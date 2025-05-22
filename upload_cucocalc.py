@@ -9,6 +9,7 @@ import requests
 import json
 import base64
 import sys
+from urllib.parse import urlparse
 
 def setup_logging(debug_mode: bool):
     """Configure logging based on debug mode."""
@@ -33,36 +34,38 @@ def setup_logging(debug_mode: bool):
     return logging.getLogger(__name__)
 
 def load_config():
-    """Load configuration from .env file."""
+    """Load configuration from environment variables."""
     load_dotenv()
     
-    # Get the base URL and ensure it's properly formatted
+    # Get and parse the Chroma API URL
     chroma_api_url = os.getenv('CHROMA_API_URL', 'https://chromadb.dev.motorenflug.at')
-    if not chroma_api_url.startswith(('http://', 'https://')):
-        chroma_api_url = f'https://{chroma_api_url}'
-    
-    # Remove any port from the URL
-    if ':' in chroma_api_url:
-        chroma_api_url = chroma_api_url.split(':')[0]
-    
-    config = {
-        'cucocalc_path': os.getenv('CUCOCALC_PATH'),
-        'local_db_path': os.getenv('LOCAL_DB_PATH'),
-        'chroma_api_url': chroma_api_url,
-        'use_remote_db': os.getenv('USE_REMOTE_DB', 'false').lower() == 'true',
-        'chroma_api_key': os.getenv('CHROMA_API_KEY', ''),
-        'collection_name': os.getenv('COLLECTION_NAME', 'cucocalc_codebase'),
-        'debug': os.getenv('DEBUG', 'false').lower() == 'true'
-    }
+    # Remove https:// if present
+    chroma_host = chroma_api_url.replace('https://', '').replace('http://', '')
+    # Always use SSL for ChromaDB
+    use_ssl = True
+    port = 443  # Default HTTPS port
     
     # Validate required configuration
-    if not config['cucocalc_path']:
-        raise ValueError("CUCOCALC_PATH not set in .env file")
+    cucocalc_path = os.getenv('CUCOCALC_PATH')
+    if not cucocalc_path:
+        raise ValueError("CUCOCALC_PATH environment variable is required")
     
-    if config['use_remote_db'] and not config['chroma_api_key']:
-        raise ValueError("CHROMA_API_KEY required for remote ChromaDB")
+    chroma_api_key = os.getenv('CHROMA_API_KEY')
+    if not chroma_api_key:
+        raise ValueError("CHROMA_API_KEY environment variable is required")
     
-    return config
+    return {
+        'cucocalc_path': cucocalc_path,
+        'local_db_path': os.getenv('LOCAL_DB_PATH', 'chroma_db'),
+        'chroma_api_url': chroma_api_url,
+        'chroma_host': chroma_host,
+        'chroma_port': port,
+        'chroma_use_ssl': use_ssl,
+        'chroma_api_key': chroma_api_key,
+        'collection_name': os.getenv('COLLECTION_NAME', 'cucocalc'),
+        'use_remote_db': os.getenv('USE_REMOTE_DB', 'false').lower() == 'true',
+        'debug': os.getenv('DEBUG', 'false').lower() == 'true'
+    }
 
 def cleanup_database(db_path: str, logger: logging.Logger):
     """Clean up the existing database."""
@@ -79,47 +82,30 @@ def upload_to_remote_chroma(config: dict, logger: logging.Logger):
     """Upload codebase to remote ChromaDB instance."""
     try:
         logger.debug(f"Initializing ChromaDB client with URL: {config['chroma_api_url']}")
+        logger.debug(f"Connecting to {config['chroma_host']}:{config['chroma_port']} ssl={config['chroma_use_ssl']}")
         
-        # Get the plain hostname without any protocol or port
-        base_url = config['chroma_api_url'].replace('https://', '').replace('http://', '').split(':')[0]
-        logger.debug(f"Using base URL: {base_url}")
-        
-        # Initialize ChromaDB client with remote settings
+        # Initialize ChromaDB client with v2 API settings
         client = chromadb.HttpClient(
-            host=base_url,
-            ssl=True,
+            host=config['chroma_host'],
+            port=config['chroma_port'],
+            ssl=config['chroma_use_ssl'],
             headers={
-                "X-Chroma-Token": config['chroma_api_key'],
-                "X-Chroma-Api-Version": "v2"
-            },
-            settings=chromadb.Settings(
-                chroma_api_impl="rest",
-                chroma_server_host=base_url,
-                allow_reset=True,
-                anonymized_telemetry=False,
-                chroma_server_cors_allow_origins=["*"]
-            )
+                "X-Chroma-Api-Version": "v2",
+                "X-Chroma-Token": config['chroma_api_key']
+            }
         )
         
-        # Test connection before proceeding
+        # Test connection
         try:
-            logger.debug("Testing connection to ChromaDB server")
-            response = requests.get(
-                f"https://{base_url}/api/v2",
-                headers={
-                    "X-Chroma-Token": config['chroma_api_key'],
-                    "X-Chroma-Api-Version": "v2"
-                },
-                verify=True
-            )
+            test_url = f"{'https' if config['chroma_use_ssl'] else 'http'}://{config['chroma_host']}:{config['chroma_port']}/api/v2/heartbeat"
+            response = requests.get(test_url, verify=config['chroma_use_ssl'])
             response.raise_for_status()
             logger.info("Successfully connected to ChromaDB server")
-            logger.debug(f"Server response: {response.text}")
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to connect to ChromaDB server: {str(e)}", exc_info=True)
+        except Exception as e:
+            logger.error(f"Failed to connect to ChromaDB server: {str(e)}")
             raise
-
-        # Get or create collection with v2 API
+        
+        # Create or get collection
         try:
             logger.debug(f"Creating/accessing collection: {config['collection_name']}")
             collection = client.get_or_create_collection(
@@ -155,6 +141,20 @@ def upload_cucocalc():
     
     # Setup logging
     logger = setup_logging(config['debug'])
+    
+    # Print configuration details
+    logger.info("Configuration details:")
+    logger.info("-" * 50)
+    logger.info(f"CUCOCALC_PATH: {config['cucocalc_path']}")
+    logger.info(f"LOCAL_DB_PATH: {config['local_db_path']}")
+    logger.info(f"CHROMA_API_URL: {config['chroma_api_url']}")
+    logger.info(f"CHROMA_HOST: {config['chroma_host']}")
+    logger.info(f"CHROMA_PORT: {config['chroma_port']}")
+    logger.info(f"CHROMA_USE_SSL: {config['chroma_use_ssl']}")
+    logger.info(f"COLLECTION_NAME: {config['collection_name']}")
+    logger.info(f"USE_REMOTE_DB: {config['use_remote_db']}")
+    logger.info(f"DEBUG: {config['debug']}")
+    logger.info("-" * 50)
     
     try:
         logger.info(f"Using {'remote' if config['use_remote_db'] else 'local'} ChromaDB")
