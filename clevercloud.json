@@ -1,0 +1,16 @@
+{
+  "deploy": {
+    "target": "chromadb",
+    "type": "docker"
+  },
+  "docker": {
+    "image": "chromadb/chroma:latest",
+    "ports": {
+      "8000": "8000"
+    },
+    "environment": {
+      "ALLOW_RESET": "true",
+      "ANONYMIZED_TELEMETRY": "false"
+    }
+  }
+} 

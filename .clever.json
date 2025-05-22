@@ -1,0 +1,12 @@
+{
+  "apps": [
+    {
+      "app_id": "app_02497525-710a-4387-a4ce-81e863a742d5",
+      "org_id": "user_344eed6e-e7ee-480f-b531-445b6552a208",
+      "deploy_url": "https://push-n3-par-clevercloud-customers.services.clever-cloud.com/app_02497525-710a-4387-a4ce-81e863a742d5.git",
+      "git_ssh_url": "git+ssh://git@push-n3-par-clevercloud-customers.services.clever-cloud.com/app_02497525-710a-4387-a4ce-81e863a742d5.git",
+      "name": "chromadb",
+      "alias": "chromadb"
+    }
+  ]
+}
