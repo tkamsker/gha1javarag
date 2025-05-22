@@ -8,9 +8,13 @@ from pathlib import Path
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
+import concurrent.futures
+from tree_sitter import Language, Parser
+import numpy as np
+from sentence_transformers import SentenceTransformer
 
 class CodebaseProcessor:
-    def __init__(self, codebase_path: str, db_path: str = "chroma_db"):
+    def __init__(self, codebase_path: str, db_path: str = "chroma_db", batch_size: int = 40000):
         """Initialize the codebase processor."""
         self.codebase_path = Path(codebase_path)
         self.parser = JavaParser()
@@ -20,12 +24,20 @@ class CodebaseProcessor:
             metadata={"description": "Java codebase embeddings"}
         )
         
+        # Initialize Tree-sitter parser
+        self.tree_sitter_parser = Parser()
+        self.tree_sitter_parser.set_language(Language('build/my-languages.so', 'java'))
+        
+        # Initialize sentence transformer model
+        self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        
         # Configure logging
         logging.basicConfig(
             level=logging.INFO,
             format='%(asctime)s - %(levelname)s - %(message)s'
         )
         self.logger = logging.getLogger(__name__)
+        self.batch_size = batch_size
 
     def find_java_files(self) -> List[Path]:
         """Find all Java files in the codebase."""
@@ -79,63 +91,141 @@ class CodebaseProcessor:
 
         return embeddings
 
-    def process_codebase(self, max_workers: int = 4):
-        """Process the entire codebase and store in vector database."""
-        java_files = self.find_java_files()
+    def process_codebase(self):
+        """Process the entire codebase and store embeddings."""
+        # Find all Java files
+        java_files = list(Path(self.codebase_path).rglob("*.java"))
         self.logger.info(f"Found {len(java_files)} Java files")
-
+        
         # Process files in parallel
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            results = list(tqdm(
-                executor.map(self.process_file, java_files),
-                total=len(java_files),
-                desc="Processing files"
-            ))
-
-        # Filter out None results and create embeddings
-        valid_results = [r for r in results if r is not None]
         all_embeddings = []
+        all_metadatas = []
+        all_documents = []
+        all_ids = []
         
-        for result in tqdm(valid_results, desc="Creating embeddings"):
-            embeddings = self.create_embeddings(result)
-            all_embeddings.extend(embeddings)
-
-        # Store in vector database
-        self.logger.info(f"Storing {len(all_embeddings)} embeddings in vector database")
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [executor.submit(self._process_file, file) for file in java_files]
+            for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Processing files"):
+                result = future.result()
+                if result:
+                    embeddings, metadata, document, doc_id = result
+                    all_embeddings.extend(embeddings)
+                    all_metadatas.extend(metadata)
+                    all_documents.extend(document)
+                    all_ids.extend(doc_id)
         
-        # Prepare data for ChromaDB
-        ids = [f"{i}" for i in range(len(all_embeddings))]
-        documents = [e['content'] for e in all_embeddings]
-        metadatas = [{
-            'type': e['type'],
-            'path': e['path'],
-            'name': e.get('name', ''),
-            'class': e.get('class', '')
-        } for e in all_embeddings]
+        # Process in batches
+        total_items = len(all_embeddings)
+        for i in range(0, total_items, self.batch_size):
+            end_idx = min(i + self.batch_size, total_items)
+            self.logger.info(f"Processing batch {i//self.batch_size + 1} of {(total_items + self.batch_size - 1)//self.batch_size}")
+            
+            batch_embeddings = all_embeddings[i:end_idx]
+            batch_metadatas = all_metadatas[i:end_idx]
+            batch_documents = all_documents[i:end_idx]
+            batch_ids = all_ids[i:end_idx]
+            
+            self.collection.add(
+                embeddings=batch_embeddings,
+                metadatas=batch_metadatas,
+                documents=batch_documents,
+                ids=batch_ids
+            )
+        
+        self.logger.info(f"Stored {total_items} embeddings in vector database")
 
-        # Add to collection
-        self.collection.add(
-            ids=ids,
-            documents=documents,
-            metadatas=metadatas
-        )
+    def _process_file(self, file_path: Path) -> tuple:
+        """Process a single Java file and return its embeddings."""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Parse the file
+            tree = self.tree_sitter_parser.parse(bytes(content, 'utf8'))
+            
+            # Extract code elements
+            elements = self._extract_elements(tree.root_node, content)
+            
+            if not elements:
+                return None
+            
+            # Create embeddings and metadata
+            embeddings = []
+            metadatas = []
+            documents = []
+            ids = []
+            
+            for i, element in enumerate(elements):
+                doc_id = f"{file_path.stem}_{i}"
+                embeddings.append(self._create_embedding(element['content']))
+                metadatas.append({
+                    'path': str(file_path),
+                    'type': element['type'],
+                    'name': element.get('name', ''),
+                    'class': element.get('class', '')
+                })
+                documents.append(element['content'])
+                ids.append(doc_id)
+            
+            return embeddings, metadatas, documents, ids
+            
+        except Exception as e:
+            self.logger.error(f"Error processing file {file_path}: {str(e)}")
+            return None
+
+    def _extract_elements(self, node, content: str) -> List[Dict[str, Any]]:
+        """Extract code elements from the AST."""
+        elements = []
+        
+        if node.type == 'class_declaration':
+            class_name = self._get_node_text(node.child_by_field_name('name'), content)
+            elements.append({
+                'type': 'class',
+                'name': class_name,
+                'content': self._get_node_text(node, content)
+            })
+            
+            # Extract methods
+            for child in node.children:
+                if child.type == 'method_declaration':
+                    method_name = self._get_node_text(child.child_by_field_name('name'), content)
+                    elements.append({
+                        'type': 'method',
+                        'name': method_name,
+                        'class': class_name,
+                        'content': self._get_node_text(child, content)
+                    })
+        
+        return elements
+
+    def _get_node_text(self, node, content: str) -> str:
+        """Get the text content of a node."""
+        return content[node.start_byte:node.end_byte]
+
+    def _create_embedding(self, text: str) -> List[float]:
+        """Create an embedding for the given text using sentence-transformers."""
+        # Encode the text and convert to list
+        embedding = self.model.encode(text)
+        return embedding.tolist()
 
     def search(self, query: str, n_results: int = 5) -> List[Dict[str, Any]]:
-        """Search the codebase using natural language."""
+        """Search the codebase for relevant code."""
+        # Create query embedding
+        query_embedding = self._create_embedding(query)
+        
+        # Search the collection
         results = self.collection.query(
-            query_texts=[query],
+            query_embeddings=[query_embedding],
             n_results=n_results
         )
         
         # Format results
         formatted_results = []
         for i in range(len(results['documents'][0])):
-            result = {
-                'content': json.loads(results['documents'][0][i]),
-                'metadata': results['metadatas'][0][i],
-                'distance': results['distances'][0][i] if 'distances' in results else None
-            }
-            formatted_results.append(result)
+            formatted_results.append({
+                'content': results['documents'][0][i],
+                'metadata': results['metadatas'][0][i]
+            })
         
         return formatted_results
 

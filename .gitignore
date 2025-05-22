@@ -34,3 +34,5 @@ log/
 *.tmp
 *.temp
 .cache/ 
+chroma*
+java_*
