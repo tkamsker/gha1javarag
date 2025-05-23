@@ -4,9 +4,17 @@ from typing import Dict, List, Optional, Any
 import json
 
 class JavaParser:
-    def __init__(self, grammar_path: str = 'build/java.so'):
+    def __init__(self, grammar_path: str = 'build/my-languages.so'):
         """Initialize the Java parser with the grammar file."""
-        self.language = Language(grammar_path, 'java')
+        # Build the multi-language library if it doesn't exist
+        if not os.path.exists(grammar_path):
+            Language.build_library(
+                grammar_path,
+                ['vendor/tree-sitter-java']
+            )
+        # Get language name from environment variable, default to 'java'
+        language_name = os.environ.get('JAVA_LANGUAGE_NAME', 'java')
+        self.language = Language(grammar_path, language_name)
         self.parser = Parser()
         self.parser.set_language(self.language)
 

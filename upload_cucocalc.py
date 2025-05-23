@@ -3,11 +3,9 @@ import logging
 from pathlib import Path
 import os
 import shutil
-import chromadb
 from dotenv import load_dotenv
 import requests
 import json
-import base64
 import sys
 from urllib.parse import urlparse
 
@@ -27,7 +25,7 @@ def setup_logging(debug_mode: bool):
     )
     
     # Set specific loggers
-    loggers = ['chromadb', 'urllib3', 'requests']
+    loggers = ['urllib3', 'requests']
     for logger_name in loggers:
         logging.getLogger(logger_name).setLevel(log_level)
     
@@ -84,17 +82,6 @@ def upload_to_remote_chroma(config: dict, logger: logging.Logger):
         logger.debug(f"Initializing ChromaDB client with URL: {config['chroma_api_url']}")
         logger.debug(f"Connecting to {config['chroma_host']}:{config['chroma_port']} ssl={config['chroma_use_ssl']}")
         
-        # Initialize ChromaDB client with v2 API settings
-        client = chromadb.HttpClient(
-            host=config['chroma_host'],
-            port=config['chroma_port'],
-            ssl=config['chroma_use_ssl'],
-            headers={
-                "X-Chroma-Api-Version": "v2",
-                "X-Chroma-Token": config['chroma_api_key']
-            }
-        )
-        
         # Test connection
         try:
             test_url = f"{'https' if config['chroma_use_ssl'] else 'http'}://{config['chroma_host']}:{config['chroma_port']}/api/v2/heartbeat"
@@ -104,24 +91,12 @@ def upload_to_remote_chroma(config: dict, logger: logging.Logger):
         except Exception as e:
             logger.error(f"Failed to connect to ChromaDB server: {str(e)}")
             raise
-        
-        # Create or get collection
-        try:
-            logger.debug(f"Creating/accessing collection: {config['collection_name']}")
-            collection = client.get_or_create_collection(
-                name=config['collection_name'],
-                metadata={"description": "Cucocalc codebase embeddings"}
-            )
-            logger.info(f"Successfully created/accessed collection: {config['collection_name']}")
-        except Exception as e:
-            logger.error(f"Failed to create/access collection: {str(e)}", exc_info=True)
-            raise
 
         # Process the codebase
         logger.debug(f"Initializing CodebaseProcessor with path: {config['cucocalc_path']}")
         processor = CodebaseProcessor(
             codebase_path=config['cucocalc_path'],
-            collection=collection,
+            db_path=config['local_db_path'],
             batch_size=40000
         )
         
@@ -198,9 +173,10 @@ def upload_cucocalc():
                         logger.info(f"Method: {result['metadata']['name']}")
                     elif result['metadata']['type'] == 'class':
                         logger.info(f"Class: {result['metadata']['name']}")
-
+                    logger.info(f"Content: {result['code']}")
+            
     except Exception as e:
-        logger.error(f"Error during upload: {str(e)}", exc_info=True)
+        logger.error(f"Error in upload process: {str(e)}", exc_info=True)
         raise
 
 if __name__ == "__main__":

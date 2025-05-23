@@ -1,8 +1,6 @@
 from java_parser import JavaParser
 import os
 from typing import List, Dict, Any
-import chromadb
-from chromadb.config import Settings
 import json
 from pathlib import Path
 import logging
@@ -10,26 +8,18 @@ from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
 import concurrent.futures
 from tree_sitter import Language, Parser
-import numpy as np
-from sentence_transformers import SentenceTransformer
+from chroma_manager import ChromaManager
 
 class CodebaseProcessor:
     def __init__(self, codebase_path: str, db_path: str = "chroma_db", batch_size: int = 40000):
         """Initialize the codebase processor."""
         self.codebase_path = Path(codebase_path)
         self.parser = JavaParser()
-        self.client = chromadb.PersistentClient(path=db_path)
-        self.collection = self.client.get_or_create_collection(
-            name="java_code",
-            metadata={"description": "Java codebase embeddings"}
-        )
+        self.chroma_manager = ChromaManager(persist_directory=db_path)
         
         # Initialize Tree-sitter parser
         self.tree_sitter_parser = Parser()
         self.tree_sitter_parser.set_language(Language('build/my-languages.so', 'java'))
-        
-        # Initialize sentence transformer model
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
         
         # Configure logging
         logging.basicConfig(
@@ -56,40 +46,49 @@ class CodebaseProcessor:
             self.logger.error(f"Error processing {file_path}: {str(e)}")
             return None
 
-    def create_embeddings(self, file_data: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Create embeddings for different code elements."""
-        embeddings = []
+    def create_snippets(self, file_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Create code snippets for different code elements."""
+        snippets = []
         
-        # Create embedding for the entire file
-        file_content = {
-            'type': 'file',
-            'path': file_data['file_path'],
-            'content': json.dumps(file_data)
-        }
-        embeddings.append(file_content)
-
-        # Create embeddings for each class
-        for class_data in file_data.get('classes', []):
-            class_content = {
-                'type': 'class',
-                'path': file_data['file_path'],
-                'name': class_data['name'],
-                'content': json.dumps(class_data)
+        # Create snippet for the entire file
+        file_snippet = {
+            'id': f"{Path(file_data['file_path']).stem}_file",
+            'code': json.dumps(file_data),
+            'metadata': {
+                'type': 'file',
+                'path': file_data['file_path']
             }
-            embeddings.append(class_content)
+        }
+        snippets.append(file_snippet)
 
-            # Create embeddings for methods
-            for method in class_data.get('methods', []):
-                method_content = {
-                    'type': 'method',
+        # Create snippets for each class
+        for class_data in file_data.get('classes', []):
+            class_snippet = {
+                'id': f"{Path(file_data['file_path']).stem}_{class_data['name']}_class",
+                'code': json.dumps(class_data),
+                'metadata': {
+                    'type': 'class',
                     'path': file_data['file_path'],
-                    'class': class_data['name'],
-                    'name': method['name'],
-                    'content': json.dumps(method)
+                    'name': class_data['name']
                 }
-                embeddings.append(method_content)
+            }
+            snippets.append(class_snippet)
 
-        return embeddings
+            # Create snippets for methods
+            for method in class_data.get('methods', []):
+                method_snippet = {
+                    'id': f"{Path(file_data['file_path']).stem}_{class_data['name']}_{method['name']}_method",
+                    'code': json.dumps(method),
+                    'metadata': {
+                        'type': 'method',
+                        'path': file_data['file_path'],
+                        'class': class_data['name'],
+                        'name': method['name']
+                    }
+                }
+                snippets.append(method_snippet)
+
+        return snippets
 
     def process_codebase(self):
         """Process the entire codebase and store embeddings."""
@@ -98,44 +97,28 @@ class CodebaseProcessor:
         self.logger.info(f"Found {len(java_files)} Java files")
         
         # Process files in parallel
-        all_embeddings = []
-        all_metadatas = []
-        all_documents = []
-        all_ids = []
+        all_snippets = []
         
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = [executor.submit(self._process_file, file) for file in java_files]
             for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Processing files"):
                 result = future.result()
                 if result:
-                    embeddings, metadata, document, doc_id = result
-                    all_embeddings.extend(embeddings)
-                    all_metadatas.extend(metadata)
-                    all_documents.extend(document)
-                    all_ids.extend(doc_id)
+                    all_snippets.extend(result)
         
         # Process in batches
-        total_items = len(all_embeddings)
+        total_items = len(all_snippets)
         for i in range(0, total_items, self.batch_size):
             end_idx = min(i + self.batch_size, total_items)
             self.logger.info(f"Processing batch {i//self.batch_size + 1} of {(total_items + self.batch_size - 1)//self.batch_size}")
             
-            batch_embeddings = all_embeddings[i:end_idx]
-            batch_metadatas = all_metadatas[i:end_idx]
-            batch_documents = all_documents[i:end_idx]
-            batch_ids = all_ids[i:end_idx]
-            
-            self.collection.add(
-                embeddings=batch_embeddings,
-                metadatas=batch_metadatas,
-                documents=batch_documents,
-                ids=batch_ids
-            )
+            batch_snippets = all_snippets[i:end_idx]
+            self.chroma_manager.add_code_snippets(batch_snippets)
         
-        self.logger.info(f"Stored {total_items} embeddings in vector database")
+        self.logger.info(f"Stored {total_items} code snippets in vector database")
 
-    def _process_file(self, file_path: Path) -> tuple:
-        """Process a single Java file and return its embeddings."""
+    def _process_file(self, file_path: Path) -> List[Dict[str, Any]]:
+        """Process a single Java file and return its snippets."""
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
@@ -147,31 +130,28 @@ class CodebaseProcessor:
             elements = self._extract_elements(tree.root_node, content)
             
             if not elements:
-                return None
+                return []
             
-            # Create embeddings and metadata
-            embeddings = []
-            metadatas = []
-            documents = []
-            ids = []
+            # Create snippets
+            snippets = []
+            for element in elements:
+                snippet = {
+                    'id': f"{file_path.stem}_{element.get('name', '')}_{element['type']}",
+                    'code': element['content'],
+                    'metadata': {
+                        'path': str(file_path),
+                        'type': element['type'],
+                        'name': element.get('name', ''),
+                        'class': element.get('class', '')
+                    }
+                }
+                snippets.append(snippet)
             
-            for i, element in enumerate(elements):
-                doc_id = f"{file_path.stem}_{i}"
-                embeddings.append(self._create_embedding(element['content']))
-                metadatas.append({
-                    'path': str(file_path),
-                    'type': element['type'],
-                    'name': element.get('name', ''),
-                    'class': element.get('class', '')
-                })
-                documents.append(element['content'])
-                ids.append(doc_id)
-            
-            return embeddings, metadatas, documents, ids
+            return snippets
             
         except Exception as e:
             self.logger.error(f"Error processing file {file_path}: {str(e)}")
-            return None
+            return []
 
     def _extract_elements(self, node, content: str) -> List[Dict[str, Any]]:
         """Extract code elements from the AST."""
@@ -202,32 +182,9 @@ class CodebaseProcessor:
         """Get the text content of a node."""
         return content[node.start_byte:node.end_byte]
 
-    def _create_embedding(self, text: str) -> List[float]:
-        """Create an embedding for the given text using sentence-transformers."""
-        # Encode the text and convert to list
-        embedding = self.model.encode(text)
-        return embedding.tolist()
-
     def search(self, query: str, n_results: int = 5) -> List[Dict[str, Any]]:
         """Search the codebase for relevant code."""
-        # Create query embedding
-        query_embedding = self._create_embedding(query)
-        
-        # Search the collection
-        results = self.collection.query(
-            query_embeddings=[query_embedding],
-            n_results=n_results
-        )
-        
-        # Format results
-        formatted_results = []
-        for i in range(len(results['documents'][0])):
-            formatted_results.append({
-                'content': results['documents'][0][i],
-                'metadata': results['metadatas'][0][i]
-            })
-        
-        return formatted_results
+        return self.chroma_manager.search_similar_code(query, n_results)
 
 def main():
     # Example usage
@@ -247,7 +204,7 @@ def main():
             print(f"Method: {result['metadata']['name']}")
         elif result['metadata']['type'] == 'class':
             print(f"Class: {result['metadata']['name']}")
-        print(f"Content: {json.dumps(result['content'], indent=2)}")
+        print(f"Content: {result['code']}")
 
 if __name__ == "__main__":
     main() 
