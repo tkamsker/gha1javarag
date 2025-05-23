@@ -11,11 +11,11 @@ from tree_sitter import Language, Parser
 from chroma_manager import ChromaManager
 
 class CodebaseProcessor:
-    def __init__(self, codebase_path: str, db_path: str = "chroma_db", batch_size: int = 40000):
+    def __init__(self, codebase_path: str, db_path: str = "chroma_db", batch_size: int = 40000, use_remote: bool = False):
         """Initialize the codebase processor."""
         self.codebase_path = Path(codebase_path)
         self.parser = JavaParser()
-        self.chroma_manager = ChromaManager(persist_directory=db_path)
+        self.chroma_manager = ChromaManager(persist_directory=db_path, use_remote=use_remote)
         
         # Initialize Tree-sitter parser
         self.tree_sitter_parser = Parser()
@@ -157,25 +157,29 @@ class CodebaseProcessor:
         """Extract code elements from the AST."""
         elements = []
         
-        if node.type == 'class_declaration':
-            class_name = self._get_node_text(node.child_by_field_name('name'), content)
-            elements.append({
-                'type': 'class',
-                'name': class_name,
-                'content': self._get_node_text(node, content)
-            })
+        def traverse(node, class_name=None):
+            if node.type == 'class_declaration':
+                class_name = self._get_node_text(node.child_by_field_name('name'), content)
+                elements.append({
+                    'type': 'class',
+                    'name': class_name,
+                    'content': self._get_node_text(node, content)
+                })
             
-            # Extract methods
+            elif node.type == 'method_declaration' and class_name:
+                method_name = self._get_node_text(node.child_by_field_name('name'), content)
+                elements.append({
+                    'type': 'method',
+                    'name': method_name,
+                    'class': class_name,
+                    'content': self._get_node_text(node, content)
+                })
+            
+            # Recursively process child nodes
             for child in node.children:
-                if child.type == 'method_declaration':
-                    method_name = self._get_node_text(child.child_by_field_name('name'), content)
-                    elements.append({
-                        'type': 'method',
-                        'name': method_name,
-                        'class': class_name,
-                        'content': self._get_node_text(child, content)
-                    })
+                traverse(child, class_name)
         
+        traverse(node)
         return elements
 
     def _get_node_text(self, node, content: str) -> str:

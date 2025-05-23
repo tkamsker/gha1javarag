@@ -1,0 +1,46 @@
+from langchain_community.document_loaders import DirectoryLoader
+from langchain.text_splitter import CharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings
+from langchain_chroma import Chroma
+import chromadb.config
+import os
+
+# 1. Load Java files from local directory
+loader = DirectoryLoader(
+    "./java_codebase",
+    glob="**/*.java"
+)
+docs = loader.load()
+
+# 2. Optimal chunking for code: 1000 chars with 200 overlap
+splitter = CharacterTextSplitter(
+    chunk_size=1000,
+    chunk_overlap=200,
+    separator="\n\n"  # prefer splitting at blank lines
+)
+chunks = splitter.split_documents(docs)
+
+# 3. Initialize embeddings
+embeddings = OpenAIEmbeddings(
+    model="text-embedding-ada-002",
+    openai_api_key=os.environ.get("OPENAI_API_KEY")
+)
+
+# 4. Connect to remote ChromaDB server
+client_settings = chromadb.config.Settings(
+    chroma_api_impl="chromadb.api.fastapi.FastAPI",
+    chroma_server_host="chromadb.dev.motorenflug.at",
+    chroma_server_http_port=443,
+    chroma_server_ssl_enabled=True
+)
+
+chroma_client = Chroma(
+    embedding_function=embeddings,
+    collection_name="cucocalc",
+    client_settings=client_settings
+)
+
+# 5. Upsert chunks into remote ChromaDB
+chroma_client.add_documents(chunks)
+
+print(f"Ingested {len(chunks)} code chunks into remote ChromaDB v2.")

@@ -52,6 +52,9 @@ def load_config():
     if not chroma_api_key:
         raise ValueError("CHROMA_API_KEY environment variable is required")
     
+    tenant = os.getenv('CHROMA_TENANT', 'default_tenant')
+    database = os.getenv('CHROMA_DATABASE', 'default_database')
+    
     return {
         'cucocalc_path': cucocalc_path,
         'local_db_path': os.getenv('LOCAL_DB_PATH', 'chroma_db'),
@@ -62,7 +65,9 @@ def load_config():
         'chroma_api_key': chroma_api_key,
         'collection_name': os.getenv('COLLECTION_NAME', 'cucocalc'),
         'use_remote_db': os.getenv('USE_REMOTE_DB', 'false').lower() == 'true',
-        'debug': os.getenv('DEBUG', 'false').lower() == 'true'
+        'debug': os.getenv('DEBUG', 'false').lower() == 'true',
+        'tenant': tenant,
+        'database': database
     }
 
 def cleanup_database(db_path: str, logger: logging.Logger):
@@ -97,7 +102,8 @@ def upload_to_remote_chroma(config: dict, logger: logging.Logger):
         processor = CodebaseProcessor(
             codebase_path=config['cucocalc_path'],
             db_path=config['local_db_path'],
-            batch_size=40000
+            batch_size=40000,
+            use_remote=config['use_remote_db']
         )
         
         # Process and upload
@@ -129,6 +135,8 @@ def upload_cucocalc():
     logger.info(f"COLLECTION_NAME: {config['collection_name']}")
     logger.info(f"USE_REMOTE_DB: {config['use_remote_db']}")
     logger.info(f"DEBUG: {config['debug']}")
+    logger.info(f"CHROMA_TENANT: {config['tenant']}")
+    logger.info(f"CHROMA_DATABASE: {config['database']}")
     logger.info("-" * 50)
     
     try:
@@ -146,7 +154,8 @@ def upload_cucocalc():
             processor = CodebaseProcessor(
                 codebase_path=config['cucocalc_path'],
                 db_path=config['local_db_path'],
-                batch_size=40000
+                batch_size=40000,
+                use_remote=config['use_remote_db']
             )
             
             logger.info("Starting Cucocalc codebase upload...")

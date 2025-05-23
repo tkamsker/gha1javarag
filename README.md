@@ -173,4 +173,15 @@ python -c "import chromadb; client = chromadb.HttpClient(host='chromadb.dev.moto
 
 MIT
 
+# Example .env for remote ChromaDB
+CUCOCALC_PATH=java_codebase
+LOCAL_DB_PATH=chroma_db
+CHROMA_API_URL=https://chromadb.dev.motorenflug.at
+CHROMA_API_KEY=your_api_key_here
+CHROMA_TENANT=your_tenant_name_here
+CHROMA_DATABASE=your_database_name_here
+COLLECTION_NAME=cucocalc
+USE_REMOTE_DB=false
+DEBUG=true
+
 curl -X POST "https://chromadb.dev.motorenflug.at/api/v2/ingest" -H "Content-Type: application/json"   -d '{"directory_path": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/cuco-master@d34bb6b6d1c"}'
