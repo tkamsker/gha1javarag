@@ -35,4 +35,3 @@ log/
 *.temp
 .cache/ 
 chroma*
-java_*
