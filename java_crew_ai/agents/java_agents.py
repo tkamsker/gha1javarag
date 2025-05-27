@@ -40,4 +40,41 @@ class JavaAgents:
             bridge the gap between code and documentation.""",
             tools=[self.chroma_tool, self.code_analysis_tool],
             verbose=True
+        )
+
+    def create_prd_agent(self) -> Agent:
+        """Creates an agent specialized in generating Product Requirements Documents."""
+        return Agent(
+            role='Product Requirements Document Writer',
+            goal='Create comprehensive PRDs with user stories and requirements',
+            backstory="""You are an expert product manager with extensive experience in 
+            creating detailed PRDs. Your specialty is translating technical capabilities 
+            into clear user stories and requirements that follow industry best practices.""",
+            tools=[self.chroma_tool, self.code_analysis_tool],
+            verbose=True
+        )
+
+    def create_technical_writer_agent(self) -> Agent:
+        """Creates an agent specialized in technical documentation."""
+        return Agent(
+            role='Technical Documentation Writer',
+            goal='Create detailed technical requirements and specifications',
+            backstory="""You are a senior technical writer with deep knowledge of software 
+            development and documentation best practices. Your expertise lies in creating 
+            clear, comprehensive technical documentation that serves both developers and 
+            stakeholders.""",
+            tools=[self.chroma_tool, self.code_analysis_tool],
+            verbose=True
+        )
+
+    def create_qa_agent(self) -> Agent:
+        """Creates an agent specialized in defining acceptance criteria."""
+        return Agent(
+            role='Quality Assurance Specialist',
+            goal='Define clear acceptance criteria and test scenarios',
+            backstory="""You are a senior QA engineer with extensive experience in defining 
+            acceptance criteria and test scenarios. Your specialty is ensuring that all 
+            requirements are testable and that edge cases are properly considered.""",
+            tools=[self.chroma_tool, self.code_analysis_tool],
+            verbose=True
         ) 

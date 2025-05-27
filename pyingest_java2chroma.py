@@ -39,7 +39,7 @@ def load_documents(directory: str) -> List:
     for file_path in tqdm(files, desc="Loading files"):
         try:
             loader = UnstructuredFileLoader(file_path)
-            docs = loader.load()
+docs = loader.load()
             all_docs.extend(docs)
             logger.info(f"Successfully processed: {file_path}")
         except Exception as e:
@@ -82,10 +82,10 @@ def main():
     # Split documents into chunks
     logger.info("Splitting documents into chunks...")
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=200,
+    chunk_size=1000,
+    chunk_overlap=200,
         length_function=len,
-    )
+)
     chunks = text_splitter.split_documents(documents)
     logger.info(f"Split into {len(chunks)} chunks")
     
@@ -99,14 +99,14 @@ def main():
     global vectorstore
     vectorstore = Chroma(
         collection_name=collection_name,
-        embedding_function=embeddings,
+    embedding_function=embeddings,
         persist_directory="./chroma_db"
-    )
-    
+)
+
     # Process chunks in batches
     logger.info("Adding documents to collection...")
     process_in_batches(chunks)
-    
+
     logger.info("Processing complete!")
 
 if __name__ == "__main__":
