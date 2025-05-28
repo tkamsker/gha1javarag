@@ -109,7 +109,13 @@ class OllamaEmbeddingGenerator:
             texts[name] = text
         
         # Generate embeddings in batches
-        return self.generate_embeddings_batch(list(texts.values()))
+        embeddings = {}
+        for name, text in texts.items():
+            embedding = self.generate_embedding(text)
+            if embedding is not None:
+                embeddings[name] = embedding
+        
+        return embeddings
     
     def batch_generate_embeddings(self, entities: Dict[str, CodeEntity]) -> Dict[str, Optional[List[float]]]:
         """Batch generate embeddings for code entities (returns mapping of name to embedding or None)."""

@@ -106,6 +106,9 @@ class DocumentationCrew:
             output_dir: Directory to write documentation
         """
         self.xml_input_dir = Path(xml_input_dir)
+        logger.info(f"XML input directory: {self.xml_input_dir}")
+        xml_files = list(self.xml_input_dir.glob("*.xml"))
+        logger.info(f"Found XML files: {xml_files}")
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
@@ -116,7 +119,7 @@ class DocumentationCrew:
         # Initialize entity cache
         self.entity_cache = {}
         
-        # Use imported tools
+        # Use imported tools (pass tool instances directly)
         self.parser_agent = Agent(
             role='Parser Agent',
             goal='Parse Doxygen XML and extract entities',

@@ -32,14 +32,14 @@ def load_embeddings():
         logging.info(f"Initializing XML parser...")
         parser = DoxygenXMLParser(xml_input_dir)
         logging.info(f"Parsing XML files...")
-        entities = parser.parse_all()
+        entities = parser.parse_all_xml_files()
         logging.info(f"Found {len(entities)} code entities: {list(entities.keys())}")
         logging.debug(f"Entity sample: {list(entities.values())[0] if entities else 'None'}")
         logging.info(f"Initializing embedding generator...")
         embedding_generator = OllamaEmbeddingGenerator(ollama_api_url, ollama_model)
         logging.info(f"Generating embeddings...")
         try:
-            embeddings = embedding_generator.generate_embeddings(entities)
+            embeddings = embedding_generator.generate_entity_embeddings(entities)
         except Exception as e:
             logging.error(f"Error generating embeddings: {e}\n{traceback.format_exc()}")
             raise

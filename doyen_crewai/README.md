@@ -220,3 +220,31 @@ pytest tests -v
 # run the script 
 
 python src/run_documentation_crew.py
+
+
+
+# -------- now we have first version 
+
+Step-by-step: How to ensure ChromaDB is loaded for documentation generation
+
+**1. Prepare your Doxygen XML files in the directory specified by XML_INPUT_DIR in your .env.**
+
+**2. Run the embedding loader:**
+Apply to README.md
+Run
+   cd doyen_crewai
+   python -m src.load_embeddings
+
+This parses XML, generates embeddings, and loads them into ChromaDB.
+
+**3. Check the logs for:**
+
+Number of entities parsed and loaded.
+No errors about empty embeddings.
+
+**4. Run your documentation generation:**
+
+Run
+   python src/run_documentation_crew.py
+   
+This script will now be able to access the embeddings and metadata in ChromaDB.

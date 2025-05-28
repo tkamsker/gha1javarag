@@ -1,8 +1,9 @@
 import logging
 from typing import Type
-from crewai.tools.base_tool import BaseTool
+from langchain.tools import BaseTool
 from pydantic import BaseModel, Field
 import lxml.etree as ET
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +33,8 @@ class ParseXMLTool(BaseTool):
             name = name_elem.text if name_elem is not None else ""
             return {"status": "success", "entity": {"name": name}}
         except Exception as e:
-            logger.error(f"Error parsing XML {xml_path}: {str(e)}")
-            return {"status": "error", "message": str(e)}
+            logger.error(f"Error parsing XML {xml_path}: {str(e)} | CWD: {os.getcwd()}")
+            return {"status": "error", "message": f"Error reading file '{xml_path}': {str(e)} | CWD: {os.getcwd()}"}
     def _arun(self, *args, **kwargs):
         raise NotImplementedError("Async not implemented")
 
