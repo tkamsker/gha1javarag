@@ -248,3 +248,6 @@ Run
    python src/run_documentation_crew.py
    
 This script will now be able to access the embeddings and metadata in ChromaDB.
+
+# run 
+cd doyen_crewai && python src/run_documentation_crew.py

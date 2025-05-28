@@ -18,8 +18,13 @@ from enum import Enum
 from jinja2 import Environment, FileSystemLoader
 from .documentation_tools import parse_xml_tool, extract_entities_tool, build_call_graph_tool
 from langchain_community.chat_models import ChatOpenAI
+import os
+from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
+
+# Load environment variables
+load_dotenv()
 
 class EntityType(Enum):
     CLASS = "class"
@@ -115,15 +120,24 @@ class DocumentationCrew:
         self.extract_entities_tool = extract_entities_tool
         self.build_call_graph_tool = build_call_graph_tool
         
-        # Initialize agents
+        # Get OpenAI configuration from environment variables
+        openai_api_key = os.getenv('OPENAI_API_KEY')
+        if not openai_api_key:
+            raise ValueError("OPENAI_API_KEY environment variable not set")
+        
+        model_name = os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo')
+        temperature = float(os.getenv('TEMPERATURE', '0'))
+        
+        # Initialize agents with environment variables
         self.parser_agent = Agent(
             role="Parser Agent",
             goal="Extract entities and relationships from XML files",
             backstory="Expert at parsing XML documentation and extracting meaningful information",
             verbose=True,
             llm=ChatOpenAI(
-                model="gpt-3.5-turbo",
-                temperature=0
+                model=model_name,
+                temperature=temperature,
+                openai_api_key=openai_api_key
             ),
             tools=[self.parse_xml_tool, self.extract_entities_tool, self.build_call_graph_tool]
         )
@@ -134,8 +148,9 @@ class DocumentationCrew:
             backstory="Expert at analyzing code structure and relationships",
             verbose=True,
             llm=ChatOpenAI(
-                model="gpt-3.5-turbo",
-                temperature=0
+                model=model_name,
+                temperature=temperature,
+                openai_api_key=openai_api_key
             ),
             tools=[self.build_call_graph_tool]
         )
@@ -146,8 +161,9 @@ class DocumentationCrew:
             backstory="Expert at validating code documentation and requirements",
             verbose=True,
             llm=ChatOpenAI(
-                model="gpt-3.5-turbo",
-                temperature=0
+                model=model_name,
+                temperature=temperature,
+                openai_api_key=openai_api_key
             ),
             tools=[self.build_call_graph_tool]
         )
@@ -158,8 +174,9 @@ class DocumentationCrew:
             backstory="Expert at creating clear and detailed documentation",
             verbose=True,
             llm=ChatOpenAI(
-                model="gpt-3.5-turbo",
-                temperature=0
+                model=model_name,
+                temperature=temperature,
+                openai_api_key=openai_api_key
             ),
             tools=[self.build_call_graph_tool]
         )
@@ -235,8 +252,8 @@ class DocumentationCrew:
             xml_refs = []
             for compound in root.findall(".//compound"):
                 refid = compound.get("refid")
-                if refid and refid.endswith(".xml"):
-                    xml_refs.append(refid)
+                if refid:
+                    xml_refs.append(f"{refid}.xml")
             
             logger.info(f"Found {len(xml_refs)} XML references in index.xml: {xml_refs}")
             
@@ -282,48 +299,50 @@ class DocumentationCrew:
                     related = self._get_related_entities_from_chroma(entity["name"])
                     related_entities.extend(related)
                 
-                # Create tasks for the crew
+                # Create tasks for the crew (context as list of dicts with description and value)
                 parser_task = Task(
                     description=f"Parse Doxygen XML and extract code entities from {xml_path}",
                     agent=self.parser_agent,
                     expected_output="List of code entities with their descriptions and relationships",
-                    context={
-                        "xml_path": str(xml_path),
-                        "entities": entities,
-                        "requirements": requirements,
-                        "tests": tests,
-                        "related_entities": related_entities
-                    }
+                    context=[
+                        {"description": "Path to the XML file", "value": str(xml_path)},
+                        {"description": "Extracted entities", "value": entities},
+                        {"description": "Extracted requirements", "value": requirements},
+                        {"description": "Extracted tests", "value": tests},
+                        {"description": "Related entities from ChromaDB", "value": related_entities}
+                    ]
                 )
                 
                 modeling_task = Task(
                     description="Group related entities and identify patterns",
                     agent=self.modeling_agent,
                     expected_output="Grouped entities and identified patterns",
-                    context={"entities": entities}
+                    context=[
+                        {"description": "Entities to group and analyze", "value": entities}
+                    ]
                 )
                 
                 verification_task = Task(
                     description="Verify requirements and relationships",
                     agent=self.verification_agent,
                     expected_output="Verified requirements and relationships",
-                    context={
-                        "entities": entities,
-                        "requirements": requirements,
-                        "tests": tests
-                    }
+                    context=[
+                        {"description": "Entities to verify", "value": entities},
+                        {"description": "Requirements to verify", "value": requirements},
+                        {"description": "Tests to verify", "value": tests}
+                    ]
                 )
                 
                 specification_task = Task(
                     description="Generate documentation based on verified requirements",
                     agent=self.specification_agent,
                     expected_output="Generated documentation",
-                    context={
-                        "entities": entities,
-                        "requirements": requirements,
-                        "tests": tests,
-                        "related_entities": related_entities
-                    }
+                    context=[
+                        {"description": "Entities for documentation", "value": entities},
+                        {"description": "Requirements for documentation", "value": requirements},
+                        {"description": "Tests for documentation", "value": tests},
+                        {"description": "Related entities for documentation", "value": related_entities}
+                    ]
                 )
                 
                 # Run the crew
