@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from enum import Enum
 from jinja2 import Environment, FileSystemLoader
 from .documentation_tools import parse_xml_tool, extract_entities_tool, build_call_graph_tool
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 
 logger = logging.getLogger(__name__)
 
@@ -104,12 +104,18 @@ class DocumentationCrew:
         self.xml_input_dir = xml_input_dir
         logger.info(f"XML input directory: {self.xml_input_dir}")
         
-        # Initialize tools
-        self.parse_xml_tool = ParseXMLTool()
-        self.extract_entities_tool = ExtractEntitiesTool()
-        self.build_call_graph_tool = BuildCallGraphTool()
+        # Initialize ChromaDB
+        self.chroma_client = chromadb.Client(Settings(
+            persist_directory=str(xml_input_dir / "chroma_db")
+        ))
+        self.collection = self.chroma_client.get_or_create_collection("code_entities")
         
-        # Initialize agents with mock responses
+        # Initialize tools
+        self.parse_xml_tool = parse_xml_tool
+        self.extract_entities_tool = extract_entities_tool
+        self.build_call_graph_tool = build_call_graph_tool
+        
+        # Initialize agents
         self.parser_agent = Agent(
             role="Parser Agent",
             goal="Extract entities and relationships from XML files",
@@ -117,9 +123,7 @@ class DocumentationCrew:
             verbose=True,
             llm=ChatOpenAI(
                 model="gpt-3.5-turbo",
-                temperature=0,
-                openai_api_key="mock-key-for-testing",
-                mock_response="Mock response for parser agent"
+                temperature=0
             ),
             tools=[self.parse_xml_tool, self.extract_entities_tool, self.build_call_graph_tool]
         )
@@ -131,13 +135,11 @@ class DocumentationCrew:
             verbose=True,
             llm=ChatOpenAI(
                 model="gpt-3.5-turbo",
-                temperature=0,
-                openai_api_key="mock-key-for-testing",
-                mock_response="Mock response for modeling agent"
+                temperature=0
             ),
             tools=[self.build_call_graph_tool]
         )
-        
+
         self.verification_agent = Agent(
             role="Verification Agent",
             goal="Verify requirements and relationships",
@@ -145,13 +147,11 @@ class DocumentationCrew:
             verbose=True,
             llm=ChatOpenAI(
                 model="gpt-3.5-turbo",
-                temperature=0,
-                openai_api_key="mock-key-for-testing",
-                mock_response="Mock response for verification agent"
+                temperature=0
             ),
             tools=[self.build_call_graph_tool]
         )
-        
+
         self.specification_agent = Agent(
             role="Specification Agent",
             goal="Generate comprehensive documentation",
@@ -159,270 +159,66 @@ class DocumentationCrew:
             verbose=True,
             llm=ChatOpenAI(
                 model="gpt-3.5-turbo",
-                temperature=0,
-                openai_api_key="mock-key-for-testing",
-                mock_response="Mock response for specification agent"
+                temperature=0
             ),
             tools=[self.build_call_graph_tool]
         )
-    
-    def _get_entity_type(self, compound: ET.Element) -> EntityType:
-        """Get entity type from compound element.
-        
-        Args:
-            compound: Compound element
-            
-        Returns:
-            Entity type
-        """
-        kind = compound.get("kind", "")
-        if kind == "class":
-            return EntityType.CLASS
-        elif kind == "function":
-            return EntityType.FUNCTION
-        elif kind == "variable":
-            return EntityType.VARIABLE
-        elif kind == "namespace":
-            return EntityType.NAMESPACE
-        else:
-            return EntityType.FILE
-    
-    def _get_entity_name(self, compound: ET.Element) -> str:
-        """Get entity name from compound element.
-        
-        Args:
-            compound: Compound element
-            
-        Returns:
-            Entity name
-        """
-        name_elem = compound.find("compoundname")
-        if name_elem is not None:
-            return name_elem.text
-        return ""
-    
-    def _get_entity_description(self, compound: ET.Element) -> str:
-        """Get entity description from compound element.
-        
-        Args:
-            compound: Compound element
-            
-        Returns:
-            Entity description
-        """
-        desc_elem = compound.find("briefdescription")
-        if desc_elem is not None:
-            return ET.tostring(desc_elem, encoding="unicode", method="text")
-        return ""
-    
-    def _get_entity_path(self, compound: ET.Element) -> str:
-        """Get entity path from compound element.
-        
-        Args:
-            compound: Compound element
-            
-        Returns:
-            Entity path
-        """
-        location = compound.find("location")
-        if location is not None:
-            return location.get("file", "")
-        return ""
-    
-    def _get_entity_dependencies(self, compound: ET.Element) -> List[str]:
-        """Get entity dependencies from compound element.
-        
-        Args:
-            compound: Compound element
-            
-        Returns:
-            List of dependencies
-        """
-        dependencies = set()
-        
-        # Get base classes
-        for base in compound.findall(".//basecompoundref"):
-            dependencies.add(base.text)
-        
-        # Get included files
-        for inc in compound.findall(".//includes"):
-            dependencies.add(inc.text)
-        
-        # Get used types
-        for type_elem in compound.findall(".//type"):
-            if type_elem.text:
-                dependencies.add(type_elem.text)
-        
-        return list(dependencies)
-    
-    def _get_entity_parameters(self, compound: ET.Element) -> List[Dict[str, str]]:
-        """Get entity parameters from compound element.
-        
-        Args:
-            compound: Compound element
-            
-        Returns:
-            List of parameters
-        """
-        parameters = []
-        for param in compound.findall(".//param"):
-            param_dict = {}
-            
-            # Get parameter name
-            name_elem = param.find("paramname")
-            if name_elem is not None:
-                param_dict["name"] = name_elem.text
-            
-            # Get parameter type
-            type_elem = param.find("type")
-            if type_elem is not None:
-                param_dict["type"] = ET.tostring(type_elem, encoding="unicode", method="text")
-            
-            # Get parameter description
-            desc_elem = param.find("briefdescription")
-            if desc_elem is not None:
-                param_dict["description"] = ET.tostring(desc_elem, encoding="unicode", method="text")
-            
-            if param_dict:
-                parameters.append(param_dict)
-        
-        return parameters
-    
-    def _get_entity_return_type(self, compound: ET.Element) -> Optional[str]:
-        """Get entity return type from compound element.
-        
-        Args:
-            compound: Compound element
-            
-        Returns:
-            Return type if available
-        """
-        type_elem = compound.find(".//type")
-        if type_elem is not None:
-            return ET.tostring(type_elem, encoding="unicode", method="text")
-        return None
-    
-    def _get_entity_modifiers(self, compound: ET.Element) -> List[str]:
-        """Get entity modifiers from compound element.
-        
-        Args:
-            compound: Compound element
-            
-        Returns:
-            List of modifiers
-        """
-        modifiers = []
-        
-        # Get access specifier
-        access = compound.get("prot", "")
-        if access:
-            modifiers.append(access)
-        
-        # Get virtual status
-        if compound.get("virt", "") == "virtual":
-            modifiers.append("virtual")
-        
-        # Get static status
-        if compound.get("static", "") == "yes":
-            modifiers.append("static")
-        
-        return modifiers
-    
-    def _get_entity_children(self, compound: ET.Element) -> List[str]:
-        """Get entity children from compound element.
-        
-        Args:
-            compound: Compound element
-            
-        Returns:
-            List of child names
-        """
-        children = []
-        
-        # Get member functions
-        for member in compound.findall(".//memberdef[@kind='function']"):
-            name_elem = member.find("name")
-            if name_elem is not None:
-                children.append(name_elem.text)
-        
-        # Get member variables
-        for member in compound.findall(".//memberdef[@kind='variable']"):
-            name_elem = member.find("name")
-            if name_elem is not None:
-                children.append(name_elem.text)
-        
-        return children
-    
-    def _calculate_entity_metrics(self, compound: ET.Element) -> Dict[str, float]:
-        """Calculate metrics for an entity.
-        
-        Args:
-            compound: Compound element
-            
-        Returns:
-            Dictionary of metrics
-        """
-        metrics = {
-            "complexity": 0.0,
-            "lines": 0,
-            "dependencies": 0,
-            "children": 0
-        }
-        
-        # Calculate cyclomatic complexity
-        for member in compound.findall(".//memberdef[@kind='function']"):
-            metrics["complexity"] += self._calculate_function_complexity(member)
-        
-        # Count lines
-        location = compound.find("location")
-        if location is not None:
-            start = int(location.get("bodystart", 0))
-            end = int(location.get("bodyend", 0))
-            metrics["lines"] = end - start
-        
-        # Count dependencies
-        metrics["dependencies"] = len(self._get_entity_dependencies(compound))
-        
-        # Count children
-        metrics["children"] = len(self._get_entity_children(compound))
-        
-        return metrics
-    
-    def _calculate_function_complexity(self, function: ET.Element) -> float:
-        """Calculate cyclomatic complexity of a function.
-        
-        Args:
-            function: Function element
-            
-        Returns:
-            Complexity score
-        """
-        complexity = 1.0  # Base complexity
-        
-        # Count control structures
-        for elem in function.iter():
-            if elem.tag in ["if", "for", "while", "switch", "case", "catch"]:
-                complexity += 1
-            elif elem.tag == "operator" and elem.text in ["&&", "||"]:
-                complexity += 1
-        
-        return complexity
-    
-    def _find_function_calls(self, text: str) -> Set[str]:
-        """Find function calls in text.
-        
-        Args:
-            text: Text to analyze
-            
-        Returns:
-            Set of function names
-        """
-        # Simple regex to find function calls
-        # This could be made more sophisticated with proper parsing
-        pattern = r'(\w+)\s*\('
-        matches = re.finditer(pattern, text)
-        return {match.group(1) for match in matches}
-    
+
+    def _extract_requirements_from_source(self, source_path: Path) -> List[str]:
+        """Extract requirements from source code files."""
+        requirements = []
+        try:
+            with open(source_path, 'r') as f:
+                content = f.read()
+                # Look for requirement patterns in comments
+                requirement_patterns = [
+                    r'@requirement\s+(.*?)(?=\n|$)',
+                    r'#\s*requirement:\s*(.*?)(?=\n|$)',
+                    r'//\s*requirement:\s*(.*?)(?=\n|$)'
+                ]
+                for pattern in requirement_patterns:
+                    matches = re.finditer(pattern, content, re.MULTILINE)
+                    requirements.extend(match.group(1).strip() for match in matches)
+        except Exception as e:
+            logger.error(f"Error extracting requirements from {source_path}: {str(e)}")
+        return requirements
+
+    def _extract_tests_from_source(self, source_path: Path) -> List[Dict[str, Any]]:
+        """Extract test cases from source code files."""
+        tests = []
+        try:
+            with open(source_path, 'r') as f:
+                content = f.read()
+                # Look for test patterns in comments
+                test_patterns = [
+                    r'@test\s+(.*?)(?=\n|$)',
+                    r'#\s*test:\s*(.*?)(?=\n|$)',
+                    r'//\s*test:\s*(.*?)(?=\n|$)'
+                ]
+                for pattern in test_patterns:
+                    matches = re.finditer(pattern, content, re.MULTILINE)
+                    for match in matches:
+                        test_desc = match.group(1).strip()
+                        tests.append({
+                            "description": test_desc,
+                            "source_file": str(source_path)
+                        })
+        except Exception as e:
+            logger.error(f"Error extracting tests from {source_path}: {str(e)}")
+        return tests
+
+    def _get_related_entities_from_chroma(self, entity_name: str) -> List[Dict[str, Any]]:
+        """Get related entities from ChromaDB."""
+        try:
+            results = self.collection.query(
+                query_texts=[entity_name],
+                n_results=5
+            )
+            return results['documents'][0] if results['documents'] else []
+        except Exception as e:
+            logger.error(f"Error querying ChromaDB for {entity_name}: {str(e)}")
+            return []
+
     def generate_documentation(self) -> str:
         """Generate documentation for the codebase."""
         try:
@@ -453,48 +249,69 @@ class DocumentationCrew:
                 
                 logger.info(f"Processing XML file: {xml_path}")
                 
-                # Mock response for testing
-                mock_entities = [
-                    {
-                        "name": "MockEntity",
-                        "description": "This is a mock entity for testing.",
-                        "type": "class",
-                        "dependencies": ["OtherEntity"]
-                    }
-                ]
+                # Parse XML and extract entities
+                parse_result = self.parse_xml_tool._run(str(xml_path))
+                if parse_result["status"] != "success":
+                    logger.error(f"Failed to parse {xml_path}: {parse_result['message']}")
+                    continue
                 
-                mock_call_graph = {
-                    "graph": {
-                        "MockEntity": {
-                            "calls": ["OtherEntity"],
-                            "called_by": ["ParentEntity"]
-                        }
-                    }
-                }
+                # Extract entities
+                entities = self.extract_entities_tool._run(parse_result)
                 
-                # Create tasks with mock data
+                # Get source file path from XML
+                source_path = None
+                try:
+                    tree = ET.parse(str(xml_path))
+                    root = tree.getroot()
+                    location = root.find(".//location")
+                    if location is not None:
+                        source_path = Path(location.get("file", ""))
+                except Exception as e:
+                    logger.error(f"Error getting source path from {xml_path}: {str(e)}")
+                
+                # Extract requirements and tests if source file exists
+                requirements = []
+                tests = []
+                if source_path and source_path.exists():
+                    requirements = self._extract_requirements_from_source(source_path)
+                    tests = self._extract_tests_from_source(source_path)
+                
+                # Get related entities from ChromaDB
+                related_entities = []
+                for entity in entities:
+                    related = self._get_related_entities_from_chroma(entity["name"])
+                    related_entities.extend(related)
+                
+                # Create tasks for the crew
                 parser_task = Task(
                     description=f"Parse Doxygen XML and extract code entities from {xml_path}",
                     agent=self.parser_agent,
                     expected_output="List of code entities with their descriptions and relationships",
-                    context={"xml_path": str(xml_path)},
-                    output=mock_entities
+                    context={
+                        "xml_path": str(xml_path),
+                        "entities": entities,
+                        "requirements": requirements,
+                        "tests": tests,
+                        "related_entities": related_entities
+                    }
                 )
                 
                 modeling_task = Task(
                     description="Group related entities and identify patterns",
                     agent=self.modeling_agent,
                     expected_output="Grouped entities and identified patterns",
-                    context={"entities": mock_entities},
-                    output={"groups": [{"name": "MockGroup", "entities": mock_entities}]}
+                    context={"entities": entities}
                 )
                 
                 verification_task = Task(
                     description="Verify requirements and relationships",
                     agent=self.verification_agent,
                     expected_output="Verified requirements and relationships",
-                    context={"groups": [{"name": "MockGroup", "entities": mock_entities}]},
-                    output={"verified": True, "requirements": ["Mock requirement"]}
+                    context={
+                        "entities": entities,
+                        "requirements": requirements,
+                        "tests": tests
+                    }
                 )
                 
                 specification_task = Task(
@@ -502,13 +319,14 @@ class DocumentationCrew:
                     agent=self.specification_agent,
                     expected_output="Generated documentation",
                     context={
-                        "requirements": ["Mock requirement"],
-                        "call_graph": mock_call_graph
-                    },
-                    output={"documentation": "Mock documentation content"}
+                        "entities": entities,
+                        "requirements": requirements,
+                        "tests": tests,
+                        "related_entities": related_entities
+                    }
                 )
                 
-                # Run the crew with mock data
+                # Run the crew
                 crew = Crew(
                     agents=[self.parser_agent, self.modeling_agent, self.verification_agent, self.specification_agent],
                     tasks=[parser_task, modeling_task, verification_task, specification_task],
