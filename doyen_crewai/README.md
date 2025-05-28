@@ -123,4 +123,4 @@ pytest --cov=src
 pytest tests/test_chroma_loader.py
 
 # Run tests with verbose output
-pytest -v
+pytest tests -v

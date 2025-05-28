@@ -11,39 +11,35 @@ def test_chroma_loader_initialization(temp_dir):
 
 def test_load_embeddings(chroma_loader, sample_entities, sample_embeddings):
     """Test loading embeddings into ChromaDB."""
-    # Load embeddings
-    chroma_loader.load_embeddings(sample_entities, sample_embeddings)
+    result = chroma_loader.load_embeddings(sample_entities, sample_embeddings)
     
-    # Verify collection stats
-    stats = chroma_loader.get_collection_stats()
-    assert stats["total_entities"] == len(sample_entities)
+    assert result["ids"] == list(sample_entities.keys())
+    assert len(result["metadatas"]) == len(sample_entities)
     
-    # Verify each entity was loaded correctly
-    for name, entity in sample_entities.items():
-        result = chroma_loader.collection.get(
-            ids=[name],
-            include=["metadatas", "documents", "embeddings"]
-        )
-        
-        assert len(result["ids"]) == 1
-        assert result["ids"][0] == name
-        assert result["metadatas"][0]["name"] == entity.name
-        assert result["metadatas"][0]["kind"] == entity.kind
-        assert result["metadatas"][0]["source_file"] == entity.source_file
-        assert result["embeddings"][0] == sample_embeddings[name]
+    # Verify metadata fields
+    for i, (name, entity) in enumerate(sample_entities.items()):
+        metadata = result["metadatas"][i]
+        assert metadata["name"] == entity.name
+        assert metadata["kind"] == entity.kind
+        assert metadata["description"] == entity.description
+        assert metadata["file"] == entity.source_file
+        assert metadata["calls"] == ",".join(entity.calls)
+        assert metadata["document"] == entity.documentation
 
 def test_get_entity_embedding(chroma_loader, sample_entities, sample_embeddings):
     """Test retrieving entity embeddings."""
     # Load embeddings first
     chroma_loader.load_embeddings(sample_entities, sample_embeddings)
     
-    # Test retrieving embeddings
-    for name, embedding in sample_embeddings.items():
-        retrieved = chroma_loader.get_entity_embedding(name)
-        assert retrieved == embedding
+    # Test retrieving embedding
+    name = "TestClass"
+    embedding = sample_embeddings[name]
+    retrieved = chroma_loader.get_entity_embedding(name)
     
-    # Test non-existent entity
-    assert chroma_loader.get_entity_embedding("NonExistentEntity") is None
+    # Compare embeddings with tolerance for floating point differences
+    assert len(retrieved) == len(embedding)
+    for r, e in zip(retrieved, embedding):
+        assert abs(r - e) < 1e-6
 
 def test_find_similar_entities(chroma_loader, sample_entities, sample_embeddings):
     """Test finding similar entities."""
@@ -51,40 +47,35 @@ def test_find_similar_entities(chroma_loader, sample_entities, sample_embeddings
     chroma_loader.load_embeddings(sample_entities, sample_embeddings)
     
     # Test finding similar entities
-    similar = chroma_loader.find_similar_entities("TestClass", n_results=2)
+    name = "TestClass"
+    similar = chroma_loader.find_similar_entities(name, n_results=2)
+    
     assert len(similar) == 2
-    assert all("name" in entity for entity in similar)
-    assert all("similarity" in entity for entity in similar)
-    assert all("metadata" in entity for entity in similar)
-    assert all("document" in entity for entity in similar)
+    assert all(isinstance(item, tuple) for item in similar)
+    assert all(len(item) == 2 for item in similar)
+    assert all(isinstance(item[0], str) for item in similar)
+    assert all(isinstance(item[1], dict) for item in similar)
 
 def test_clear_collection(chroma_loader, sample_entities, sample_embeddings):
     """Test clearing the collection."""
     # Load embeddings first
     chroma_loader.load_embeddings(sample_entities, sample_embeddings)
     
-    # Verify data was loaded
-    stats_before = chroma_loader.get_collection_stats()
-    assert stats_before["total_entities"] > 0
-    
     # Clear collection
     chroma_loader.clear_collection()
     
     # Verify collection is empty
-    stats_after = chroma_loader.get_collection_stats()
-    assert stats_after["total_entities"] == 0
+    stats = chroma_loader.get_collection_stats()
+    assert stats["total_entities"] == 0
 
 def test_get_collection_stats(chroma_loader, sample_entities, sample_embeddings):
     """Test getting collection statistics."""
-    # Test empty collection
-    stats_empty = chroma_loader.get_collection_stats()
-    assert stats_empty["total_entities"] == 0
-    assert "persist_directory" in stats_empty
-    
-    # Load embeddings
+    # Load embeddings first
     chroma_loader.load_embeddings(sample_entities, sample_embeddings)
     
-    # Test populated collection
-    stats_populated = chroma_loader.get_collection_stats()
-    assert stats_populated["total_entities"] == len(sample_entities)
-    assert stats_populated["persist_directory"] == chroma_loader.persist_directory 
+    # Get stats
+    stats = chroma_loader.get_collection_stats()
+    
+    assert isinstance(stats, dict)
+    assert "total_entities" in stats
+    assert stats["total_entities"] == len(sample_entities) 

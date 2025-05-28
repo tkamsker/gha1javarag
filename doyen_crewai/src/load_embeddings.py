@@ -3,6 +3,7 @@
 import logging
 import os
 from pathlib import Path
+import traceback
 
 from dotenv import load_dotenv
 
@@ -19,61 +20,46 @@ logger = logging.getLogger(__name__)
 
 def load_embeddings():
     """Load code embeddings into ChromaDB."""
-    # Load environment variables
-    load_dotenv()
-    
-    # Get configuration from environment
-    xml_input_dir = os.getenv("XML_INPUT_DIR")
-    ollama_api_url = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
-    ollama_model = os.getenv("OLLAMA_MODEL", "all-minilm")
-    chroma_persist_dir = os.getenv("CHROMA_PERSIST_DIRECTORY", "./chroma_db")
-    
-    if not xml_input_dir:
-        raise ValueError("XML_INPUT_DIR environment variable is not set")
-    
     try:
-        # Initialize XML parser
-        logger.info("Initializing XML parser...")
+        load_dotenv()
+        xml_input_dir = os.getenv("XML_INPUT_DIR")
+        ollama_api_url = os.getenv("OLLAMA_API_URL")
+        ollama_model = os.getenv("OLLAMA_MODEL", "all-minilm")
+        chroma_persist_dir = os.getenv("CHROMA_PERSIST_DIRECTORY", "./chroma_db")
+        if not xml_input_dir:
+            logging.error("XML_INPUT_DIR is not set in the environment.")
+            raise ValueError("XML_INPUT_DIR is not set.")
+        logging.info(f"Initializing XML parser...")
         parser = DoxygenXMLParser(xml_input_dir)
-        
-        # Parse XML files
-        logger.info("Parsing XML files...")
+        logging.info(f"Parsing XML files...")
         entities = parser.parse_all()
-        logger.info(f"Found {len(entities)} code entities")
-        
-        # Initialize embedding generator
-        logger.info("Initializing embedding generator...")
-        embedding_gen = OllamaEmbeddingGenerator(
-            api_url=ollama_api_url,
-            model=ollama_model
-        )
-        
-        # Generate embeddings
-        logger.info("Generating embeddings...")
-        embeddings = embedding_gen.batch_generate_embeddings(entities)
-        logger.info(f"Generated {len(embeddings)} embeddings")
-        
-        # Initialize ChromaDB loader
-        logger.info("Initializing ChromaDB loader...")
+        logging.info(f"Found {len(entities)} code entities: {list(entities.keys())}")
+        logging.debug(f"Entity sample: {list(entities.values())[0] if entities else 'None'}")
+        logging.info(f"Initializing embedding generator...")
+        embedding_generator = OllamaEmbeddingGenerator(ollama_api_url, ollama_model)
+        logging.info(f"Generating embeddings...")
+        try:
+            embeddings = embedding_generator.generate_embeddings(entities)
+        except Exception as e:
+            logging.error(f"Error generating embeddings: {e}\n{traceback.format_exc()}")
+            raise
+        logging.info(f"Generated {len(embeddings)} embeddings")
+        logging.info(f"Initializing ChromaDB loader...")
         chroma_loader = ChromaDBLoader(persist_directory=chroma_persist_dir)
-        
-        # Clear existing data
-        logger.info("Clearing existing ChromaDB data...")
-        chroma_loader.clear_collection()
-        
-        # Load embeddings into ChromaDB
-        logger.info("Loading embeddings into ChromaDB...")
-        chroma_loader.load_embeddings(entities, embeddings)
-        
-        # Get and log collection stats
+        logging.info(f"Clearing existing ChromaDB data...")
+        try:
+            chroma_loader.clear_collection()
+        except Exception as e:
+            logging.error(f"Error clearing ChromaDB collection: {e}\n{traceback.format_exc()}")
+        logging.info(f"Loading embeddings into ChromaDB...")
+        try:
+            chroma_loader.load_embeddings(entities, embeddings)
+        except Exception as e:
+            logging.error(f"Error during embedding loading: {e}\n{traceback.format_exc()}")
         stats = chroma_loader.get_collection_stats()
-        logger.info(f"ChromaDB collection stats: {stats}")
-        
-        logger.info("Embedding loading complete!")
-        
+        logging.info(f"ChromaDB collection stats: {stats}")
     except Exception as e:
-        logger.error(f"Error during embedding loading: {str(e)}")
-        raise
+        logging.error(f"Fatal error in load_embeddings: {e}\n{traceback.format_exc()}")
 
 if __name__ == "__main__":
     load_embeddings() 

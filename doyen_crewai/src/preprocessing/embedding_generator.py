@@ -2,6 +2,7 @@
 
 import json
 import logging
+import time
 from typing import Dict, List, Optional
 
 import requests
@@ -27,81 +28,93 @@ class OllamaEmbeddingGenerator:
         self.model = model
         self.embeddings_endpoint = f"{self.api_url}/api/embeddings"
     
-    def generate_embeddings(self, entities: Dict[str, CodeEntity]) -> Dict[str, List[float]]:
-        """Generate embeddings for all code entities.
-        
-        Args:
-            entities: Dictionary of code entities to generate embeddings for
-            
-        Returns:
-            Dictionary mapping entity names to their embeddings
-        """
-        embeddings = {}
-        
-        for name, entity in entities.items():
-            try:
-                # Combine relevant information for embedding
-                text = f"{entity.name}\n{entity.description}\n{entity.documentation}"
-                
-                # Generate embedding
-                embedding = self._get_embedding(text)
-                if embedding:
-                    embeddings[name] = embedding
-                else:
-                    logger.warning(f"Failed to generate embedding for entity: {name}")
-            
-            except Exception as e:
-                logger.error(f"Error generating embedding for {name}: {str(e)}")
-        
-        return embeddings
-    
-    def _get_embedding(self, text: str) -> Optional[List[float]]:
-        """Get embedding for a single text using Ollama API.
+    def generate_embedding(self, text: str) -> Optional[List[float]]:
+        """Generate embedding for a single text.
         
         Args:
             text: Text to generate embedding for
             
         Returns:
-            List of floats representing the embedding, or None if failed
+            Embedding vector or None if generation fails
         """
         try:
             response = requests.post(
-                self.embeddings_endpoint,
-                json={
-                    "model": self.model,
-                    "prompt": text
-                }
+                f"{self.api_url}/api/embeddings",
+                json={"model": self.model, "prompt": text},
+                timeout=30
             )
-            
-            if response.status_code == 200:
-                result = response.json()
-                return result.get("embedding")
-            else:
-                logger.error(f"Ollama API error: {response.status_code} - {response.text}")
-                return None
-                
+            try:
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as e:
+                if response.status_code == 429:
+                    logger.error("Rate limit exceeded while generating embedding")
+                    return None
+                else:
+                    raise
+            return response.json()["embedding"]
+        except requests.exceptions.Timeout:
+            logger.error("Timeout while generating embedding")
+            return None
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error generating embedding: {str(e)}")
+            return None
         except Exception as e:
-            logger.error(f"Error calling Ollama API: {str(e)}")
+            logger.error(f"Unexpected error generating embedding: {str(e)}")
             return None
     
-    def batch_generate_embeddings(self, entities: Dict[str, CodeEntity], batch_size: int = 10) -> Dict[str, List[float]]:
-        """Generate embeddings in batches to avoid overwhelming the API.
+    def generate_embeddings_batch(self, texts: List[str]) -> Dict[str, List[float]]:
+        """Generate embeddings for a batch of texts.
         
         Args:
-            entities: Dictionary of code entities to generate embeddings for
-            batch_size: Number of entities to process in each batch
+            texts: List of texts to generate embeddings for
+            
+        Returns:
+            Dictionary mapping texts to their embeddings
+        """
+        embeddings = {}
+        max_retries = 3
+        retry_delay = 1  # seconds
+        
+        for text in texts:
+            retries = 0
+            while retries < max_retries:
+                embedding = self.generate_embedding(text)
+                if embedding is not None:
+                    embeddings[text] = embedding
+                    break
+                retries += 1
+                if retries < max_retries:
+                    logger.info(f"Retrying embedding generation (attempt {retries + 1}/{max_retries})")
+                    time.sleep(retry_delay * retries)  # Exponential backoff
+            
+            if retries == max_retries:
+                logger.error(f"Failed to generate embedding after {max_retries} attempts")
+        
+        return embeddings
+    
+    def generate_entity_embeddings(self, entities: Dict[str, CodeEntity]) -> Dict[str, List[float]]:
+        """Generate embeddings for code entities.
+        
+        Args:
+            entities: Dictionary mapping entity names to CodeEntity objects
             
         Returns:
             Dictionary mapping entity names to their embeddings
         """
+        # Prepare texts for embedding
+        texts = {}
+        for name, entity in entities.items():
+            # Combine relevant entity information for embedding
+            text = f"{entity.name} {entity.kind} {entity.description} {entity.documentation}"
+            texts[name] = text
+        
+        # Generate embeddings in batches
+        return self.generate_embeddings_batch(list(texts.values()))
+    
+    def batch_generate_embeddings(self, entities: Dict[str, CodeEntity]) -> Dict[str, Optional[List[float]]]:
+        """Batch generate embeddings for code entities (returns mapping of name to embedding or None)."""
         embeddings = {}
-        entity_items = list(entities.items())
-        
-        for i in range(0, len(entity_items), batch_size):
-            batch = entity_items[i:i + batch_size]
-            batch_embeddings = self.generate_embeddings(dict(batch))
-            embeddings.update(batch_embeddings)
-            
-            logger.info(f"Processed batch {i//batch_size + 1}/{(len(entity_items) + batch_size - 1)//batch_size}")
-        
+        for name, entity in entities.items():
+            embedding = self.generate_embedding(f"{entity.name} {entity.kind} {entity.description} {entity.documentation}")
+            embeddings[name] = embedding
         return embeddings 

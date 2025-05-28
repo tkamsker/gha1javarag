@@ -5,16 +5,18 @@ import pytest
 from pathlib import Path
 from src.preprocessing.xml_parser import DoxygenXMLParser, CodeEntity
 
-def create_sample_xml(temp_dir: Path) -> Path:
-    """Create a sample XML file for testing."""
-    xml_content = """<?xml version="1.0" encoding="UTF-8"?>
+def create_sample_xml(temp_dir: Path, prefix: str = "") -> Path:
+    """Create a sample XML file for testing with unique names."""
+    xml_content = f'''<?xml version="1.0" encoding="UTF-8"?>
     <doxygen>
-        <compounddef id="class_test" kind="class">
-            <compoundname>Test</compoundname>
+        <compounddef id="class_{prefix}test" kind="class">
+            <compoundname>{prefix}Test</compoundname>
             <includes>test.h</includes>
+            <briefdescription>Test class</briefdescription>
+            <detaileddescription>Detailed description</detaileddescription>
             <sectiondef kind="public-func">
-                <memberdef kind="function" id="class_test_1a1" prot="public" static="no">
-                    <name>testMethod1</name>
+                <memberdef kind="function" id="class_{prefix}test_1a1" prot="public" static="no">
+                    <name>{prefix}testMethod1</name>
                     <param>
                         <type>int</type>
                         <declname>param1</declname>
@@ -22,8 +24,8 @@ def create_sample_xml(temp_dir: Path) -> Path:
                     <briefdescription>Test method 1</briefdescription>
                     <detaileddescription>Detailed description of test method 1</detaileddescription>
                 </memberdef>
-                <memberdef kind="function" id="class_test_1a2" prot="public" static="no">
-                    <name>testMethod2</name>
+                <memberdef kind="function" id="class_{prefix}test_1a2" prot="public" static="no">
+                    <name>{prefix}testMethod2</name>
                     <param>
                         <type>string</type>
                         <declname>param2</declname>
@@ -33,7 +35,7 @@ def create_sample_xml(temp_dir: Path) -> Path:
                 </memberdef>
             </sectiondef>
         </compounddef>
-    </doxygen>"""
+    </doxygen>'''
     
     xml_file = temp_dir / "test.xml"
     xml_file.write_text(xml_content)
@@ -42,38 +44,53 @@ def create_sample_xml(temp_dir: Path) -> Path:
 def test_xml_parser_initialization(temp_dir):
     """Test XML parser initialization."""
     parser = DoxygenXMLParser(xml_dir=str(temp_dir))
-    assert parser.xml_dir == str(temp_dir)
+    assert parser.xml_dir == temp_dir
 
 def test_parse_xml_file(temp_dir):
     """Test parsing a single XML file."""
     xml_file = create_sample_xml(temp_dir)
     parser = DoxygenXMLParser(xml_dir=str(temp_dir))
-    
     entities = parser.parse_xml_file(xml_file)
-    assert len(entities) == 3  # One class and two methods
+    
+    # Should have 3 entities (1 class, 2 methods)
+    assert len(entities) == 3
     
     # Verify class entity
-    class_entity = next(e for e in entities if e.kind == "class")
+    class_entity = entities["Test"]
+    assert isinstance(class_entity, CodeEntity)
     assert class_entity.name == "Test"
+    assert class_entity.kind == "class"
+    assert class_entity.description == "Test class"
     assert class_entity.source_file == "test.h"
+    assert class_entity.calls == ["testMethod1", "testMethod2"]
+    assert class_entity.documentation == "Detailed description"
     
     # Verify method entities
-    methods = [e for e in entities if e.kind == "function"]
-    assert len(methods) == 2
+    method1 = entities["testMethod1"]
+    assert isinstance(method1, CodeEntity)
+    assert method1.name == "testMethod1"
+    assert method1.kind == "function"
+    assert method1.description == "Test method 1"
+    assert method1.source_file == "test.h"
+    assert method1.calls == []
+    assert method1.documentation == "Detailed description of test method 1"
     
-    method1 = next(m for m in methods if m.name == "testMethod1")
-    assert method1.brief == "Test method 1"
-    assert method1.detailed == "Detailed description of test method 1"
-    
-    method2 = next(m for m in methods if m.name == "testMethod2")
-    assert method2.brief == "Test method 2"
-    assert method2.detailed == "Detailed description of test method 2"
+    method2 = entities["testMethod2"]
+    assert isinstance(method2, CodeEntity)
+    assert method2.name == "testMethod2"
+    assert method2.kind == "function"
+    assert method2.description == "Test method 2"
+    assert method2.source_file == "test.h"
+    assert method2.calls == []
+    assert method2.documentation == "Detailed description of test method 2"
 
 def test_parse_all_xml_files(temp_dir):
     """Test parsing all XML files in a directory."""
-    # Create multiple XML files
-    xml_file1 = create_sample_xml(temp_dir)
-    xml_file2 = create_sample_xml(temp_dir / "test2.xml")
+    # Create multiple XML files with unique names
+    xml_file1 = create_sample_xml(temp_dir, prefix="A")
+    subdir = temp_dir / "subdir"
+    subdir.mkdir(parents=True, exist_ok=True)
+    xml_file2 = create_sample_xml(subdir, prefix="B")
     
     parser = DoxygenXMLParser(xml_dir=str(temp_dir))
     entities = parser.parse_all_xml_files()
@@ -82,13 +99,14 @@ def test_parse_all_xml_files(temp_dir):
     assert len(entities) == 6
     
     # Verify all entities have required attributes
-    for entity in entities:
+    for entity in entities.values():
         assert isinstance(entity, CodeEntity)
         assert entity.name
         assert entity.kind
+        assert entity.description is not None
         assert entity.source_file
-        assert entity.brief is not None
-        assert entity.detailed is not None
+        assert isinstance(entity.calls, list)
+        assert entity.documentation is not None
 
 def test_parse_xml_file_invalid(temp_dir):
     """Test parsing an invalid XML file."""

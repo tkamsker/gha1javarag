@@ -1,222 +1,189 @@
-"""Parser agent for analyzing codebase structure and relationships."""
+"""Parser agent for analyzing codebase structure."""
 
-from typing import Dict, List
-
-from crewai import Agent
-from langchain.tools import Tool
-
+import logging
+import re
+from typing import Dict, Any, List
+from crewai import Agent, Task
 from ..preprocessing.chroma_loader import ChromaDBLoader
+from .parser_tools import (
+    GLOBAL_CHROMA_LOADER,
+    analyze_entity_tool,
+    find_related_entities_tool,
+    find_similar_entities_tool,
+    extract_requirements_tool
+)
+
+logger = logging.getLogger(__name__)
 
 class ParserAgent:
-    """Agent responsible for parsing and analyzing codebase structure."""
-    
+    """Agent for parsing and analyzing code entities."""
     def __init__(self, chroma_loader: ChromaDBLoader):
-        """Initialize the parser agent.
-        
-        Args:
-            chroma_loader: ChromaDB loader instance for accessing embeddings and metadata
-        """
+        global GLOBAL_CHROMA_LOADER
+        GLOBAL_CHROMA_LOADER = chroma_loader
         self.chroma_loader = chroma_loader
         self.agent = self._create_agent()
-    
+
     def _create_agent(self) -> Agent:
-        """Create the CrewAI agent with appropriate tools and configuration.
-        
-        Returns:
-            Configured CrewAI agent
-        """
         tools = [
-            Tool(
-                name="analyze_entity",
-                func=self._analyze_entity,
-                description="Analyze a specific code entity and its relationships"
-            ),
-            Tool(
-                name="find_related_entities",
-                func=self._find_related_entities,
-                description="Find entities related to a given entity through calls or inheritance"
-            ),
-            Tool(
-                name="find_similar_entities",
-                func=self._find_similar_entities,
-                description="Find semantically similar entities based on embeddings"
-            ),
-            Tool(
-                name="extract_requirements",
-                func=self._extract_requirements,
-                description="Extract potential requirements from entity documentation"
-            )
+            analyze_entity_tool,
+            find_related_entities_tool,
+            find_similar_entities_tool,
+            extract_requirements_tool
         ]
-        
         return Agent(
-            role="Code Parser",
-            goal="Analyze codebase structure and extract meaningful relationships",
-            backstory="""You are an expert code analyzer with deep knowledge of software architecture
-            and design patterns. Your task is to understand the codebase structure and identify
-            key relationships between components.""",
+            role="Codebase Parser",
+            goal="Analyze code entities and their relationships",
+            backstory="You are an expert codebase parser.",
             tools=tools,
             verbose=True
         )
-    
-    def _analyze_entity(self, entity_name: str) -> Dict:
-        """Analyze a specific code entity.
+
+    def analyze_entity(self, entity_id: str) -> Dict[str, Any]:
+        """Analyze a single entity.
         
         Args:
-            entity_name: Name of the entity to analyze
+            entity_id: ID of the entity to analyze
             
+        Returns:
+            Dictionary containing entity analysis
+        """
+        try:
+            entity = self.chroma_loader.get_entity(entity_id)
+            if not entity:
+                return {"error": f"Entity {entity_id} not found"}
+            
+            return {
+                "id": entity_id,
+                "name": entity.get("name", ""),
+                "kind": entity.get("kind", ""),
+                "description": entity.get("description", ""),
+                "file": entity.get("file", ""),
+                "calls": entity.get("calls", []),
+                "document": entity.get("document", "")
+            }
+        except Exception as e:
+            logger.error(f"Error analyzing entity {entity_id}: {str(e)}")
+            return {"error": str(e)}
+
+    def find_related_entities(self, entity_id: str) -> List[Dict[str, Any]]:
+        """Find entities related to the given entity.
+        
+        Args:
+            entity_id: ID of the entity to find related ones for
+            
+        Returns:
+            List of related entities with their metadata
+        """
+        try:
+            entity = self.chroma_loader.get_entity(entity_id)
+            if not entity:
+                return []
+            
+            related = []
+            for call in entity.get("calls", []):
+                called_entity = self.chroma_loader.get_entity(call)
+                if called_entity:
+                    related.append({
+                        "id": call,
+                        "name": called_entity.get("name", ""),
+                        "kind": called_entity.get("kind", ""),
+                        "description": called_entity.get("description", ""),
+                        "file": called_entity.get("file", ""),
+                        "calls": called_entity.get("calls", []),
+                        "document": called_entity.get("document", "")
+                    })
+            return related
+        except Exception as e:
+            logger.error(f"Error finding related entities: {str(e)}")
+            return []
+
+    def find_similar_entities(self, entity_id: str, n_results: int = 5) -> List[Dict[str, Any]]:
+        """Find semantically similar entities (public for testing)."""
+        try:
+            similar = self.chroma_loader.find_similar_entities(entity_id, n_results)
+            return [{"id": id, **metadata} for id, metadata in similar]
+        except Exception as e:
+            logger.error(f"Error finding similar entities: {str(e)}")
+            return []
+
+    def extract_requirements(self, description: str) -> List[str]:
+        """Extract requirements from a description (public for testing)."""
+        try:
+            requirements = []
+            lines = description.split("\n")
+            for line in lines:
+                line = line.strip()
+                if line.startswith(("- ", "* ", "• ")) or re.match(r"^\d+\.\s", line):
+                    requirements.append(line.lstrip("- *•1234567890. "))
+            return requirements
+        except Exception as e:
+            logger.error(f"Error extracting requirements: {str(e)}")
+            return []
+
+    def analyze_codebase(self) -> Dict[str, Any]:
+        """Analyze the entire codebase.
+        
         Returns:
             Dictionary containing analysis results
         """
         try:
-            # Get entity data from ChromaDB
-            result = self.chroma_loader.collection.get(
-                ids=[entity_name],
-                include=["metadatas", "documents"]
-            )
-            
-            if not result["ids"]:
-                return {"error": f"Entity not found: {entity_name}"}
-            
-            metadata = result["metadatas"][0]
-            document = result["documents"][0]
-            
-            return {
-                "name": metadata["name"],
-                "kind": metadata["kind"],
-                "source_file": metadata["source_file"],
-                "calls": metadata["calls"].split(",") if metadata["calls"] else [],
-                "documentation": document
-            }
-            
-        except Exception as e:
-            return {"error": f"Error analyzing entity {entity_name}: {str(e)}"}
-    
-    def _find_related_entities(self, entity_name: str) -> List[Dict]:
-        """Find entities related to a given entity.
-        
-        Args:
-            entity_name: Name of the entity to find relations for
-            
-        Returns:
-            List of dictionaries containing related entity information
-        """
-        try:
-            # Get entity data
-            entity_data = self._analyze_entity(entity_name)
-            if "error" in entity_data:
-                return [entity_data]
-            
-            related = []
-            
-            # Find entities that this entity calls
-            for call in entity_data["calls"]:
-                if call:
-                    call_data = self._analyze_entity(call)
-                    if "error" not in call_data:
-                        related.append({
-                            "name": call,
-                            "relationship": "called_by",
-                            "entity": call_data
-                        })
-            
-            # Find entities that call this entity
-            # This requires a full collection scan, which might be expensive
-            # Consider implementing a more efficient indexing strategy if needed
-            all_entities = self.chroma_loader.collection.get(
-                include=["metadatas", "documents"]
-            )
-            
-            for i, metadata in enumerate(all_entities["metadatas"]):
-                calls = metadata["calls"].split(",") if metadata["calls"] else []
-                if entity_name in calls:
-                    related.append({
-                        "name": metadata["name"],
-                        "relationship": "calls",
-                        "entity": {
-                            "name": metadata["name"],
-                            "kind": metadata["kind"],
-                            "source_file": metadata["source_file"],
-                            "calls": calls,
-                            "documentation": all_entities["documents"][i]
-                        }
-                    })
-            
-            return related
-            
-        except Exception as e:
-            return [{"error": f"Error finding related entities for {entity_name}: {str(e)}"}]
-    
-    def _find_similar_entities(self, entity_name: str, n_results: int = 5) -> List[Dict]:
-        """Find semantically similar entities based on embeddings.
-        
-        Args:
-            entity_name: Name of the entity to find similar entities for
-            n_results: Number of similar entities to return
-            
-        Returns:
-            List of dictionaries containing similar entity information
-        """
-        return self.chroma_loader.find_similar_entities(entity_name, n_results)
-    
-    def _extract_requirements(self, entity_name: str) -> List[str]:
-        """Extract potential requirements from entity documentation.
-        
-        Args:
-            entity_name: Name of the entity to extract requirements from
-            
-        Returns:
-            List of potential requirements
-        """
-        try:
-            # Get entity data
-            entity_data = self._analyze_entity(entity_name)
-            if "error" in entity_data:
-                return [entity_data["error"]]
-            
-            requirements = []
-            doc = entity_data["documentation"].lower()
-            
-            # Look for requirement indicators
-            indicators = [
-                "must", "should", "shall", "will", "needs to",
-                "required", "requirement", "needs", "requires"
-            ]
-            
-            for line in doc.split("\n"):
-                if any(indicator in line for indicator in indicators):
-                    requirements.append(line.strip())
-            
-            return requirements
-            
-        except Exception as e:
-            return [f"Error extracting requirements for {entity_name}: {str(e)}"]
-    
-    def analyze_codebase(self) -> Dict:
-        """Analyze the entire codebase and return structured results.
-        
-        Returns:
-            Dictionary containing codebase analysis results
-        """
-        try:
-            # Get all entities from ChromaDB
-            all_entities = self.chroma_loader.collection.get(
-                include=["metadatas", "documents"]
-            )
-            
-            results = {
-                "entities": {},
-                "relationships": {},
-                "requirements": []
-            }
+            # Get all entities
+            entities = self.chroma_loader.get_all_entities()
+            if not entities:
+                return {
+                    "total_entities": 0,
+                    "entities": [],
+                    "relationships": [],
+                    "requirements": []
+                }
             
             # Analyze each entity
-            for i, metadata in enumerate(all_entities["metadatas"]):
-                name = metadata["name"]
-                results["entities"][name] = self._analyze_entity(name)
-                results["relationships"][name] = self._find_related_entities(name)
-                results["requirements"].extend(self._extract_requirements(name))
+            results = []
+            relationships = []
+            requirements = []
+            for entity_id, entity in entities.items():
+                # Get entity details
+                details = self.analyze_entity(entity_id)
+                if details:
+                    results.append(details)
+                
+                # Find related entities
+                related = self.find_related_entities(entity_id)
+                for rel in related:
+                    relationships.append({
+                        "source": entity_id,
+                        "target": rel["id"],
+                        "type": "calls"
+                    })
+                
+                # Find similar entities
+                similar = self.find_similar_entities(entity_id)
+                for sim in similar:
+                    if sim["id"] != entity_id:  # Avoid self-similarity
+                        relationships.append({
+                            "source": entity_id,
+                            "target": sim["id"],
+                            "type": "similar",
+                            "similarity": sim["similarity"]
+                        })
+                
+                # Extract requirements
+                if entity.get("description"):
+                    reqs = self.extract_requirements(entity["description"])
+                    requirements.extend(reqs)
             
-            return results
+            return {
+                "total_entities": len(entities),
+                "entities": results,
+                "relationships": relationships,
+                "requirements": list(set(requirements))  # Remove duplicates
+            }
             
         except Exception as e:
-            return {"error": f"Error analyzing codebase: {str(e)}"} 
+            logger.error(f"Error analyzing codebase: {str(e)}")
+            return {
+                "total_entities": 0,
+                "entities": [],
+                "relationships": [],
+                "requirements": []
+            } 
