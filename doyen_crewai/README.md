@@ -1,3 +1,94 @@
+# Documentation Generation with CrewAI
+
+This project uses CrewAI to generate comprehensive documentation from Doxygen XML output.
+
+## Prerequisites
+
+- Python 3.8 or higher
+- Doxygen XML output from your codebase
+- Required Python packages (see requirements.txt)
+
+## Setup
+
+1. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+2. Create a `.env` file in the project root with the following content:
+```env
+# Path to Doxygen XML output directory
+XML_INPUT_DIR=/path/to/doxygen/xml
+
+# Optional: Configure logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+LOG_LEVEL=INFO
+
+# Optional: Configure chunk size for processing
+CHUNK_SIZE=1000
+```
+
+## Usage
+
+1. Generate Doxygen XML documentation for your codebase:
+```bash
+doxygen Doxyfile
+```
+
+2. Update the `XML_INPUT_DIR` in your `.env` file to point to the Doxygen XML output directory.
+
+3. Run the documentation generation script:
+```bash
+python src/run_documentation_crew.py
+```
+
+The script will:
+- Parse the Doxygen XML files
+- Extract code entities and their relationships
+- Group entities into logical components
+- Verify requirements and code metrics
+- Generate comprehensive documentation
+
+## Output
+
+The generated documentation will be available in the `generated_documentation` directory:
+- `prd.md`: Product Requirements Document
+- `technical_requirements.md`: Technical Requirements Specification
+- `acceptance_criteria.md`: Acceptance Criteria and Test Scenarios
+
+## Project Structure
+
+```
+doyen_crewai/
+├── src/
+│   ├── agents/
+│   │   └── documentation_crew.py
+│   └── run_documentation_crew.py
+├── documentation/
+│   └── templates/
+│       ├── prd.md.j2
+│       ├── technical_requirements.md.j2
+│       └── acceptance_criteria.md.j2
+├── .env
+├── requirements.txt
+└── README.md
+```
+
+## Customization
+
+You can customize the documentation generation by:
+1. Modifying the Jinja2 templates in `documentation/templates/`
+2. Adjusting the chunk size in `.env`
+3. Configuring logging levels
+4. Extending the DocumentationCrew class with additional functionality
+
+## Troubleshooting
+
+If you encounter issues:
+1. Check that the XML_INPUT_DIR is correctly set in `.env`
+2. Verify that Doxygen XML files are present in the specified directory
+3. Check the logs for detailed error messages
+4. Ensure all dependencies are installed correctly
+
 # Doyen CrewAI
 
 A modular, agent-driven architecture for automated Java codebase documentation and analysis using Doxygen XML output, local Ollama LLM embeddings, and CrewAI agent workflows.
@@ -124,3 +215,8 @@ pytest tests/test_chroma_loader.py
 
 # Run tests with verbose output
 pytest tests -v
+
+
+# run the script 
+
+python src/run_documentation_crew.py
