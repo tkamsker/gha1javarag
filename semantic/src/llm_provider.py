@@ -103,21 +103,23 @@ class OpenAIProvider(LLMProvider):
         logger.info(f"Initialized OpenAI provider with model: {self.model}")
 
     def generate_text(self, prompt: str) -> str:
+        """Generate text using the LLM."""
         try:
             params = {
-                "model": self.model,
-                "messages": [{"role": "user", "content": prompt}]
+                'model': self.model,
+                'messages': [{'role': 'user', 'content': prompt}],
             }
             # Set the correct token parameter for the model
-            if self.model.startswith("o3-"):
-                params["max_completion_tokens"] = self.max_tokens
+            if self.model.startswith('o3-'):
+                params['max_completion_tokens'] = self.max_tokens
             else:
-                params["max_tokens"] = self.max_tokens
-            # Add temperature only for models that support it
-            if self.model.startswith('gpt-4'):
-                params["temperature"] = float(os.getenv('LLM_TEMPERATURE', '0.7'))
+                params['max_tokens'] = self.max_tokens
+                # Only add temperature for models that support it
+                params['temperature'] = float(os.getenv('LLM_TEMPERATURE', '0.7'))
+            
             response = self.client.chat.completions.create(**params)
             return response.choices[0].message.content
+            
         except Exception as e:
             logger.error(f"Error generating text with OpenAI: {str(e)}")
             raise
