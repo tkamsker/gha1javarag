@@ -2,6 +2,7 @@
   "4": {
     "Database::DatabaseConnection": [
       {
+        "id": "d7/d39/class_database_1_1_database_connection_1a4f83d6579943478f63720ae90e2b3af8",
         "name": "initializeDatabase",
         "description": "initializeDatabase()",
         "definition": "static Connection Database.DatabaseConnection.initializeDatabase",
@@ -13,6 +14,7 @@
   "2": {
     "Controller::AddDoctor": [
       {
+        "id": "df/d33/class_controller_1_1_add_doctor_1a1fd4649d81af55d097b92638205dc438",
         "name": "i",
         "description": "i",
         "definition": "int Controller.AddDoctor.i",
@@ -22,6 +24,7 @@
     ],
     "Controller::UserRegister": [
       {
+        "id": "df/d0b/class_controller_1_1_user_register_1a89e8888f20fd163a9e6e6919797d35d2",
         "name": "i",
         "description": "i",
         "definition": "int Controller.UserRegister.i",
@@ -31,6 +34,7 @@
     ],
     "Controller::AddPatient": [
       {
+        "id": "d3/d8e/class_controller_1_1_add_patient_1a088fb46945b6dc0ef6d92f6548679e75",
         "name": "i",
         "description": "i",
         "definition": "int Controller.AddPatient.i",
@@ -40,6 +44,7 @@
     ],
     "Controller::AdminRegister": [
       {
+        "id": "d4/d1d/class_controller_1_1_admin_register_1a0385b5c5e885bc0701433d1f0a63492e",
         "name": "i",
         "description": "i",
         "definition": "int Controller.AdminRegister.i",
@@ -49,6 +54,7 @@
     ],
     "Controller::AddRecp": [
       {
+        "id": "dd/d4a/class_controller_1_1_add_recp_1a54e640bec7e46f1dd7062d5abd921244",
         "name": "i",
         "description": "i",
         "definition": "int Controller.AddRecp.i",
@@ -58,6 +64,7 @@
     ],
     "Controller::AddWorker": [
       {
+        "id": "d2/d66/class_controller_1_1_add_worker_1ac93b0ac170b284803bc8916fbb9a29c7",
         "name": "i",
         "description": "i",
         "definition": "int Controller.AddWorker.i",
@@ -69,6 +76,7 @@
   "1": {
     "Controller::AddDoctor": [
       {
+        "id": "df/d33/class_controller_1_1_add_doctor_1aacb1e7c0d1c6535fb2e42993575ad80c",
         "name": "doPost",
         "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
         "definition": "void Controller.AddDoctor.doPost",
@@ -78,6 +86,7 @@
     ],
     "Controller::UserRegister": [
       {
+        "id": "df/d0b/class_controller_1_1_user_register_1afc20c5d4ba86575d115b78941999d958",
         "name": "doPost",
         "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
         "definition": "void Controller.UserRegister.doPost",
@@ -87,6 +96,7 @@
     ],
     "Controller::UserLogin": [
       {
+        "id": "d6/d67/class_controller_1_1_user_login_1a68379d5204cfa8295007805b5bce5f4e",
         "name": "doPost",
         "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
         "definition": "void Controller.UserLogin.doPost",
@@ -96,6 +106,7 @@
     ],
     "Controller::AddPatient": [
       {
+        "id": "d3/d8e/class_controller_1_1_add_patient_1a9471ee452f1ff500d7db4986fa008390",
         "name": "doPost",
         "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
         "definition": "void Controller.AddPatient.doPost",
@@ -105,6 +116,7 @@
     ],
     "Controller::AdminLogin": [
       {
+        "id": "d3/d04/class_controller_1_1_admin_login_1a1d7477ec6ba9658e6d8539ae1da3a45e",
         "name": "doPost",
         "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
         "definition": "void Controller.AdminLogin.doPost",
@@ -114,6 +126,7 @@
     ],
     "Controller::AdminRegister": [
       {
+        "id": "d4/d1d/class_controller_1_1_admin_register_1a4a28febac090e7bdf659fb7e55b9381f",
         "name": "doPost",
         "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
         "definition": "void Controller.AdminRegister.doPost",
@@ -123,6 +136,7 @@
     ],
     "Controller::AddRecp": [
       {
+        "id": "dd/d4a/class_controller_1_1_add_recp_1a8246f42fa17e03c70e431d1b9d55c8be",
         "name": "doPost",
         "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
         "definition": "void Controller.AddRecp.doPost",
@@ -132,6 +146,7 @@
     ],
     "Controller::updatePatient": [
       {
+        "id": "dc/d77/class_controller_1_1update_patient_1a77ccc0ab8c34d6acd9a06689df3c61e9",
         "name": "doPost",
         "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
         "definition": "void Controller.updatePatient.doPost",
@@ -141,6 +156,7 @@
     ],
     "Controller::AddWorker": [
       {
+        "id": "d2/d66/class_controller_1_1_add_worker_1a8f0f8322e17cc9da4d254b18d76dafc7",
         "name": "doPost",
         "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
         "definition": "void Controller.AddWorker.doPost",
@@ -152,6 +168,7 @@
   "3": {
     "Controller::UserRegister": [
       {
+        "id": "df/d0b/class_controller_1_1_user_register_1a52183513c3b53736e81189526b5fb920",
         "name": "user",
         "description": "user",
         "definition": "String Controller.UserRegister.user",
@@ -161,6 +178,7 @@
     ],
     "Controller::UserLogin": [
       {
+        "id": "d6/d67/class_controller_1_1_user_login_1a0e21faa02730db2ed388f31523a69a95",
         "name": "user",
         "description": "user",
         "definition": "String Controller.UserLogin.user",
@@ -170,6 +188,7 @@
     ],
     "Controller::AdminLogin": [
       {
+        "id": "d3/d04/class_controller_1_1_admin_login_1afb496273165322ba7202a42e7732bee1",
         "name": "user",
         "description": "user",
         "definition": "String Controller.AdminLogin.user",
@@ -181,6 +200,7 @@
   "0": {
     "Controller::UserRegister": [
       {
+        "id": "df/d0b/class_controller_1_1_user_register_1a16b98613fcd13fff9a2661218a3038af",
         "name": "pass",
         "description": "pass",
         "definition": "String Controller.UserRegister.pass",
@@ -190,6 +210,7 @@
     ],
     "Controller::UserLogin": [
       {
+        "id": "d6/d67/class_controller_1_1_user_login_1acd32b5066b8cefb679f39962872f4f2e",
         "name": "pass",
         "description": "pass",
         "definition": "String Controller.UserLogin.pass",
@@ -199,6 +220,7 @@
     ],
     "Controller::AdminLogin": [
       {
+        "id": "d3/d04/class_controller_1_1_admin_login_1ac87d88eee83b972d466bb9dd2d022310",
         "name": "pass",
         "description": "pass",
         "definition": "String Controller.AdminLogin.pass",

@@ -58,7 +58,7 @@ class DoxygenParser:
                 for member in compound.xpath(".//memberdef"):
                     try:
                         artifact = {
-                            "id": member.findtext("id", ""),
+                            "id": member.get("id", ""),
                             "name": member.findtext("name", ""),
                             "definition": member.findtext("definition", ""),
                             "args": member.findtext("argsstring", ""),

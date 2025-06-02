@@ -7,7 +7,13 @@
 ## Cluster Details
 
 ### Cluster 4
-**Requirement:** Requirement: The system shall be capable of establishing a connection to its persistent storage (database) through a dedicated method. Specifically, the Database module must include a class named DatabaseConnection that provides a public static method called initializeDatabase. This method shall return a Connection object representing an active connection to the designated database. The implementation must ensure that all necessary connection parameters are configured appropriately, allowing the system to reliably and securely interact with the database.
+**Requirement:** Requirement: The system shall provide a mechanism to establish a connection to the database by including a static method named initializeDatabase within the DatabaseConnection class (located in the Database package). When invoked, this method must reliably create and return a valid Connection object to support database operations. Specifically, the method is responsible for:
+
+• Initiating and establishing a connection to the designated database.
+• Handling any exceptions or errors that may occur during the connection process.
+• Ensuring the connection is properly configured and ready for immediate use in subsequent database transactions.
+
+This functionality is critical for the application to perform data operations effectively, and its behavior should be verifiable through appropriate testing procedures.
 
 **Classes and Methods:**
 
@@ -17,16 +23,20 @@
   - Definition: static Connection Database.DatabaseConnection.initializeDatabase
 
 ### Cluster 2
-**Requirement:** Requirement: 
-The system shall support the registration and addition of various user roles by implementing dedicated controller classes for each role. Specifically, the system must provide the following controllers:
- • AddDoctor – to handle doctor registration,
- • AddPatient – to handle patient registration,
- • AdminRegister – to handle administrative user registration,
- • AddRecp – to handle receptionist registration,
- • AddWorker – to handle general worker registration,
- • UserRegister – to handle overall user registration.
+**Requirement:** Requirement: The system’s controller components that manage user and entity registration (specifically for doctors, patients, administrators, receptionists, workers, and generic users) shall each maintain an integer variable named “i.” This variable shall serve as an internal counter or index to track the number of additions or registrations made by that controller. In particular, the following conditions must be met:
 
-Each of these controller classes must include an integer variable named “i” that serves as an internal counter or identifier within its respective module. This variable “i” shall be used consistently across all controllers for tasks such as tracking state, counting processed records, or maintaining unique identifiers as needed by the business logic. The implementation must ensure that the handling of “i” is correct, consistent, and supports the intended functionality (such as sequential record numbering, control flow management, or logging) within each controller module.
+1. For each controller class—namely, AddDoctor, UserRegister, AddPatient, AdminRegister, AddRecp, and AddWorker—the system code must declare an integer field named “i.”
+
+2. The variable “i” must be used consistently within its controller to support functions such as:
+  a. Counting the number of entities (e.g., newly registered doctors, patients, etc.).
+  b. Serving as an index or counter for managing the registration process.
+  c. Potentially generating unique identifiers or tracking the state of registration operations.
+
+3. Though the exact initialization and usage details of “i” may depend on the specific needs of each registration process, its presence is mandatory across all registration-related controllers to facilitate uniform tracking and internal referencing.
+
+4. Future documentation and design specifications shall clearly define the intended semantics, lifecycle, and value management (such as initialization and incrementation rules) for the “i” variable in each controller class to ensure consistency and maintainability within the application.
+
+This requirement ensures that all user and entity registration controllers follow a standardized approach to counting and indexing, thereby supporting reliable tracking and management of registration operations within the system.
 
 **Classes and Methods:**
 
@@ -61,30 +71,23 @@ Each of these controller classes must include an integer variable named “i” 
   - Definition: int Controller.AddWorker.i
 
 ### Cluster 1
-**Requirement:** Requirement: The system shall support a web-based management platform for various user roles in a healthcare or similar organization by handling HTTP POST requests to perform data insertion, updates, registration, and authentication actions. In particular, the system must:
+**Requirement:** Requirement: The system must expose a set of HTTP POST endpoints that enable the following functionalities for managing healthcare facility users and records:
 
-1. Process and record the registration of different user types:
-   - Doctors (via AddDoctor)
-   - Patients (via AddPatient)
-   - Receptionists (via AddRecp)
-   - Workers (via AddWorker)
-   - Administrators (via AdminRegister)
-   - General users (via UserRegister)
+1. User and Administrator Authentication and Registration:
+   - Enable user registration and login operations that allow new users to create accounts (handled by the UserRegister and UserLogin controllers) and existing users to authenticate.
+   - Provide administrator registration and login endpoints (handled by the AdminRegister and AdminLogin controllers) to securely onboard and authenticate admin users.
 
-2. Facilitate secure and reliable user authentication:
-   - Enable user login (via UserLogin)
-   - Enable administrator login (via AdminLogin)
+2. Entity Creation (Addition):
+   - Allow the creation of various healthcare facility personnel records by accepting HTTP POST requests:
+     • Add new doctors (handled by the AddDoctor controller).
+     • Add new patients (handled by the AddPatient controller).
+     • Add new receptionists (handled by the AddRecp controller).
+     • Add new workers (handled by the AddWorker controller).
 
-3. Support the updating of patient data:
-   - Allow modifications to patient records (via updatePatient)
+3. Record Update:
+   - Provide functionality to update the information of existing patients (handled by the updatePatient controller).
 
-4. Acquire input reliably via HTTP POST requests:
-   - Each controller’s doPost method is responsible for handling and processing forms of data sent by clients, ensuring data is valid, appropriately stored in the persistence layer (e.g., databases), and consistent with business logic.
-
-5. Provide an extensible and modular controller-based architecture:
-   - Each functionality (registration, login, addition, update) is encapsulated in its respective controller, promoting maintainability, separation of concerns, and scalability of the system.
-
-Overall, the system is required to integrate these functionalities to support comprehensive user management, including registration, authentication, and data updates across multiple roles while ensuring secure server-side processing of POST requests.
+Each of these functionalities must be implemented through a dedicated POST method (doPost) in the respective controller classes, ensuring that all create, update, and authentication operations are performed in a secure and efficient manner, and that the application appropriately distinguishes between different user roles and actions.
 
 **Classes and Methods:**
 
@@ -134,13 +137,21 @@ Overall, the system is required to integrate these functionalities to support co
   - Definition: void Controller.AddWorker.doPost
 
 ### Cluster 3
-**Requirement:** Requirement: The system shall support user account management by providing separate interfaces for user registration, user login, and administrator login. In each of these controllers (UserRegister, UserLogin, and AdminLogin), a user identifier – represented as a String variable named "user" – shall be used to capture and process the username information input by the end user. Specifically, the system must:
+**Requirement:** Requirement: The system shall provide a robust user authentication module that supports both regular user and administrator interactions. Specifically, the module must include the following functionalities:
 
-1. Allow new users to register by capturing a username (via the Controller.UserRegister.user property).
-2. Enable registered users to log in using their username (via the Controller.UserLogin.user property).
-3. Provide a dedicated login mechanism for administrators using their username (via the Controller.AdminLogin.user property).
+1. User Registration:
+   - A dedicated component (Controller.UserRegister) must allow new users to register.
+   - This component shall include a string attribute named "user" to capture the username provided by the registering user.
 
-This design ensures a consistent approach to handling user identity across different authentication processes within the system.
+2. User Login:
+   - A dedicated component (Controller.UserLogin) must enable existing users to authenticate themselves.
+   - This component shall include a string attribute named "user" to capture the username used for login.
+
+3. Administrator Login:
+   - A dedicated component (Controller.AdminLogin) must enable administrator-level users to authenticate.
+   - This component shall include a string attribute named "user" to capture the administrator’s username.
+
+Across all these components, the "user" attribute must be consistently defined as a String. This consistency ensures uniform handling of the username across registration and login processes, aiding in the integration of further validation and security controls.
 
 **Classes and Methods:**
 
@@ -160,15 +171,15 @@ This design ensures a consistent approach to handling user identity across diffe
   - Definition: String Controller.AdminLogin.user
 
 ### Cluster 0
-**Requirement:** Requirement: The system SHALL provide secure authentication support for user registration and login—both for regular users and administrators—by including a standardized password attribute. Specifically:
+**Requirement:** Requirement: The system shall provide secure user and administrator account management by supporting distinct workflows for user registration, user login, and administrator login, each of which requires the input of a password. Specifically:
 
-• Each of the controllers handling authentication (UserRegister, UserLogin, and AdminLogin) MUST define a string attribute (named “pass”) to capture the password input provided by the user or administrator.
+• During user registration (via the UserRegister controller), the system shall require the user to supply a password ("pass") that meets predefined validation criteria (e.g., length, complexity) and ensure that it is processed and stored securely.
 
-• The “pass” field in each controller SHALL be used as a key element in the authentication process, ensuring that the password is correctly received, processed, and subsequently validated against stored credentials.
+• During the login processes for both standard users (UserLogin controller) and administrators (AdminLogin controller), the system shall require the entry of a password ("pass") and verify it against securely stored credentials to authenticate the user.
 
-• The design and implementation of these password attributes MUST adhere to security best practices (e.g., input validation, proper encryption or hashing at a later stage, secure storage, etc.) to mitigate risks associated with handling sensitive credential data.
+• In all cases, the handling of the password field ("pass") must adhere to robust security practices, ensuring that it is transmitted securely (e.g., via encryption) and stored in a manner that prevents unauthorized access (e.g., hashed and salted).
 
-This requirement ensures that all aspects of the user and administrator authentication workflow are consistently and securely managed through a dedicated password field in each relevant controller.
+This requirement ensures that password management is consistently and securely implemented across the user registration and authentication processes for both regular users and administrators.
 
 **Classes and Methods:**
 

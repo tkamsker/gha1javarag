@@ -123,6 +123,7 @@ class SemanticAnalyzer:
                 if class_name not in clusters_by_class[cluster_id]:
                     clusters_by_class[cluster_id][class_name] = []
                 clusters_by_class[cluster_id][class_name].append({
+                    'id': artifact['id'],
                     'name': artifact['name'],
                     'description': artifact['description'],
                     'definition': artifact.get('definition', ''),
