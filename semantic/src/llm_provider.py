@@ -107,13 +107,10 @@ class OpenAIProvider(LLMProvider):
         try:
             params = {
                 'model': self.model,
-                'messages': [{'role': 'user', 'content': prompt}]
+                'messages': [{'role': 'user', 'content': prompt}],
+                'max_tokens': self.max_tokens,
+                'temperature': float(os.getenv('LLM_TEMPERATURE', '0.7'))
             }
-            if self.model.startswith('o3-'):
-                params['max_completion_tokens'] = self.max_tokens
-            else:
-                params['max_tokens'] = self.max_tokens
-                params['temperature'] = float(os.getenv('LLM_TEMPERATURE', '0.7'))
             response = self.client.chat.completions.create(**params)
             return response.choices[0].message.content
         except Exception as e:

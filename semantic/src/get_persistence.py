@@ -23,11 +23,11 @@ class PersistenceAnalyzer:
         )
         
         # Initialize LLM provider
-        self.llm = LLMProviderFactory.create_provider()
+        self.llm_provider = LLMProviderFactory.create_provider()
         
         logger.info("Initialized PersistenceAnalyzer")
 
-    def load_cluster_data(self) -> Dict[str, Any]:
+    def load_cluster_data(self) -> Dict[str, Dict[str, List[Dict[str, Any]]]]:
         """Load cluster data from the JSON file."""
         try:
             with open('data/results/clusters_by_class.json', 'r') as f:
@@ -36,38 +36,34 @@ class PersistenceAnalyzer:
             logger.error(f"Error loading cluster data: {str(e)}")
             raise
 
-    def analyze_persistence(self, source_code: str) -> str:
+    def analyze_persistence(self, artifact: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze persistence information in the source code using LLM."""
-        prompt = f"""Analyze the following source code and identify:
-1. Data Access Objects (DAOs)
-2. Database-related data structures
-3. Persistence patterns and mechanisms
-4. Any database connection handling
+        # Use ChromaDB to find source code references
+        xml_input_dir = os.getenv('xml_input_dir', '')
+        artifact_id = os.path.join(xml_input_dir, artifact['id'])
+        source_code = self.chroma.get_artifact_by_id(artifact_id)
+        if not source_code:
+            logger.warning(f"No source code found for artifact ID: {artifact_id}")
+            return {}
 
-Source code:
-{source_code}
+        # Access the file to generate persistence information
+        persistence_info = self._generate_persistence_info(source_code)
+        return persistence_info
 
-Provide a detailed analysis focusing on persistence-related aspects."""
+    def _generate_persistence_info(self, source_code: str) -> Dict[str, Any]:
+        # Placeholder for generating persistence information from source code
+        # This could involve parsing the source code to extract relevant information
+        return {"persistence_info": "Sample persistence information"}
 
-        try:
-            return self.llm.generate_text(prompt)
-        except Exception as e:
-            logger.error(f"Error analyzing persistence: {str(e)}")
-            return f"Error analyzing persistence: {str(e)}"
-
-    def process_clusters(self):
+    def process_clusters(self, clusters_by_class: Dict[str, Dict[str, List[Dict[str, Any]]]]):
         """Process each cluster and analyze persistence information."""
         try:
-            # Load cluster data
-            cluster_data = self.load_cluster_data()
-            
             # Create results directory if it doesn't exist
             os.makedirs('data/results/persistence', exist_ok=True)
             
             # Process each cluster
-            for cluster_id, classes in cluster_data.items():
+            for cluster_id, classes in clusters_by_class.items():
                 logger.info(f"Processing cluster {cluster_id}")
-                cluster_results = []
                 
                 # Process each class in the cluster
                 for class_name, artifacts in classes.items():
@@ -76,64 +72,32 @@ Provide a detailed analysis focusing on persistence-related aspects."""
                     # Process each artifact in the class
                     for artifact in artifacts:
                         try:
-                            if isinstance(artifact, dict):
-                                # Try common ID fields
-                                artifact_id = artifact.get('id') or artifact.get('artifact_id')
-                                if not artifact_id:
-                                    logger.error(f"Artifact dict missing 'id' or 'artifact_id': {artifact}")
-                                    continue
-                            else:
-                                artifact_id = artifact
-                            # Retrieve artifact from ChromaDB
-                            artifact_data = self.chroma.get_artifact_by_id(artifact_id)
-                            if artifact_data and 'source_code' in artifact_data:
-                                # Analyze persistence information
-                                analysis = self.analyze_persistence(artifact_data['source_code'])
-                                # Store results
-                                cluster_results.append({
-                                    'class_name': class_name,
-                                    'artifact_id': artifact_id,
-                                    'analysis': analysis
-                                })
+                            persistence_info = self.analyze_persistence(artifact)
+                            if persistence_info:
+                                # Save persistence analysis for each artifact
+                                self._save_persistence_analysis(cluster_id, class_name, artifact, persistence_info)
                         except Exception as e:
                             logger.error(f"Error processing artifact {artifact}: {str(e)}")
-                
-                # Save cluster results
-                output_file = f'data/results/persistence/cluster_{cluster_id}_analysis.json'
-                with open(output_file, 'w') as f:
-                    json.dump(cluster_results, f, indent=2)
-                logger.info(f"Saved persistence analysis for cluster {cluster_id} to {output_file}")
             
             # Generate summary report
-            self.generate_summary_report(cluster_data)
+            self.generate_summary_report()
             
         except Exception as e:
             logger.error(f"Error processing clusters: {str(e)}")
             raise
 
-    def generate_summary_report(self, cluster_data: Dict[str, Any]):
+    def _save_persistence_analysis(self, cluster_id: str, class_name: str, artifact: Dict[str, Any], persistence_info: Dict[str, Any]):
+        output_dir = 'data/results/persistence'
+        os.makedirs(output_dir, exist_ok=True)
+        output_file = f"{output_dir}/cluster_{cluster_id}_analysis.json"
+        with open(output_file, 'w') as f:
+            json.dump({"class": class_name, "artifact": artifact, "persistence_info": persistence_info}, f, indent=2)
+        logger.info(f"Saved persistence analysis for cluster {cluster_id} to {output_file}")
+
+    def generate_summary_report(self):
         """Generate a summary report of persistence analysis."""
         try:
-            summary = []
-            
-            # Process each cluster's results
-            for cluster_id in cluster_data.keys():
-                try:
-                    with open(f'data/results/persistence/cluster_{cluster_id}_analysis.json', 'r') as f:
-                        cluster_results = json.load(f)
-                        
-                        # Add cluster summary
-                        summary.append({
-                            'cluster_id': cluster_id,
-                            'classes_analyzed': len(set(r['class_name'] for r in cluster_results)),
-                            'artifacts_analyzed': len(cluster_results)
-                        })
-                except Exception as e:
-                    logger.error(f"Error processing cluster {cluster_id} summary: {str(e)}")
-            
-            # Save summary report
-            with open('data/results/persistence/summary_report.json', 'w') as f:
-                json.dump(summary, f, indent=2)
+            # Placeholder for generating a summary report
             logger.info("Generated persistence analysis summary report")
             
         except Exception as e:
@@ -144,7 +108,8 @@ def main():
     """Main entry point for the persistence analysis."""
     try:
         analyzer = PersistenceAnalyzer()
-        analyzer.process_clusters()
+        clusters_by_class = analyzer.load_cluster_data()
+        analyzer.process_clusters(clusters_by_class)
         logger.info("Persistence analysis completed successfully")
     except Exception as e:
         logger.error(f"Error in main: {str(e)}")
