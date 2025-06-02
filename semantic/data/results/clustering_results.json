@@ -1,0 +1,128 @@
+{
+  "clusters": {
+    "4": [
+      {
+        "name": "initializeDatabase",
+        "class": "Database::DatabaseConnection",
+        "description": "initializeDatabase()"
+      }
+    ],
+    "2": [
+      {
+        "name": "i",
+        "class": "Controller::AddDoctor",
+        "description": "i"
+      },
+      {
+        "name": "i",
+        "class": "Controller::UserRegister",
+        "description": "i"
+      },
+      {
+        "name": "i",
+        "class": "Controller::AddPatient",
+        "description": "i"
+      },
+      {
+        "name": "i",
+        "class": "Controller::AdminRegister",
+        "description": "i"
+      },
+      {
+        "name": "i",
+        "class": "Controller::AddRecp",
+        "description": "i"
+      },
+      {
+        "name": "i",
+        "class": "Controller::AddWorker",
+        "description": "i"
+      }
+    ],
+    "1": [
+      {
+        "name": "doPost",
+        "class": "Controller::AddDoctor",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
+      },
+      {
+        "name": "doPost",
+        "class": "Controller::UserRegister",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
+      },
+      {
+        "name": "doPost",
+        "class": "Controller::UserLogin",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
+      },
+      {
+        "name": "doPost",
+        "class": "Controller::AddPatient",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
+      },
+      {
+        "name": "doPost",
+        "class": "Controller::AdminLogin",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
+      },
+      {
+        "name": "doPost",
+        "class": "Controller::AdminRegister",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
+      },
+      {
+        "name": "doPost",
+        "class": "Controller::AddRecp",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
+      },
+      {
+        "name": "doPost",
+        "class": "Controller::updatePatient",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
+      },
+      {
+        "name": "doPost",
+        "class": "Controller::AddWorker",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
+      }
+    ],
+    "3": [
+      {
+        "name": "user",
+        "class": "Controller::UserRegister",
+        "description": "user"
+      },
+      {
+        "name": "user",
+        "class": "Controller::UserLogin",
+        "description": "user"
+      },
+      {
+        "name": "user",
+        "class": "Controller::AdminLogin",
+        "description": "user"
+      }
+    ],
+    "0": [
+      {
+        "name": "pass",
+        "class": "Controller::UserRegister",
+        "description": "pass"
+      },
+      {
+        "name": "pass",
+        "class": "Controller::UserLogin",
+        "description": "pass"
+      },
+      {
+        "name": "pass",
+        "class": "Controller::AdminLogin",
+        "description": "pass"
+      }
+    ]
+  },
+  "statistics": {
+    "total_artifacts": 22,
+    "total_clusters": 10
+  }
+}

@@ -1,0 +1,14 @@
+{
+    "clustering": {
+        "n_clusters": 10,
+        "random_state": 42
+    },
+    "embedding": {
+        "model_name": "sentence-transformers/all-MiniLM-L6-v2",
+        "batch_size": 32
+    },
+    "logging": {
+        "level": "INFO",
+        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    }
+} 
