@@ -79,6 +79,11 @@
         "name": "doPost",
         "class": "Controller::updatePatient",
         "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
+      },
+      {
+        "name": "doPost",
+        "class": "Controller::AddWorker",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
       }
     ],
     "3": [
@@ -114,25 +119,81 @@
         "class": "Controller::AdminLogin",
         "description": "pass"
       }
-    ],
-    "8": [
-      {
-        "name": "doPost",
-        "class": "Controller::AddWorker",
-        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
-      }
     ]
   },
   "statistics": {
     "total_artifacts": 22,
-    "total_clusters": 10
+    "total_clusters": 10,
+    "cluster_stats": {
+      "4": {
+        "size": 1,
+        "classes": [
+          "Database::DatabaseConnection"
+        ],
+        "methods": [
+          "initializeDatabase"
+        ]
+      },
+      "2": {
+        "size": 6,
+        "classes": [
+          "Controller::UserRegister",
+          "Controller::AddWorker",
+          "Controller::AddRecp",
+          "Controller::AdminRegister",
+          "Controller::AddPatient",
+          "Controller::AddDoctor"
+        ],
+        "methods": [
+          "i"
+        ]
+      },
+      "1": {
+        "size": 9,
+        "classes": [
+          "Controller::UserRegister",
+          "Controller::AddWorker",
+          "Controller::AddRecp",
+          "Controller::AdminLogin",
+          "Controller::AdminRegister",
+          "Controller::AddPatient",
+          "Controller::AddDoctor",
+          "Controller::UserLogin",
+          "Controller::updatePatient"
+        ],
+        "methods": [
+          "doPost"
+        ]
+      },
+      "3": {
+        "size": 3,
+        "classes": [
+          "Controller::AdminLogin",
+          "Controller::UserLogin",
+          "Controller::UserRegister"
+        ],
+        "methods": [
+          "user"
+        ]
+      },
+      "0": {
+        "size": 3,
+        "classes": [
+          "Controller::AdminLogin",
+          "Controller::UserLogin",
+          "Controller::UserRegister"
+        ],
+        "methods": [
+          "pass"
+        ]
+      }
+    }
   },
   "requirements": {
-    "4": "Requirement:\nThe system shall include a Database module that provides a centralized mechanism for establishing a connection to the database. In particular, the Database.DatabaseConnection class must expose a static method named initializeDatabase that, when invoked, initializes and returns an active Connection object. This method will serve as the primary entry point for components requiring database access, ensuring that the connection is properly configured and available for database operations.",
-    "2": "Requirement: The system shall provide dedicated controller components to manage the registration and addition of various user roles within the application. Specifically, the controllers must support the following functionalities:\n\n1. AddDoctor \u2013 Responsible for adding new doctor records.\n2. UserRegister \u2013 Responsible for registering new general users.\n3. AddPatient \u2013 Responsible for adding new patient records.\n4. AdminRegister \u2013 Responsible for registering new administrative users.\n5. AddRecp \u2013 Responsible for adding new receptionist records.\n6. AddWorker \u2013 Responsible for adding new worker records.\n\nEach of these controllers shall include an integer attribute (named \u201ci\u201d) that is used to manage internal state\u2014such as maintaining a unique index, counter, or identifier\u2014for processing and tracking the corresponding additions or registrations. This integer may be utilized for tasks such as sequencing, validation, or ensuring unique identification during the creation of new entries.",
-    "1": "Requirement: The system\u2019s back-end must provide robust, secure HTTP POST endpoints to support user and administrative operations in a healthcare or personnel management context. Specifically, the system shall:\n\n1. Accept and process new user registrations and login requests:\n\u2003a. Register standard users via a POST endpoint (Controller.UserRegister.doPost).\n\u2003b. Log in registered users via a POST endpoint (Controller.UserLogin.doPost).\n\u2003c. Register administrators via a POST endpoint (Controller.AdminRegister.doPost).\n\u2003d. Log in administrators via a POST endpoint (Controller.AdminLogin.doPost).\n\n2. Manage personnel addition:\n\u2003a. Add new doctors into the system via a dedicated POST endpoint (Controller.AddDoctor.doPost).\n\u2003b. Add new receptionists into the system via a dedicated POST endpoint (Controller.AddRecp.doPost).\n\n3. Handle patient-related operations:\n\u2003a. Add new patient records via a POST endpoint (Controller.AddPatient.doPost).\n\u2003b. Update existing patient information via a POST endpoint (Controller.updatePatient.doPost).\n\nAll endpoints must:\n\u2003\u2022 Accept HTTP POST requests carrying the necessary data in a secure manner.\n\u2003\u2022 Validate input data to prevent erroneous or malicious entries.\n\u2003\u2022 Enforce appropriate authentication and authorization where applicable.\n\u2003\u2022 Process and persist data changes reliably while providing appropriate success or error responses.\n\nThis comprehensive requirement ensures that the system supports the registration, authentication, record management, and updating of entities (doctors, patients, administrators, and receptionists) as part of its overall functionality.",
-    "3": "Requirement: The system shall support user account creation and authentication through separate workflows for both standard users and administrators. In all relevant controllers\u2014specifically, the user registration controller (Controller::UserRegister), the user login controller (Controller::UserLogin), and the administrator login controller (Controller::AdminLogin)\u2014the system must accept a username provided as a string (field named \"user\"). This username field will serve as the unique identifier during registration and authentication processes, ensuring consistent handling of user data across all account management functionalities.",
-    "0": "Requirement: The system shall implement secure authentication and user management functionality with three distinct controllers\u2014User Registration, User Login, and Admin Login. Each controller must include a password attribute, labeled \u201cpass,\u201d defined as a String, that is used to capture and process the respective user\u2019s or administrator\u2019s password during the registration or login process. Specifically, the requirements are as follows:\n\n1. User Registration (Controller::UserRegister):\n   \u2022 The system must enable new users to create an account by providing a valid \u201cpass\u201d (password) as part of the registration information.\n   \u2022 The \u201cpass\u201d field shall be validated against security policies (e.g., minimum length, complexity requirements, etc.) before account creation.\n\n2. User Login (Controller::UserLogin):\n   \u2022 The system must allow existing users to authenticate by entering their \u201cpass\u201d (password) along with their username.\n   \u2022 The provided \u201cpass\u201d must be compared securely against the stored user credentials to grant or deny access.\n\n3. Admin Login (Controller::AdminLogin):\n   \u2022 The system must support administrator authentication via a dedicated login process that includes a \u201cpass\u201d (password) field.\n   \u2022 The administrator\u2019s \u201cpass\u201d shall be subject to additional or more stringent security requirements if necessary, ensuring that administrative access is tightly controlled.\n\nOverall, the \u201cpass\u201d attribute in each controller is core to the authentication process. The system must ensure that these password fields are handled securely\u2014in transit and at rest\u2014by employing proper encryption, secure hashing, and validation mechanisms.",
-    "8": "Requirement: The system shall provide functionality to add a new worker through an HTTP POST operation. Specifically, when an HTTP POST request is received, the Controller.AddWorker.doPost method must be invoked to process the request. In doing so, the system must:\n\n1. Validate the incoming request data to ensure all required fields for a worker (such as name, role, contact information, etc.) are present and correctly formatted.\n2. Interact with the underlying business logic and data access layers to securely and reliably add the worker\u2019s information to the persistent data store.\n3. Handle any errors gracefully by providing an appropriate response or error message to the user, along with logging relevant error information for auditing and debugging.\n4. Ensure that the method\u2019s operations conform to the system\u2019s overall security and data integrity requirements, preventing any unauthorized data manipulation or injection.\n5. Return a clear acknowledgment (or redirection) when the worker addition is successful, along with any pertinent information needed by the client application.\n\nIn summary, the Controller.AddWorker.doPost method must serve as the entry point for processing worker addition requests, validating and persisting the input data while ensuring robustness, security, and proper error handling."
+    "4": "Requirement: The system shall be capable of establishing a connection to its persistent storage (database) through a dedicated method. Specifically, the Database module must include a class named DatabaseConnection that provides a public static method called initializeDatabase. This method shall return a Connection object representing an active connection to the designated database. The implementation must ensure that all necessary connection parameters are configured appropriately, allowing the system to reliably and securely interact with the database.",
+    "2": "Requirement: \nThe system shall support the registration and addition of various user roles by implementing dedicated controller classes for each role. Specifically, the system must provide the following controllers:\n\u2003\u2022 AddDoctor \u2013 to handle doctor registration,\n\u2003\u2022 AddPatient \u2013 to handle patient registration,\n\u2003\u2022 AdminRegister \u2013 to handle administrative user registration,\n\u2003\u2022 AddRecp \u2013 to handle receptionist registration,\n\u2003\u2022 AddWorker \u2013 to handle general worker registration,\n\u2003\u2022 UserRegister \u2013 to handle overall user registration.\n\nEach of these controller classes must include an integer variable named \u201ci\u201d that serves as an internal counter or identifier within its respective module. This variable \u201ci\u201d shall be used consistently across all controllers for tasks such as tracking state, counting processed records, or maintaining unique identifiers as needed by the business logic. The implementation must ensure that the handling of \u201ci\u201d is correct, consistent, and supports the intended functionality (such as sequential record numbering, control flow management, or logging) within each controller module.",
+    "1": "Requirement: The system shall support a web-based management platform for various user roles in a healthcare or similar organization by handling HTTP POST requests to perform data insertion, updates, registration, and authentication actions. In particular, the system must:\n\n1. Process and record the registration of different user types:\n   - Doctors (via AddDoctor)\n   - Patients (via AddPatient)\n   - Receptionists (via AddRecp)\n   - Workers (via AddWorker)\n   - Administrators (via AdminRegister)\n   - General users (via UserRegister)\n\n2. Facilitate secure and reliable user authentication:\n   - Enable user login (via UserLogin)\n   - Enable administrator login (via AdminLogin)\n\n3. Support the updating of patient data:\n   - Allow modifications to patient records (via updatePatient)\n\n4. Acquire input reliably via HTTP POST requests:\n   - Each controller\u2019s doPost method is responsible for handling and processing forms of data sent by clients, ensuring data is valid, appropriately stored in the persistence layer (e.g., databases), and consistent with business logic.\n\n5. Provide an extensible and modular controller-based architecture:\n   - Each functionality (registration, login, addition, update) is encapsulated in its respective controller, promoting maintainability, separation of concerns, and scalability of the system.\n\nOverall, the system is required to integrate these functionalities to support comprehensive user management, including registration, authentication, and data updates across multiple roles while ensuring secure server-side processing of POST requests.",
+    "3": "Requirement: The system shall support user account management by providing separate interfaces for user registration, user login, and administrator login. In each of these controllers (UserRegister, UserLogin, and AdminLogin), a user identifier \u2013 represented as a String variable named \"user\" \u2013 shall be used to capture and process the username information input by the end user. Specifically, the system must:\n\n1. Allow new users to register by capturing a username (via the Controller.UserRegister.user property).\n2. Enable registered users to log in using their username (via the Controller.UserLogin.user property).\n3. Provide a dedicated login mechanism for administrators using their username (via the Controller.AdminLogin.user property).\n\nThis design ensures a consistent approach to handling user identity across different authentication processes within the system.",
+    "0": "Requirement: The system SHALL provide secure authentication support for user registration and login\u2014both for regular users and administrators\u2014by including a standardized password attribute. Specifically:\n\n\u2022 Each of the controllers handling authentication (UserRegister, UserLogin, and AdminLogin) MUST define a string attribute (named \u201cpass\u201d) to capture the password input provided by the user or administrator.\n\n\u2022 The \u201cpass\u201d field in each controller SHALL be used as a key element in the authentication process, ensuring that the password is correctly received, processed, and subsequently validated against stored credentials.\n\n\u2022 The design and implementation of these password attributes MUST adhere to security best practices (e.g., input validation, proper encryption or hashing at a later stage, secure storage, etc.) to mitigate risks associated with handling sensitive credential data.\n\nThis requirement ensures that all aspects of the user and administrator authentication workflow are consistently and securely managed through a dedicated password field in each relevant controller."
   }
 }

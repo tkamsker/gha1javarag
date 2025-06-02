@@ -29,7 +29,9 @@ class SemanticAnalyzer:
         self.cluster_engine = ClusterEngine(
             n_clusters=self.config.get('clustering', {}).get('n_clusters', 10)
         )
-        self.chroma = ChromaConnector()
+        # Get ChromaDB path from environment or config
+        chroma_db_path = os.getenv('CHROMA_DB_DIR') or self.config.get('chromadb', {}).get('db_path', 'data/chroma_db')
+        self.chroma = ChromaConnector(db_path=chroma_db_path)
         self.requirement_gen = RequirementGenerator()
         logger.info("Initialized SemanticAnalyzer")
 
@@ -47,8 +49,35 @@ class SemanticAnalyzer:
         output_path = Path('data/results/clustering_results.json')
         return output_path.exists()
 
+    def _generate_markdown_report(self, results: Dict[str, Any], clusters_by_class: Dict[int, Dict[str, List[Dict[str, Any]]]]) -> str:
+        """Generate a Markdown report of the analysis results."""
+        report = ["# Semantic Code Analysis Report\n"]
+        
+        # Add statistics
+        report.append("## Statistics")
+        report.append(f"- Total Artifacts: {results['statistics']['total_artifacts']}")
+        report.append(f"- Number of Clusters: {results['statistics']['total_clusters']}\n")
+        
+        # Add cluster details
+        report.append("## Cluster Details")
+        for cluster_id, classes in clusters_by_class.items():
+            report.append(f"\n### Cluster {cluster_id}")
+            report.append(f"**Requirement:** {results['requirements'].get(cluster_id, 'N/A')}")
+            report.append("\n**Classes and Methods:**")
+            
+            for class_name, artifacts in classes.items():
+                report.append(f"\n#### {class_name}")
+                for artifact in artifacts:
+                    report.append(f"- {artifact['name']}")
+                    if artifact.get('description'):
+                        report.append(f"  - Description: {artifact['description']}")
+                    if artifact.get('definition'):
+                        report.append(f"  - Definition: {artifact['definition']}")
+        
+        return "\n".join(report)
+
     def analyze_project(self, project_path: str, force_reanalysis: bool = False) -> Dict[str, Any]:
-        """Analyze a Java project using semantic clustering."""
+        """Analyze a Java project using semantic clustering. Groups artifacts by cluster and class, and documents every persistence step."""
         try:
             # Check if analysis already exists
             if not force_reanalysis and self._check_existing_analysis():
@@ -71,12 +100,46 @@ class SemanticAnalyzer:
                 )
 
             # Store in ChromaDB
-            logger.info("Storing artifacts in ChromaDB")
+            logger.info("Storing artifacts in ChromaDB (persistence step)")
             self.chroma.store_artifacts(artifacts)
+            logger.info("Artifacts persisted in ChromaDB")
 
             # Cluster artifacts
             logger.info("Clustering artifacts")
             clustered_artifacts = self.cluster_engine.cluster_artifacts(artifacts)
+
+            # Calculate cluster statistics
+            cluster_stats = self.cluster_engine._calculate_cluster_stats(clustered_artifacts)
+            logger.info("Cluster statistics calculated")
+
+            # Group artifacts by cluster and class
+            logger.info("Grouping artifacts by cluster and class")
+            clusters_by_class = {}
+            for artifact in clustered_artifacts:
+                cluster_id = artifact['cluster']
+                class_name = artifact['class']
+                if cluster_id not in clusters_by_class:
+                    clusters_by_class[cluster_id] = {}
+                if class_name not in clusters_by_class[cluster_id]:
+                    clusters_by_class[cluster_id][class_name] = []
+                clusters_by_class[cluster_id][class_name].append({
+                    'name': artifact['name'],
+                    'description': artifact['description'],
+                    'definition': artifact.get('definition', ''),
+                    'args': artifact.get('args', ''),
+                    'kind': artifact.get('kind', '')
+                })
+
+            # Create output directory
+            output_dir = Path('data/results')
+            output_dir.mkdir(parents=True, exist_ok=True)
+            logger.info(f"Created output directory: {output_dir}")
+
+            # Persist the cluster-class grouping
+            cluster_class_path = output_dir / 'clusters_by_class.json'
+            with open(cluster_class_path, 'w') as f:
+                json.dump(clusters_by_class, f, indent=2)
+            logger.info(f"Cluster-class grouping persisted to {cluster_class_path}")
 
             # Generate requirements
             logger.info("Generating requirements")
@@ -90,7 +153,8 @@ class SemanticAnalyzer:
                 'clusters': {},
                 'statistics': {
                     'total_artifacts': len(clustered_artifacts),
-                    'total_clusters': self.cluster_engine.n_clusters
+                    'total_clusters': self.cluster_engine.n_clusters,
+                    'cluster_stats': cluster_stats
                 },
                 'requirements': cluster_requirements
             }
@@ -105,6 +169,19 @@ class SemanticAnalyzer:
                     'class': artifact['class'],
                     'description': artifact['description']
                 })
+
+            # Persist the main clustering results
+            clustering_results_path = output_dir / 'clustering_results.json'
+            with open(clustering_results_path, 'w') as f:
+                json.dump(results, f, indent=2)
+            logger.info(f"Clustering results persisted to {clustering_results_path}")
+
+            # Generate and persist Markdown report
+            markdown_report = self._generate_markdown_report(results, clusters_by_class)
+            report_path = output_dir / 'analysis_report.md'
+            with open(report_path, 'w') as f:
+                f.write(markdown_report)
+            logger.info(f"Markdown report persisted to {report_path}")
 
             return results
 
@@ -157,39 +234,22 @@ def main():
             logger.warning("No results generated. Exiting.")
             return
         
-        # Save results
-        output_path = Path('data/results')
-        output_path.mkdir(parents=True, exist_ok=True)
-        
-        with open(output_path / 'clustering_results.json', 'w') as f:
-            json.dump(results, f, indent=2)
-        
-        logger.info(f"Analysis complete. Results saved to {output_path}/clustering_results.json")
-        
         # Print summary
         print("\nAnalysis Summary:")
         print(f"Total artifacts analyzed: {results['statistics']['total_artifacts']}")
         print(f"Number of clusters: {results['statistics']['total_clusters']}")
         
-        print("\nCluster Requirements:")
-        for cluster_id, requirement in results['requirements'].items():
+        print("\nCluster Statistics:")
+        for cluster_id, stats in results['statistics']['cluster_stats'].items():
             print(f"\nCluster {cluster_id}:")
-            print(f"Requirement: {requirement}")
-            print(f"Number of artifacts: {len(results['clusters'][cluster_id])}")
-            print("Artifacts:")
-            for artifact in results['clusters'][cluster_id]:
-                print(f"- {artifact['name']} ({artifact['class']})")
-
-        # Example semantic search
-        print("\nPerforming example semantic search...")
-        search_results = analyzer.semantic_search("database connection", top_k=3)
-        print("\nSearch Results:")
-        for result in search_results:
-            print(f"\nID: {result['id']}")
-            print(f"Class: {result['metadata']['class']}")
-            print(f"Name: {result['metadata']['name']}")
-            print(f"Document: {result['document']}")
-            print(f"Distance: {result['distance']:.4f}")
+            print(f"- Size: {stats['size']}")
+            print(f"- Classes: {', '.join(stats['classes'])}")
+            print(f"- Methods: {len(stats['methods'])}")
+        
+        print("\nResults have been saved to:")
+        print("- data/results/clustering_results.json")
+        print("- data/results/clusters_by_class.json")
+        print("- data/results/analysis_report.md")
 
     except Exception as e:
         logger.error(f"Error in main: {str(e)}")

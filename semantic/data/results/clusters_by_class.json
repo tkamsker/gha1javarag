@@ -1,0 +1,210 @@
+{
+  "4": {
+    "Database::DatabaseConnection": [
+      {
+        "name": "initializeDatabase",
+        "description": "initializeDatabase()",
+        "definition": "static Connection Database.DatabaseConnection.initializeDatabase",
+        "args": "()",
+        "kind": "class"
+      }
+    ]
+  },
+  "2": {
+    "Controller::AddDoctor": [
+      {
+        "name": "i",
+        "description": "i",
+        "definition": "int Controller.AddDoctor.i",
+        "args": "",
+        "kind": "class"
+      }
+    ],
+    "Controller::UserRegister": [
+      {
+        "name": "i",
+        "description": "i",
+        "definition": "int Controller.UserRegister.i",
+        "args": "",
+        "kind": "class"
+      }
+    ],
+    "Controller::AddPatient": [
+      {
+        "name": "i",
+        "description": "i",
+        "definition": "int Controller.AddPatient.i",
+        "args": "",
+        "kind": "class"
+      }
+    ],
+    "Controller::AdminRegister": [
+      {
+        "name": "i",
+        "description": "i",
+        "definition": "int Controller.AdminRegister.i",
+        "args": "",
+        "kind": "class"
+      }
+    ],
+    "Controller::AddRecp": [
+      {
+        "name": "i",
+        "description": "i",
+        "definition": "int Controller.AddRecp.i",
+        "args": "",
+        "kind": "class"
+      }
+    ],
+    "Controller::AddWorker": [
+      {
+        "name": "i",
+        "description": "i",
+        "definition": "int Controller.AddWorker.i",
+        "args": "",
+        "kind": "class"
+      }
+    ]
+  },
+  "1": {
+    "Controller::AddDoctor": [
+      {
+        "name": "doPost",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+        "definition": "void Controller.AddDoctor.doPost",
+        "args": "(HttpServletRequest request, HttpServletResponse response)",
+        "kind": "class"
+      }
+    ],
+    "Controller::UserRegister": [
+      {
+        "name": "doPost",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+        "definition": "void Controller.UserRegister.doPost",
+        "args": "(HttpServletRequest request, HttpServletResponse response)",
+        "kind": "class"
+      }
+    ],
+    "Controller::UserLogin": [
+      {
+        "name": "doPost",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+        "definition": "void Controller.UserLogin.doPost",
+        "args": "(HttpServletRequest request, HttpServletResponse response)",
+        "kind": "class"
+      }
+    ],
+    "Controller::AddPatient": [
+      {
+        "name": "doPost",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+        "definition": "void Controller.AddPatient.doPost",
+        "args": "(HttpServletRequest request, HttpServletResponse response)",
+        "kind": "class"
+      }
+    ],
+    "Controller::AdminLogin": [
+      {
+        "name": "doPost",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+        "definition": "void Controller.AdminLogin.doPost",
+        "args": "(HttpServletRequest request, HttpServletResponse response)",
+        "kind": "class"
+      }
+    ],
+    "Controller::AdminRegister": [
+      {
+        "name": "doPost",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+        "definition": "void Controller.AdminRegister.doPost",
+        "args": "(HttpServletRequest request, HttpServletResponse response)",
+        "kind": "class"
+      }
+    ],
+    "Controller::AddRecp": [
+      {
+        "name": "doPost",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+        "definition": "void Controller.AddRecp.doPost",
+        "args": "(HttpServletRequest request, HttpServletResponse response)",
+        "kind": "class"
+      }
+    ],
+    "Controller::updatePatient": [
+      {
+        "name": "doPost",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+        "definition": "void Controller.updatePatient.doPost",
+        "args": "(HttpServletRequest request, HttpServletResponse response)",
+        "kind": "class"
+      }
+    ],
+    "Controller::AddWorker": [
+      {
+        "name": "doPost",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+        "definition": "void Controller.AddWorker.doPost",
+        "args": "(HttpServletRequest request, HttpServletResponse response)",
+        "kind": "class"
+      }
+    ]
+  },
+  "3": {
+    "Controller::UserRegister": [
+      {
+        "name": "user",
+        "description": "user",
+        "definition": "String Controller.UserRegister.user",
+        "args": "",
+        "kind": "class"
+      }
+    ],
+    "Controller::UserLogin": [
+      {
+        "name": "user",
+        "description": "user",
+        "definition": "String Controller.UserLogin.user",
+        "args": "",
+        "kind": "class"
+      }
+    ],
+    "Controller::AdminLogin": [
+      {
+        "name": "user",
+        "description": "user",
+        "definition": "String Controller.AdminLogin.user",
+        "args": "",
+        "kind": "class"
+      }
+    ]
+  },
+  "0": {
+    "Controller::UserRegister": [
+      {
+        "name": "pass",
+        "description": "pass",
+        "definition": "String Controller.UserRegister.pass",
+        "args": "",
+        "kind": "class"
+      }
+    ],
+    "Controller::UserLogin": [
+      {
+        "name": "pass",
+        "description": "pass",
+        "definition": "String Controller.UserLogin.pass",
+        "args": "",
+        "kind": "class"
+      }
+    ],
+    "Controller::AdminLogin": [
+      {
+        "name": "pass",
+        "description": "pass",
+        "definition": "String Controller.AdminLogin.pass",
+        "args": "",
+        "kind": "class"
+      }
+    ]
+  }
+}
