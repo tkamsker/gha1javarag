@@ -137,12 +137,12 @@
       "2": {
         "size": 6,
         "classes": [
-          "Controller::AddDoctor",
-          "Controller::AddWorker",
-          "Controller::AdminRegister",
           "Controller::UserRegister",
+          "Controller::AddDoctor",
+          "Controller::AddRecp",
           "Controller::AddPatient",
-          "Controller::AddRecp"
+          "Controller::AdminRegister",
+          "Controller::AddWorker"
         ],
         "methods": [
           "i"
@@ -151,15 +151,15 @@
       "1": {
         "size": 9,
         "classes": [
-          "Controller::AdminLogin",
+          "Controller::UserRegister",
           "Controller::AddDoctor",
-          "Controller::AddWorker",
+          "Controller::AddRecp",
+          "Controller::AddPatient",
           "Controller::AdminRegister",
           "Controller::UserLogin",
-          "Controller::UserRegister",
-          "Controller::AddPatient",
-          "Controller::updatePatient",
-          "Controller::AddRecp"
+          "Controller::AdminLogin",
+          "Controller::AddWorker",
+          "Controller::updatePatient"
         ],
         "methods": [
           "doPost"
@@ -169,8 +169,8 @@
         "size": 3,
         "classes": [
           "Controller::UserRegister",
-          "Controller::UserLogin",
-          "Controller::AdminLogin"
+          "Controller::AdminLogin",
+          "Controller::UserLogin"
         ],
         "methods": [
           "user"
@@ -180,8 +180,8 @@
         "size": 3,
         "classes": [
           "Controller::UserRegister",
-          "Controller::UserLogin",
-          "Controller::AdminLogin"
+          "Controller::AdminLogin",
+          "Controller::UserLogin"
         ],
         "methods": [
           "pass"
@@ -190,10 +190,10 @@
     }
   },
   "requirements": {
-    "4": "Requirement: The system shall provide a static utility method to initialize and return a database connection. Specifically, within the Database module\u2019s DatabaseConnection class, the system must implement a method named initializeDatabase that establishes a connection to the database and returns a valid Connection object. The method should ensure that the connection is properly configured and available for use by other components of the system to perform database operations. Additionally, the implementation must handle any initialization errors appropriately (e.g., by throwing exceptions or using logging mechanisms) to guarantee reliable and consistent access to the database throughout the application\u2019s lifecycle.",
-    "2": "Requirement: The system shall provide a Controller layer that supports the addition and registration of various user and system entities\u2014including doctors, patients, administrators, receptionists, users, and workers\u2014through dedicated controller classes. Each of these controller classes (namely, AddDoctor, UserRegister, AddPatient, AdminRegister, AddRecp, and AddWorker) must include and manage an integer attribute (named \"i\") that serves as a counter or unique identifier for the respective entity\u2019s registration process. The attribute \u201ci\u201d shall be used to track the number of addition operations or to assign unique, sequential numeric identifiers to newly registered entities, ensuring that:\n\n1. Every registration or addition event in these controllers is captured via an internally maintained counter.\n2. Unique identification or orderly processing is guaranteed for every entity added by the system.\n3. The system maintains consistency and integrity in the creation and management of records across different entity types.\n\nThis requirement ensures that the Controller layer uniformly handles the addition of new entities, leverages the \"i\" variable to maintain order and uniqueness, and forms a fundamental part of the system\u2019s registration and data integrity process.",
-    "1": "Requirement: The system shall provide a set of HTTP POST interfaces\u2014implemented as dedicated Controller classes\u2014for managing user interactions and administrative operations in a healthcare management application. Specifically, the system must allow the following:\n\n\u2022 Doctor Management: The system must support the addition of new doctors via a dedicated endpoint (AddDoctor.doPost), handling all necessary validations and data persistence.\n\n\u2022 Patient Management: The system must support both the creation (AddPatient.doPost) and updating (updatePatient.doPost) of patient records through secure POST operations.\n\n\u2022 User Account Management: The system must provide endpoints for user registration (UserRegister.doPost) and user login (UserLogin.doPost), ensuring that proper authentication and validation protocols are followed.\n\n\u2022 Administrator Management: The system must include separate endpoints for administrator registration (AdminRegister.doPost) and administrator login (AdminLogin.doPost), guaranteeing enhanced security measures for administrative access.\n\n\u2022 Additional Staff Management: The system must support the addition of receptionists (AddRecp.doPost) and other workers (AddWorker.doPost) through their respective endpoints, managing the onboarding and data management process.\n\nOverall, all these operations must be implemented through HTTP POST requests to maintain proper data encapsulation, security, and modularity of the application.",
-    "3": "Requirement: The system shall support secure and consistent user identification across registration and login functionalities for both regular users and administrators. Specifically, the following conditions must be met:\n\n1. When a new user registers through the UserRegister controller, the controller must include a String field named \"user\" to hold the identifier (e.g., username) of the registering user.\n\n2. During a user login process handled by the UserLogin controller, the controller must include a String field named \"user\" to capture and process the login identifier of the user attempting access.\n\n3. For administrative login through the AdminLogin controller, a String field named \"user\" must be present to uniquely identify the administrator attempting to log in.\n\nThese implementations ensure consistent naming conventions and data types across the controllers, thereby facilitating proper verification, authentication, and role-based access control within the system.",
-    "0": "Requirement: The system shall support password-based authentication for both regular users and administrators. Specifically, for each of the authentication-related functions\u2014user registration, user login, and admin login\u2014the system must include a password field represented as a string. This means:\n\n\u2022 The UserRegister component must include a string variable (named \u201cpass\u201d) to capture and process the password during user registration.  \n\u2022 The UserLogin component must include a string variable (named \u201cpass\u201d) to capture and verify the password entered during a user login attempt.  \n\u2022 The AdminLogin component must include a string variable (named \u201cpass\u201d) to capture and verify the password entered by an administrator during an admin login attempt.\n\nBy defining a clear, consistent \u201cpass\u201d attribute in each controller, the design ensures that all user credentials (both for registration and login purposes) are handled uniformly, facilitating reliable authentication processes across both user and administrative pathways."
+    "4": "Requirement: The system shall provide a static method, implemented in the DatabaseConnection class of the Database module, that initializes and returns a valid database connection object (of type Connection). Specifically, the method (named initializeDatabase) must:\n\n1. Be accessible without needing to instantiate the DatabaseConnection class.\n2. Establish a connection to the designated database, ensuring that the returned Connection instance is valid and ready for use by other modules or components.\n3. Handle and propagate any connection errors appropriately so that calling components are informed of connection failures.\n4. Adhere to best practices in resource management and error handling to support reliable interaction with the database.\n\nThis functionality ensures that the system can reliably initialize and manage its connection to the database through a single, consistent entry point.",
+    "2": "Requirement: The system shall support user and administrator operations for registering various types of personnel and users, including doctors, patients, receptionists, workers, and administrative accounts. For each of these registration processes, a dedicated controller (e.g., AddDoctor, AddPatient, AddRecp, AddWorker, UserRegister, and AdminRegister) must be implemented to encapsulate the specific business logic associated with adding that type of account. \n\nEach controller shall maintain an integer counter variable (named \u201ci\u201d) that can be used to track, index, or uniquely identify the records created during its respective registration process. This counter \u201ci\u201d is intended to support operations such as counting the number of registrations, generating unique identifiers, or controlling iteration within the registration logic, ensuring that each new entry is managed appropriately.\n\nIn summary, the system\u2019s requirement is to provide a modular, controller-based registration framework where each registration type maintains its own counter state (\u201ci\u201d) to fulfill the responsibility of adding new doctors, patients, receptionists, workers, and administrative users, thereby ensuring proper segregation of functionalities and state management during the account creation process.",
+    "1": "Requirement: The system shall support secure, role-based management of users and healthcare staff through dedicated HTTP POST operations. Specifically, it must provide endpoints for:\n\n\u2022 Registering and authenticating users, including standard users (patients), doctors, and administrators.\n\u2022 Enabling administrative functions such as the registration and login of administrators.\n\u2022 Adding new personnel, including doctors, receptionists, and other healthcare workers.\n\u2022 Managing patient records through creation (adding a new patient) and updating existing patient information.\n\u2022 Processing incoming HTTP POST requests in a segregated controller architecture, where each role (doctor, user, admin, receptionist, worker) has a dedicated controller method to handle its specific business logic.\n\nThis architecture ensures that all actions\u2014including registration, login, and record updates\u2014are handled via secure, well-defined endpoints, thereby facilitating proper user management and workflow operations across the healthcare application.",
+    "3": "Requirement: The system shall support user account management by enabling three primary operations\u2014user registration, user login, and administrator login\u2014that each require the use of a unique user identifier. In detail:\n\n1. For user registration (Controller::UserRegister), the system must collect a username (a String value) from the user. This username, referenced as the \"user\" field, is essential for registering a new user account.\n\n2. For user login (Controller::UserLogin), the system must accept a username (a String value) provided by the user. This \"user\" field is used to verify the identity of the user attempting to access the system.\n\n3. For administrator login (Controller::AdminLogin), the system must similarly require a username (a String value) that uniquely identifies the administrator logging in. The \"user\" field in this context is critical for ensuring that the administrator is authenticated correctly.\n\nAcross all these operations, the \"user\" field, defined as a String in each respective controller, must be handled consistently to ensure proper authentication and account management.",
+    "0": "Requirement: The system must support secure password-based authentication for both user and administrator interactions. Specifically, it shall provide separate controller modules for user registration, user login, and administrator login\u2014each incorporating a password attribute (represented as a String named \"pass\") that is used to capture and verify the submitted password credentials during authentication operations. This design ensures that distinct authentication workflows are maintained for different user roles while enforcing the consistent use of password data for verifying identity."
   }
 }
