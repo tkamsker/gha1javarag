@@ -95,3 +95,38 @@ The application includes comprehensive error handling and logging. Check the con
 ## Contributing
 
 Feel free to submit issues and enhancement requests! 
+
+
+## .env 
+# Doxygen XML input directory
+XML_INPUT_DIR=/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/doxygen/hotel_docs_doxygen/xml
+
+# Java source code directory
+JAVA_SOURCE_DIR=/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem
+
+# OpenAI API key
+OPENAI_API_KEY=sk-svcacct-ulHz4SoGxJ6Rb-
+#
+KMP_DUPLICATE_LIB_OK=TRUE
+OMP_NUM_THREADS=1
+
+PROJECT_ROOT=/Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag
+CHROMA_DB_DIR=/Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag/semantic/data/chroma_db
+
+# LLM Configuration local or azure openai
+#LLM_PROVIDER=local
+#LLM_MODEL_PATH=/path/to/your/llama/model.gguf
+#LLM_CONTEXT_SIZE=4096
+#LLM_TEMPERATURE=0.7
+#LLM_MAX_TOKENS=1024
+
+# LLM Configuration
+LLM_PROVIDER=ollama
+OLLAMA_MODEL_NAME=deepseek-r1
+OLLAMA_BASE_URL=http://localhost:11434
+LLM_TEMPERATURE=0.7
+
+## 
+# from semantic 
+#
+python -m src.main

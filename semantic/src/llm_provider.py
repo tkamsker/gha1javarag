@@ -6,6 +6,10 @@ from typing import Optional, Dict, Any
 from dotenv import load_dotenv
 from llama_cpp import Llama
 from openai import AzureOpenAI, OpenAI
+import openai
+
+# Load environment variables
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -86,17 +90,34 @@ class AzureOpenAIProvider(LLMProvider):
             raise
 
 class OpenAIProvider(LLMProvider):
-    def __init__(self, api_key: str):
-        self.client = OpenAI(api_key=api_key)
-        logger.info("Initialized OpenAI provider")
+    def __init__(self):
+        # Configure OpenAI client
+        self.client = OpenAI(
+            api_key=os.getenv('OPENAI_API_KEY'),
+            base_url=os.getenv('OPENAI_API_BASE')
+        )
+        
+        self.model = os.getenv('LLM_MODEL', 'gpt-4-turbo-preview')
+        self.max_tokens = int(os.getenv('LLM_MAX_TOKENS', '2000'))
+        
+        logger.info(f"Initialized OpenAI provider with model: {self.model}")
 
     def generate_text(self, prompt: str) -> str:
         try:
-            response = self.client.chat.completions.create(
-                model="gpt-4-turbo-preview",
-                messages=[{"role": "user", "content": prompt}]
-            )
-            return response.choices[0].message.content.strip()
+            params = {
+                "model": self.model,
+                "messages": [{"role": "user", "content": prompt}]
+            }
+            # Set the correct token parameter for the model
+            if self.model.startswith("o3-"):
+                params["max_completion_tokens"] = self.max_tokens
+            else:
+                params["max_tokens"] = self.max_tokens
+            # Add temperature only for models that support it
+            if self.model.startswith('gpt-4'):
+                params["temperature"] = float(os.getenv('LLM_TEMPERATURE', '0.7'))
+            response = self.client.chat.completions.create(**params)
+            return response.choices[0].message.content
         except Exception as e:
             logger.error(f"Error generating text with OpenAI: {str(e)}")
             raise
@@ -104,10 +125,11 @@ class OpenAIProvider(LLMProvider):
 class LLMProviderFactory:
     @staticmethod
     def create_provider() -> LLMProvider:
-        load_dotenv()
-        provider = os.getenv("LLM_PROVIDER", "local").lower()
-
-        if provider == "ollama":
+        provider_type = os.getenv('LLM_PROVIDER', 'openai').lower()
+        
+        if provider_type == 'openai':
+            return OpenAIProvider()
+        elif provider_type == 'ollama':
             model_name = os.getenv("OLLAMA_MODEL_NAME")
             if not model_name:
                 raise ValueError("OLLAMA_MODEL_NAME environment variable is required for Ollama provider")
@@ -120,8 +142,7 @@ class LLMProviderFactory:
                 base_url=base_url,
                 temperature=temperature
             )
-        
-        elif provider == "local":
+        elif provider_type == 'local':
             model_path = os.getenv("LLM_MODEL_PATH")
             if not model_path:
                 raise ValueError("LLM_MODEL_PATH environment variable is required for local provider")
@@ -136,8 +157,7 @@ class LLMProviderFactory:
                 temperature=temperature,
                 max_tokens=max_tokens
             )
-        
-        elif provider == "azure":
+        elif provider_type == 'azure':
             api_key = os.getenv("AZURE_OPENAI_API_KEY")
             endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
             deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
@@ -152,13 +172,5 @@ class LLMProviderFactory:
                 deployment_name=deployment_name,
                 api_version=api_version
             )
-        
-        elif provider == "openai":
-            api_key = os.getenv("OPENAI_API_KEY")
-            if not api_key:
-                raise ValueError("OPENAI_API_KEY environment variable is required for OpenAI provider")
-            
-            return OpenAIProvider(api_key=api_key)
-        
         else:
-            raise ValueError(f"Unsupported LLM provider: {provider}") 
+            raise ValueError(f"Unsupported LLM provider: {provider_type}") 

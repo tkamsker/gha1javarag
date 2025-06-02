@@ -15,14 +15,10 @@ logger = logging.getLogger(__name__)
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 class ClusterEngine:
-    def __init__(self, n_clusters: int = 10):
+    def __init__(self, n_clusters: int = 6):
         """Initialize the clustering engine."""
         self.n_clusters = n_clusters
-        self.model = KMeans(
-            n_clusters=n_clusters,
-            random_state=42,
-            n_init=10
-        )
+        self.kmeans = KMeans(n_clusters=n_clusters, random_state=42)
         logger.info(f"Initialized clustering engine with {n_clusters} clusters")
 
     def cluster_artifacts(self, artifacts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -31,10 +27,10 @@ class ClusterEngine:
             logger.info("Performing clustering on artifacts")
             
             # Extract embeddings
-            embeddings = np.array([artifact['embedding'] for artifact in artifacts])
+            embeddings = np.array([a['embedding'] for a in artifacts])
             
-            # Perform clustering
-            cluster_labels = self.model.fit_predict(embeddings)
+            # Fit and predict clusters
+            cluster_labels = self.kmeans.fit_predict(embeddings)
             
             # Add cluster labels to artifacts
             for artifact, label in zip(artifacts, cluster_labels):
@@ -74,8 +70,8 @@ class ClusterEngine:
 
     def get_cluster_centers(self) -> np.ndarray:
         """Get the cluster centers."""
-        return self.model.cluster_centers_
+        return self.kmeans.cluster_centers_
 
     def predict_cluster(self, embedding: np.ndarray) -> int:
         """Predict the cluster for a single embedding."""
-        return int(self.model.predict([embedding])[0]) 
+        return int(self.kmeans.predict([embedding])[0]) 
