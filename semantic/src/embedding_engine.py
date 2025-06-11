@@ -1,7 +1,8 @@
-from sentence_transformers import SentenceTransformer
+import requests
 import logging
 import os
 import numpy as np
+import json
 
 # Set environment variable to avoid threadpool warning
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
@@ -10,18 +11,22 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class EmbeddingEngine:
-    def __init__(self, model_name='all-MiniLM-L6-v2'):
-        """Initialize the embedding engine with the specified model."""
-        logger.info(f"Loading embedding model: {model_name}")
+    def __init__(self, config_path: str = "config/config.json"):
+        """Initialize the embedding engine with the model from configuration."""
         try:
-            self.model = SentenceTransformer(model_name)
-            logger.info("Model loaded successfully")
+            # Load configuration
+            with open(config_path, 'r') as f:
+                config = json.load(f)
+            
+            # Get model name from config
+            self.model_name = config.get('embedding', {}).get('model', 'all-minilm')
+            logger.info(f"Using embedding model: {self.model_name}")
         except Exception as e:
             logger.error(f"Error loading model: {str(e)}")
             raise
 
     def generate_embedding(self, text):
-        """Generate embedding for the given text.
+        """Generate embedding for the given text using Ollama API.
         
         Args:
             text (str or dict): If str, the text to embed. If dict, should contain 'text' key.
@@ -42,19 +47,19 @@ class EmbeddingEngine:
             if not text.strip():
                 raise ValueError("Input text cannot be empty")
             
-            # Generate embedding
-            embeddings = self.model.encode([text], convert_to_tensor=False)
-            if len(embeddings) == 0:
-                raise ValueError("No embedding generated")
+            # Call Ollama API for embeddings
+            response = requests.post('http://localhost:11434/api/embeddings', json={'model': self.model_name, 'prompt': text})
+            response.raise_for_status()
+            embedding = response.json()['embedding']
             
-            return embeddings[0]
+            return embedding
             
         except Exception as e:
             logger.error(f"Error generating embedding: {str(e)}")
             raise
 
     def generate_embeddings_batch(self, texts: list, batch_size: int = 32) -> list:
-        """Generate embeddings for a batch of texts."""
+        """Generate embeddings for a batch of texts using Ollama API."""
         try:
             if not texts:
                 logger.warning("Empty text list provided for batch embedding")
@@ -64,8 +69,12 @@ class EmbeddingEngine:
             texts = [str(text) for text in texts]
             
             # Generate embeddings in batches
-            embeddings = self.model.encode(texts, batch_size=batch_size, convert_to_tensor=False)
-            return embeddings.tolist()
+            embeddings = []
+            for text in texts:
+                embedding = self.generate_embedding(text)
+                embeddings.append(embedding)
+            
+            return embeddings
         except Exception as e:
             logger.error(f"Error generating batch embeddings: {str(e)}")
             raise 

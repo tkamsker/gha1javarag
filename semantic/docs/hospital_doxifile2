@@ -1,0 +1,89 @@
+# Doxygen configuration for HospitalManagementSysyem
+
+# Project Info
+PROJECT_NAME           = "HospitalManagementSysyem"
+PROJECT_BRIEF          = "A Java-based hospital management system using JSP, Servlets, MySQL, and MVC."
+PROJECT_LOGO           = 
+OUTPUT_DIRECTORY       = hotel_docs_doxygen2
+CREATE_SUBDIRS         = YES
+
+# Input
+INPUT                  = /Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem
+RECURSIVE              = YES
+FILE_PATTERNS          = *.java \
+                         *.jsp \
+                         *.xml \
+                         *.ui.xml
+EXCLUDE                = **/test/**
+
+# File Type Mapping
+EXTENSION_MAPPING      = jsp=Java \
+                         ui.xml=XML
+
+# Source Code Parsing
+OPTIMIZE_OUTPUT_JAVA   = YES
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+EXTRACT_LOCAL_METHODS  = YES
+JAVADOC_AUTOBRIEF      = YES
+HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_CLASSES     = NO
+SHOW_USED_FILES        = YES
+
+# Cross-referencing & Graphs
+HAVE_DOT               = YES
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = YES
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
+INCLUDE_GRAPH          = YES
+INCLUDED_BY_GRAPH      = YES
+GRAPHICAL_HIERARCHY    = YES
+DOT_IMAGE_FORMAT       = png
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
+
+# Output Formats
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_LATEX         = NO
+GENERATE_XML           = YES
+XML_OUTPUT             = xml
+
+# Source Browsing
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = YES
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+
+# Search
+SEARCHENGINE           = YES
+
+# Misc
+LOOKUP_CACHE_SIZE      = 3
+ALLOW_UNICODE_NAMES    = YES
+QUIET                  = NO
+WARNINGS               = YES
+
+# Advanced: Grouping (optional, helps organize modules)
+ENABLE_GROUPING        = YES
+GROUP_NESTED_COMPOUNDS = YES
+
+# Customization: Aliases for special tags (optional)
+ALIASES                = "dbtable=\\par Database Table:\n" \
+                         "endpoint=\\par Web Endpoint:\n" \
+                         "mvc=\\par MVC Role:\n"
+
+# Optional: Use Markdown for better docs
+MARKDOWN_SUPPORT       = YES
+
+# Optional: Show TODOs in docs
+SHOW_TODOS             = YES
+# full path for RAG
+FULL_PATH_NAMES        = YES
+STRIP_FROM_PATH        = 
+STRIP_FROM_INC_PATH    = 
+
+SHORT_NAMES            = NO

@@ -40,3 +40,4 @@ chroma*
 # Backup files
 *.venv*
 semantic/data*
+*.pytest*

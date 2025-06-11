@@ -130,3 +130,15 @@ LLM_TEMPERATURE=0.7
 # from semantic 
 #
 python -m src.main
+
+
+### 3 June 
+
+python -m src.main --force-reanalysis
+
+PYTHONPATH=. python -m unittest test_doxygen_parser.py -v
+
+cd semantic/src && python -m unittest test_doxygen_parser.py -v
+
+# tests 
+python -m unittest test_embedding_manager.py -v

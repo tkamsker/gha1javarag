@@ -39,7 +39,7 @@ class PersistenceAnalyzer:
     def analyze_persistence(self, artifact: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze persistence information in the source code using LLM."""
         # Use ChromaDB to find source code references
-        xml_input_dir = os.getenv('xml_input_dir', '')
+        xml_input_dir = os.getenv('XML_INPUT_DIR', 'data/doxygen_xml')
         artifact_id = os.path.join(xml_input_dir, artifact['id'])
         source_code = self.chroma.get_artifact_by_id(artifact_id)
         if not source_code:

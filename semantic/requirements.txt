@@ -1,12 +1,12 @@
-chromadb==0.4.24
-sentence-transformers==2.5.1
+chromadb>=0.4.22
+sentence-transformers>=2.2.2
 scikit-learn==1.6.1
 openai==1.14.0
-lxml==5.1.0
+lxml>=4.9.3
 pyyaml==6.0.1
 python-dotenv==1.0.1
 llama-cpp-python==0.2.56
-numpy==1.26.4
+numpy>=1.24.0
 pandas==2.2.1
 tqdm==4.66.2
 torch==2.2.1

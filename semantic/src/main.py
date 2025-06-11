@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Dict, Any, List
 import json
 from dotenv import load_dotenv
+import argparse
 
 from src.doxygen_parser import DoxygenParser
 from src.embedding_engine import EmbeddingEngine
@@ -24,8 +25,10 @@ logger = logging.getLogger(__name__)
 class SemanticAnalyzer:
     def __init__(self, config_path: str = "config/config.json"):
         self.config = self._load_config(config_path)
-        self.parser = DoxygenParser()
-        self.embedding_engine = EmbeddingEngine()
+        # Get Java source directory from environment or config
+        java_source_dir = os.getenv('JAVA_SOURCE_DIR') or self.config.get('java', {}).get('source_dir')
+        self.parser = DoxygenParser(java_source_dir=java_source_dir)
+        self.embedding_engine = EmbeddingEngine(config_path=config_path)
         self.cluster_engine = ClusterEngine(
             n_clusters=self.config.get('clustering', {}).get('n_clusters', 10)
         )
@@ -73,6 +76,13 @@ class SemanticAnalyzer:
                         report.append(f"  - Description: {artifact['description']}")
                     if artifact.get('definition'):
                         report.append(f"  - Definition: {artifact['definition']}")
+                    if artifact.get('source_file'):
+                        report.append(f"  - Source File: {artifact['source_file']}")
+                    if artifact.get('source_code'):
+                        report.append("  - Source Code:")
+                        report.append("```java")
+                        report.append(artifact['source_code'])
+                        report.append("```")
         
         return "\n".join(report)
 
@@ -95,9 +105,9 @@ class SemanticAnalyzer:
             # Generate embeddings
             logger.info("Generating embeddings for artifacts")
             for artifact in artifacts:
-                artifact['embedding'] = self.embedding_engine.generate_embedding(
-                    artifact['description']
-                )
+                # Combine description and source code for better semantic understanding
+                text_to_embed = f"{artifact['description']}\n{artifact.get('source_code', '')}"
+                artifact['embedding'] = self.embedding_engine.generate_embedding(text_to_embed)
 
             # Store in ChromaDB
             logger.info("Storing artifacts in ChromaDB (persistence step)")
@@ -128,7 +138,10 @@ class SemanticAnalyzer:
                     'description': artifact['description'],
                     'definition': artifact.get('definition', ''),
                     'args': artifact.get('args', ''),
-                    'kind': artifact.get('kind', '')
+                    'kind': artifact.get('kind', ''),
+                    'source_file': artifact.get('source_file', ''),
+                    'source_code': artifact.get('source_code', ''),
+                    'metadata': artifact.get('metadata', {})
                 })
 
             # Create output directory
@@ -168,7 +181,9 @@ class SemanticAnalyzer:
                 results['clusters'][cluster_id].append({
                     'name': artifact['name'],
                     'class': artifact['class'],
-                    'description': artifact['description']
+                    'description': artifact['description'],
+                    'source_file': artifact.get('source_file', ''),
+                    'metadata': artifact.get('metadata', {})
                 })
 
             # Persist the main clustering results
@@ -203,55 +218,37 @@ class SemanticAnalyzer:
     def semantic_search(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
         """Perform semantic search on the codebase."""
         try:
-            # Generate embedding for the query
+            # Generate query embedding
             query_embedding = self.embedding_engine.generate_embedding(query)
             
             # Search in ChromaDB
-            results = self.chroma.semantic_search(query, query_embedding, top_k)
+            results = self.chroma.search(query_embedding, top_k=top_k)
             
             return results
         except Exception as e:
             logger.error(f"Error performing semantic search: {str(e)}")
-            raise
+            return []
 
 def main():
+    """Main entry point for the semantic analyzer."""
     try:
-        # Get project path from environment variable XML_INPUT_DIR
-        project_path = os.getenv('XML_INPUT_DIR')
-        if not project_path:
-            raise ValueError("XML_INPUT_DIR is not set in the environment or .env file.")
-        if not os.path.exists(project_path):
-            raise FileNotFoundError(f"Project path not found: {project_path}")
-
+        # Parse command line arguments
+        parser = argparse.ArgumentParser(description='Semantic Code Analysis')
+        parser.add_argument('--force-reanalysis', action='store_true', help='Force reanalysis of the project')
+        args = parser.parse_args()
+        
         # Initialize analyzer
         analyzer = SemanticAnalyzer()
         
-        # Analyze project (force reanalysis to ensure fresh data)
-        logger.info(f"Starting analysis of project at {project_path}")
-        results = analyzer.analyze_project(project_path, force_reanalysis=True)
+        # Get project path from environment variable XML_INPUT_DIR or use default
+        project_path = os.getenv('XML_INPUT_DIR', 'data/hotel_docs_doxygen2/xml')
         
-        # Check if results are empty
-        if not results:
-            logger.warning("No results generated. Exiting.")
-            return
+        # Analyze project
+        results = analyzer.analyze_project(project_path, force_reanalysis=args.force_reanalysis)
         
-        # Print summary
-        print("\nAnalysis Summary:")
-        print(f"Total artifacts analyzed: {results['statistics']['total_artifacts']}")
-        print(f"Number of clusters: {results['statistics']['total_clusters']}")
+        logger.info("Analysis completed successfully")
+        return results
         
-        print("\nCluster Statistics:")
-        for cluster_id, stats in results['statistics']['cluster_stats'].items():
-            print(f"\nCluster {cluster_id}:")
-            print(f"- Size: {stats['size']}")
-            print(f"- Classes: {', '.join(stats['classes'])}")
-            print(f"- Methods: {len(stats['methods'])}")
-        
-        print("\nResults have been saved to:")
-        print("- data/results/clustering_results.json")
-        print("- data/results/clusters_by_class.json")
-        print("- data/results/analysis_report.md")
-
     except Exception as e:
         logger.error(f"Error in main: {str(e)}")
         raise
