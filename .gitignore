@@ -35,3 +35,6 @@ log/
 *.temp
 .cache/ 
 chroma*
+clever*
+semantic/data/*
+*.venv*
