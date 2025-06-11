@@ -35,3 +35,8 @@ log/
 *.temp
 .cache/ 
 chroma*
+*.Temporary
+
+# Backup files
+*.venv*
+semantic/data*
