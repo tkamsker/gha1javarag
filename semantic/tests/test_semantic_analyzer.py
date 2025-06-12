@@ -20,9 +20,10 @@ class TestSemanticAnalyzer(unittest.TestCase):
 
     def setUp(self):
         """Set up test cases"""
+        os.environ['TEST_MODE'] = 'true'
         self.embedding_engine = EmbeddingEngine()
         self.cluster_engine = ClusterEngine(n_clusters=TEST_SETTINGS['n_clusters'])
-        self.chroma_connector = ChromaConnector(TEST_DB_DIR)
+        self.chroma_connector = ChromaConnector('test_chroma_db')
         self.requirement_gen = RequirementGenerator()
 
     def test_xml_parsing(self):

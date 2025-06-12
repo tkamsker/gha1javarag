@@ -9,7 +9,7 @@ import argparse
 from src.doxygen_parser import DoxygenParser
 from src.embedding_engine import EmbeddingEngine
 from src.cluster_engine import ClusterEngine
-from src.chroma_connector import ChromaConnector
+from src.get_persistence import get_persistence
 from src.requirement_gen import RequirementGenerator
 
 # Load environment variables from .env if present
@@ -34,7 +34,7 @@ class SemanticAnalyzer:
         )
         # Get ChromaDB path from environment or config
         chroma_db_path = os.getenv('CHROMA_DB_DIR') or self.config.get('chromadb', {}).get('db_path', 'data/chroma_db')
-        self.chroma = ChromaConnector(db_path=chroma_db_path)
+        self.chroma = get_persistence(db_path=chroma_db_path)
         self.requirement_gen = RequirementGenerator()
         logger.info("Initialized SemanticAnalyzer")
 

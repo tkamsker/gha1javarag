@@ -52,7 +52,8 @@ class EmbeddingEngine:
             response.raise_for_status()
             embedding = response.json()['embedding']
             
-            return embedding
+            # Convert embedding to numpy.ndarray
+            return np.array(embedding)
             
         except Exception as e:
             logger.error(f"Error generating embedding: {str(e)}")

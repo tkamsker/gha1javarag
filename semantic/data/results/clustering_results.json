@@ -1,199 +1,1498 @@
 {
   "clusters": {
-    "4": [
+    "3": [
       {
-        "name": "initializeDatabase",
-        "class": "Database::DatabaseConnection",
-        "description": "initializeDatabase()"
+        "name": "build-impl.xml",
+        "class": "build-impl.xml",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/nbproject/build-impl.xml",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      },
+      {
+        "name": "ant-deploy.xml",
+        "class": "ant-deploy.xml",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/nbproject/ant-deploy.xml",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      },
+      {
+        "name": "build.xml",
+        "class": "build.xml",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/build.xml",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      }
+    ],
+    "8": [
+      {
+        "name": "adminLogin.jsp",
+        "class": "adminLogin.jsp",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/web/adminLogin.jsp",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      },
+      {
+        "name": "adminRegister.jsp",
+        "class": "adminRegister.jsp",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/web/adminRegister.jsp",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      }
+    ],
+    "6": [
+      {
+        "name": "updatePatient.jsp",
+        "class": "updatePatient.jsp",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/web/updatePatient.jsp",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      },
+      {
+        "name": "index.jsp",
+        "class": "index.jsp",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/web/index.jsp",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      },
+      {
+        "name": "UserHome.jsp",
+        "class": "UserHome.jsp",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/web/UserHome.jsp",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      },
+      {
+        "name": "userRegister.jsp",
+        "class": "userRegister.jsp",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/web/userRegister.jsp",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
       }
     ],
     "2": [
       {
-        "name": "i",
-        "class": "Controller::AddDoctor",
-        "description": "i"
+        "name": "AddDoctor.java",
+        "class": "AddDoctor.java",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddDoctor.java",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
       },
       {
         "name": "i",
-        "class": "Controller::UserRegister",
-        "description": "i"
+        "class": "Controller::AddDoctor",
+        "description": "i",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddDoctor.java",
+        "metadata": {
+          "line_start": "33",
+          "line_end": "-1",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "int",
+          "parameters": [],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddDoctor.java",
+            "line": "33",
+            "column": "17",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddDoctor.java",
+            "bodystart": "33",
+            "bodyend": "-1"
+          }
+        }
+      },
+      {
+        "name": "doPost",
+        "class": "Controller::AddDoctor",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddDoctor.java",
+        "metadata": {
+          "line_start": "36",
+          "line_end": "90",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "void",
+          "parameters": [
+            {
+              "name": "request",
+              "type": "HttpServletRequest",
+              "description": "HttpServletRequest \n           request"
+            },
+            {
+              "name": "response",
+              "type": "HttpServletResponse",
+              "description": "HttpServletResponse \n           response"
+            }
+          ],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddDoctor.java",
+            "line": "33",
+            "column": "17",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddDoctor.java",
+            "bodystart": "33",
+            "bodyend": "-1"
+          }
+        }
       },
       {
         "name": "i",
         "class": "Controller::AddPatient",
-        "description": "i"
-      },
-      {
-        "name": "i",
-        "class": "Controller::AdminRegister",
-        "description": "i"
-      },
-      {
-        "name": "i",
-        "class": "Controller::AddRecp",
-        "description": "i"
-      },
-      {
-        "name": "i",
-        "class": "Controller::AddWorker",
-        "description": "i"
-      }
-    ],
-    "1": [
-      {
-        "name": "doPost",
-        "class": "Controller::AddDoctor",
-        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
-      },
-      {
-        "name": "doPost",
-        "class": "Controller::UserRegister",
-        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
-      },
-      {
-        "name": "doPost",
-        "class": "Controller::UserLogin",
-        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
+        "description": "i",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddPatient.java",
+        "metadata": {
+          "line_start": "33",
+          "line_end": "-1",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "int",
+          "parameters": [],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddPatient.java",
+            "line": "33",
+            "column": "17",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddPatient.java",
+            "bodystart": "33",
+            "bodyend": "-1"
+          }
+        }
       },
       {
         "name": "doPost",
         "class": "Controller::AddPatient",
-        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddPatient.java",
+        "metadata": {
+          "line_start": "36",
+          "line_end": "88",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "void",
+          "parameters": [
+            {
+              "name": "request",
+              "type": "HttpServletRequest",
+              "description": "HttpServletRequest \n           request"
+            },
+            {
+              "name": "response",
+              "type": "HttpServletResponse",
+              "description": "HttpServletResponse \n           response"
+            }
+          ],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddPatient.java",
+            "line": "33",
+            "column": "17",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddPatient.java",
+            "bodystart": "33",
+            "bodyend": "-1"
+          }
+        }
       },
       {
-        "name": "doPost",
-        "class": "Controller::AdminLogin",
-        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
+        "name": "updatePatient.java",
+        "class": "updatePatient.java",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/updatePatient.java",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
       },
       {
-        "name": "doPost",
-        "class": "Controller::AdminRegister",
-        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
+        "name": "i",
+        "class": "Controller::AddRecp",
+        "description": "i",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddRecp.java",
+        "metadata": {
+          "line_start": "33",
+          "line_end": "-1",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "int",
+          "parameters": [],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddRecp.java",
+            "line": "33",
+            "column": "17",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddRecp.java",
+            "bodystart": "33",
+            "bodyend": "-1"
+          }
+        }
       },
       {
         "name": "doPost",
         "class": "Controller::AddRecp",
-        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddRecp.java",
+        "metadata": {
+          "line_start": "36",
+          "line_end": "74",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "void",
+          "parameters": [
+            {
+              "name": "request",
+              "type": "HttpServletRequest",
+              "description": "HttpServletRequest \n           request"
+            },
+            {
+              "name": "response",
+              "type": "HttpServletResponse",
+              "description": "HttpServletResponse \n           response"
+            }
+          ],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddRecp.java",
+            "line": "33",
+            "column": "17",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddRecp.java",
+            "bodystart": "33",
+            "bodyend": "-1"
+          }
+        }
+      },
+      {
+        "name": "AddPatient.java",
+        "class": "AddPatient.java",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddPatient.java",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
       },
       {
         "name": "doPost",
         "class": "Controller::updatePatient",
-        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/updatePatient.java",
+        "metadata": {
+          "line_start": "27",
+          "line_end": "72",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "void",
+          "parameters": [
+            {
+              "name": "request",
+              "type": "HttpServletRequest",
+              "description": "HttpServletRequest \n           request"
+            },
+            {
+              "name": "response",
+              "type": "HttpServletResponse",
+              "description": "HttpServletResponse \n           response"
+            }
+          ],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/updatePatient.java",
+            "line": "27",
+            "column": "20",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/updatePatient.java",
+            "bodystart": "27",
+            "bodyend": "72"
+          }
+        }
+      },
+      {
+        "name": "AddRecp.java",
+        "class": "AddRecp.java",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddRecp.java",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      },
+      {
+        "name": "i",
+        "class": "Controller::AddWorker",
+        "description": "i",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddWorker.java",
+        "metadata": {
+          "line_start": "32",
+          "line_end": "-1",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "int",
+          "parameters": [],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddWorker.java",
+            "line": "32",
+            "column": "17",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddWorker.java",
+            "bodystart": "32",
+            "bodyend": "-1"
+          }
+        }
       },
       {
         "name": "doPost",
         "class": "Controller::AddWorker",
-        "description": "doPost(HttpServletRequest request, HttpServletResponse response)"
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddWorker.java",
+        "metadata": {
+          "line_start": "35",
+          "line_end": "73",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "void",
+          "parameters": [
+            {
+              "name": "request",
+              "type": "HttpServletRequest",
+              "description": "HttpServletRequest \n           request"
+            },
+            {
+              "name": "response",
+              "type": "HttpServletResponse",
+              "description": "HttpServletResponse \n           response"
+            }
+          ],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddWorker.java",
+            "line": "32",
+            "column": "17",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddWorker.java",
+            "bodystart": "32",
+            "bodyend": "-1"
+          }
+        }
+      },
+      {
+        "name": "AddWorker.java",
+        "class": "AddWorker.java",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddWorker.java",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
       }
     ],
-    "3": [
+    "7": [
       {
-        "name": "user",
-        "class": "Controller::UserRegister",
-        "description": "user"
+        "name": "initializeDatabase",
+        "class": "Database::DatabaseConnection",
+        "description": "initializeDatabase()",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Database/DatabaseConnection.java",
+        "metadata": {
+          "line_start": "18",
+          "line_end": "33",
+          "is_public": true,
+          "is_static": true,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "Connection",
+          "parameters": [],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Database/DatabaseConnection.java",
+            "line": "18",
+            "column": "30",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Database/DatabaseConnection.java",
+            "bodystart": "18",
+            "bodyend": "33"
+          }
+        }
       },
       {
-        "name": "user",
-        "class": "Controller::UserLogin",
-        "description": "user"
+        "name": "deletePatient.jsp",
+        "class": "deletePatient.jsp",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/web/deletePatient.jsp",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
       },
       {
-        "name": "user",
-        "class": "Controller::AdminLogin",
-        "description": "user"
+        "name": "DatabaseConnection.java",
+        "class": "DatabaseConnection.java",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Database/DatabaseConnection.java",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      },
+      {
+        "name": "project.xml",
+        "class": "project.xml",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/nbproject/project.xml",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
       }
     ],
     "0": [
       {
-        "name": "pass",
-        "class": "Controller::UserRegister",
-        "description": "pass"
+        "name": "AdminLogin.java",
+        "class": "AdminLogin.java",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminLogin.java",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      },
+      {
+        "name": "user",
+        "class": "Controller::UserLogin",
+        "description": "user",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserLogin.java",
+        "metadata": {
+          "line_start": "27",
+          "line_end": "-1",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "String",
+          "parameters": [],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserLogin.java",
+            "line": "27",
+            "column": "20",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserLogin.java",
+            "bodystart": "27",
+            "bodyend": "-1"
+          }
+        }
       },
       {
         "name": "pass",
         "class": "Controller::UserLogin",
-        "description": "pass"
+        "description": "pass",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserLogin.java",
+        "metadata": {
+          "line_start": "28",
+          "line_end": "-1",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "String",
+          "parameters": [],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserLogin.java",
+            "line": "27",
+            "column": "20",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserLogin.java",
+            "bodystart": "27",
+            "bodyend": "-1"
+          }
+        }
+      },
+      {
+        "name": "doPost",
+        "class": "Controller::UserLogin",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserLogin.java",
+        "metadata": {
+          "line_start": "31",
+          "line_end": "65",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "void",
+          "parameters": [
+            {
+              "name": "request",
+              "type": "HttpServletRequest",
+              "description": "HttpServletRequest \n           request"
+            },
+            {
+              "name": "response",
+              "type": "HttpServletResponse",
+              "description": "HttpServletResponse \n           response"
+            }
+          ],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserLogin.java",
+            "line": "27",
+            "column": "20",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserLogin.java",
+            "bodystart": "27",
+            "bodyend": "-1"
+          }
+        }
+      },
+      {
+        "name": "UserLogin.java",
+        "class": "UserLogin.java",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserLogin.java",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      },
+      {
+        "name": "user",
+        "class": "Controller::AdminLogin",
+        "description": "user",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminLogin.java",
+        "metadata": {
+          "line_start": "27",
+          "line_end": "-1",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "String",
+          "parameters": [],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminLogin.java",
+            "line": "27",
+            "column": "20",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminLogin.java",
+            "bodystart": "27",
+            "bodyend": "-1"
+          }
+        }
       },
       {
         "name": "pass",
         "class": "Controller::AdminLogin",
-        "description": "pass"
+        "description": "pass",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminLogin.java",
+        "metadata": {
+          "line_start": "28",
+          "line_end": "-1",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "String",
+          "parameters": [],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminLogin.java",
+            "line": "27",
+            "column": "20",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminLogin.java",
+            "bodystart": "27",
+            "bodyend": "-1"
+          }
+        }
+      },
+      {
+        "name": "doPost",
+        "class": "Controller::AdminLogin",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminLogin.java",
+        "metadata": {
+          "line_start": "31",
+          "line_end": "65",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "void",
+          "parameters": [
+            {
+              "name": "request",
+              "type": "HttpServletRequest",
+              "description": "HttpServletRequest \n           request"
+            },
+            {
+              "name": "response",
+              "type": "HttpServletResponse",
+              "description": "HttpServletResponse \n           response"
+            }
+          ],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminLogin.java",
+            "line": "27",
+            "column": "20",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminLogin.java",
+            "bodystart": "27",
+            "bodyend": "-1"
+          }
+        }
+      },
+      {
+        "name": "i",
+        "class": "Controller::AdminRegister",
+        "description": "i",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminRegister.java",
+        "metadata": {
+          "line_start": "27",
+          "line_end": "-1",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "int",
+          "parameters": [],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminRegister.java",
+            "line": "27",
+            "column": "17",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminRegister.java",
+            "bodystart": "27",
+            "bodyend": "-1"
+          }
+        }
+      },
+      {
+        "name": "doPost",
+        "class": "Controller::AdminRegister",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminRegister.java",
+        "metadata": {
+          "line_start": "30",
+          "line_end": "64",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "void",
+          "parameters": [
+            {
+              "name": "request",
+              "type": "HttpServletRequest",
+              "description": "HttpServletRequest \n           request"
+            },
+            {
+              "name": "response",
+              "type": "HttpServletResponse",
+              "description": "HttpServletResponse \n           response"
+            }
+          ],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminRegister.java",
+            "line": "27",
+            "column": "17",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminRegister.java",
+            "bodystart": "27",
+            "bodyend": "-1"
+          }
+        }
+      },
+      {
+        "name": "AdminRegister.java",
+        "class": "AdminRegister.java",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminRegister.java",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      }
+    ],
+    "9": [
+      {
+        "name": "user",
+        "class": "Controller::UserRegister",
+        "description": "user",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserRegister.java",
+        "metadata": {
+          "line_start": "26",
+          "line_end": "-1",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "String",
+          "parameters": [],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserRegister.java",
+            "line": "26",
+            "column": "20",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserRegister.java",
+            "bodystart": "26",
+            "bodyend": "-1"
+          }
+        }
+      },
+      {
+        "name": "pass",
+        "class": "Controller::UserRegister",
+        "description": "pass",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserRegister.java",
+        "metadata": {
+          "line_start": "27",
+          "line_end": "-1",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "String",
+          "parameters": [],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserRegister.java",
+            "line": "26",
+            "column": "20",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserRegister.java",
+            "bodystart": "26",
+            "bodyend": "-1"
+          }
+        }
+      },
+      {
+        "name": "i",
+        "class": "Controller::UserRegister",
+        "description": "i",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserRegister.java",
+        "metadata": {
+          "line_start": "28",
+          "line_end": "-1",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "int",
+          "parameters": [],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserRegister.java",
+            "line": "26",
+            "column": "20",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserRegister.java",
+            "bodystart": "26",
+            "bodyend": "-1"
+          }
+        }
+      },
+      {
+        "name": "doPost",
+        "class": "Controller::UserRegister",
+        "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+        "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserRegister.java",
+        "metadata": {
+          "line_start": "31",
+          "line_end": "65",
+          "is_public": false,
+          "is_static": false,
+          "is_virtual": false,
+          "is_const": false,
+          "return_type": "void",
+          "parameters": [
+            {
+              "name": "request",
+              "type": "HttpServletRequest",
+              "description": "HttpServletRequest \n           request"
+            },
+            {
+              "name": "response",
+              "type": "HttpServletResponse",
+              "description": "HttpServletResponse \n           response"
+            }
+          ],
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserRegister.java",
+            "line": "26",
+            "column": "20",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserRegister.java",
+            "bodystart": "26",
+            "bodyend": "-1"
+          }
+        }
+      },
+      {
+        "name": "UserRegister.java",
+        "class": "UserRegister.java",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserRegister.java",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      }
+    ],
+    "4": [
+      {
+        "name": "adminDoctorList.jsp",
+        "class": "adminDoctorList.jsp",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/web/adminDoctorList.jsp",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      },
+      {
+        "name": "adminRecpList.jsp",
+        "class": "adminRecpList.jsp",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/web/adminRecpList.jsp",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      },
+      {
+        "name": "listPatient.jsp",
+        "class": "listPatient.jsp",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/web/listPatient.jsp",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      },
+      {
+        "name": "adminPatientList.jsp",
+        "class": "adminPatientList.jsp",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/web/adminPatientList.jsp",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      },
+      {
+        "name": "adminWorkerList.jsp",
+        "class": "adminWorkerList.jsp",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/web/adminWorkerList.jsp",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      },
+      {
+        "name": "AdminHome.jsp",
+        "class": "AdminHome.jsp",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/web/AdminHome.jsp",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      }
+    ],
+    "1": [
+      {
+        "name": "addpatient.jsp",
+        "class": "addpatient.jsp",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/web/addpatient.jsp",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      },
+      {
+        "name": "addWorker.jsp",
+        "class": "addWorker.jsp",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/web/addWorker.jsp",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      },
+      {
+        "name": "addRecp.jsp",
+        "class": "addRecp.jsp",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/web/addRecp.jsp",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      },
+      {
+        "name": "addDoctor.jsp",
+        "class": "addDoctor.jsp",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/web/addDoctor.jsp",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
+      }
+    ],
+    "5": [
+      {
+        "name": "context.xml",
+        "class": "context.xml",
+        "description": "Code from programlisting",
+        "source_file": "",
+        "metadata": {
+          "location": {
+            "file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/web/META-INF/context.xml",
+            "line": "",
+            "column": "",
+            "declfile": "",
+            "declline": "",
+            "declcolumn": "",
+            "bodyfile": "",
+            "bodystart": "",
+            "bodyend": ""
+          }
+        }
       }
     ]
   },
   "statistics": {
-    "total_artifacts": 22,
+    "total_artifacts": 54,
     "total_clusters": 10,
     "cluster_stats": {
-      "4": {
-        "size": 1,
-        "classes": [
-          "Database::DatabaseConnection"
-        ],
-        "methods": [
-          "initializeDatabase"
-        ]
-      },
-      "2": {
-        "size": 6,
-        "classes": [
-          "Controller::UserRegister",
-          "Controller::AddDoctor",
-          "Controller::AddRecp",
-          "Controller::AddPatient",
-          "Controller::AdminRegister",
-          "Controller::AddWorker"
-        ],
-        "methods": [
-          "i"
-        ]
-      },
-      "1": {
-        "size": 9,
-        "classes": [
-          "Controller::UserRegister",
-          "Controller::AddDoctor",
-          "Controller::AddRecp",
-          "Controller::AddPatient",
-          "Controller::AdminRegister",
-          "Controller::UserLogin",
-          "Controller::AdminLogin",
-          "Controller::AddWorker",
-          "Controller::updatePatient"
-        ],
-        "methods": [
-          "doPost"
-        ]
-      },
       "3": {
         "size": 3,
         "classes": [
-          "Controller::UserRegister",
-          "Controller::AdminLogin",
-          "Controller::UserLogin"
+          "build.xml",
+          "ant-deploy.xml",
+          "build-impl.xml"
         ],
         "methods": [
-          "user"
+          "build.xml",
+          "ant-deploy.xml",
+          "build-impl.xml"
+        ]
+      },
+      "8": {
+        "size": 2,
+        "classes": [
+          "adminRegister.jsp",
+          "adminLogin.jsp"
+        ],
+        "methods": [
+          "adminRegister.jsp",
+          "adminLogin.jsp"
+        ]
+      },
+      "6": {
+        "size": 4,
+        "classes": [
+          "UserHome.jsp",
+          "index.jsp",
+          "userRegister.jsp",
+          "updatePatient.jsp"
+        ],
+        "methods": [
+          "UserHome.jsp",
+          "index.jsp",
+          "userRegister.jsp",
+          "updatePatient.jsp"
+        ]
+      },
+      "2": {
+        "size": 14,
+        "classes": [
+          "AddRecp.java",
+          "AddDoctor.java",
+          "Controller::updatePatient",
+          "Controller::AddPatient",
+          "Controller::AddRecp",
+          "updatePatient.java",
+          "Controller::AddWorker",
+          "AddPatient.java",
+          "AddWorker.java",
+          "Controller::AddDoctor"
+        ],
+        "methods": [
+          "AddRecp.java",
+          "AddDoctor.java",
+          "updatePatient.java",
+          "i",
+          "AddPatient.java",
+          "AddWorker.java",
+          "doPost"
+        ]
+      },
+      "7": {
+        "size": 4,
+        "classes": [
+          "Database::DatabaseConnection",
+          "project.xml",
+          "DatabaseConnection.java",
+          "deletePatient.jsp"
+        ],
+        "methods": [
+          "DatabaseConnection.java",
+          "project.xml",
+          "initializeDatabase",
+          "deletePatient.jsp"
         ]
       },
       "0": {
-        "size": 3,
+        "size": 11,
         "classes": [
-          "Controller::UserRegister",
+          "Controller::UserLogin",
+          "AdminRegister.java",
           "Controller::AdminLogin",
-          "Controller::UserLogin"
+          "AdminLogin.java",
+          "Controller::AdminRegister",
+          "UserLogin.java"
         ],
         "methods": [
-          "pass"
+          "AdminRegister.java",
+          "i",
+          "user",
+          "AdminLogin.java",
+          "pass",
+          "doPost",
+          "UserLogin.java"
+        ]
+      },
+      "9": {
+        "size": 5,
+        "classes": [
+          "Controller::UserRegister",
+          "UserRegister.java"
+        ],
+        "methods": [
+          "UserRegister.java",
+          "i",
+          "user",
+          "pass",
+          "doPost"
+        ]
+      },
+      "4": {
+        "size": 6,
+        "classes": [
+          "adminWorkerList.jsp",
+          "adminPatientList.jsp",
+          "adminRecpList.jsp",
+          "listPatient.jsp",
+          "adminDoctorList.jsp",
+          "AdminHome.jsp"
+        ],
+        "methods": [
+          "adminWorkerList.jsp",
+          "adminPatientList.jsp",
+          "adminRecpList.jsp",
+          "listPatient.jsp",
+          "adminDoctorList.jsp",
+          "AdminHome.jsp"
+        ]
+      },
+      "1": {
+        "size": 4,
+        "classes": [
+          "addWorker.jsp",
+          "addpatient.jsp",
+          "addDoctor.jsp",
+          "addRecp.jsp"
+        ],
+        "methods": [
+          "addWorker.jsp",
+          "addpatient.jsp",
+          "addDoctor.jsp",
+          "addRecp.jsp"
+        ]
+      },
+      "5": {
+        "size": 1,
+        "classes": [
+          "context.xml"
+        ],
+        "methods": [
+          "context.xml"
         ]
       }
     }
   },
   "requirements": {
-    "4": "Requirement: The system shall provide a static method, implemented in the DatabaseConnection class of the Database module, that initializes and returns a valid database connection object (of type Connection). Specifically, the method (named initializeDatabase) must:\n\n1. Be accessible without needing to instantiate the DatabaseConnection class.\n2. Establish a connection to the designated database, ensuring that the returned Connection instance is valid and ready for use by other modules or components.\n3. Handle and propagate any connection errors appropriately so that calling components are informed of connection failures.\n4. Adhere to best practices in resource management and error handling to support reliable interaction with the database.\n\nThis functionality ensures that the system can reliably initialize and manage its connection to the database through a single, consistent entry point.",
-    "2": "Requirement: The system shall support user and administrator operations for registering various types of personnel and users, including doctors, patients, receptionists, workers, and administrative accounts. For each of these registration processes, a dedicated controller (e.g., AddDoctor, AddPatient, AddRecp, AddWorker, UserRegister, and AdminRegister) must be implemented to encapsulate the specific business logic associated with adding that type of account. \n\nEach controller shall maintain an integer counter variable (named \u201ci\u201d) that can be used to track, index, or uniquely identify the records created during its respective registration process. This counter \u201ci\u201d is intended to support operations such as counting the number of registrations, generating unique identifiers, or controlling iteration within the registration logic, ensuring that each new entry is managed appropriately.\n\nIn summary, the system\u2019s requirement is to provide a modular, controller-based registration framework where each registration type maintains its own counter state (\u201ci\u201d) to fulfill the responsibility of adding new doctors, patients, receptionists, workers, and administrative users, thereby ensuring proper segregation of functionalities and state management during the account creation process.",
-    "1": "Requirement: The system shall support secure, role-based management of users and healthcare staff through dedicated HTTP POST operations. Specifically, it must provide endpoints for:\n\n\u2022 Registering and authenticating users, including standard users (patients), doctors, and administrators.\n\u2022 Enabling administrative functions such as the registration and login of administrators.\n\u2022 Adding new personnel, including doctors, receptionists, and other healthcare workers.\n\u2022 Managing patient records through creation (adding a new patient) and updating existing patient information.\n\u2022 Processing incoming HTTP POST requests in a segregated controller architecture, where each role (doctor, user, admin, receptionist, worker) has a dedicated controller method to handle its specific business logic.\n\nThis architecture ensures that all actions\u2014including registration, login, and record updates\u2014are handled via secure, well-defined endpoints, thereby facilitating proper user management and workflow operations across the healthcare application.",
-    "3": "Requirement: The system shall support user account management by enabling three primary operations\u2014user registration, user login, and administrator login\u2014that each require the use of a unique user identifier. In detail:\n\n1. For user registration (Controller::UserRegister), the system must collect a username (a String value) from the user. This username, referenced as the \"user\" field, is essential for registering a new user account.\n\n2. For user login (Controller::UserLogin), the system must accept a username (a String value) provided by the user. This \"user\" field is used to verify the identity of the user attempting to access the system.\n\n3. For administrator login (Controller::AdminLogin), the system must similarly require a username (a String value) that uniquely identifies the administrator logging in. The \"user\" field in this context is critical for ensuring that the administrator is authenticated correctly.\n\nAcross all these operations, the \"user\" field, defined as a String in each respective controller, must be handled consistently to ensure proper authentication and account management.",
-    "0": "Requirement: The system must support secure password-based authentication for both user and administrator interactions. Specifically, it shall provide separate controller modules for user registration, user login, and administrator login\u2014each incorporating a password attribute (represented as a String named \"pass\") that is used to capture and verify the submitted password credentials during authentication operations. This design ensures that distinct authentication workflows are maintained for different user roles while enforcing the consistent use of password data for verifying identity."
+    "3": "This is a test requirement that includes the word calculate.",
+    "8": "This is a test requirement that includes the word calculate.",
+    "6": "This is a test requirement that includes the word calculate.",
+    "2": "This is a test requirement that includes the word calculate.",
+    "7": "This is a test requirement that includes the word calculate.",
+    "0": "This is a test requirement that includes the word calculate.",
+    "9": "This is a test requirement that includes the word calculate.",
+    "4": "This is a test requirement that includes the word calculate.",
+    "1": "This is a test requirement that includes the word calculate.",
+    "5": "This is a test requirement that includes the word calculate."
   }
 }

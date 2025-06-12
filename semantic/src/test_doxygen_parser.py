@@ -1,7 +1,7 @@
 import unittest
 from pathlib import Path
 import os
-from doxygen_parser import DoxygenParser
+from src.doxygen_parser import DoxygenParser
 import tempfile
 import logging
 

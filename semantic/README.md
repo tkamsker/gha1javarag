@@ -142,3 +142,9 @@ cd semantic/src && python -m unittest test_doxygen_parser.py -v
 
 # tests 
 python -m unittest test_embedding_manager.py -v
+
+# 12 Jun 
+./generate_test_data.sh
+
+PYTHONPATH=. python -m unittest src.test_doxygen_parser -v
+

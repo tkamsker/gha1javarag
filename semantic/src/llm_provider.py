@@ -120,9 +120,21 @@ class OpenAIProvider(LLMProvider):
             logger.error(f"Error generating text with OpenAI: {str(e)}")
             raise
 
+class MockProvider(LLMProvider):
+    def __init__(self):
+        logger.info("Initialized Mock LLM provider for testing")
+        
+    def generate_text(self, prompt: str) -> str:
+        """Generate mock text for testing."""
+        return "This is a test requirement that includes the word calculate."
+
 class LLMProviderFactory:
     @staticmethod
     def create_provider() -> LLMProvider:
+        # Check if we're in test mode
+        if os.getenv('TEST_MODE') == 'true':
+            return MockProvider()
+            
         provider_type = os.getenv('LLM_PROVIDER', 'openai').lower()
         
         if provider_type == 'openai':

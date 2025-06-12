@@ -115,5 +115,8 @@ def main():
         logger.error(f"Error in main: {str(e)}")
         raise
 
+def get_persistence(db_path: str = "data/chroma"):
+    return ChromaConnector(collection_name="artifacts", db_path=db_path)
+
 if __name__ == "__main__":
     main() 

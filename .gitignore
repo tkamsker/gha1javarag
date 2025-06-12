@@ -38,6 +38,6 @@ chroma*
 *.Temporary
 
 # Backup files
-*.venv*
+*/.venv*
 semantic/data*
 *.pytest*
