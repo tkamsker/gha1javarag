@@ -1,0 +1,585 @@
+{
+  "requirements": [
+    {
+      "name": "build-impl.xml",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "3",
+      "persistence_info": null
+    },
+    {
+      "name": "ant-deploy.xml",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "3",
+      "persistence_info": null
+    },
+    {
+      "name": "build.xml",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "3",
+      "persistence_info": null
+    },
+    {
+      "name": "adminLogin.jsp",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "8",
+      "persistence_info": null
+    },
+    {
+      "name": "adminRegister.jsp",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "8",
+      "persistence_info": null
+    },
+    {
+      "name": "updatePatient.jsp",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "6",
+      "persistence_info": null
+    },
+    {
+      "name": "index.jsp",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "6",
+      "persistence_info": null
+    },
+    {
+      "name": "UserHome.jsp",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "6",
+      "persistence_info": null
+    },
+    {
+      "name": "userRegister.jsp",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "6",
+      "persistence_info": null
+    },
+    {
+      "name": "AddDoctor.java",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "2",
+      "persistence_info": null
+    },
+    {
+      "name": "Controller::AddDoctor",
+      "description": "i",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddDoctor.java",
+      "category": "2",
+      "persistence_info": {
+        "table_name": "doctor",
+        "fields": [
+          "id",
+          "gender",
+          "fname",
+          "phone",
+          "address",
+          "DateAndTime",
+          "email",
+          "city",
+          "qualification",
+          "lname",
+          "age"
+        ],
+        "operations": [
+          "insert"
+        ]
+      }
+    },
+    {
+      "name": "Controller::AddDoctor",
+      "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddDoctor.java",
+      "category": "2",
+      "persistence_info": {
+        "table_name": "doctor",
+        "fields": [
+          "id",
+          "gender",
+          "fname",
+          "phone",
+          "address",
+          "DateAndTime",
+          "email",
+          "city",
+          "qualification",
+          "lname",
+          "age"
+        ],
+        "operations": [
+          "insert"
+        ]
+      }
+    },
+    {
+      "name": "Controller::AddPatient",
+      "description": "i",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddPatient.java",
+      "category": "2",
+      "persistence_info": {
+        "table_name": "patient",
+        "fields": [
+          "gender",
+          "fname",
+          "phone",
+          "address",
+          "DateAndTime",
+          "email",
+          "city",
+          "lname",
+          "age"
+        ],
+        "operations": [
+          "insert"
+        ]
+      }
+    },
+    {
+      "name": "Controller::AddPatient",
+      "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddPatient.java",
+      "category": "2",
+      "persistence_info": {
+        "table_name": "patient",
+        "fields": [
+          "gender",
+          "fname",
+          "phone",
+          "address",
+          "DateAndTime",
+          "email",
+          "city",
+          "lname",
+          "age"
+        ],
+        "operations": [
+          "insert"
+        ]
+      }
+    },
+    {
+      "name": "updatePatient.java",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "2",
+      "persistence_info": null
+    },
+    {
+      "name": "Controller::AddRecp",
+      "description": "i",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddRecp.java",
+      "category": "2",
+      "persistence_info": {
+        "table_name": "recp",
+        "fields": [
+          "phone",
+          "DateAndTime",
+          "lname",
+          "fname"
+        ],
+        "operations": [
+          "insert"
+        ]
+      }
+    },
+    {
+      "name": "Controller::AddRecp",
+      "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddRecp.java",
+      "category": "2",
+      "persistence_info": {
+        "table_name": "recp",
+        "fields": [
+          "phone",
+          "DateAndTime",
+          "lname",
+          "fname"
+        ],
+        "operations": [
+          "insert"
+        ]
+      }
+    },
+    {
+      "name": "AddPatient.java",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "2",
+      "persistence_info": null
+    },
+    {
+      "name": "Controller::updatePatient",
+      "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/updatePatient.java",
+      "category": "2",
+      "persistence_info": {
+        "table_name": "patient",
+        "fields": [
+          "gender",
+          "fname",
+          "address",
+          "email",
+          "city",
+          "lname",
+          "age"
+        ],
+        "operations": [
+          "update"
+        ]
+      }
+    },
+    {
+      "name": "AddRecp.java",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "2",
+      "persistence_info": null
+    },
+    {
+      "name": "Controller::AddWorker",
+      "description": "i",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddWorker.java",
+      "category": "2",
+      "persistence_info": {
+        "table_name": "worker",
+        "fields": [
+          "phone",
+          "DateAndTime",
+          "lname",
+          "fname"
+        ],
+        "operations": [
+          "insert"
+        ]
+      }
+    },
+    {
+      "name": "Controller::AddWorker",
+      "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AddWorker.java",
+      "category": "2",
+      "persistence_info": {
+        "table_name": "worker",
+        "fields": [
+          "phone",
+          "DateAndTime",
+          "lname",
+          "fname"
+        ],
+        "operations": [
+          "insert"
+        ]
+      }
+    },
+    {
+      "name": "AddWorker.java",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "2",
+      "persistence_info": null
+    },
+    {
+      "name": "Database::DatabaseConnection",
+      "description": "initializeDatabase()",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Database/DatabaseConnection.java",
+      "category": "7",
+      "persistence_info": null
+    },
+    {
+      "name": "deletePatient.jsp",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "7",
+      "persistence_info": null
+    },
+    {
+      "name": "DatabaseConnection.java",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "7",
+      "persistence_info": null
+    },
+    {
+      "name": "project.xml",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "7",
+      "persistence_info": null
+    },
+    {
+      "name": "AdminLogin.java",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "0",
+      "persistence_info": null
+    },
+    {
+      "name": "Controller::UserLogin",
+      "description": "user",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserLogin.java",
+      "category": "0",
+      "persistence_info": null
+    },
+    {
+      "name": "Controller::UserLogin",
+      "description": "pass",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserLogin.java",
+      "category": "0",
+      "persistence_info": null
+    },
+    {
+      "name": "Controller::UserLogin",
+      "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserLogin.java",
+      "category": "0",
+      "persistence_info": null
+    },
+    {
+      "name": "UserLogin.java",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "0",
+      "persistence_info": null
+    },
+    {
+      "name": "Controller::AdminLogin",
+      "description": "user",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminLogin.java",
+      "category": "0",
+      "persistence_info": null
+    },
+    {
+      "name": "Controller::AdminLogin",
+      "description": "pass",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminLogin.java",
+      "category": "0",
+      "persistence_info": null
+    },
+    {
+      "name": "Controller::AdminLogin",
+      "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminLogin.java",
+      "category": "0",
+      "persistence_info": null
+    },
+    {
+      "name": "Controller::AdminRegister",
+      "description": "i",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminRegister.java",
+      "category": "0",
+      "persistence_info": {
+        "table_name": "adminreg",
+        "fields": [
+          "userp",
+          "passp"
+        ],
+        "operations": [
+          "insert"
+        ]
+      }
+    },
+    {
+      "name": "Controller::AdminRegister",
+      "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/AdminRegister.java",
+      "category": "0",
+      "persistence_info": {
+        "table_name": "adminreg",
+        "fields": [
+          "userp",
+          "passp"
+        ],
+        "operations": [
+          "insert"
+        ]
+      }
+    },
+    {
+      "name": "AdminRegister.java",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "0",
+      "persistence_info": null
+    },
+    {
+      "name": "Controller::UserRegister",
+      "description": "user",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserRegister.java",
+      "category": "9",
+      "persistence_info": {
+        "table_name": "login",
+        "fields": [
+          "user",
+          "pass"
+        ],
+        "operations": [
+          "insert"
+        ]
+      }
+    },
+    {
+      "name": "Controller::UserRegister",
+      "description": "pass",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserRegister.java",
+      "category": "9",
+      "persistence_info": {
+        "table_name": "login",
+        "fields": [
+          "user",
+          "pass"
+        ],
+        "operations": [
+          "insert"
+        ]
+      }
+    },
+    {
+      "name": "Controller::UserRegister",
+      "description": "i",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserRegister.java",
+      "category": "9",
+      "persistence_info": {
+        "table_name": "login",
+        "fields": [
+          "user",
+          "pass"
+        ],
+        "operations": [
+          "insert"
+        ]
+      }
+    },
+    {
+      "name": "Controller::UserRegister",
+      "description": "doPost(HttpServletRequest request, HttpServletResponse response)",
+      "source_file": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/HospitalManagementSysyem/src/java/Controller/UserRegister.java",
+      "category": "9",
+      "persistence_info": {
+        "table_name": "login",
+        "fields": [
+          "user",
+          "pass"
+        ],
+        "operations": [
+          "insert"
+        ]
+      }
+    },
+    {
+      "name": "UserRegister.java",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "9",
+      "persistence_info": null
+    },
+    {
+      "name": "adminDoctorList.jsp",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "4",
+      "persistence_info": null
+    },
+    {
+      "name": "adminRecpList.jsp",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "4",
+      "persistence_info": null
+    },
+    {
+      "name": "listPatient.jsp",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "4",
+      "persistence_info": null
+    },
+    {
+      "name": "adminPatientList.jsp",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "4",
+      "persistence_info": null
+    },
+    {
+      "name": "adminWorkerList.jsp",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "4",
+      "persistence_info": null
+    },
+    {
+      "name": "AdminHome.jsp",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "4",
+      "persistence_info": null
+    },
+    {
+      "name": "addpatient.jsp",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "1",
+      "persistence_info": null
+    },
+    {
+      "name": "addWorker.jsp",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "1",
+      "persistence_info": null
+    },
+    {
+      "name": "addRecp.jsp",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "1",
+      "persistence_info": null
+    },
+    {
+      "name": "addDoctor.jsp",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "1",
+      "persistence_info": null
+    },
+    {
+      "name": "context.xml",
+      "description": "Code from programlisting",
+      "source_file": "",
+      "category": "5",
+      "persistence_info": null
+    }
+  ],
+  "summary": {
+    "total_requirements": 54,
+    "categories": [
+      "5",
+      "0",
+      "8",
+      "9",
+      "3",
+      "4",
+      "2",
+      "6",
+      "1",
+      "7"
+    ],
+    "persistence_tables": [
+      "patient",
+      "doctor",
+      "worker",
+      "recp",
+      "login",
+      "adminreg"
+    ]
+  }
+}
