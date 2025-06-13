@@ -10,21 +10,23 @@ The application must run from the `iteration6/` directory and use **Python** (no
 
 ## Directory Structure
 
-iteration6/
+.
 ├── config/
-│ └── app.yaml # Configuration file
+│   └── app.yaml
 ├── data/
-│ ├── doxygen_xml/ # Input Doxygen XML files
-│ └── chroma_db/ # ChromaDB persistent storage
+│   ├── doxygen_xml/
+│   ├── java_source/
+│   └── chromadb/
+├── output/
 ├── src/
-│ ├── doxygen_parser.py # XML → code artifact extraction
-│ ├── embedder.py # Embedding generation
-│ ├── chroma_connector.py # ChromaDB interface
-│ ├── cluster_engine.py # Clustering logic
-│ ├── requirement_gen.py # GenAI requirement generation
-│ └── main.py # Main workflow
-├── requirements.txt # Python dependencies
-└── README.md # Setup/usage instructions
+│   ├── doxygen_parser.py
+│   ├── embedder.py
+│   ├── chromadb_connector.py
+│   ├── clustering_engine.py
+│   ├── requirement_generator.py
+│   └── main.py
+├── requirements.txt
+└── .env
 
 ### Pipeline Architecture
 

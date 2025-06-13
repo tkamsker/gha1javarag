@@ -1,0 +1,27 @@
+# Application Configuration
+
+# Data paths
+data:
+  doxygen_xml_dir: ${XML_INPUT_DIR}
+  java_source_dir: ${JAVA_SOURCE_DIR}
+  chroma_db_dir: ${CHROMA_DB_DIR}
+
+# LLM Settings
+llm:
+  provider: ${LLM_PROVIDER}
+  model: ${LLM_MODEL}
+  temperature: ${LLM_TEMPERATURE}
+  max_tokens: ${LLM_MAX_TOKENS}
+  top_p: ${LLM_TOP_P}
+  frequency_penalty: ${LLM_FREQUENCY_PENALTY}
+  presence_penalty: ${LLM_PRESENCE_PENALTY}
+
+# Clustering Settings
+clustering:
+  eps: 0.5
+  min_samples: 3
+
+# Output Settings
+output:
+  requirements_file: "output/requirements.md"
+  traceability_matrix: "output/traceability.csv" 

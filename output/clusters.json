@@ -1,0 +1,30 @@
+{
+  "clusters": {
+    "0": [
+      "class:Controller::AddDoctor",
+      "class:Controller::AddPatient",
+      "class:Controller::AddRecp",
+      "class:Controller::AddWorker",
+      "class:Controller::AdminLogin",
+      "class:Controller::AdminRegister",
+      "class:Controller::updatePatient",
+      "class:Controller::UserLogin",
+      "class:Controller::UserRegister"
+    ],
+    "1": [
+      "method:Controller::AddDoctor.doPost",
+      "method:Controller::AddPatient.doPost",
+      "method:Controller::AddRecp.doPost",
+      "method:Controller::AddWorker.doPost",
+      "method:Controller::AdminLogin.doPost",
+      "method:Controller::AdminRegister.doPost",
+      "method:Controller::updatePatient.doPost",
+      "method:Controller::UserLogin.doPost",
+      "method:Controller::UserRegister.doPost"
+    ]
+  },
+  "noise_points": [
+    "class:Database::DatabaseConnection",
+    "method:Database::DatabaseConnection.initializeDatabase"
+  ]
+}
