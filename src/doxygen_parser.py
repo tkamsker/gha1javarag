@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Any
 import logging
 import os
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 class DoxygenParser:
@@ -33,7 +33,15 @@ class DoxygenParser:
         for compound in index_root.findall('.//doxygen:compound', self.namespace):
             refid = compound.get('refid')
             if refid:
-                compound_file = self.xml_dir / f"{refid}.xml"
+                # Check if the reference exists in the XML file
+                reference = compound.find('.//doxygen:reference', self.namespace)
+                if reference is not None and reference.text:
+                    # Remove the trailing dot from the reference text
+                    reference_text = reference.text.rstrip('.')
+                    compound_file = self.xml_dir / f"{reference_text}.xml"
+                else:
+                    compound_file = self.xml_dir / f"{refid}.xml"
+                logger.debug(f"Compound refid: {refid}, reference: {reference.text if reference is not None else 'None'}, compound file: {compound_file}, exists: {compound_file.exists()}")
                 if compound_file.exists():
                     compound_files.append(compound_file)
         

@@ -4,7 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import yaml
 from doxygen_parser import DoxygenParser
-from embedder import CodeEmbedder
+from embedder import Embedder
 from chromadb_connector import ChromaDBConnector
 from clustering_engine import ClusteringEngine
 from requirement_generator import RequirementGenerator
@@ -75,9 +75,13 @@ def main():
         parser = DoxygenParser(xml_input_dir)
         artifacts = parser.parse_xml_files()
         
+        if not artifacts:
+            logger.warning("No artifacts found. Exiting early.")
+            return
+        
         # Generate embeddings
         logger.info("Generating embeddings...")
-        embedder = CodeEmbedder(os.getenv('OPENAI_API_KEY'))
+        embedder = Embedder(os.getenv('OPENAI_API_KEY'))
         embeddings = embedder.generate_embeddings(artifacts)
         
         # Store embeddings in ChromaDB
@@ -86,7 +90,7 @@ def main():
         db.store_embeddings(embeddings, artifacts)
         
         # Save embeddings to file
-        embedder.save_embeddings(str(Path(output_dir) / "embeddings.json"))
+        embedder.save_embeddings(embeddings, str(Path(output_dir) / "embeddings.json"))
         
         # Perform clustering
         logger.info("Clustering embeddings...")

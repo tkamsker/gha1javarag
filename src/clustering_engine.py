@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Any
 import numpy as np
 from sklearn.cluster import DBSCAN
 import logging
@@ -9,40 +9,41 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class ClusteringEngine:
-    def __init__(self, config: dict):
-        """Initialize the clustering engine with DBSCAN parameters."""
-        self.config = config
-        self.clusters: Dict[int, List[str]] = {}
-        self.noise_points: List[str] = []
+    def __init__(self, config=None):
+        self.config = config or {}
+        self.clusters = {}
+        self.noise_points = []
 
-    def cluster_embeddings(self, embeddings: Dict[str, List[float]]) -> Dict[int, List[str]]:
-        """Cluster the embeddings using DBSCAN."""
+    def cluster_embeddings(self, embeddings: List[Dict[str, Any]]) -> Dict:
+        """Cluster embeddings using DBSCAN and return cluster assignments."""
         try:
-            # Convert embeddings to numpy array
-            ids = list(embeddings.keys())
-            embedding_matrix = np.array([embeddings[id] for id in ids])
+            if not embeddings:
+                logger.warning("No embeddings provided for clustering.")
+                return {}
 
-            # Perform clustering
-            dbscan = DBSCAN(
-                eps=self.config["eps"],
-                min_samples=self.config["min_samples"]
-            ).fit(embedding_matrix)
+            # Extract vectors and IDs from the list of embedding dicts
+            ids = [emb['id'] for emb in embeddings]
+            vectors = np.array([emb['embedding'] for emb in embeddings])
 
-            # Process results
-            self.clusters = {}
-            self.noise_points = []
+            # DBSCAN parameters
+            eps = self.config.get('eps', 0.5)
+            min_samples = self.config.get('min_samples', 2)
 
-            for idx, label in enumerate(dbscan.labels_):
+            db = DBSCAN(eps=eps, min_samples=min_samples, metric='cosine').fit(vectors)
+            labels = db.labels_
+
+            clusters = {}
+            noise_points = []
+            for idx, label in enumerate(labels):
                 if label == -1:
-                    self.noise_points.append(ids[idx])
+                    noise_points.append(ids[idx])
                 else:
-                    if label not in self.clusters:
-                        self.clusters[label] = []
-                    self.clusters[label].append(ids[idx])
+                    clusters.setdefault(label, []).append(ids[idx])
 
-            logger.info(f"Found {len(self.clusters)} clusters and {len(self.noise_points)} noise points")
-            return self.clusters
-
+            self.clusters = clusters
+            self.noise_points = noise_points
+            logger.info(f"Found {len(clusters)} clusters and {len(noise_points)} noise points")
+            return clusters
         except Exception as e:
             logger.error(f"Error clustering embeddings: {str(e)}")
             raise
@@ -65,7 +66,6 @@ class ClusteringEngine:
         try:
             output_file = Path(output_path)
             with open(output_file, 'w') as f:
-                # Convert numpy.int64 keys to strings
                 clusters_dict = {str(k): v for k, v in self.clusters.items()}
                 json.dump({
                     "clusters": clusters_dict,

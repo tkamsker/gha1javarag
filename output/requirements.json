@@ -1,4 +1,0 @@
-[
-  "**Requirement Statement:**\n\nThe system shall provide HTTP POST endpoints to support the following operations:  \n- Addition of doctors, patients, receptionists, and workers  \n- Registration and login for both administrators and users  \n- Updating of patient information  \n\nEach operation shall be implemented in a dedicated controller class with a `doPost` method to handle incoming POST requests accordingly.",
-  "**Requirement:**\n\nThe system shall implement HTTP POST request handling by providing a doPost(HttpServletRequest request, HttpServletResponse response) method in all relevant servlet components. This method shall process POST requests and return no value (void). The servlet container will pass the HttpServletRequest and HttpServletResponse objects to this method to facilitate client-server communication via the POST method."
-]

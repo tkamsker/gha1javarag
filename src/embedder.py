@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Any
 from openai import OpenAI
 from langchain_openai import OpenAIEmbeddings
 import logging
@@ -19,66 +19,81 @@ client = OpenAI(
     base_url=os.getenv('OPENAI_API_BASE')
 )
 
-class CodeEmbedder:
-    def __init__(self, api_key: str):
-        """Initialize the embedder with OpenAI API key."""
+class Embedder:
+    def __init__(self, api_key: str, model: str = "text-embedding-3-small"):
+        """Initialize the embedder with OpenAI API key and model."""
         self.client = client
-        self.embeddings = OpenAIEmbeddings(
-            openai_api_key=api_key,
-            openai_api_base=os.getenv('OPENAI_API_BASE')
-        )
-        self.embeddings_cache: Dict[str, List[float]] = {}
+        self.model = model
 
-    def generate_embeddings(self, code_artifacts: Dict) -> Dict[str, List[float]]:
-        """Generate embeddings for all code artifacts."""
+    def generate_embeddings(self, artifacts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Generate embeddings for code artifacts."""
         try:
-            # Process classes
-            for class_name, class_info in code_artifacts["classes"].items():
-                class_text = self._prepare_class_text(class_info)
-                self.embeddings_cache[f"class:{class_name}"] = self._get_embedding(class_text)
-
-            # Process methods
-            for method_key, method_info in code_artifacts["methods"].items():
-                method_text = self._prepare_method_text(method_info)
-                self.embeddings_cache[f"method:{method_key}"] = self._get_embedding(method_text)
-
-            return self.embeddings_cache
-
+            embeddings = []
+            for artifact in artifacts:
+                # Create a text representation of the artifact
+                text = self._create_artifact_text(artifact)
+                
+                # Generate embedding
+                response = self.client.embeddings.create(
+                    model=self.model,
+                    input=text
+                )
+                
+                # Store the embedding with metadata
+                embeddings.append({
+                    'id': artifact['name'],
+                    'text': text,
+                    'embedding': response.data[0].embedding,
+                    'metadata': {
+                        'type': artifact['type'],
+                        'name': artifact['name'],
+                        'brief': artifact.get('brief', ''),
+                        'detailed': artifact.get('detailed', '')
+                    }
+                })
+            
+            logger.info(f"Generated {len(embeddings)} embeddings")
+            return embeddings
+            
         except Exception as e:
             logger.error(f"Error generating embeddings: {str(e)}")
             raise
 
-    def _prepare_class_text(self, class_info: Dict) -> str:
-        """Prepare class information for embedding."""
-        return f"""
-        Class: {class_info['name']}
-        Documentation: {class_info['documentation']}
-        Methods: {', '.join(m['name'] for m in class_info['methods'])}
-        """
+    def _create_artifact_text(self, artifact: Dict[str, Any]) -> str:
+        """Create a text representation of an artifact for embedding."""
+        text_parts = []
+        
+        # Add type and name
+        text_parts.append(f"{artifact['type']}: {artifact['name']}")
+        
+        # Add brief description
+        if artifact.get('brief'):
+            text_parts.append(f"Brief: {artifact['brief']}")
+        
+        # Add detailed description
+        if artifact.get('detailed'):
+            text_parts.append(f"Detailed: {artifact['detailed']}")
+        
+        # Add fields for classes
+        if artifact['type'] == 'class' and artifact.get('fields'):
+            text_parts.append("Fields:")
+            for field in artifact['fields']:
+                text_parts.append(f"- {field['name']} ({field['type']}): {field['description']}")
+        
+        # Add parameters for methods
+        if artifact['type'] == 'function' and artifact.get('parameters'):
+            text_parts.append("Parameters:")
+            for param in artifact['parameters']:
+                text_parts.append(f"- {param['name']} ({param['type']})")
+        
+        return "\n".join(text_parts)
 
-    def _prepare_method_text(self, method_info: Dict) -> str:
-        """Prepare method information for embedding."""
-        return f"""
-        Method: {method_info['name']}
-        Return Type: {method_info['return_type']}
-        Parameters: {method_info['parameters']}
-        Documentation: {method_info['documentation']}
-        """
-
-    def _get_embedding(self, text: str) -> List[float]:
-        """Get embedding for a text using OpenAI's API."""
-        try:
-            return self.embeddings.embed_query(text)
-        except Exception as e:
-            logger.error(f"Error getting embedding: {str(e)}")
-            raise
-
-    def save_embeddings(self, output_path: str) -> None:
+    def save_embeddings(self, embeddings: List[Dict[str, Any]], output_path: str) -> None:
         """Save embeddings to a JSON file."""
         try:
             output_file = Path(output_path)
             with open(output_file, 'w') as f:
-                json.dump(self.embeddings_cache, f)
+                json.dump(embeddings, f, indent=2)
             logger.info(f"Embeddings saved to {output_path}")
         except Exception as e:
             logger.error(f"Error saving embeddings: {str(e)}")
