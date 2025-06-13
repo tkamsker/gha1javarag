@@ -65,8 +65,10 @@ class ClusteringEngine:
         try:
             output_file = Path(output_path)
             with open(output_file, 'w') as f:
+                # Convert numpy.int64 keys to strings
+                clusters_dict = {str(k): v for k, v in self.clusters.items()}
                 json.dump({
-                    "clusters": {str(k): v for k, v in self.clusters.items()},
+                    "clusters": clusters_dict,
                     "noise_points": self.noise_points
                 }, f, indent=2)
             logger.info(f"Clustering results saved to {output_path}")
