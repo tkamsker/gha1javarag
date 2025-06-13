@@ -8,53 +8,47 @@ This section describes the functional requirements of the system, organized by f
 
 | Feature ID | Title | Description | Priority |
 |------------|-------|-------------|----------|
-| FR-UserManagement-001 | Comprehensive User and Staff Management Functionality | The system must provide secure interfaces and workflows to support registration, authentication, and profile management for all user and staff types, including doctors, patients, receptionists, and workers. Administrators must have the ability to register and log in, while regular users (patients, staff) can create accounts, log in, and update their profiles (where applicable). | High |
+| FR-UserManagement-001 | Comprehensive User and Administrator Account Management | The system shall provide functionality to register and login both normal users and administrators, as well as add and update various roles including doctors, patients, receptionists, and workers. The solution will support secure credential management, role assignment, and user information updates to ensure effective access control and personnel data integrity in the healthcare system. | High |
+| FR-UserManagement-001 | Unified User Management Operations (Add, Update, Login, Register) for Admin and General Users | The system shall provide secure and unified endpoints for adding and updating healthcare users (doctors, patients, receptionists, workers), and for registering and authenticating both admin and general users. All operations must be handled via HTTP POST methods in the Controller class, ensuring data validation, role-appropriate access control, and consistent error handling. | High |
 
-#### FR-UserManagement-001: Comprehensive User and Staff Management Functionality
+#### FR-UserManagement-001: Comprehensive User and Administrator Account Management
 
-**Description:** The system must provide secure interfaces and workflows to support registration, authentication, and profile management for all user and staff types, including doctors, patients, receptionists, and workers. Administrators must have the ability to register and log in, while regular users (patients, staff) can create accounts, log in, and update their profiles (where applicable).
-
-**Acceptance Criteria:**
-- The system must allow an administrator to register a new account using valid credentials, with successful registration confirmed by a message and database record.
-- An administrator must be able to log in with credentials tied to the Admin role. Invalid credentials must return an appropriate error message.
-- System must allow patients to register and create new accounts, requiring valid personal information.
-- Patients must be able to update their profile information, with all changes saved and reflected in their next login session.
-- The system must provide interfaces for adding new doctors, receptionists, and workers, each with validation for data fields specific to their roles.
-- All user types (staff and patients) must be able to log in securely. On failed authentication attempts, users receive descriptive error feedback.
-- New account registration, login, and worker/staff addition must include input validation and prevent duplicate accounts based on unique identifiers.
-- Sessions must be securely managed for all user types post-login.
-
-**Dependencies:**
-- FR-Security-001 (Authentication System)
-- FR-Database-001 (User Data Storage and Retrieval)
-- FR-Validation-001 (Input Validation and Sanitization)
-
-**Source:** ['Controller::AddDoctor', 'Controller::AddPatient', 'Controller::AddRecp', 'Controller::AddWorker', 'Controller::AdminLogin', 'Controller::AdminRegister', 'Controller::updatePatient', 'Controller::UserLogin', 'Controller::UserRegister']
-
-
-### AUTHENTICATION Requirements
-
-| Feature ID | Title | Description | Priority |
-|------------|-------|-------------|----------|
-| FR-Authentication-001 | Unified User Management and Authentication for Healthcare System | Implement robust HTTP POST endpoints to manage the registration, login, and profile updating of multiple user roles in the healthcare system, including doctors, patients, receptionists, workers, and administrators. Each endpoint should securely handle incoming requests, validate input data, manage user sessions, and interact with the backend database to persist or update user information. The system must ensure data integrity and role-based access control throughout authentication and registration processes. | High |
-
-#### FR-Authentication-001: Unified User Management and Authentication for Healthcare System
-
-**Description:** Implement robust HTTP POST endpoints to manage the registration, login, and profile updating of multiple user roles in the healthcare system, including doctors, patients, receptionists, workers, and administrators. Each endpoint should securely handle incoming requests, validate input data, manage user sessions, and interact with the backend database to persist or update user information. The system must ensure data integrity and role-based access control throughout authentication and registration processes.
+**Description:** The system shall provide functionality to register and login both normal users and administrators, as well as add and update various roles including doctors, patients, receptionists, and workers. The solution will support secure credential management, role assignment, and user information updates to ensure effective access control and personnel data integrity in the healthcare system.
 
 **Acceptance Criteria:**
-- All roles (doctor, patient, receptionist, worker, admin) can register via dedicated POST endpoints with valid data.
-- All roles can log in using validated credentials and obtain a new session/token.
-- Patient profiles can be updated via POST with data validation and confirmation.
-- User password fields are always stored securely (e.g., hashed, salted) in the database.
-- System responds with appropriate error codes and messages for invalid registration, login, or update attempts.
-- Users cannot register with duplicate unique identifiers (e.g., usernames, emails).
-- Role-based access is enforced for registration, login, and profile update endpoints.
+- The system allows new users and administrators to register with required information and validations.
+- The system authenticates users and administrators via separate login interfaces with secure credential checks.
+- Authorized personnel can add new doctors, patients, receptionists, and workers by submitting required data through corresponding controller endpoints.
+- Patient information can be updated by authorized users through the updatePatient interface, with appropriate field validations and audit trails.
+- All role assignments and account creations trigger confirmation messages and provide error messages on failure (e.g., duplicate usernames or invalid data).
+- All endpoints enforce authentication and authorization based on user role before allowing role-specific data operations.
 
 **Dependencies:**
-- FR-Database-001: Backend Database Schema for User Roles and Credentials
-- FR-Security-001: Password Hashing and Session Management
-- FR-Validation-001: Server-side Validation for User Input
+- FR-Auth-001: Secure Authentication Implementation
+- FR-Data-Validation-002: Robust Input Validation for User Data
+- FR-Roles-001: User Role and Permission Management
 
-**Source:** Controller (Controller::AddDoctor.doPost, Controller::AddPatient.doPost, Controller::AddRecp.doPost, Controller::AddWorker.doPost, Controller::AdminLogin.doPost, Controller::AdminRegister.doPost, Controller::updatePatient.doPost, Controller::UserLogin.doPost, Controller::UserRegister.doPost)
+**Source:** Controller::AddDoctor, Controller::AddPatient, Controller::AddRecp, Controller::AddWorker, Controller::AdminLogin, Controller::AdminRegister, Controller::updatePatient, Controller::UserLogin, Controller::UserRegister
+
+
+#### FR-UserManagement-001: Unified User Management Operations (Add, Update, Login, Register) for Admin and General Users
+
+**Description:** The system shall provide secure and unified endpoints for adding and updating healthcare users (doctors, patients, receptionists, workers), and for registering and authenticating both admin and general users. All operations must be handled via HTTP POST methods in the Controller class, ensuring data validation, role-appropriate access control, and consistent error handling.
+
+**Acceptance Criteria:**
+- All user addition (Doctor, Patient, Receptionist, Worker) operations use POST methods and validate input data for required fields and formats.
+- Admin registration and login via POST are accessible only to unauthenticated users; authentication tokens are issued upon success.
+- User registration and login via POST are available for general users and require unique identifiers for new accounts.
+- Updating patient records is possible only for authenticated users with sufficient privileges.
+- All endpoints respond with standardized success or error messages, with meaningful error details on failure (e.g., validation errors, authentication failure).
+- Duplicate entries (e.g., existing user registration) are properly detected and rejected with an appropriate message.
+- Session management and redirection are handled as per authentication state.
+- All operations comply with applicable data privacy and security standards (e.g., password hashing, input sanitization).
+
+**Dependencies:**
+- FR-UserRoles-001 (User Roles and Permissions Management)
+- FR-DataValidation-001 (Data Input Validation Framework)
+- FR-SessionAuth-001 (Session and Authentication Middleware)
+
+**Source:** ['Controller::AddDoctor.doPost', 'Controller::AddPatient.doPost', 'Controller::AddRecp.doPost', 'Controller::AddWorker.doPost', 'Controller::AdminLogin.doPost', 'Controller::AdminRegister.doPost', 'Controller::updatePatient.doPost', 'Controller::UserLogin.doPost', 'Controller::UserRegister.doPost']
 

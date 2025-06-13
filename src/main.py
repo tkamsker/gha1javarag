@@ -20,17 +20,16 @@ def get_project_root() -> Path:
 
 def ensure_directories() -> None:
     """Ensure all required directories exist."""
-    root = get_project_root()
-    directories = [
-        root / "data" / "doxygen_xml",
-        root / "data" / "java_source",
-        root / "data" / "chromadb",
-        root / "output"
-    ]
+    directories = {
+        'XML_INPUT_DIR': os.getenv('XML_INPUT_DIR', './data/hotel_docs_doxygen2/xml'),
+        'JAVA_SOURCE_DIR': os.getenv('JAVA_SOURCE_DIR', './data/java_source'),
+        'CHROMADB_DIR': os.getenv('CHROMADB_DIR', './data/chromadb'),
+        'OUTPUT_DIR': os.getenv('OUTPUT_DIR', './output')
+    }
     
-    for directory in directories:
-        directory.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Ensured directory exists: {directory}")
+    for dir_name, dir_path in directories.items():
+        Path(dir_path).mkdir(parents=True, exist_ok=True)
+        logger.info(f"Ensured directory exists: {dir_path}")
 
 def load_config() -> dict:
     """Load configuration from YAML file."""
@@ -62,52 +61,48 @@ def main():
         config = load_config()
         config = interpolate_env_vars(config)
         
-        # Use .env variables if set, otherwise fall back to config
-        xml_input_dir = os.getenv("XML_INPUT_DIR") or str(get_project_root() / config["data"]["doxygen_xml_dir"])
-        java_source_dir = os.getenv("JAVA_SOURCE_DIR") or str(get_project_root() / config["data"]["java_source_dir"])
-        chroma_db_dir = str(get_project_root() / config["data"]["chroma_db_dir"])
-
-        if os.getenv("XML_INPUT_DIR"):
-            logger.info(f"Using XML_INPUT_DIR from .env: {xml_input_dir}")
-        else:
-            logger.info(f"Using XML input dir from config: {xml_input_dir}")
-        if os.getenv("JAVA_SOURCE_DIR"):
-            logger.info(f"Using JAVA_SOURCE_DIR from .env: {java_source_dir}")
-        else:
-            logger.info(f"Using Java source dir from config: {java_source_dir}")
-
-        # Initialize components
-        parser = DoxygenParser(xml_input_dir)
-        embedder = CodeEmbedder(os.getenv('OPENAI_API_KEY'))
-        db = ChromaDBConnector(chroma_db_dir)
-        clustering = ClusteringEngine(config["clustering"])
-        generator = RequirementGenerator(os.getenv('OPENAI_API_KEY'), config["llm"]["model"])
+        # Get directory paths from environment
+        xml_input_dir = os.getenv('XML_INPUT_DIR', './data/hotel_docs_doxygen2/xml')
+        java_source_dir = os.getenv('JAVA_SOURCE_DIR', './data/java_source')
+        chromadb_dir = os.getenv('CHROMADB_DIR', './data/chromadb')
+        output_dir = os.getenv('OUTPUT_DIR', './output')
+        
+        logger.info(f"Using XML_INPUT_DIR from .env: {xml_input_dir}")
+        logger.info(f"Using JAVA_SOURCE_DIR from .env: {java_source_dir}")
         
         # Parse code artifacts
         logger.info("Parsing code artifacts...")
-        code_artifacts = parser.parse_xml_files()
+        parser = DoxygenParser(xml_input_dir)
+        artifacts = parser.parse_xml_files()
         
         # Generate embeddings
         logger.info("Generating embeddings...")
-        embeddings = embedder.generate_embeddings(code_artifacts)
+        embedder = CodeEmbedder(os.getenv('OPENAI_API_KEY'))
+        embeddings = embedder.generate_embeddings(artifacts)
         
-        # Store in ChromaDB
+        # Store embeddings in ChromaDB
         logger.info("Storing embeddings in ChromaDB...")
-        db.store_embeddings(embeddings, code_artifacts)
+        db = ChromaDBConnector(chromadb_dir)
+        db.store_embeddings(embeddings, artifacts)
         
-        # Cluster embeddings
+        # Save embeddings to file
+        embedder.save_embeddings(str(Path(output_dir) / "embeddings.json"))
+        
+        # Perform clustering
         logger.info("Clustering embeddings...")
+        clustering = ClusteringEngine(config["clustering"])
         clusters = clustering.cluster_embeddings(embeddings)
         
         # Generate requirements
         logger.info("Generating requirements...")
-        requirements = generator.generate_requirements(clusters, code_artifacts)
+        generator = RequirementGenerator(os.getenv('OPENAI_API_KEY'), os.getenv('LLM_MODEL'))
+        requirements = generator.generate_requirements(clusters, artifacts)
         
-        # Save results
-        output_dir = get_project_root() / "output"
-        embedder.save_embeddings(str(output_dir / "embeddings.json"))
-        clustering.save_clusters(str(output_dir / "clusters.json"))
-        generator.save_requirements(requirements, str(output_dir / "requirements.json"))
+        # Save requirements to file
+        generator.save_requirements(requirements, str(Path(output_dir) / "requirements.json"))
+        
+        # Save clusters to file
+        clustering.save_clusters(str(Path(output_dir) / "clusters.json"))
         
         logger.info("Processing completed successfully!")
         

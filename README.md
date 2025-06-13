@@ -185,3 +185,14 @@ USE_REMOTE_DB=false
 DEBUG=true
 
 curl -X POST "https://chromadb.dev.motorenflug.at/api/v2/ingest" -H "Content-Type: application/json"   -d '{"directory_path": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/cuco-master@d34bb6b6d1c"}'
+
+
+
+# iteration 6 
+
+
+# generate it 
+python src/main.py
+
+# extract 
+python src/requirement_document_generator.py
