@@ -1,0 +1,239 @@
+namespace: Controller
+summary: 'Summary for Controller: {''ids'': [[''doc_29'', ''doc_17'', ''doc_15'',
+  ''doc_19'', ''doc_24'']], ''distances'': [[1.6670214036518494, 1.6670214036518494,
+  1.6750965355168668, 1.6750965355168668, 1.6750965355168668]], ''metadatas'': [[{''file_size'':
+  3446, ''file_type'': ''jsp'', ''source'': ''web/index.jsp''}, {''file_size'': 4232,
+  ''file_type'': ''jsp'', ''source'': ''web/userRegister.jsp''}, {''file_size'': 7925,
+  ''file_type'': ''jsp'', ''source'': ''web/addWorker.jsp''}, {''file_size'': 3554,
+  ''file_type'': ''jsp'', ''source'': ''web/UserHome.jsp''}, {''file_size'': 7923,
+  ''file_type'': ''jsp'', ''source'': ''web/addRecp.jsp''}]], ''embeddings'': None,
+  ''documents'': [[''<!DOCTYPE html>\n<html>\n    <head>\n        <meta charset="ISO-8859-1">\n        <title>Hospital
+  Management System</title>\n        <link rel="stylesheet"\n              href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">\n        <link
+  rel="stylesheet"\n              href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">\n        <script\n        src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>\n        <script\n        src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>\n        <script\n        src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>\n        <link\n            href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"\n            rel="stylesheet"
+  id="bootstrap-css">\n        <script\n        src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>\n        <script\n        src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>\n        <link
+  rel="stylesheet" href="css/style.css" type="text/css" />\n    </head>\n    <style
+  type="text/css">\n        body {\n            background-image: url("img/Medical.jpg");\n            background-color:
+  #cccccc;\n        }\n\n        .img-rounded {\n            height: 100%;\n            width:
+  100%;\n        }\n\n        h1 {\n            color: white;\n            text-align:
+  center;\n        }\n    </style>\n    <body>\n        <nav class="navbar navbar-expand-md
+  navbar-light bg-light">\n            <a href="#" class="navbar-brand"> <img src="img/2855.jpeg"\n                                                   height="30"
+  width="100" alt="HospitalManagementSystem">\n            </a>\n            <button
+  type="button" class="navbar-toggler" data-toggle="collapse"\n                    data-target="#navbarCollapse">\n                <span
+  class="navbar-toggler-icon"></span>\n            </button>\n\n            <div class="collapse
+  navbar-collapse" id="navbarCollapse">\n                <div class="navbar-nav ml-auto"
+  style="margin-right: 30px;">\n                    <a class="dropdown-item" href="index.jsp">Home</a>\n                    <a
+  class="dropdown-item" href="adminLogin.jsp">Admin</a>\n                </div>\n            </div>\n        </nav>\n        <div>\n            <h1>\n                <b>Hospital
+  Management System</b>\n            </h1>\n        </div>\n        <div class="wrapper
+  fadeInDown">\n            <div id="formContent">\n                <!-- Tabs Titles
+  -->\n                <h2>User Login</h2>\n                <!-- Icon -->\n                <div
+  class="fadeIn first">\n\n                </div>\n\n                <!-- Login Form
+  -->\n                <form action="<%=request.getContextPath()%>/UserLogin" method="post">\n                    <input
+  type="text" id="Username" class="fadeIn second" name="username"\n                           placeholder="Username">
+  \n                    <input type="password" id="password"\n                           class="fadeIn
+  third" name="password" placeholder="password"> \n                    <input\n                        type="submit"
+  class="fadeIn fourth" value="Log In">\n                </form>\n\n                <!--
+  Remind Passowrd -->\n                <div id="formFooter">\n                    <a
+  class="underlineHover" href="userRegister.jsp">Create Account</a>\n                </div>\n\n            </div>\n        </div>\n    </body>\n</html>'',
+  ''<!DOCTYPE html>\n<html>\n    <head>\n        <meta charset="ISO-8859-1">\n        <title>Hospital
+  Management System</title>\n        <link rel="stylesheet"\n              href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">\n        <link
+  rel="stylesheet"\n              href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">\n        <script\n        src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>\n        <script\n        src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>\n        <script\n        src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>\n        <link\n            href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"\n            rel="stylesheet"
+  id="bootstrap-css">\n        <script\n        src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>\n        <script\n        src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>\n        <link
+  rel="stylesheet" href="css/style.css" type="text/css" />\n    </head>\n    <style
+  type="text/css">\n        body {\n            background-image: url("img/Medical.jpg");\n            background-color:
+  #cccccc;\n        }\n\n        .img-rounded {\n            height: 100%;\n            width:
+  100%;\n        }\n\n        h1 {\n            color: white;\n            text-align:
+  center;\n        }\n    </style>\n    <body>\n        <nav class="navbar navbar-expand-md
+  navbar-light bg-light">\n            <a href="#" class="navbar-brand"> <img src="img/2855.jpeg"\n                                                   height="30"
+  width="100" alt="HospitalManagementSystem">\n            </a>\n            <button
+  type="button" class="navbar-toggler" data-toggle="collapse"\n                    data-target="#navbarCollapse">\n                <span
+  class="navbar-toggler-icon"></span>\n            </button>\n\n            <div class="collapse
+  navbar-collapse" id="navbarCollapse">\n                <div class="navbar-nav ml-auto"
+  style="margin-right: 30px;">\n                    <a class="dropdown-item" href="index.jsp">Home</a>\n                    <li
+  class="nav-item dropdown">\n                        <a class="nav-link dropdown-toggle"
+  href="" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+  aria-expanded="false">\n                            Admin\n                        </a>\n                        <div
+  class="dropdown-menu" aria-labelledby="navbarDropdown">\n                            <a
+  class="dropdown-item" href="adminRegister.jsp">Register</a>\n                            <a
+  class="dropdown-item" href="adminLogin.jsp">Login</a>\n                        </div>\n                    </li>\n                    <li
+  class="nav-item dropdown">\n                        \n                    </li>\n                </div>\n            </div>\n        </nav>\n        <div>\n            <h1>\n                <b>Hospital
+  Management System</b>\n            </h1>\n        </div>\n        <div class="wrapper
+  fadeInDown">\n            <div id="formContent">\n                <!-- Tabs Titles
+  -->\n                <h2>User Login</h2>\n                <!-- Icon -->\n                <div
+  class="fadeIn first">\n\n                </div>\n\n                <!-- Login Form
+  -->\n                <form action="<%=request.getContextPath()%>/UserRegister" method="post">\n                    <input
+  type="text" id="Username" class="fadeIn second" name="Username"\n                           placeholder="Enter
+  Username"> \n                    <input type="password" id="password"\n                           class="fadeIn
+  third" name="password" placeholder="Enter Password"> \n                    <input
+  type="password" id="password"\n                           class="fadeIn third" name="repassword"
+  placeholder="Enter Password Again"> \n                    <input\n                        type="submit"
+  class="fadeIn fourth" value="Log In">\n                </form>\n\n                <!--
+  Remind Passowrd -->\n                <div id="formFooter">\n                    <a
+  class="underlineHover" href="index.jsp">Log in</a>\n                </div>\n\n            </div>\n        </div>\n    </body>\n</html>'',
+  ''<%-- \n    Document   : UserHome\n    Created on : 13 Aug, 2020, 9:56:36 AM\n    Author     :
+  Admin\n--%>\n\n<%@page contentType="text/html" pageEncoding="UTF-8"%>\n<!DOCTYPE
+  html>\n<html>\n    <head>\n        <meta http-equiv="Content-Type" content="text/html;
+  charset=UTF-8">\n        <title>User Home</title>\n        <link rel="stylesheet"\n              href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">\n        <link
+  rel="stylesheet"\n              href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">\n        <script\n        src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>\n        <script\n        src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>\n        <script\n        src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>\n        <link\n            href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"\n            rel="stylesheet"
+  id="bootstrap-css">\n        <script\n        src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>\n        <script\n        src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>\n        <link
+  rel="stylesheet" type="text/css" href="css/adddataform.css">\n        <link rel="stylesheet"
+  type="text/css" href="css/adddatafrm1.css">\n        <style>\n            body {\n                background-image:
+  url("img/Medical.jpg");\n                background-color: #cccccc;\n            }\n        </style>\n    </head>\n    <body>\n        <nav
+  class="navbar navbar-expand-lg navbar-light bg-light">\n            <a href="#"
+  class="navbar-brand"> <img src="img/2855.jpeg"\n                                                   height="30"
+  width="100" alt="HospitalManagementSystem">\n            </a>\n            <button
+  class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+  aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle
+  navigation">\n                <span class="navbar-toggler-icon"></span>\n            </button>\n\n            <div
+  class="collapse navbar-collapse" id="navbarSupportedContent">\n                <h3>\n                    <b>Hospital
+  Management System</b>\n                </h3>\n                <ul class="navbar-nav
+  ml-auto" style="margin-right: 70px;">\n\n                    <li class="nav-item
+  active">\n                        <a class="nav-link" href="AdminHome.jsp">Home
+  <span class="sr-only">(current)</span></a>\n                    </li>\n                    <li
+  class="nav-item dropdown">\n                        <a class="nav-link dropdown-toggle"
+  href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+  aria-expanded="false">\n                            PATIENT\n                        </a>\n                        <div
+  class="dropdown-menu" aria-labelledby="navbarDropdown">\n                            <a
+  class="dropdown-item" href="addpatient.jsp">Add Patient</a>\n                            <a
+  class="dropdown-item" href="adminPatientList.jsp">Patient List</a>\n                        </div>\n                    </li>\n                    <li
+  class="nav-item dropdown">\n                        <a class="nav-link dropdown-toggle"
+  href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+  aria-expanded="false">\n                            DOCTOR\n                        </a>\n                        <div
+  class="dropdown-menu" aria-labelledby="navbarDropdown">\n                            <a
+  class="dropdown-item" href="addDoctor.jsp">Add Doctor</a>\n                            <a
+  class="dropdown-item" href="adminDoctorList.jsp">View Doctor</a>\n                        </div>\n                    </li>\n                    <li
+  class="nav-item dropdown">\n                        <a class="nav-link dropdown-toggle"
+  href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+  aria-expanded="false">\n                            RECEPTIONIST\n                        </a>\n                        <div
+  class="dropdown-menu" aria-labelledby="navbarDropdown">\n                            <a
+  class="dropdown-item" href="addRecp.jsp">Add Receptionist</a>\n                            <a
+  class="dropdown-item" href="adminRecpList.jsp">View Receptionist</a>\n                        </div>\n                    </li>\n                    <li
+  class="nav-item dropdown">\n                        <a class="nav-link dropdown-toggle"
+  href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+  aria-expanded="false">\n                            WORKER\n                        </a>\n                        <div
+  class="dropdown-menu" aria-labelledby="navbarDropdown">\n                            <a
+  class="dropdown-item" href="addWorker.jsp">Add Worker</a>\n                            <a
+  class="dropdown-item" href="adminWorkerList.jsp">View Worker</a>\n                        </div>\n                    </li>\n                </ul>\n            </div>\n        </nav>\n\n\n        <div
+  class="container-contact100">\n\n\n            <div class="wrap-contact100">\n                <div
+  class="contact100-form-title" style="background-image: url(img/bg-01.jpg);">\n                    <span
+  class="contact100-form-title-1">\n                        Receptionist Registration
+  Form\n                    </span>\t\t\t\t\n                </div>\n\n                <form
+  class="contact100-form validate-form"  action="<%=request.getContextPath()%>/AddWorker"
+  method="post">\n\n                    <div class="wrap-input100 validate-input"
+  data-validate="First Name is required">\n                        <span class="label-input100">First_Name:</span>\n                        <input
+  class="input100" type="text" name="fname" placeholder="Enter First name">\n                        <span
+  class="focus-input100"></span>\n                    </div>\n\n                    <div
+  class="wrap-input100 validate-input" data-validate="Last Name is required">\n                        <span
+  class="label-input100">Last_Name:</span>\n                        <input class="input100"
+  type="text" name="lname" placeholder="Enter Last name">\n                        <span
+  class="focus-input100"></span>\n                    </div>\n\n                    <div
+  class="wrap-input100 validate-input" data-validate="Phone is required">\n                        <span
+  class="label-input100">Phone:</span>\n                        <input class="input100"
+  type="text" name="Mobile" placeholder="Enter phone number">\n                        <span
+  class="focus-input100"></span>\n                    </div>\n\n                    <div
+  class="container-contact100-form-btn">\n                        <button class="contact100-form-btn">\n                            <span>\n                                Submit\n                                <i
+  class="fa fa-long-arrow-right m-l-7" aria-hidden="true"></i>\n                            </span>\n                        </button>\n                    </div>\n                </form>\n            </div>\n        </div>\n\n\n\n        <div
+  id="dropDownSelect1"></div>\n        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAKFWBqlKAGCeS1rMVoaNlwyayu0e0YRes"></script>\n        <script
+  src="js/map-custom.js"></script>\n        <!--===============================================================================================-->\n        <script
+  src="js/main.js"></script>\n\n        <!-- Global site tag (gtag.js) - Google Analytics
+  -->\n        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-23581568-13"></script>\n        <script>\n            window.dataLayer
+  = window.dataLayer || [];\n            function gtag() {\n                dataLayer.push(arguments);\n            }\n            gtag(\''js\'',
+  new Date());\n\n            gtag(\''config\'', \''UA-23581568-13\'');\n        </script>\n\n\n    </body>\n</html>\n'',
+  ''<%-- \n    Document   : UserHome\n    Created on : 13 Aug, 2020, 9:56:36 AM\n    Author     :
+  Admin\n--%>\n\n<%@page contentType="text/html" pageEncoding="UTF-8"%>\n<!DOCTYPE
+  html>\n<html>\n    <head>\n        <meta http-equiv="Content-Type" content="text/html;
+  charset=UTF-8">\n        <title>User Home</title>\n        <link rel="stylesheet"\n              href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">\n        <link
+  rel="stylesheet"\n              href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">\n        <script\n        src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>\n        <script\n        src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>\n        <script\n        src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>\n        <link\n            href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"\n            rel="stylesheet"
+  id="bootstrap-css">\n        <script\n        src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>\n        <script\n        src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>\n        \n        <style>\n            body
+  {\n            background-image: url("img/Medical.jpg");\n            background-color:
+  #cccccc;\n        }\n        </style>\n    </head>\n    <body>\n        <nav class="navbar
+  navbar-expand-lg navbar-light bg-light">\n            <a href="#" class="navbar-brand">
+  <img src="img/2855.jpeg"\n                                                   height="30"
+  width="100" alt="HospitalManagementSystem">\n            </a>\n            <button
+  class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+  aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle
+  navigation">\n                <span class="navbar-toggler-icon"></span>\n            </button>\n\n            <div
+  class="collapse navbar-collapse" id="navbarSupportedContent">\n                <ul
+  class="navbar-nav mr-auto">\n                    <li class="nav-item active">\n                        <a
+  class="nav-link" href="index.jsp">Home <span class="sr-only">(current)</span></a>\n                    </li>\n                    <li
+  class="nav-item dropdown">\n                        <a class="nav-link dropdown-toggle"
+  href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+  aria-expanded="false">\n                            PATIENT\n                        </a>\n                        <div
+  class="dropdown-menu" aria-labelledby="navbarDropdown">\n                            <a
+  class="dropdown-item" href="addpatient.jsp">Add Patient</a>\n                            <a
+  class="dropdown-item" href="listPatient.jsp">Patient List</a>\n                        </div>\n                    </li>\n                    <li
+  class="nav-item dropdown">\n                        <a class="nav-link dropdown-toggle"
+  href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+  aria-expanded="false">\n                            Billing\n                        </a>\n                        <div
+  class="dropdown-menu" aria-labelledby="navbarDropdown">\n                            <a
+  class="dropdown-item" href="#">Add Bill</a>\n                            <a class="dropdown-item"
+  href="#">View Bill</a>\n                        </div>\n                    </li>\n                </ul>\n            </div>\n        </nav>\n    </body>\n</html>\n'',
+  ''<%-- \n    Document   : UserHome\n    Created on : 13 Aug, 2020, 9:56:36 AM\n    Author     :
+  Admin\n--%>\n\n<%@page contentType="text/html" pageEncoding="UTF-8"%>\n<!DOCTYPE
+  html>\n<html>\n    <head>\n        <meta http-equiv="Content-Type" content="text/html;
+  charset=UTF-8">\n        <title>User Home</title>\n        <link rel="stylesheet"\n              href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">\n        <link
+  rel="stylesheet"\n              href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">\n        <script\n        src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>\n        <script\n        src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>\n        <script\n        src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>\n        <link\n            href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"\n            rel="stylesheet"
+  id="bootstrap-css">\n        <script\n        src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>\n        <script\n        src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>\n        <link
+  rel="stylesheet" type="text/css" href="css/adddataform.css">\n        <link rel="stylesheet"
+  type="text/css" href="css/adddatafrm1.css">\n        <style>\n            body {\n                background-image:
+  url("img/Medical.jpg");\n                background-color: #cccccc;\n            }\n        </style>\n    </head>\n    <body>\n        <nav
+  class="navbar navbar-expand-lg navbar-light bg-light">\n            <a href="#"
+  class="navbar-brand"> <img src="img/2855.jpeg"\n                                                   height="30"
+  width="100" alt="HospitalManagementSystem">\n            </a>\n            <button
+  class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+  aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle
+  navigation">\n                <span class="navbar-toggler-icon"></span>\n            </button>\n\n            <div
+  class="collapse navbar-collapse" id="navbarSupportedContent">\n                <h3>\n                    <b>Hospital
+  Management System</b>\n                </h3>\n                <ul class="navbar-nav
+  ml-auto" style="margin-right: 70px;">\n\n                    <li class="nav-item
+  active">\n                        <a class="nav-link" href="AdminHome.jsp">Home
+  <span class="sr-only">(current)</span></a>\n                    </li>\n                    <li
+  class="nav-item dropdown">\n                        <a class="nav-link dropdown-toggle"
+  href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+  aria-expanded="false">\n                            PATIENT\n                        </a>\n                        <div
+  class="dropdown-menu" aria-labelledby="navbarDropdown">\n                            <a
+  class="dropdown-item" href="addpatient.jsp">Add Patient</a>\n                            <a
+  class="dropdown-item" href="adminPatientList.jsp">Patient List</a>\n                        </div>\n                    </li>\n                    <li
+  class="nav-item dropdown">\n                        <a class="nav-link dropdown-toggle"
+  href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+  aria-expanded="false">\n                            DOCTOR\n                        </a>\n                        <div
+  class="dropdown-menu" aria-labelledby="navbarDropdown">\n                            <a
+  class="dropdown-item" href="addDoctor.jsp">Add Doctor</a>\n                            <a
+  class="dropdown-item" href="adminDoctorList.jsp">View Doctor</a>\n                        </div>\n                    </li>\n                    <li
+  class="nav-item dropdown">\n                        <a class="nav-link dropdown-toggle"
+  href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+  aria-expanded="false">\n                            RECEPTIONIST\n                        </a>\n                        <div
+  class="dropdown-menu" aria-labelledby="navbarDropdown">\n                            <a
+  class="dropdown-item" href="addRecp.jsp">Add Receptionist</a>\n                            <a
+  class="dropdown-item" href="adminRecpList.jsp">View Receptionist</a>\n                        </div>\n                    </li>\n                    <li
+  class="nav-item dropdown">\n                        <a class="nav-link dropdown-toggle"
+  href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+  aria-expanded="false">\n                            WORKER\n                        </a>\n                        <div
+  class="dropdown-menu" aria-labelledby="navbarDropdown">\n                            <a
+  class="dropdown-item" href="addWorker.jsp">Add Worker</a>\n                            <a
+  class="dropdown-item" href="adminWorkerList.jsp">View Worker</a>\n                        </div>\n                    </li>\n                </ul>\n            </div>\n        </nav>\n\n\n        <div
+  class="container-contact100">\n\n\n            <div class="wrap-contact100">\n                <div
+  class="contact100-form-title" style="background-image: url(img/bg-01.jpg);">\n                    <span
+  class="contact100-form-title-1">\n                        Receptionist Registration
+  Form\n                    </span>\t\t\t\t\n                </div>\n\n                <form
+  class="contact100-form validate-form"  action="<%=request.getContextPath()%>/AddRecp"
+  method="post">\n\n                    <div class="wrap-input100 validate-input"
+  data-validate="First Name is required">\n                        <span class="label-input100">First_Name:</span>\n                        <input
+  class="input100" type="text" name="fname" placeholder="Enter First name">\n                        <span
+  class="focus-input100"></span>\n                    </div>\n\n                    <div
+  class="wrap-input100 validate-input" data-validate="Last Name is required">\n                        <span
+  class="label-input100">Last_Name:</span>\n                        <input class="input100"
+  type="text" name="lname" placeholder="Enter Last name">\n                        <span
+  class="focus-input100"></span>\n                    </div>\n\n                    <div
+  class="wrap-input100 validate-input" data-validate="Phone is required">\n                        <span
+  class="label-input100">Phone:</span>\n                        <input class="input100"
+  type="text" name="Mobile" placeholder="Enter phone number">\n                        <span
+  class="focus-input100"></span>\n                    </div>\n\n                    <div
+  class="container-contact100-form-btn">\n                        <button class="contact100-form-btn">\n                            <span>\n                                Submit\n                                <i
+  class="fa fa-long-arrow-right m-l-7" aria-hidden="true"></i>\n                            </span>\n                        </button>\n                    </div>\n                </form>\n            </div>\n        </div>\n\n\n\n        <div
+  id="dropDownSelect1"></div>\n        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAKFWBqlKAGCeS1rMVoaNlwyayu0e0YRes"></script>\n        <script
+  src="js/map-custom.js"></script>\n        <!--===============================================================================================-->\n        <script
+  src="js/main.js"></script>\n\n        <!-- Global site tag (gtag.js) - Google Analytics
+  -->\n        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-23581568-13"></script>\n        <script>\n            window.dataLayer
+  = window.dataLayer || [];\n            function gtag() {\n                dataLayer.push(arguments);\n            }\n            gtag(\''js\'',
+  new Date());\n\n            gtag(\''config\'', \''UA-23581568-13\'');\n        </script>\n\n\n    </body>\n</html>\n'']],
+  ''uris'': None, ''data'': None}'
