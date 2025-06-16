@@ -225,3 +225,28 @@ python src/inspect_ast.py
 
 # 
 python3 inspect_doxygen_xml.py
+
+
+## ------
+
+AI-Powered Description Generation:
+Added generate_ai_description function to create descriptions for missing documentation
+Uses GPT-3.5-turbo to generate contextually relevant descriptions
+Enhanced Artifact Extraction:
+Now handles all file types (classes, methods, attributes, files, namespaces)
+Extracts more detailed information including return types and parameters
+Uses AI to generate descriptions when none are available
+Improved Business Rules Identification:
+Uses AI to analyze and extract business rules from descriptions
+Handles multiple rules per item
+Better error handling and reporting
+Enhanced Requirements Generation:
+AI-enhanced requirement descriptions
+More detailed functional requirements including parameters and return types
+Improved non-functional requirements based on dependencies
+Better data model documentation
+Better Error Handling and Configuration:
+Checks for OpenAI API key
+Creates output directory if it doesn't exist
+Better error reporting for AI operations
+To test the enhanced script, you'll need to:

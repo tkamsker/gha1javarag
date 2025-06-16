@@ -1,115 +1,545 @@
 functional_requirements:
-- feature_id: FR-Controller::AddDoctor
-  description: Controller::AddDoctor
-  source_class: Controller::AddDoctor
-  ai_generated: AI-generated requirement for Controller::AddDoctor
-- feature_id: FR-Controller::AddPatient
-  description: Controller::AddPatient
-  source_class: Controller::AddPatient
-  ai_generated: AI-generated requirement for Controller::AddPatient
-- feature_id: FR-Controller::AddRecp
-  description: Controller::AddRecp
-  source_class: Controller::AddRecp
-  ai_generated: AI-generated requirement for Controller::AddRecp
-- feature_id: FR-Controller::AddWorker
-  description: Controller::AddWorker
-  source_class: Controller::AddWorker
-  ai_generated: AI-generated requirement for Controller::AddWorker
-- feature_id: FR-Controller::AdminLogin
-  description: Controller::AdminLogin
-  source_class: Controller::AdminLogin
-  ai_generated: AI-generated requirement for Controller::AdminLogin
-- feature_id: FR-Controller::AdminRegister
-  description: Controller::AdminRegister
-  source_class: Controller::AdminRegister
-  ai_generated: AI-generated requirement for Controller::AdminRegister
-- feature_id: FR-Database::DatabaseConnection
-  description: Database::DatabaseConnection
-  source_class: Database::DatabaseConnection
-  ai_generated: AI-generated requirement for Database::DatabaseConnection
-- feature_id: FR-Controller::updatePatient
-  description: Controller::updatePatient
-  source_class: Controller::updatePatient
-  ai_generated: AI-generated requirement for Controller::updatePatient
-- feature_id: FR-Controller::UserLogin
-  description: Controller::UserLogin
-  source_class: Controller::UserLogin
-  ai_generated: AI-generated requirement for Controller::UserLogin
-- feature_id: FR-Controller::UserRegister
-  description: Controller::UserRegister
-  source_class: Controller::UserRegister
-  ai_generated: AI-generated requirement for Controller::UserRegister
+- id: FR-Controller::AddDoctor-doPost
+  description: 'Functional Requirement:
+
+    The system must include a Controller::AddDoctor.doPost method that can handle
+    an HTTP POST request for adding a new doctor. This method should be able to process
+    the data submitted in the request and save the information to the database.'
+  source: Controller::AddDoctor.doPost
+  dependencies: []
+  parameters: []
+  return_type: ''
+- id: FR-Controller::AddPatient-doPost
+  description: 'Functional Requirement: The system shall have a `Controller::AddPatient.doPost`
+    code element that is responsible for handling the HTTP POST request to add a new
+    patient.'
+  source: Controller::AddPatient.doPost
+  dependencies: []
+  parameters: []
+  return_type: ''
+- id: FR-Controller::AddRecp-doPost
+  description: 'Functional Requirement:
+
+    The system shall have a `Controller::AddRecp.doPost` code element that is responsible
+    for handling HTTP POST requests to add a new recipe in the application.'
+  source: Controller::AddRecp.doPost
+  dependencies: []
+  parameters: []
+  return_type: ''
+- id: FR-Controller::AddWorker-doPost
+  description: 'Functional Requirement: The system must have a Controller::AddWorker.doPost
+    code element that handles the HTTP POST request for adding a new worker.'
+  source: Controller::AddWorker.doPost
+  dependencies: []
+  parameters: []
+  return_type: ''
+- id: FR-Controller::AdminLogin-doPost
+  description: 'Functional Requirement:
+
+    The system shall include a Controller::AdminLogin.doPost code element that processes
+    the HTTP POST request for authenticating administrative users.'
+  source: Controller::AdminLogin.doPost
+  dependencies: []
+  parameters: []
+  return_type: ''
+- id: FR-Controller::AdminRegister-doPost
+  description: 'Functional Requirement: The system shall include a controller class
+    method named "Controller::AdminRegister.doPost" that handles the post request
+    for admin registration in the web application.'
+  source: Controller::AdminRegister.doPost
+  dependencies: []
+  parameters: []
+  return_type: ''
+- id: FR-Database::DatabaseConnection-initializeDatabase
+  description: "Functional Requirement: \nThe system shall include a method Database::DatabaseConnection.initializeDatabase\
+    \ that initializes the database connection for the application."
+  source: Database::DatabaseConnection.initializeDatabase
+  dependencies: []
+  parameters: []
+  return_type: ''
+- id: FR-Controller::updatePatient-doPost
+  description: 'Functional Requirement:
+
+
+    The system shall have a Controller::updatePatient.doPost method that is responsible
+    for handling the update of patient information. This method must be triggered
+    when a user submits a POST request to update patient details through the controller
+    component in the software application.'
+  source: Controller::updatePatient.doPost
+  dependencies: []
+  parameters: []
+  return_type: ''
+- id: FR-Controller::UserLogin-doPost
+  description: 'Functional Requirement:
+
+
+    The system shall include a Controller::UserLogin.doPost code element that processes
+    and validates user login credentials submitted in a web application, and authenticates
+    the user before granting access to the system.'
+  source: Controller::UserLogin.doPost
+  dependencies: []
+  parameters: []
+  return_type: ''
+- id: FR-Controller::UserRegister-doPost
+  description: 'Title: User Registration Functionality
+
+
+    Description:
+
+    The system shall include a functionality that is responsible for handling user
+    registration when an HTTP POST request is made. This functionality, triggered
+    by the `Controller::UserRegister.doPost` code element, shall collect user input
+    from the registration form, validate the data, and create a new user account in
+    the system.'
+  source: Controller::UserRegister.doPost
+  dependencies: []
+  parameters: []
+  return_type: ''
+non_functional_requirements: []
+business_rules:
+- 'Class Controller::AddDoctor: 1. The `Controller::AddDoctor` element is responsible
+  for facilitating the addition of a new doctor.'
+- 'Class Controller::AddDoctor: 2. Only authorized users or personnel should have
+  access to the `Controller::AddDoctor` element.'
+- 'Class Controller::AddDoctor: 3. The `Controller::AddDoctor` element should prompt
+  the user to provide necessary information to add a new doctor.'
+- 'Class Controller::AddDoctor: 4. The information provided for adding a new doctor
+  should be validated for accuracy and completeness.'
+- 'Class Controller::AddDoctor: 5. The `Controller::AddDoctor` element should interact
+  with the software system to store the newly added doctor''s information.'
+- 'Class Controller::AddDoctor: 6. The `Controller::AddDoctor` element should handle
+  any errors or exceptions that occur during the addition process.'
+- 'Class Controller::AddPatient: 1. The Controller class is responsible for handling
+  the addition of new patients to the system.'
+- 'Class Controller::AddPatient: 2. The AddPatient method is a function specifically
+  designed to add a new patient.'
+- 'Class Controller::AddPatient: 3. The AddPatient function should only be used for
+  adding new patients to the system.'
+- 'Class Controller::AddPatient: 4. The AddPatient function should not perform any
+  other unrelated actions.'
+- 'Class Controller::AddPatient: 5. The AddPatient function must ensure that all necessary
+  patient information is provided before adding the patient to the system.'
+- 'Class Controller::AddRecp: 1. The Controller class has a method or function named
+  AddRecp that is responsible for adding a new recipe to the system. '
+- 'Class Controller::AddRecp: 2. The AddRecp method is specific to the Controller
+  class. '
+- 'Class Controller::AddRecp: 3. The purpose of the AddRecp method is to add a new
+  recipe.'
+- 'Class Controller::AddWorker: 1. The Controller class is responsible for managing
+  the addition of new workers to the system.'
+- 'Class Controller::AddWorker: 2. The AddWorker method within the Controller class
+  is specifically responsible for adding a new worker.'
+- 'Class Controller::AddWorker: 3. Only authorized users or roles should be able to
+  access and execute the AddWorker method.'
+- 'Class Controller::AddWorker: 4. The AddWorker method must successfully add all
+  required information for a new worker to be considered added to the system.'
+- 'Class Controller::AddWorker: 5. The new worker added must adhere to any defined
+  validation rules or data requirements.'
+- 'Class Controller::AdminLogin: 1. The `Controller::AdminLogin` element is responsible
+  for handling the login functionality.'
+- 'Class Controller::AdminLogin: 2. The login functionality is specifically for administrators.'
+- 'Class Controller::AdminLogin: 3. The login functionality is within a software application.'
+- 'Class Controller::AdminLogin: 4. The `Controller::AdminLogin` module is designated
+  for administrators only.'
+- 'Class Controller::AdminRegister: 1. The Controller::AdminRegister is a code element
+  in charge of managing the registration process for administrators.'
+- 'Class Controller::AdminRegister: 2. The registration process being referred to
+  is specifically for administrators within the application.'
+- 'Class Database::DatabaseConnection: 1. The "Database::DatabaseConnection" class
+  manages the connection to a database within the software system.'
+- 'Class Database::DatabaseConnection: 2. The class is responsible for establishing
+  and maintaining the connection to the database.'
+- 'Class Database::DatabaseConnection: 3. The class can execute queries on the database.'
+- 'Class Database::DatabaseConnection: 4. The class must close the connection to the
+  database when necessary.'
+- 'Class Controller::updatePatient: 1. The `Controller::updatePatient` function is
+  responsible for handling the updating of patient information.'
+- 'Class Controller::updatePatient: 2. Only authorized users are allowed to update
+  patient information.'
+- 'Class Controller::updatePatient: 3. The information being updated must be related
+  to a specific patient within the system.'
+- 'Class Controller::updatePatient: 4. The update process must follow specific guidelines
+  and rules set by the system.'
+- 'Class Controller::UserLogin: 1. The Controller::UserLogin module is a component
+  in the software system.'
+- 'Class Controller::UserLogin: 2. The Controller::UserLogin module is responsible
+  for handling user authentication and login processes.'
+- 'Class Controller::UserLogin: 3. The Controller::UserLogin module contains the logic
+  and functionality related to user authentication and login processes.'
+- 'Class Controller::UserRegister: 1. The code element "Controller::UserRegister"
+  is responsible for handling user registration functionality within the software
+  system.'
+- 'Class Controller::UserRegister: 2. The component manages the process of registering
+  new users.'
+- 'Class Controller::UserRegister: 3. The component is responsible for validating
+  input data for user registration.'
+- 'Class Controller::UserRegister: 4. The component is responsible for storing user
+  information securely.'
+- 'Method Controller::AddDoctor.doPost: 1. The Controller::AddDoctor.doPost method
+  is triggered by an HTTP POST request.'
+- 'Method Controller::AddDoctor.doPost: 2. This method is responsible for adding a
+  new doctor to the system.'
+- 'Method Controller::AddDoctor.doPost: 3. The method processes the data submitted
+  in the request.'
+- 'Method Controller::AddDoctor.doPost: 4. The processed data is saved to the database.'
+- 'Method Controller::AddDoctor.doPost: 5. The system allows for the addition of doctors
+  through this functionality.'
+- 'Method Controller::AddPatient.doPost: 1. The `Controller::AddPatient.doPost` method
+  is specifically designed to handle HTTP POST requests.'
+- 'Method Controller::AddPatient.doPost: 2. This method is responsible for adding
+  a new patient to the system.'
+- 'Method Controller::AddPatient.doPost: 3. Only valid patient information should
+  be accepted and added to the system.'
+- 'Method Controller::AddPatient.doPost: 4. The method should ensure that the new
+  patient information is correctly formatted and meets any required validation criteria
+  before adding the patient to the system.'
+- 'Method Controller::AddRecp.doPost: 1. The `Controller::AddRecp.doPost` method is
+  specifically responsible for processing HTTP POST requests related to adding new
+  recipes.'
+- 'Method Controller::AddRecp.doPost: 2. This method should only be invoked in response
+  to a POST request.'
+- 'Method Controller::AddRecp.doPost: 3. The purpose of invoking this method is to
+  add a new recipe to the application.'
+- 'Method Controller::AddRecp.doPost: 4. The method likely validates the incoming
+  data to ensure it contains all required information for a new recipe.'
+- 'Method Controller::AddRecp.doPost: 5. The method is expected to handle any errors
+  that may occur during the process of adding a new recipe.'
+- 'Method Controller::AddRecp.doPost: 6. Only authorized users with the necessary
+  permissions should be able to successfully execute this method.'
+- 'Method Controller::AddRecp.doPost: 7. The method may trigger additional actions
+  or processes in the application related to adding a new recipe.'
+- 'Method Controller::AddWorker.doPost: 1. The system allows the addition of new workers
+  through an HTTP POST request.'
+- 'Method Controller::AddWorker.doPost: 2. The Controller::AddWorker class has a doPost
+  method that specifically handles the addition of a new worker.'
+- 'Method Controller::AddWorker.doPost: 3. Only HTTP POST requests are accepted for
+  adding new workers.'
+- 'Method Controller::AddWorker.doPost: 4. The data submitted through the HTTP POST
+  request must be valid for creating a new worker in the system.'
+- 'Method Controller::AddWorker.doPost: 5. The doPost method likely validates the
+  input data for adding a new worker before processing the request.'
+- 'Method Controller::AdminLogin.doPost: 1. The method is specific to processing HTTP
+  POST requests.'
+- 'Method Controller::AdminLogin.doPost: 2. The method is specifically for authenticating
+  administrative users.'
+- 'Method Controller::AdminLogin.doPost: 3. The method is likely part of a Controller
+  class that handles login functionality.'
+- 'Method Controller::AdminLogin.doPost: 4. The method is responsible for handling
+  the authentication process for administrative users.'
+- 'Method Controller::AdminRegister.doPost: 1. Admin registration in the web application
+  requires data to be submitted through a post request.'
+- 'Method Controller::AdminRegister.doPost: 2. The method "doPost" in the Controller::AdminRegister
+  class is responsible for handling the post request for admin registration.'
+- 'Method Controller::AdminRegister.doPost: 3. The method "doPost" likely contains
+  the business logic for processing and validating admin registration data.'
+- 'Method Controller::AdminRegister.doPost: 4. The Controller::AdminRegister class
+  is a controller class that manages admin registration functionality.'
+- 'Method Database::DatabaseConnection.initializeDatabase: 1. The database connection
+  for the application needs to be initialized before any database operations can be
+  performed.'
+- 'Method Database::DatabaseConnection.initializeDatabase: 2. The method Database::DatabaseConnection.initializeDatabase
+  is responsible for initializing the database connection.'
+- 'Method Database::DatabaseConnection.initializeDatabase: 3. Initializing the database
+  connection is a crucial step for the application to successfully interact with the
+  database.'
+- 'Method Database::DatabaseConnection.initializeDatabase: 4. The method initializeDatabase
+  should handle any necessary configuration or settings required for the database
+  connection to be established.'
+- 'Method Database::DatabaseConnection.initializeDatabase: 5. It is important to call
+  the initializeDatabase method before attempting to access or modify any data in
+  the database.'
+- 'Method Controller::updatePatient.doPost: 1. The updatePatient.doPost method is
+  responsible for updating patient information in the system.'
+- 'Method Controller::updatePatient.doPost: 2. This method is triggered specifically
+  when a user submits a POST request to update patient details.'
+- 'Method Controller::updatePatient.doPost: 3. The update process is handled through
+  the controller component within the software application.'
+- 'Method Controller::updatePatient.doPost: 4. The method must ensure that only authorized
+  users are allowed to update patient information.'
+- 'Method Controller::updatePatient.doPost: 5. The method should validate and sanitize
+  the input data received for updating patient details.'
+- 'Method Controller::updatePatient.doPost: 6. The method should update the patient
+  information in a consistent and accurate manner within the system''s database. '
+- 'Method Controller::updatePatient.doPost: 7. The method should handle any errors
+  or exceptions that may occur during the update process effectively.'
+- 'Method Controller::UserLogin.doPost: 1. The Controller::UserLogin.doPost method
+  is responsible for handling the submission of user login credentials in the web
+  application.'
+- 'Method Controller::UserLogin.doPost: 2. The method processes and validates the
+  user input before proceeding with authentication.'
+- 'Method Controller::UserLogin.doPost: 3. Authentication of the user is necessary
+  before granting access to the system.'
+- 'Method Controller::UserLogin.doPost: 4. Validation of the user input is a mandatory
+  step before authentication can occur.'
+- 'Method Controller::UserLogin.doPost: 5. Only authenticated users are granted access
+  to the system after successful validation and authentication.'
+- 'Method Controller::UserLogin.doPost: 6. Access to the system is restricted to users
+  who have been successfully authenticated.'
+- 'Method Controller::UserRegister.doPost: 1. This method is triggered when an HTTP
+  POST request is made for user registration.'
+- 'Method Controller::UserRegister.doPost: 2. The method collects user input from
+  the registration form.'
+- 'Method Controller::UserRegister.doPost: 3. The collected data is validated before
+  creating a new user account.'
+- 'Method Controller::UserRegister.doPost: 4. User account creation process should
+  only proceed if the data passes validation.'
+- 'Attribute Controller::AddDoctor.i: 1. Only authorized users with access to the
+  `Controller::AddDoctor` code element can add a new doctor to the system.'
+- 'Attribute Controller::AddDoctor.i: 2. The `Controller::AddDoctor` code must validate
+  all information provided for the new doctor before adding them to the system.'
+- 'Attribute Controller::AddDoctor.i: 3. The `Controller::AddDoctor` code must ensure
+  that the new doctor being added does not already exist in the system.'
+- 'Attribute Controller::AddDoctor.i: 4. The `Controller::AddDoctor` code should follow
+  any specific business rules or guidelines for adding doctors to the system.'
+- 'Attribute Controller::AddDoctor.i: 5. The `Controller::AddDoctor` code should trigger
+  any necessary notifications or updates after successfully adding a new doctor to
+  the system.'
+- 'Attribute Controller::AddPatient.i: 1. The function Controller::AddPatient.i belongs
+  to the Controller class.'
+- 'Attribute Controller::AddPatient.i: 2. The function is responsible for adding a
+  new patient to the system.'
+- 'Attribute Controller::AddPatient.i: 3. The function name follows the convention
+  of using the Controller namespace followed by the specific function name.'
+- 'Attribute Controller::AddPatient.i: 4. The function should be used specifically
+  for adding patients to the system and not for other purposes.'
+- 'Attribute Controller::AddPatient.i: 5. The function should adhere to the functionality
+  defined for adding a new patient and not perform any unrelated tasks.'
+- 'Attribute Controller::AddRecp.i: 1. The Controller module is responsible for managing
+  recipes within the system.'
+- 'Attribute Controller::AddRecp.i: 2. The AddRecp.i code element is specifically
+  responsible for adding a new recipe.'
+- 'Attribute Controller::AddRecp.i: 3. Only the Controller module is allowed to add
+  new recipes to the system.'
+- 'Attribute Controller::AddRecp.i: 4. Adding a new recipe must be done through the
+  AddRecp.i code element.'
+- 'Attribute Controller::AddRecp.i: 5. Adding a new recipe is a functionality specific
+  to the Controller module.'
+- 'Attribute Controller::AddWorker.i: 1. The AddWorker function or method must be
+  implemented within the Controller component of the system.'
+- 'Attribute Controller::AddWorker.i: 2. The AddWorker function or method must be
+  responsible for adding a new worker or employee to the system.'
+- 'Attribute Controller::AddWorker.i: 3. The AddWorker function or method cannot be
+  used for purposes other than adding a new worker or employee.'
+- 'Attribute Controller::AddWorker.i: 4. The AddWorker function or method should ensure
+  that all necessary information for a new worker or employee is provided before adding
+  them to the system.'
+- 'Attribute Controller::AddWorker.i: 5. The AddWorker function or method should handle
+  any errors or exceptions that may occur during the process of adding a new worker
+  or employee.'
+- 'Attribute Controller::AddWorker.i: 6. The AddWorker function or method should update
+  the system with the new worker or employee''s information accurately.'
+- 'Attribute Controller::AdminLogin.user: 1. The code element "Controller::AdminLogin.user"
+  must refer to a method or function within the AdminLogin controller.'
+- 'Attribute Controller::AdminLogin.user: 2. The method or function referenced by
+  "Controller::AdminLogin.user" must specifically handle user authentication for administrative
+  purposes.'
+- 'Attribute Controller::AdminLogin.pass: 1. The code element "Controller::AdminLogin.pass"
+  is a method within the AdminLogin controller class.'
+- 'Attribute Controller::AdminLogin.pass: 2. This method is likely responsible for
+  handling the process of validating and authenticating an administrator''s login
+  credentials.'
+- 'Attribute Controller::AdminLogin.pass: 3. The method is specific to the AdminLogin
+  controller class, suggesting that it is related to administrator login functionality
+  only.'
+- 'Attribute Controller::AdminLogin.pass: 4. The method should implement logic to
+  validate the administrator''s login credentials, ensuring they are authentic and
+  authorized to access the system.'
+- 'Attribute Controller::AdminLogin.pass: 5. The method may include functionality
+  to handle different scenarios such as successful login, incorrect credentials, or
+  account lockout for security purposes.'
+- 'Attribute Controller::AdminLogin.pass: 6. The method should adhere to the security
+  standards and best practices for handling sensitive login information.'
+- 'Attribute Controller::AdminLogin.pass: 7. The method may interact with other components
+  of the system to verify the administrator''s credentials and grant access accordingly.'
+- 'Attribute Controller::AdminLogin.pass: 8. The method should be efficient and reliable
+  in handling the authentication process to provide a smooth user experience for administrators
+  logging in.'
+- 'Attribute Controller::AdminRegister.i: 1. Controller::AdminRegister.i is a software
+  code element that is specifically related to the registration process for administrators
+  in the system.'
+- 'Attribute Controller::AdminRegister.i: 2. This code element is responsible for
+  handling the registration functionality for administrators only, indicating a segregation
+  of user types within the system.'
+- 'Attribute Controller::AdminRegister.i: 3. The purpose of Controller::AdminRegister.i
+  is to facilitate the registration process specifically for administrators, implying
+  a specialized workflow for this user group.'
+- 'Attribute Controller::AdminRegister.i: 4. The functionality implemented in Controller::AdminRegister.i
+  is limited to the registration tasks and operations for administrators, indicating
+  a focused scope for this code element.'
+- 'Attribute Controller::AdminRegister.i: 5. Any changes, updates, or enhancements
+  related to the registration process for administrators should be implemented within
+  the Controller::AdminRegister.i code element to maintain consistency and effectiveness.'
+- 'Attribute Controller::UserLogin.user: 1. The code element "Controller::UserLogin.user"
+  is used to refer to the user login functionality.'
+- 'Attribute Controller::UserLogin.user: 2. The user login functionality is implemented
+  within the UserLogin controller.'
+- 'Attribute Controller::UserLogin.user: 3. The naming convention for referencing
+  the user login functionality is "Controller::UserLogin.user".'
+- 'Attribute Controller::UserLogin.user: 4. Any changes or updates related to the
+  user login functionality should be made in the UserLogin controller.'
+- 'Attribute Controller::UserLogin.user: 5. The UserLogin controller is responsible
+  for handling the user login process in the system.'
+- 'Attribute Controller::UserLogin.pass: 1. The purpose of the "Controller::UserLogin.pass"
+  code element is to handle the authentication and verification of user login credentials.'
+- 'Attribute Controller::UserLogin.pass: 2. The code element is specifically associated
+  with the "UserLogin" controller.'
+- 'Attribute Controller::UserLogin.pass: 3. The code element is responsible for ensuring
+  that only valid user login credentials are accepted for authentication.'
+- 'Attribute Controller::UserLogin.pass: 4. The authentication process implemented
+  by the code element is used to verify the identity of users trying to log in.'
+- 'Attribute Controller::UserLogin.pass: 5. The code element is not intended to perform
+  any other functions outside of authenticating and verifying user login credentials
+  in the UserLogin controller.'
+- 'Attribute Controller::UserRegister.user: 1. The "Controller::UserRegister.user"
+  code element refers to the user registration feature within the Controller class.'
+- 'Attribute Controller::UserRegister.user: 2. The Controller::UserRegister.user is
+  responsible for handling the registration process for a new user in the system. '
+- 'Attribute Controller::UserRegister.user: 3. The Controller::UserRegister.user must
+  handle all steps required for successfully registering a new user in the system.'
+- 'Attribute Controller::UserRegister.user: 4. The user registration process should
+  follow the defined steps and rules set by the Controller class.'
+- 'Attribute Controller::UserRegister.user: 5. Any changes or updates to the user
+  registration process must be implemented within the Controller::UserRegister.user
+  code element.'
+- 'Attribute Controller::UserRegister.user: 6. The Controller::UserRegister.user should
+  ensure that all required user information is collected during the registration process.'
+- 'Attribute Controller::UserRegister.user: 7. The Controller::UserRegister.user is
+  expected to validate the user input to ensure its accuracy and completeness.'
+- 'Attribute Controller::UserRegister.user: 8. The Controller::UserRegister.user must
+  securely handle and store user registration data in the system.'
+- 'Attribute Controller::UserRegister.pass: 1. The code element "Controller::UserRegister.pass"
+  is part of the UserRegister controller class.'
+- 'Attribute Controller::UserRegister.pass: 2. The code element "Controller::UserRegister.pass"
+  is a function or method.'
+- 'Attribute Controller::UserRegister.pass: 3. The function or method "Controller::UserRegister.pass"
+  handles user registration or password generation functionality.'
+- 'Attribute Controller::UserRegister.i: 1. The registration process for a user in
+  the application''s controller module is handled by the code element Controller::UserRegister.i.'
+- 'Attribute Controller::UserRegister.i: 2. The Controller::UserRegister.i element
+  is specifically responsible for managing user registration within the controller
+  module of the application.'
+- 'Attribute Controller::UserRegister.i: 3. Any changes or updates related to the
+  user registration process should be implemented and reflected within the Controller::UserRegister.i
+  code element.'
+- 'Attribute Controller::UserRegister.i: 4. The Controller::UserRegister.i code element
+  is critical for ensuring the proper functioning of the user registration feature
+  in the application.'
+dependencies:
+  Controller::AddDoctor: []
+  Controller::AddPatient: []
+  Controller::AddRecp: []
+  Controller::AddWorker: []
+  Controller::AdminLogin: []
+  Controller::AdminRegister: []
+  Database::DatabaseConnection: []
+  Controller::updatePatient: []
+  Controller::UserLogin: []
+  Controller::UserRegister: []
 data_model:
-- entity: Controller::AddDoctor
+- name: Controller::AddDoctor
   attributes:
-  - i
-- entity: Controller::AddPatient
+  - name: i
+    type: ''
+    description: 'Enhanced description: The `Controller::AddDoctor` code element facilitates
+      the process of adding a new doctor to the system by handling the input validation,
+      database interactions, and business logic required for successfully creating
+      and integrating a doctor''s profile into the system.'
+- name: Controller::AddPatient
   attributes:
-  - i
-- entity: Controller::AddRecp
+  - name: i
+    type: ''
+    description: 'Enhanced description: The code element Controller::AddPatient.i
+      is a method within the Controller class that encapsulates the functionality
+      to add a new patient to the system. This method is responsible for handling
+      the logic and operations required to successfully incorporate the patient''s
+      information into the system, ensuring accurate and efficient patient management.'
+- name: Controller::AddRecp
   attributes:
-  - i
-- entity: Controller::AddWorker
+  - name: i
+    type: ''
+    description: The Controller::AddRecp.i code element is a specific method within
+      the Controller module that manages the process of creating and adding a new
+      recipe to the system. This functionality includes validating input data, creating
+      a new recipe object, and storing it within the system's database.
+- name: Controller::AddWorker
   attributes:
-  - i
-- entity: Controller::AdminLogin
+  - name: i
+    type: ''
+    description: The Controller::AddWorker function or method facilitates the creation
+      and addition of a new worker or employee entity to the system. This process
+      includes capturing and validating relevant employee details such as personal
+      information, job role, and contact information before integrating the new worker
+      into the organizational structure.
+- name: Controller::AdminLogin
   attributes:
-  - user
-  - pass
-- entity: Controller::AdminRegister
+  - name: user
+    type: ''
+    description: The code element "Controller::AdminLogin.user" refers to the specific
+      method or function named "user" located within the AdminLogin controller class.
+      This method is responsible for managing the authentication process specifically
+      designed for administrative users, ensuring secure access to privileged functionalities
+      and data within the system.
+- name: Controller::AdminLogin
   attributes:
-  - i
-- entity: Database::DatabaseConnection
-  attributes: []
-- entity: Controller::updatePatient
-  attributes: []
-- entity: Controller::UserLogin
+  - name: pass
+    type: ''
+    description: The code element Controller::AdminLogin.pass is a method within the
+      AdminLogin controller class. This method is responsible for validating and authenticating
+      an administrator's login credentials, ensuring that only authorized individuals
+      can access privileged administrative functionalities within the system. It likely
+      includes functions such as verifying the username and password provided by the
+      administrator against stored credentials, enforcing security measures to protect
+      against unauthorized access, and managing the session for authenticated users.
+- name: Controller::AdminRegister
   attributes:
-  - user
-  - pass
-- entity: Controller::UserRegister
+  - name: i
+    type: ''
+    description: Controller::AdminRegister.i is a software code element that encapsulates
+      the logic and processes related to registering administrators in the system.
+      It handles the validation of administrator registration inputs, creation of
+      new administrator accounts, and storage of relevant data in the system database.
+      Additionally, this code element may include error handling mechanisms and security
+      features to ensure a secure and seamless registration process for administrators.
+- name: Controller::UserLogin
   attributes:
-  - user
-  - pass
-  - i
-traceability_matrix:
-- requirement_id: FR-Controller::AddDoctor
-  source_file: Controller::AddDoctor
-  method: doPost
-  type: Method
-- requirement_id: FR-Controller::AddPatient
-  source_file: Controller::AddPatient
-  method: doPost
-  type: Method
-- requirement_id: FR-Controller::AddRecp
-  source_file: Controller::AddRecp
-  method: doPost
-  type: Method
-- requirement_id: FR-Controller::AddWorker
-  source_file: Controller::AddWorker
-  method: doPost
-  type: Method
-- requirement_id: FR-Controller::AdminLogin
-  source_file: Controller::AdminLogin
-  method: doPost
-  type: Method
-- requirement_id: FR-Controller::AdminRegister
-  source_file: Controller::AdminRegister
-  method: doPost
-  type: Method
-- requirement_id: FR-Database::DatabaseConnection
-  source_file: Database::DatabaseConnection
-  method: initializeDatabase
-  type: Method
-- requirement_id: FR-Controller::updatePatient
-  source_file: Controller::updatePatient
-  method: doPost
-  type: Method
-- requirement_id: FR-Controller::UserLogin
-  source_file: Controller::UserLogin
-  method: doPost
-  type: Method
-- requirement_id: FR-Controller::UserRegister
-  source_file: Controller::UserRegister
-  method: doPost
-  type: Method
+  - name: user
+    type: ''
+    description: The code element Controller::UserLogin.user uniquely identifies and
+      references the specific method or feature responsible for handling user login
+      operations, which is implemented within the UserLogin controller component of
+      the software system.
+- name: Controller::UserLogin
+  attributes:
+  - name: pass
+    type: ''
+    description: The code element "Controller::UserLogin.pass" implements the logic
+      for authenticating and verifying user login credentials in the UserLogin controller.
+      It processes user-provided login information such as username and password,
+      interacts with the authentication system, performs necessary validations, and
+      grants access to authorized users based on the provided credentials.
+- name: Controller::UserRegister
+  attributes:
+  - name: user
+    type: ''
+    description: 'Enhanced description: The code element "Controller::UserRegister.user"
+      represents a specific function within the Controller class that manages the
+      user registration functionality. This function executes the registration process
+      for new users within the system, including validating user input, creating user
+      accounts, and storing user information securely.'
+- name: Controller::UserRegister
+  attributes:
+  - name: pass
+    type: ''
+    description: 'Enhanced description: The code element "Controller::UserRegister.pass"
+      is a method within the UserRegister controller class responsible for managing
+      the process of user registration, including password generation and associated
+      functionality.'
+- name: Controller::UserRegister
+  attributes:
+  - name: i
+    type: ''
+    description: 'Enhanced description: The code element Controller::UserRegister.i
+      is responsible for managing and executing the user registration workflow within
+      the controller module of the application. It includes functionalities such as
+      validating user input, creating user accounts, and storing registration data
+      in the database.'
