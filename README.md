@@ -185,3 +185,43 @@ USE_REMOTE_DB=false
 DEBUG=true
 
 curl -X POST "https://chromadb.dev.motorenflug.at/api/v2/ingest" -H "Content-Type: application/json"   -d '{"directory_path": "/Users/thomaskamsker/Desktop/AKT_Docs/2025/AI/Cucocalc/code/cuco-master@d34bb6b6d1c"}'
+
+
+# --  16 Jun 
+
+ow we have implemented step 2 of the pipeline, which includes:
+1. DoxygenParser class that:
+- Parses doxygen XML files
+- Extracts class, method, and namespace information
+- Builds a structured AST representation
+
+2. ASTProcessor class that:
+- Processes the AST data
+- Creates semantic documents for each component
+- Stores the data in ChromaDB with proper metadata
+
+3. Updated main.py to:
+- Process source files (step 1)
+- Process AST data from doxygen (step 2)
+- Handle both steps in sequence
+
+4. Added test_ast.py to:
+- Test the AST processing functionality
+- Verify the data in ChromaDB
+- Demonstrate querying capabilities
+
+To test the implementation:
+1. Make sure you have doxygen XML output in the correct directory (should be in $JAVA_SOURCE_DIR/doxygen/xml/)
+2. Run the main script:
+
+python src/main.py
+
+or 
+
+python src/test_ast.py
+
+python src/inspect_ast.py
+
+
+# 
+python3 inspect_doxygen_xml.py

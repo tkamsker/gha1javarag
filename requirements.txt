@@ -1,0 +1,5 @@
+python-dotenv==1.0.0
+chromadb==0.4.24
+langchain==0.1.14
+gitpython==3.1.40
+pyyaml==6.0.1 

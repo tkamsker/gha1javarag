@@ -1,0 +1,115 @@
+functional_requirements:
+- feature_id: FR-Controller::AddDoctor
+  description: Controller::AddDoctor
+  source_class: Controller::AddDoctor
+  ai_generated: AI-generated requirement for Controller::AddDoctor
+- feature_id: FR-Controller::AddPatient
+  description: Controller::AddPatient
+  source_class: Controller::AddPatient
+  ai_generated: AI-generated requirement for Controller::AddPatient
+- feature_id: FR-Controller::AddRecp
+  description: Controller::AddRecp
+  source_class: Controller::AddRecp
+  ai_generated: AI-generated requirement for Controller::AddRecp
+- feature_id: FR-Controller::AddWorker
+  description: Controller::AddWorker
+  source_class: Controller::AddWorker
+  ai_generated: AI-generated requirement for Controller::AddWorker
+- feature_id: FR-Controller::AdminLogin
+  description: Controller::AdminLogin
+  source_class: Controller::AdminLogin
+  ai_generated: AI-generated requirement for Controller::AdminLogin
+- feature_id: FR-Controller::AdminRegister
+  description: Controller::AdminRegister
+  source_class: Controller::AdminRegister
+  ai_generated: AI-generated requirement for Controller::AdminRegister
+- feature_id: FR-Database::DatabaseConnection
+  description: Database::DatabaseConnection
+  source_class: Database::DatabaseConnection
+  ai_generated: AI-generated requirement for Database::DatabaseConnection
+- feature_id: FR-Controller::updatePatient
+  description: Controller::updatePatient
+  source_class: Controller::updatePatient
+  ai_generated: AI-generated requirement for Controller::updatePatient
+- feature_id: FR-Controller::UserLogin
+  description: Controller::UserLogin
+  source_class: Controller::UserLogin
+  ai_generated: AI-generated requirement for Controller::UserLogin
+- feature_id: FR-Controller::UserRegister
+  description: Controller::UserRegister
+  source_class: Controller::UserRegister
+  ai_generated: AI-generated requirement for Controller::UserRegister
+data_model:
+- entity: Controller::AddDoctor
+  attributes:
+  - i
+- entity: Controller::AddPatient
+  attributes:
+  - i
+- entity: Controller::AddRecp
+  attributes:
+  - i
+- entity: Controller::AddWorker
+  attributes:
+  - i
+- entity: Controller::AdminLogin
+  attributes:
+  - user
+  - pass
+- entity: Controller::AdminRegister
+  attributes:
+  - i
+- entity: Database::DatabaseConnection
+  attributes: []
+- entity: Controller::updatePatient
+  attributes: []
+- entity: Controller::UserLogin
+  attributes:
+  - user
+  - pass
+- entity: Controller::UserRegister
+  attributes:
+  - user
+  - pass
+  - i
+traceability_matrix:
+- requirement_id: FR-Controller::AddDoctor
+  source_file: Controller::AddDoctor
+  method: doPost
+  type: Method
+- requirement_id: FR-Controller::AddPatient
+  source_file: Controller::AddPatient
+  method: doPost
+  type: Method
+- requirement_id: FR-Controller::AddRecp
+  source_file: Controller::AddRecp
+  method: doPost
+  type: Method
+- requirement_id: FR-Controller::AddWorker
+  source_file: Controller::AddWorker
+  method: doPost
+  type: Method
+- requirement_id: FR-Controller::AdminLogin
+  source_file: Controller::AdminLogin
+  method: doPost
+  type: Method
+- requirement_id: FR-Controller::AdminRegister
+  source_file: Controller::AdminRegister
+  method: doPost
+  type: Method
+- requirement_id: FR-Database::DatabaseConnection
+  source_file: Database::DatabaseConnection
+  method: initializeDatabase
+  type: Method
+- requirement_id: FR-Controller::updatePatient
+  source_file: Controller::updatePatient
+  method: doPost
+  type: Method
+- requirement_id: FR-Controller::UserLogin
+  source_file: Controller::UserLogin
+  method: doPost
+  type: Method
+- requirement_id: FR-Controller::UserRegister
+  source_file: Controller::UserRegister
+  method: doPost
+  type: Method

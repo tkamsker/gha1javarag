@@ -1,0 +1,15 @@
+chromadb:
+  persist_directory: "data/chromadb"
+  collection_name: "java_source"
+
+source:
+  file_extensions:
+    - ".java"
+    - ".xml"
+    - ".jsp"
+    - ".sql"
+
+embedding:
+  model_name: "all-MiniLM-L6-v2"
+  chunk_size: 1000
+  chunk_overlap: 200 
