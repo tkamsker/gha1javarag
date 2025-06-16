@@ -1,27 +1,62 @@
 import os
 import yaml
 import json
+import logging
 from typing import Dict, List, Any
 from dotenv import load_dotenv
 from chromadb_connector import ChromaDBConnector
 from openai import OpenAI
 from bs4 import BeautifulSoup
 import glob
+from datetime import datetime
+
+# Configure logging
+def setup_logging():
+    """Configure logging with detailed debug information."""
+    log_dir = os.getenv('LOG_DIR', './logs')
+    os.makedirs(log_dir, exist_ok=True)
+    
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    log_file = os.path.join(log_dir, f'requirement_generator_{timestamp}.log')
+    
+    # Configure logging format
+    log_format = '%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s'
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format=log_format,
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler()
+        ]
+    )
+    
+    # Create logger
+    logger = logging.getLogger('requirement_generator')
+    logger.setLevel(logging.DEBUG)
+    
+    return logger
+
+# Initialize logger
+logger = setup_logging()
 
 # Load environment variables
 load_dotenv()
+logger.debug("Environment variables loaded")
 
 # Initialize OpenAI client with model from .env
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 OPENAI_MODEL = os.getenv('OPENAI_MODEL_NAME', 'gpt-3.5-turbo')
+logger.debug(f"OpenAI client initialized with model: {OPENAI_MODEL}")
 
 def extract_jsp_requirements(jsp_file_path: str) -> Dict[str, Any]:
     """
     Extract requirements from JSP files by analyzing HTML elements.
     """
+    logger.debug(f"Processing JSP file: {jsp_file_path}")
     try:
         with open(jsp_file_path, 'r', encoding='utf-8') as f:
             content = f.read()
+        logger.debug(f"Successfully read JSP file: {jsp_file_path}")
         
         soup = BeautifulSoup(content, 'html.parser')
         requirements = {
@@ -33,13 +68,17 @@ def extract_jsp_requirements(jsp_file_path: str) -> Dict[str, Any]:
         }
         
         # Extract form requirements
-        for form in soup.find_all('form'):
+        forms = soup.find_all('form')
+        logger.debug(f"Found {len(forms)} forms in {jsp_file_path}")
+        for form in forms:
             form_info = {
                 'action': form.get('action', ''),
                 'method': form.get('method', ''),
                 'inputs': []
             }
-            for input_elem in form.find_all('input'):
+            inputs = form.find_all('input')
+            logger.debug(f"Found {len(inputs)} inputs in form {form_info['action']}")
+            for input_elem in inputs:
                 form_info['inputs'].append({
                     'type': input_elem.get('type', ''),
                     'name': input_elem.get('name', ''),
@@ -48,40 +87,50 @@ def extract_jsp_requirements(jsp_file_path: str) -> Dict[str, Any]:
             requirements['forms'].append(form_info)
         
         # Extract link requirements
-        for link in soup.find_all('a'):
+        links = soup.find_all('a')
+        logger.debug(f"Found {len(links)} links in {jsp_file_path}")
+        for link in links:
             requirements['links'].append({
                 'href': link.get('href', ''),
                 'text': link.get_text().strip()
             })
         
         # Extract button requirements
-        for button in soup.find_all('button'):
+        buttons = soup.find_all('button')
+        logger.debug(f"Found {len(buttons)} buttons in {jsp_file_path}")
+        for button in buttons:
             requirements['buttons'].append({
                 'type': button.get('type', ''),
                 'text': button.get_text().strip()
             })
         
         # Extract table requirements
-        for table in soup.find_all('table'):
+        tables = soup.find_all('table')
+        logger.debug(f"Found {len(tables)} tables in {jsp_file_path}")
+        for table in tables:
             table_info = {
                 'headers': [],
                 'rows': []
             }
             headers = table.find_all('th')
             table_info['headers'] = [h.get_text().strip() for h in headers]
-            for row in table.find_all('tr'):
+            rows = table.find_all('tr')
+            logger.debug(f"Found {len(rows)} rows in table")
+            for row in rows:
                 cells = row.find_all('td')
                 if cells:
                     table_info['rows'].append([cell.get_text().strip() for cell in cells])
             requirements['tables'].append(table_info)
         
+        logger.debug(f"Successfully processed JSP file: {jsp_file_path}")
         return requirements
     except Exception as e:
-        print(f"Error processing JSP file {jsp_file_path}: {str(e)}")
+        logger.error(f"Error processing JSP file {jsp_file_path}: {str(e)}", exc_info=True)
         return {}
 
 def generate_ai_description(text: str) -> str:
     """Generate AI description using OpenAI API."""
+    logger.debug(f"Generating AI description for: {text[:100]}...")
     try:
         response = client.chat.completions.create(
             model=OPENAI_MODEL,
@@ -91,47 +140,62 @@ def generate_ai_description(text: str) -> str:
             ],
             max_tokens=150
         )
-        return response.choices[0].message.content.strip()
+        description = response.choices[0].message.content.strip()
+        logger.debug(f"Successfully generated AI description: {description[:100]}...")
+        return description
     except Exception as e:
-        print(f"Error generating AI description: {str(e)}")
+        logger.error(f"Error generating AI description: {str(e)}", exc_info=True)
         return ""
 
 def generate_requirements_spec(xml_dir: str, output_dir: str) -> None:
     """
     Generate a structured requirements specification document using reverse engineering.
     """
+    logger.info(f"Starting requirements generation for directory: {xml_dir}")
     yaml_file = os.path.join(xml_dir, 'doxygen_output.yaml')
     if not os.path.exists(yaml_file):
-        print(f"Error: YAML file not found at {yaml_file}")
+        logger.error(f"YAML file not found at {yaml_file}")
         return
 
+    logger.debug(f"Loading YAML data from: {yaml_file}")
     # Load and process the YAML data
     with open(yaml_file, 'r') as f:
         data = yaml.safe_load(f)
+    logger.debug("Successfully loaded YAML data")
 
     # Extract code artifacts
+    logger.info("Extracting code artifacts")
     artifacts = extract_code_artifacts(data)
+    logger.debug(f"Extracted {len(artifacts['classes'])} classes, {len(artifacts['methods'])} methods")
     
     # Process JSP files
+    logger.info("Processing JSP files")
     jsp_files = glob.glob(os.path.join(xml_dir, '**/*.jsp'), recursive=True)
+    logger.debug(f"Found {len(jsp_files)} JSP files")
     jsp_requirements = {}
     for jsp_file in jsp_files:
         jsp_requirements[jsp_file] = extract_jsp_requirements(jsp_file)
     
     # Analyze dependencies
+    logger.info("Analyzing dependencies")
     dependencies = analyze_dependencies(artifacts)
+    logger.debug(f"Analyzed dependencies for {len(dependencies)} components")
     
     # Identify business rules
+    logger.info("Identifying business rules")
     business_rules = identify_business_rules(artifacts)
+    logger.debug(f"Identified {len(business_rules)} business rules")
     
     # Generate requirements
+    logger.info("Generating requirements")
     requirements = generate_requirements(artifacts, dependencies, business_rules, jsp_requirements)
     
     # Write the requirements to file
     output_file = os.path.join(output_dir, 'requirements_spec.yaml')
+    logger.info(f"Writing requirements to: {output_file}")
     with open(output_file, 'w') as f:
         yaml.dump(requirements, f, sort_keys=False, allow_unicode=True)
-    print(f"Requirements specification written to {output_file}")
+    logger.info(f"Requirements specification written to {output_file}")
 
 def generate_requirements(artifacts: Dict[str, Any], 
                          dependencies: Dict[str, List[str]], 
@@ -557,29 +621,36 @@ def identify_business_rules(artifacts: Dict[str, Any]) -> List[str]:
     return business_rules
 
 if __name__ == "__main__":
+    logger.info("Starting requirement generator")
     load_dotenv()
     
     # Check for OpenAI API key
     if not os.getenv('OPENAI_API_KEY'):
-        print("Warning: OPENAI_API_KEY not set. AI-generated descriptions will be limited.")
+        logger.warning("OPENAI_API_KEY not set. AI-generated descriptions will be limited.")
     
     xml_dir = os.getenv('XML_INPUT_DIR')
     output_dir = os.getenv('OUTPUT_DIR', './output')
     
     if not xml_dir:
-        print("Error: XML_INPUT_DIR environment variable not set.")
+        logger.error("XML_INPUT_DIR environment variable not set.")
     else:
         # Create output directory if it doesn't exist
         os.makedirs(output_dir, exist_ok=True)
+        logger.debug(f"Created output directory: {output_dir}")
         
         # Generate main requirements specification
         generate_requirements_spec(xml_dir, output_dir)
         
         # Generate requirements for the 'Controller' namespace
+        logger.info("Generating requirements for Controller namespace")
         generate_requirements_for_namespace('Controller', output_dir)
         
         # Identify class clusters and generate markdown requirements
+        logger.info("Identifying class clusters")
         with open(os.path.join(xml_dir, 'doxygen_output.yaml'), 'r') as f:
             data = yaml.safe_load(f)
         clusters = identify_class_clusters(data)
-        generate_markdown_requirements(clusters, output_dir) 
+        logger.debug(f"Identified {len(clusters)} class clusters")
+        generate_markdown_requirements(clusters, output_dir)
+    
+    logger.info("Requirement generator completed") 

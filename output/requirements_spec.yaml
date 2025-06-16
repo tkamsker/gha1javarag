@@ -3,502 +3,509 @@ functional_requirements:
   description: '**Functional Requirement:**
 
 
-    The system shall provide an HTTP POST endpoint that allows the addition of a new
-    doctor. When a POST request with the doctor''s details is received, the system
-    shall validate the provided information. If the validation is successful, the
-    system shall create a new doctor record in the database. The system shall return
-    a success response if the operation is completed successfully, or an appropriate
-    error response if the validation fails or if the creation of the doctor record
-    is unsuccessful.'
+    The system shall provide an endpoint that accepts HTTP POST requests to add a
+    new doctor. The endpoint shall receive doctor details from the request, validate
+    the input data according to predefined rules, and, if valid, persist the new doctor
+    record in the system. The system shall return a response indicating whether the
+    operation was successful or if it failed, including an appropriate error message
+    in case of failure.'
   source: Controller::AddDoctor.doPost
   dependencies: []
   parameters: []
   return_type: ''
 - id: FR-Controller::AddPatient-doPost
-  description: "**Requirement:**  \nThe system shall provide an HTTP POST endpoint\
-    \ that allows clients to add a new patient to the system. Upon receiving a request,\
-    \ the system shall:\n\n- Parse patient information from the request body.\n- Validate\
-    \ the input data according to defined data validation rules.\n- If validation\
-    \ is successful, create a new patient record in the database.\n- Respond with\
-    \ a success message and the details of the newly created patient.\n- If validation\
-    \ fails or an error occurs, respond with an appropriate error message indicating\
-    \ the reason for failure."
+  description: "**Functional Requirement:**  \nThe system shall provide an endpoint\
+    \ that handles HTTP POST requests for adding a new patient. Upon receiving a request,\
+    \ the system shall validate the submitted patient data, create a new patient record\
+    \ if the data is valid, and return a response indicating whether the operation\
+    \ was successful or if it failed (including failure reasons)."
   source: Controller::AddPatient.doPost
   dependencies: []
   parameters: []
   return_type: ''
 - id: FR-Controller::AddRecp-doPost
-  description: '**Functional Requirement**
-
-
-    When an HTTP POST request is received at the Add Recipient endpoint, the system
-    shall process the submitted form data, validate the user input, and, if the input
-    is valid, create a new recipient record in the database. Upon successful creation,
-    the system shall either redirect the user to a confirmation page or return a success
-    message. If the input is invalid, the system shall return specific error messages
-    or prompt the user to correct the input.'
+  description: "**Functional Requirement:**  \nThe system shall provide an HTTP POST\
+    \ endpoint to add a new recipient record. When a POST request is received, the\
+    \ system shall process and validate the submitted data, create a new recipient\
+    \ entry in the system if the data is valid, and return a response indicating whether\
+    \ the operation was successful or if it failed (with appropriate error information\
+    \ in case of failure)."
   source: Controller::AddRecp.doPost
   dependencies: []
   parameters: []
   return_type: ''
 - id: FR-Controller::AddWorker-doPost
-  description: "**Functional Requirement:**  \nThe system shall provide an HTTP POST\
-    \ endpoint for adding a new worker. Upon receiving a request, the system shall\
-    \ validate the input data and, if the data is valid, create a new worker record\
-    \ in the datastore. The system shall return a success response if the worker is\
-    \ added successfully, or return an error message if input validation fails or\
-    \ if a database error occurs."
+  description: '**Functional Requirement:**
+
+
+    The system shall support the addition of a new worker by accepting HTTP POST requests
+    containing worker information in the request payload, validating the provided
+    data, creating a new worker record upon successful validation, and returning a
+    response indicating the success or failure of the operation.'
   source: Controller::AddWorker.doPost
   dependencies: []
   parameters: []
   return_type: ''
 - id: FR-Controller::AdminLogin-doPost
-  description: '**Functional Requirement:**
-
-
-    The system shall provide an admin login endpoint that accepts HTTP POST requests
-    containing login credentials. Upon receiving a request, the system shall validate
-    the provided credentials, authenticate the administrator against the user database,
-    and initiate an administrative session if authentication is successful. If authentication
-    fails, the system shall return an error response or redirect the administrator
-    to the login page with an appropriate error message.'
+  description: "**Functional Requirement:**  \nThe system shall process HTTP POST\
+    \ requests to the admin login endpoint by validating the submitted administrator\
+    \ credentials. If the credentials are valid, the system shall establish an authenticated\
+    \ session for the administrator; otherwise, it shall return an appropriate error\
+    \ response."
   source: Controller::AdminLogin.doPost
   dependencies: []
   parameters: []
   return_type: ''
 - id: FR-Controller::AdminRegister-doPost
-  description: "**Functional Requirement:**  \nThe system shall provide a backend\
-    \ endpoint that accepts HTTP POST requests for administrator registration. Upon\
-    \ receiving registration data, the endpoint shall validate the input, create a\
-    \ new administrator account if the data is valid, and return a success response.\
-    \ If validation fails, the endpoint shall return an appropriate error response."
+  description: '**Functional Requirement:**
+
+
+    The system shall provide an endpoint for administrator registration that handles
+    HTTP POST requests at the registration endpoint. Upon receiving such a request,
+    the system shall process the submitted registration data, validate the input fields
+    according to predefined rules, and—if the validation succeeds—create a new administrator
+    user account. The system shall return a response indicating either successful
+    registration or specifying any validation errors encountered. This functionality
+    shall be accessible internally within the controller layer to ensure secure onboarding
+    of administrator users.'
   source: Controller::AdminRegister.doPost
   dependencies: []
   parameters: []
   return_type: ''
 - id: FR-Database::DatabaseConnection-initializeDatabase
-  description: '**Functional Requirement:**
-
-
-    The system shall provide a function to initialize the database connection by configuring
-    required parameters and establishing a connection to the specified database. This
-    function shall be invoked before any database operations are performed. If the
-    connection attempt fails, the system shall handle the exception and provide an
-    appropriate error response.'
+  description: "**Functional Requirement:**  \nThe system shall provide a function\
+    \ to initialize the database connection, which performs the following actions:\
+    \  \n- Establishes a new connection to the database by configuring the necessary\
+    \ connection parameters.\n- Verifies user credentials for authentication.\n- Executes\
+    \ all required setup and initialization routines to prepare the database environment\
+    \ for subsequent operations.  \nThis function shall be invoked prior to the execution\
+    \ of any database queries or transactions to ensure that the database session\
+    \ is properly initialized."
   source: Database::DatabaseConnection.initializeDatabase
   dependencies: []
   parameters: []
   return_type: ''
 - id: FR-Controller::updatePatient-doPost
-  description: "**Functional Requirement:**  \nThe system shall process HTTP POST\
-    \ requests to update an existing patient’s information by parsing the request\
-    \ body for patient data, validating the input, and applying the updates to the\
-    \ corresponding patient record. If the update is successful, the system shall\
-    \ return a success response; if validation fails or the patient cannot be found,\
-    \ the system shall return an appropriate error message."
+  description: "**Functional Requirement:**  \nThe system shall provide an HTTP POST\
+    \ endpoint to update an existing patient’s details. Upon receiving a request,\
+    \ the system shall validate the input data, update the corresponding patient record\
+    \ in the database if validation is successful, and return a response indicating\
+    \ whether the update was successful or if any errors occurred."
   source: Controller::updatePatient.doPost
   dependencies: []
   parameters: []
   return_type: ''
 - id: FR-Controller::UserLogin-doPost
-  description: "**Functional Requirement:**  \nThe system shall process HTTP POST\
-    \ requests to the user login endpoint by receiving user credentials from the client,\
-    \ validating the input, and authenticating the user against stored credentials.\
-    \ Upon successful authentication, the system shall initiate a new user session\
-    \ and redirect the user to the dashboard; if authentication fails, the system\
-    \ shall return an appropriate error message to the client."
+  description: "**Functional Requirement:**  \nThe system shall handle HTTP POST requests\
+    \ to the user login endpoint by performing the following actions:  \n- Validate\
+    \ the submitted login credentials.\n- Authenticate the user based on the validated\
+    \ credentials.\n- If authentication is successful, initiate a new user session\
+    \ and respond with a success status and user information.\n- If authentication\
+    \ fails, respond with an error status and an appropriate error message."
   source: Controller::UserLogin.doPost
   dependencies: []
   parameters: []
   return_type: ''
 - id: FR-Controller::UserRegister-doPost
-  description: "**Functional Requirement:**  \nThe system shall handle HTTP POST requests\
-    \ for user registration by validating the submitted user data, creating a new\
-    \ user account if all validations pass, and returning an appropriate response\
-    \ indicating success or failure."
+  description: '**Functional Requirement:**
+
+
+    The system shall handle HTTP POST requests to the user registration endpoint by
+    processing the submitted registration data, validating the input, creating a new
+    user account in the system upon successful validation, and returning a response
+    indicating whether the registration was successful or failed.'
   source: Controller::UserRegister.doPost
   dependencies: []
   parameters: []
   return_type: ''
 non_functional_requirements: []
 business_rules:
-- 'Class Controller::AddDoctor: **Business Rules extracted from Controller::AddDoctor:**'
-- 'Class Controller::AddDoctor: 1. The system must allow users to add a new doctor
-  via a designated endpoint (e.g., an "Add Doctor" form).'
-- 'Class Controller::AddDoctor: 2. The input data for adding a doctor must include,
-  at minimum, the doctor’s name, contact information, and credentials.'
-- 'Class Controller::AddDoctor: 3. The system must validate the received input data
-  for completeness and correctness before processing.'
-- 'Class Controller::AddDoctor: 4. If any validation errors occur, the system must
-  return appropriate error messages to the user.'
-- 'Class Controller::AddDoctor: 5. If the input passes validation, the system must
-  create a new doctor record using the provided data.'
-- 'Class Controller::AddDoctor: 6. Upon successful creation, the system must return
-  a confirmation or the details of the newly added doctor to the user.'
-- 'Class Controller::AddPatient: **Business Rules extracted from Controller::AddPatient:**'
-- 'Class Controller::AddPatient: 1. Patient details must be provided as input when
-  adding a new patient.'
-- 'Class Controller::AddPatient: 2. All patient details must be validated according
-  to the system’s data validation rules before a new record is created.'
-- 'Class Controller::AddPatient: 3. A new patient record is created in the underlying
-  data store only if validation is successful.'
-- 'Class Controller::AddPatient: 4. A confirmation message must be returned upon successful
-  addition of a new patient.'
-- 'Class Controller::AddPatient: 5. If patient data validation fails or if there are
-  system issues, an error message must be returned instead of creating a record.'
-- 'Class Controller::AddRecp: **Business Rules extracted from Controller::AddRecp:**'
-- 'Class Controller::AddRecp: 1. The system must accept and process input data to
-  add a new recipient.'
-- 'Class Controller::AddRecp: 2. All recipient input data must be validated before
-  adding to the repository.'
-- 'Class Controller::AddRecp: 3. The system must check for and prevent the addition
-  of duplicate recipient records.'
-- 'Class Controller::AddRecp: 4. If the input data is valid and not a duplicate, the
-  new recipient''s information must be saved to the repository.'
-- 'Class Controller::AddRecp: 5. If the operation is successful, a confirmation message
-  must be returned.'
-- 'Class Controller::AddRecp: 6. If the operation fails (e.g., due to invalid input
-  or duplicate records), an appropriate error message must be returned.'
-- 'Class Controller::AddWorker: **Extracted Business Rules:**'
-- 'Class Controller::AddWorker: 1. The system allows addition of new worker entities
-  using the `Controller::AddWorker` method.'
-- 'Class Controller::AddWorker: 2. The input to the method must include worker-related
-  data.'
-- 'Class Controller::AddWorker: 3. The system must perform validation checks on the
-  input worker data before addition.'
-- 'Class Controller::AddWorker: 4. The underlying data store or worker registry must
-  be updated upon successful validation.'
-- 'Class Controller::AddWorker: 5. After successful addition, the system should return
-  either a status indicator or the details of the newly added worker.'
-- 'Class Controller::AddWorker: 6. Adding a worker is used to expand (increase) the
-  workforce managed by the application.'
-- 'Class Controller::AddWorker: 7. If validation fails, the worker should not be added
-  (implied).'
-- 'Class Controller::AdminLogin: **Business Rules extracted from Controller::AdminLogin:**'
-- 'Class Controller::AdminLogin: 1. Only administrative users are permitted to access
-  the admin login process.'
-- 'Class Controller::AdminLogin: 2. The system must display an admin login form when
-  accessed by a prospective administrator.'
-- 'Class Controller::AdminLogin: 3. Upon submission of login credentials, the system
-  must validate the credentials against authorized administrative user records.'
-- 'Class Controller::AdminLogin: 4. If the credentials are valid, the system must
-  establish an authenticated session for the administrative user.'
-- 'Class Controller::AdminLogin: 5. Only users with successful authentication are
-  granted access to the administrative interface.'
-- 'Class Controller::AdminLogin: 6. Unauthorized or invalid login attempts must be
-  denied access to the administrative interface.'
+- 'Class Controller::AddDoctor: **Extracted Business Rules:**'
+- 'Class Controller::AddDoctor: 1. The system must accept doctor-related data (including
+  at least name, contact details, and credentials) when adding a new doctor.'
+- 'Class Controller::AddDoctor: 2. All input data must be validated before proceeding
+  with the doctor creation process.'
+- 'Class Controller::AddDoctor: 3. If any input validation fails, the system must
+  not create the doctor and must return an error message indicating the reason for
+  failure.'
+- 'Class Controller::AddDoctor: 4. Upon successful validation, the system must proceed
+  to create the new doctor via the appropriate service or model layer.'
+- 'Class Controller::AddDoctor: 5. If doctor creation is successful, the system must
+  return a success response containing the details of the newly created doctor.'
+- 'Class Controller::AddDoctor: 6. If the addition operation fails due to a system
+  issue, the system must return an error message indicating the failure.'
+- 'Class Controller::AddPatient: **Business Rules Extracted:**'
+- 'Class Controller::AddPatient: 1. Patient data must be validated before being added
+  to the system.'
+- 'Class Controller::AddPatient: 2. Only valid and complete patient data may be stored
+  as a new patient record in the database.'
+- 'Class Controller::AddPatient: 3. If patient data fails validation (invalid or incomplete),
+  the system must not save the data and must return appropriate error messages describing
+  the issues.'
+- 'Class Controller::AddPatient: 4. The process of adding a new patient to the system
+  is only completed upon successful validation of the input data.'
+- 'Class Controller::AddRecp: **Business Rules extracted:**'
+- 'Class Controller::AddRecp: 1. The system must accept recipient data from the request
+  when adding a new recipient.'
+- 'Class Controller::AddRecp: 2. The recipient data must be validated before any processing.'
+- 'Class Controller::AddRecp: 3. A new recipient record must only be created if the
+  input passes all validation checks.'
+- 'Class Controller::AddRecp: 4. The system must return a response indicating the
+  outcome—either success or detailing any validation errors.'
+- 'Class Controller::AddWorker: **Business Rules extracted from Controller::AddWorker:**'
+- 'Class Controller::AddWorker: 1. **A new worker can be added to the system by providing
+  required worker-related information** (such as name, ID, role, or other attributes).'
+- 'Class Controller::AddWorker: 2. **Each worker must have a unique identifier (ID)**—the
+  system must check to ensure that the worker does not already exist before adding.'
+- 'Class Controller::AddWorker: 3. **The system must validate the provided worker
+  information** prior to creating a new worker.'
+- 'Class Controller::AddWorker: 4. **Upon addition, the newly created worker is associated
+  with relevant data structures** in the system.'
+- 'Class Controller::AddWorker: 5. **Any related records or system state must be updated
+  as necessary** when a worker is added.'
+- 'Class Controller::AddWorker: 6. **A worker is only available for subsequent operations
+  after successful addition** to the system.'
+- 'Class Controller::AdminLogin: **Business Rules extracted from the description:**'
+- 'Class Controller::AdminLogin: 1. Only users with administrator credentials are
+  permitted to authenticate via this controller.'
+- 'Class Controller::AdminLogin: 2. Administrator login credentials must be verified
+  for authenticity before granting access.'
+- 'Class Controller::AdminLogin: 3. An authenticated admin session must be initiated
+  only upon successful authentication.'
+- 'Class Controller::AdminLogin: 4. If authentication fails, appropriate failure responses
+  or scenarios must be handled (e.g., error messaging).'
+- 'Class Controller::AdminLogin: 5. Security measures must be enforced, such as account
+  lockout on repeated failed login attempts.'
+- 'Class Controller::AdminLogin: 6. All administrator login attempts (successful or
+  failed) must be logged for audit and security purposes.'
 - 'Class Controller::AdminRegister: **Business Rules extracted from Controller::AdminRegister:**'
-- 'Class Controller::AdminRegister: 1. Only qualified users can register for new administrator
-  accounts via the admin registration process.'
-- 'Class Controller::AdminRegister: 2. All required input data for administrator registration
-  must be validated before proceeding (e.g., credentials, permissions).'
-- 'Class Controller::AdminRegister: 3. Only registrations with complete and valid
-  credentials and permissions may result in the creation of new administrator users.'
-- 'Class Controller::AdminRegister: 4. The system must ensure that administrator users
-  receive all necessary permissions/settings upon account creation.'
-- 'Class Controller::AdminRegister: 5. The controller must offer a means to display
-  the administrator registration form to prospective users.'
-- 'Class Controller::AdminRegister: 6. The controller must process submissions of
-  administrator registration data.'
-- 'Class Controller::AdminRegister: 7. The system must provide feedback to the registering
-  user on the outcome of their registration attempt (success or failure).'
+- 'Class Controller::AdminRegister: 1. Only new users who will hold admin roles can
+  be registered through this process.'
+- 'Class Controller::AdminRegister: 2. Incoming admin registration requests must be
+  validated according to criteria specific to admin accounts.'
+- 'Class Controller::AdminRegister: 3. Admin user registration is allowed only if
+  all required admin-related validation checks succeed.'
+- 'Class Controller::AdminRegister: 4. Upon successful validation, a new admin user
+  account must be created and stored in the system.'
+- 'Class Controller::AdminRegister: 5. Additional security and authorization checks,
+  relevant to the registration of admins, must be performed before completing registration.'
 - 'Class Database::DatabaseConnection: **Business Rules Extracted from Database::DatabaseConnection:**'
-- 'Class Database::DatabaseConnection: 1. A database connection must be established
-  before any queries can be executed.'
-- 'Class Database::DatabaseConnection: 2. The connection must be opened explicitly
-  using the provided method before sending commands to the database server.'
-- 'Class Database::DatabaseConnection: 3. The connection must be closed explicitly
-  using the provided method after operations are complete to release resources.'
-- 'Class Database::DatabaseConnection: 4. Authentication credentials and connection
-  strings must be correctly specified as parameters when establishing a connection.'
-- 'Class Database::DatabaseConnection: 5. The class must support error handling for
-  all connection-related operations, including failures to connect, execute queries,
-  or close the connection.'
-- 'Class Database::DatabaseConnection: 6. Connection parameters (such as credentials
-  and connection strings) must be managed securely and efficiently.'
-- 'Class Database::DatabaseConnection: 7. Resource management standards must be enforced,
-  ensuring that connections are not left open unnecessarily (preventing resource leaks).'
-- 'Class Database::DatabaseConnection: 8. Only valid, open connections can be used
-  to execute queries; attempts to use closed or invalid connections should result
-  in an error.'
-- 'Class Database::DatabaseConnection: 9. All communication with the database server
-  must be managed safely and efficiently as per best practices.'
+- 'Class Database::DatabaseConnection: 1. A database connection must be explicitly
+  established before use.'
+- 'Class Database::DatabaseConnection: 2. The connection must be able to be closed
+  when no longer needed.'
+- 'Class Database::DatabaseConnection: 3. Connection pooling must be supported to
+  efficiently manage multiple database sessions.'
+- 'Class Database::DatabaseConnection: 4. Connection parameters—including credentials,
+  host address, port number, and database options—must be configurable before establishing
+  the connection.'
+- 'Class Database::DatabaseConnection: 5. All database communications (including queries
+  and transactions) must be conducted over a reliable and secure connection.'
+- 'Class Database::DatabaseConnection: 6. The system should ensure that session management
+  (opening, maintaining, and terminating) is handled for each connection.'
 - 'Class Controller::updatePatient: **Business Rules extracted from Controller::updatePatient:**'
-- 'Class Controller::updatePatient: 1. The system must receive updated patient data
-  before proceeding with the update.'
-- 'Class Controller::updatePatient: 2. The input patient data must be validated before
-  any update is applied.'
-- 'Class Controller::updatePatient: 3. If validation succeeds, the system updates
-  the existing patient''s record in the data store with the new information.'
-- 'Class Controller::updatePatient: 4. The operation must return a success message
-  if the update is applied successfully.'
-- 'Class Controller::updatePatient: 5. If the update fails (due to errors in validation
-  or data store operation), the system must return an appropriate error response.'
-- 'Class Controller::UserLogin: **Business Rules Extracted:**'
-- 'Class Controller::UserLogin: 1. The system must receive and process user login
-  credentials.'
-- 'Class Controller::UserLogin: 2. The system must validate the input credentials
-  for completeness and correct format.'
-- 'Class Controller::UserLogin: 3. The system must authenticate users by comparing
-  provided credentials against stored user data.'
-- 'Class Controller::UserLogin: 4. Upon successful authentication, the system must
-  initiate a user session.'
-- 'Class Controller::UserLogin: 5. If authentication fails or credentials are incorrect,
-  the system must generate an appropriate error response.'
+- 'Class Controller::updatePatient: 1. The patient to be updated must already exist
+  in the data store.'
+- 'Class Controller::updatePatient: 2. Updated patient information must be validated
+  before any changes are applied.'
+- 'Class Controller::updatePatient: 3. Changes are only applied to the corresponding
+  patient record after successful validation.'
+- 'Class Controller::updatePatient: 4. The update operation can be initiated by a
+  user action, such as submitting an edit patient form.'
+- 'Class Controller::updatePatient: 5. The system must return an appropriate response
+  or error message based on the success or failure of the update operation.'
+- 'Class Controller::updatePatient: 6. If input validation fails, no changes are made
+  to the patient record.'
+- 'Class Controller::updatePatient: 7. Only permissible patient fields can be updated;
+  restricted or protected fields cannot be modified through this operation. (implied
+  if "validated")'
+- 'Class Controller::updatePatient: 8. All changes must be persisted in the data store
+  once applied.'
+- 'Class Controller::UserLogin: **Business Rules extracted:**'
+- 'Class Controller::UserLogin: 1. The system must process user login requests by
+  receiving and handling input credentials (username and password).'
+- 'Class Controller::UserLogin: 2. The system must validate that the input credentials
+  (username and password) are provided and meet required input format criteria.'
+- 'Class Controller::UserLogin: 3. The system must verify that the provided username
+  and password match a registered user’s credentials.'
+- 'Class Controller::UserLogin: 4. If authentication fails (invalid credentials),
+  the system must handle and report authentication errors to the user.'
+- 'Class Controller::UserLogin: 5. Upon successful authentication, the system must
+  initiate a user login session.'
+- 'Class Controller::UserLogin: 6. After authentication, the system must redirect
+  the user:  '
+- 'Class Controller::UserLogin:     a. If login succeeds, direct the user to the appropriate
+  post-login page.  '
+- 'Class Controller::UserLogin:     b. If login fails, redirect or present the user
+  with the login form and error notification.'
 - 'Class Controller::UserRegister: **Business Rules extracted from Controller::UserRegister:**'
-- 'Class Controller::UserRegister: 1. User registration requests must be handled by
-  the system.'
-- 'Class Controller::UserRegister: 2. Registration data submitted by the client must
-  be validated.'
-- 'Class Controller::UserRegister: 3. A new user account must be created only if the
-  registration data is valid.'
-- 'Class Controller::UserRegister: 4. The system must return a response indicating
-  whether the registration was successful or failed.'
-- 'Method Controller::AddDoctor.doPost: **Business Rules Extracted:**'
-- 'Method Controller::AddDoctor.doPost: 1. Only HTTP POST requests are accepted for
+- 'Class Controller::UserRegister: 1. Incoming user registration requests must be
+  processed via this controller.'
+- 'Class Controller::UserRegister: 2. User registration data must be collected from
+  the sign-up form.'
+- 'Class Controller::UserRegister: 3. All user input during registration must be validated.'
+- 'Class Controller::UserRegister: 4. New user accounts must only be created if the
+  input data passes validation.'
+- 'Class Controller::UserRegister: 5. Appropriate responses or error messages must
+  be returned based on the outcome of the registration attempt.'
+- 'Class Controller::UserRegister: 6. Registration functionality must be accessible
+  only through this designated entry point.'
+- 'Method Controller::AddDoctor.doPost: **Business rules extracted:**'
+- 'Method Controller::AddDoctor.doPost: 1. Only HTTP POST requests are allowed for
   adding a new doctor.'
-- 'Method Controller::AddDoctor.doPost: 2. Incoming data for the doctor must be validated
+- 'Method Controller::AddDoctor.doPost: 2. Doctor details must be provided in the
+  request.'
+- 'Method Controller::AddDoctor.doPost: 3. The input doctor details must be validated
   before processing.'
-- 'Method Controller::AddDoctor.doPost: 3. A new doctor record is created in the database
-  only if all validations succeed.'
-- 'Method Controller::AddDoctor.doPost: 4. If validation fails, an error response
-  is returned (doctor is not added).'
-- 'Method Controller::AddDoctor.doPost: 5. If creation is successful after validation,
-  a success response is returned.'
+- 'Method Controller::AddDoctor.doPost: 4. If the validation is successful, a new
+  doctor record must be persisted in the system.'
+- 'Method Controller::AddDoctor.doPost: 5. The system must return a response indicating
+  whether the add doctor operation was successful or failed.'
 - 'Method Controller::AddPatient.doPost: **Business Rules Extracted:**'
-- 'Method Controller::AddPatient.doPost: 1. A new patient can be added to the system
-  only via an HTTP POST request.'
-- 'Method Controller::AddPatient.doPost: 2. Patient information must be provided in
-  the request body.'
-- 'Method Controller::AddPatient.doPost: 3. The system must validate all input data
-  before creating a new patient record.'
-- 'Method Controller::AddPatient.doPost: 4. If input data is valid, a new patient
-  record is created in the database.'
-- 'Method Controller::AddPatient.doPost: 5. On successful creation, the system responds
-  with a success message and the newly added patient''s details.'
-- 'Method Controller::AddPatient.doPost: 6. If input data is invalid or an error occurs,
-  the system must return appropriate error messages.'
-- 'Method Controller::AddRecp.doPost: **Extracted Business Rules:**'
-- 'Method Controller::AddRecp.doPost: 1. Incoming form data for adding a new recipient
+- 'Method Controller::AddPatient.doPost: 1. Only HTTP POST requests are allowed for
+  adding a new patient.'
+- 'Method Controller::AddPatient.doPost: 2. Submitted patient data must be validated
+  before processing.'
+- 'Method Controller::AddPatient.doPost: 3. A new patient record is created only if
+  the submitted data passes validation.'
+- 'Method Controller::AddPatient.doPost: 4. The system must return a response indicating
+  whether the operation was successful or not.'
+- 'Method Controller::AddRecp.doPost: **Business Rules Extracted:**'
+- 'Method Controller::AddRecp.doPost: 1. The system must accept HTTP POST requests
+  for adding new recipient records.'
+- 'Method Controller::AddRecp.doPost: 2. Incoming request data for a new recipient
   must be validated before processing.'
-- 'Method Controller::AddRecp.doPost: 2. A recipient record is created in the database
-  only if the user input passes validation checks.'
-- 'Method Controller::AddRecp.doPost: 3. If input validation fails, an appropriate
-  error message must be returned or the system must prompt the user to correct the
-  input.'
-- 'Method Controller::AddRecp.doPost: 4. Upon successful creation of a recipient record,
-  the system must redirect or respond with a success message.'
+- 'Method Controller::AddRecp.doPost: 3. A new recipient entry must be created in
+  the system if the input data passes validation.'
+- 'Method Controller::AddRecp.doPost: 4. The system must return a response indicating
+  whether the addition of the recipient was successful or if it failed.'
 - 'Method Controller::AddWorker.doPost: **Business Rules Extracted:**'
-- 'Method Controller::AddWorker.doPost: 1. Only HTTP POST requests are allowed to
-  add a new worker.'
-- 'Method Controller::AddWorker.doPost: 2. Input data for the new worker must be validated
-  before creation.'
-- 'Method Controller::AddWorker.doPost: 3. If the input data is valid, a new worker
-  record must be created in the datastore.'
-- 'Method Controller::AddWorker.doPost: 4. If worker creation is successful, a success
+- 'Method Controller::AddWorker.doPost: 1. New worker information must be received
+  in the request payload when adding a worker.'
+- 'Method Controller::AddWorker.doPost: 2. The system must validate the provided worker
+  information before creating a new worker record.'
+- 'Method Controller::AddWorker.doPost: 3. A new worker record is created only if
+  all validation checks pass.'
+- 'Method Controller::AddWorker.doPost: 4. The system must return a response indicating
+  whether the operation to add a new worker was successful or failed.'
+- 'Method Controller::AdminLogin.doPost: **Business Rules extracted from `Controller::AdminLogin.doPost`:**'
+- 'Method Controller::AdminLogin.doPost: 1. Only administrator users can attempt to
+  log in using this endpoint.'
+- 'Method Controller::AdminLogin.doPost: 2. The submitted administrator credentials
+  must be validated upon receiving a POST request.'
+- 'Method Controller::AdminLogin.doPost: 3. If the credentials are valid, an authenticated
+  session for the administrator must be created.'
+- 'Method Controller::AdminLogin.doPost: 4. If the credentials are invalid, an error
   response must be returned.'
-- 'Method Controller::AddWorker.doPost: 5. If input validation fails or a database
-  error occurs, an error message must be returned.'
-- 'Method Controller::AdminLogin.doPost: **Business Rules extracted from the description:**'
-- 'Method Controller::AdminLogin.doPost: 1. The system must accept and process HTTP
-  POST requests for the administrator login.'
-- 'Method Controller::AdminLogin.doPost: 2. The administrator is required to submit
-  login credentials (e.g., username and password).'
-- 'Method Controller::AdminLogin.doPost: 3. The system must validate the input credentials
-  for correctness and completeness before authentication.'
-- 'Method Controller::AdminLogin.doPost: 4. The system must authenticate administrator
-  credentials against records in the user database.'
-- 'Method Controller::AdminLogin.doPost: 5. If authentication is successful, the system
-  must initiate an administrative session for the user.'
-- 'Method Controller::AdminLogin.doPost: 6. If authentication fails, the system must
-  either:'
-- 'Method Controller::AdminLogin.doPost:    - Return an error response, or'
-- 'Method Controller::AdminLogin.doPost:    - Redirect the user back to the login
-  page, displaying an appropriate error message.'
-- 'Method Controller::AdminRegister.doPost: **Business Rules Extracted:**'
-- 'Method Controller::AdminRegister.doPost: 1. Administrator registration requests
-  must be submitted via HTTP POST.'
-- 'Method Controller::AdminRegister.doPost: 2. Registration data is required in the
-  request payload.'
-- 'Method Controller::AdminRegister.doPost: 3. Input validation must be performed
-  on the received registration data.'
-- 'Method Controller::AdminRegister.doPost: 4. A new administrator account is created
-  only if input validation is successful.'
-- 'Method Controller::AdminRegister.doPost: 5. The system must return a success response
-  if account creation is successful.'
-- 'Method Controller::AdminRegister.doPost: 6. The system must return an error response
-  if validation fails or account creation is unsuccessful.'
-- 'Method Controller::AdminRegister.doPost: 7. This functionality is intended specifically
-  for backend endpoints handling administrator signup forms.'
-- 'Method Database::DatabaseConnection.initializeDatabase: **Business Rules Extracted:**'
-- 'Method Database::DatabaseConnection.initializeDatabase: 1. The database connection
-  must be initialized by setting up all necessary configurations before any database
-  operations are performed.'
-- 'Method Database::DatabaseConnection.initializeDatabase: 2. The initializeDatabase
-  method must be invoked prior to attempting any database access or operations.'
-- 'Method Database::DatabaseConnection.initializeDatabase: 3. If the connection initialization
-  fails, exceptions must be handled appropriately to prevent application failure or
-  undefined behavior.'
-- 'Method Controller::updatePatient.doPost: **Business Rules Extracted:**'
-- 'Method Controller::updatePatient.doPost: 1. The request must use the HTTP POST
-  method to update an existing patient''s information.'
-- 'Method Controller::updatePatient.doPost: 2. Patient data in the request body must
-  be parsed and validated before any update is performed.'
-- 'Method Controller::updatePatient.doPost: 3. Only valid input data will be used
-  to update patient records; invalid data will result in a validation error and no
-  update.'
-- 'Method Controller::updatePatient.doPost: 4. The patient to be updated must exist;
-  if the patient cannot be found, an error is returned and no update occurs.'
-- 'Method Controller::updatePatient.doPost: 5. If the update is successful, a success
-  response is returned to the requester.'
-- 'Method Controller::UserLogin.doPost: **Business Rules extracted from `Controller::UserLogin.doPost`:**'
-- 'Method Controller::UserLogin.doPost: 1. The system must receive user login credentials
-  via an HTTP POST request.'
-- 'Method Controller::UserLogin.doPost: 2. The system must validate the input login
-  credentials for correctness and completeness.'
-- 'Method Controller::UserLogin.doPost: 3. The system must authenticate the user by
-  verifying the submitted credentials against the stored credentials.'
+- 'Method Controller::AdminLogin.doPost: 5. This method should only process authentication
+  requests sent via HTTP POST (e.g., submissions from the admin login form).'
+- 'Method Controller::AdminRegister.doPost: **Business Rules extracted from `Controller::AdminRegister.doPost`:**'
+- 'Method Controller::AdminRegister.doPost: 1. Admin registration data must be submitted
+  via HTTP POST requests.'
+- 'Method Controller::AdminRegister.doPost: 2. Submitted registration data must be
+  validated according to predefined rules.'
+- 'Method Controller::AdminRegister.doPost: 3. A new admin user is created only if
+  the registration data passes all validation checks.'
+- 'Method Controller::AdminRegister.doPost: 4. The response must clearly indicate
+  whether registration succeeded or detail the encountered validation errors.'
+- 'Method Controller::AdminRegister.doPost: 5. The admin registration process is internal
+  and not exposed to external parties (internal controller use only).'
+- 'Method Controller::AdminRegister.doPost: 6. Only validated and secure onboarding
+  of administrators is allowed through this endpoint.'
+- 'Method Database::DatabaseConnection.initializeDatabase: **Business Rules extracted:**'
+- 'Method Database::DatabaseConnection.initializeDatabase: 1. A database connection
+  must be established before executing any queries or transactions.'
+- 'Method Database::DatabaseConnection.initializeDatabase: 2. The database initialization
+  process must configure all necessary connection parameters.'
+- 'Method Database::DatabaseConnection.initializeDatabase: 3. Credentials must be
+  verified as part of the initialization routine.'
+- 'Method Database::DatabaseConnection.initializeDatabase: 4. The database environment
+  must be appropriately prepared prior to any database operations.'
+- 'Method Database::DatabaseConnection.initializeDatabase: 5. The initialization routine
+  must be completed successfully before any other database interactions occur.'
+- 'Method Controller::updatePatient.doPost: **Extracted Business Rules:**'
+- 'Method Controller::updatePatient.doPost: 1. The system must accept HTTP POST requests
+  to update a patient’s details.'
+- 'Method Controller::updatePatient.doPost: 2. Incoming request data must be validated
+  before updates are applied.'
+- 'Method Controller::updatePatient.doPost: 3. The system must update only existing
+  patient records that match the specified identifier.'
+- 'Method Controller::updatePatient.doPost: 4. If validation fails, the system must
+  not update the patient record.'
+- 'Method Controller::updatePatient.doPost: 5. After attempting the update, the system
+  must return a response indicating whether the operation was successful or failed.'
+- 'Method Controller::UserLogin.doPost: **Extracted Business Rules:**'
+- 'Method Controller::UserLogin.doPost: 1. User must submit login credentials via
+  an HTTP POST request.'
+- 'Method Controller::UserLogin.doPost: 2. The system must validate the submitted
+  login credentials for correctness and completeness.'
+- 'Method Controller::UserLogin.doPost: 3. The system must authenticate the user based
+  on the provided credentials.'
 - 'Method Controller::UserLogin.doPost: 4. If authentication is successful, the system
-  must:'
-- 'Method Controller::UserLogin.doPost:    - Initiate a new user session.'
-- 'Method Controller::UserLogin.doPost:    - Redirect the user to the dashboard.'
+  must initiate a user session.'
 - 'Method Controller::UserLogin.doPost: 5. If authentication fails, the system must
-  return an error message to the user.'
+  NOT initiate a session.'
+- 'Method Controller::UserLogin.doPost: 6. The system must respond with an appropriate
+  status code.'
+- 'Method Controller::UserLogin.doPost: 7. On successful authentication, the system
+  must respond with user information.'
+- 'Method Controller::UserLogin.doPost: 8. On authentication failure, the system must
+  respond with an error message.'
 - 'Method Controller::UserRegister.doPost: **Business Rules Extracted:**'
-- 'Method Controller::UserRegister.doPost: 1. User registration requests must be submitted
-  via HTTP POST.'
-- 'Method Controller::UserRegister.doPost: 2. Submitted user data must be validated
-  according to defined criteria.'
-- 'Method Controller::UserRegister.doPost: 3. A new user account is created only if
-  all validations are successful.'
-- 'Method Controller::UserRegister.doPost: 4. The system must return a response indicating
-  whether user registration was successful or failed.'
+- 'Method Controller::UserRegister.doPost: 1. A user registration request must be
+  submitted via an HTTP POST method.'
+- 'Method Controller::UserRegister.doPost: 2. User-submitted registration data must
+  be validated before account creation.'
+- 'Method Controller::UserRegister.doPost: 3. If input validation passes, a new user
+  account is created in the system.'
+- 'Method Controller::UserRegister.doPost: 4. The method must return a response indicating
+  whether the registration was successful or failed.'
 - 'Attribute Controller::AddDoctor.i: **Extracted Business Rules:**'
-- 'Attribute Controller::AddDoctor.i: 1. The system must accept and process HTTP requests
-  to add new doctor records.'
-- 'Attribute Controller::AddDoctor.i: 2. Submitted doctor data must be validated before
-  further processing.'
-- 'Attribute Controller::AddDoctor.i: 3. Only valid doctor data will be forwarded
-  to the service layer for record creation.'
-- 'Attribute Controller::AddDoctor.i: 4. The system must generate and return a response
-  indicating whether the add operation succeeded or failed.'
-- 'Attribute Controller::AddPatient.i: **Business Rules extracted from AddPatient
-  (Controller Method):**'
-- 'Attribute Controller::AddPatient.i: 1. A new patient record can be added to the
-  system via the AddPatient method.'
-- 'Attribute Controller::AddPatient.i: 2. The method receives patient data from client
-  requests.'
-- 'Attribute Controller::AddPatient.i: 3. The input patient data must be validated
-  before being processed.'
-- 'Attribute Controller::AddPatient.i: 4. If validation succeeds, the new patient
-  information must be saved to the database.'
-- 'Attribute Controller::AddPatient.i: 5. A response must be returned to indicate
-  whether the operation was successful or failed.'
-- 'Attribute Controller::AddRecp.i: **Business Rules extracted:**'
-- 'Attribute Controller::AddRecp.i: 1. Adding a recipient requires processing provided
-  input data.'
-- 'Attribute Controller::AddRecp.i: 2. All input data for a new recipient must be
-  validated before addition.'
-- 'Attribute Controller::AddRecp.i: 3. Only recipients whose data passes all validations
-  may be added to the recipient list.'
-- 'Attribute Controller::AddRecp.i: 4. The recipient list must be updated to reflect
-  the successful addition of a valid recipient.'
-- 'Attribute Controller::AddRecp.i: Let me know if you need these in a different format
-  or with clarifications!'
-- 'Attribute Controller::AddWorker.i: **Business Rules extracted:**'
-- 'Attribute Controller::AddWorker.i: 1. The value of the attribute `@i` in the `AddWorker`
-  controller is accessible to other components, but only through a getter method (read-only).'
-- 'Attribute Controller::AddWorker.i: 2. The `@i` attribute represents an internal
-  state or counter and cannot be modified externally; it is intended for internal
-  use within the controller.'
-- 'Attribute Controller::AddWorker.i: 3. Direct modification of `@i` from outside
-  the `AddWorker` controller is not permitted—access is restricted to reading its
-  value only.'
-- 'Attribute Controller::AdminLogin.user: **Extracted Business Rules:**'
-- 'Attribute Controller::AdminLogin.user: 1. Only administrative users are allowed
-  to access and log in through the `AdminLogin` controller.'
-- 'Attribute Controller::AdminLogin.user: 2. Incoming login requests for admin users
-  must be processed by this code element.'
-- 'Attribute Controller::AdminLogin.user: 3. Admin user credentials must be verified
-  before access is granted.'
-- 'Attribute Controller::AdminLogin.user: 4. Access to administrative features is
-  permitted only if authentication is successful.'
-- 'Attribute Controller::AdminLogin.user: 5. Unauthenticated or failed login attempts
-  must not grant access to administrative features.'
-- 'Attribute Controller::AdminLogin.pass: **Extracted Business Rules from Controller::AdminLogin.pass:**'
-- 'Attribute Controller::AdminLogin.pass: 1. The system must verify login credentials
-  submitted by an admin.'
-- 'Attribute Controller::AdminLogin.pass: 2. If the credentials are valid, the system
-  must initiate an admin session.'
-- 'Attribute Controller::AdminLogin.pass: 3. If the credentials are valid, the system
-  must grant access to the administrative dashboard.'
-- 'Attribute Controller::AdminLogin.pass: 4. If the credentials are invalid, the system
-  must return an authentication error or redirect the user to the login page.'
-- 'Attribute Controller::AdminRegister.i: **Extracted Business Rules:**'
-- 'Attribute Controller::AdminRegister.i: 1. Only one instance of the `AdminRegister`
-  controller may exist at any time within the application (Singleton Pattern).'
-- 'Attribute Controller::AdminRegister.i: 2. Access to the `AdminRegister` controller''s
-  actions and properties must be provided via the singleton instance.'
-- 'Attribute Controller::AdminRegister.i: 3. The `AdminRegister` controller is designated
-  for administrative user registration workflows.'
-- 'Attribute Controller::AdminRegister.i: 4. Administrative registration operations
-  must use the singleton instance of the controller, not instantiate new ones.'
-- 'Attribute Controller::UserLogin.user: **Extracted Business Rules:**'
-- 'Attribute Controller::UserLogin.user: 1. The `user` attribute or method in the
-  `UserLogin` controller must provide access to the current user''s information during
-  the login process.'
-- 'Attribute Controller::UserLogin.user: 2. Access to the `user` attribute or method
-  is used for authenticating user credentials during login.'
-- 'Attribute Controller::UserLogin.user: 3. The `user` attribute or method is used
-  to manage session data for the logged-in user.'
-- 'Attribute Controller::UserLogin.user: 4. The `user` attribute or method can be
-  used to retrieve user-specific details required for login-related actions.'
-- 'Attribute Controller::UserLogin.user: 5. Access to the `user` attribute or method
-  is restricted to processes or actions related to user login.'
-- 'Attribute Controller::UserLogin.pass: **Business Rules Extracted:**'
-- 'Attribute Controller::UserLogin.pass: 1. The system must validate user credentials
-  each time a login request is received.'
-- 'Attribute Controller::UserLogin.pass: 2. The system must manage (track and/or limit)
-  user login attempts.'
-- 'Attribute Controller::UserLogin.pass: 3. The system must return either a success
-  or failure status in response to every user login request.'
-- 'Attribute Controller::UserRegister.user: **Extracted Business Rules:**'
-- 'Attribute Controller::UserRegister.user: 1. The system must accept user registration
-  requests via the `Controller::UserRegister.user` method.'
-- 'Attribute Controller::UserRegister.user: 2. Incoming registration data must be
-  validated according to defined rules (e.g., format, required fields).'
-- 'Attribute Controller::UserRegister.user: 3. A new user account may only be created
-  if all user input passes validation.'
-- 'Attribute Controller::UserRegister.user: 4. Upon successful validation and account
-  creation, the system must return relevant response data confirming registration.'
-- 'Attribute Controller::UserRegister.user: 5. If any validation fails, the system
-  must return appropriate error messages detailing the validation issues.'
-- 'Attribute Controller::UserRegister.user: 6. User sign-up requests must be processed
-  exclusively through this method as the primary entry point.'
-- 'Attribute Controller::UserRegister.pass: **Extracted Business Rules:**'
-- 'Attribute Controller::UserRegister.pass: 1. **Registration Data Validation:**  '
-- 'Attribute Controller::UserRegister.pass:    Before creating a new user account,
-  the registration data provided by the user must be validated.'
-- 'Attribute Controller::UserRegister.pass: 2. **Account Creation Delegation:**  '
-- 'Attribute Controller::UserRegister.pass:    If the registration data passes validation,
-  the system must initiate the creation of a new user account.'
-- 'Attribute Controller::UserRegister.pass: 3. **Success Response:**  '
-- 'Attribute Controller::UserRegister.pass:    If the user registration process (including
-  validation and account creation) is successful, a success response must be returned
-  to the user.'
-- 'Attribute Controller::UserRegister.pass: 4. **Failure/Error Handling:**  '
-- 'Attribute Controller::UserRegister.pass:    If the registration data fails validation
-  or the account creation process fails, an error message must be returned to the
-  user.'
+- 'Attribute Controller::AddDoctor.i: 1. Only valid doctor details may be used to
+  create a new doctor record.'
+- 'Attribute Controller::AddDoctor.i: 2. All incoming doctor details must be validated
+  before a new record is created.'
+- 'Attribute Controller::AddDoctor.i: 3. If the doctor details are valid, a new doctor
+  record is created in the database.'
+- 'Attribute Controller::AddDoctor.i: 4. If the doctor record is successfully created,
+  a confirmation response is returned to the client.'
+- 'Attribute Controller::AddDoctor.i: 5. If validation fails or the doctor record
+  cannot be created, an appropriate error message is returned to the client.'
+- 'Attribute Controller::AddPatient.i: **Business Rules extracted from the description:**'
+- 'Attribute Controller::AddPatient.i: 1. The system must handle the addition of new
+  patient records via the `AddPatient` controller.'
+- 'Attribute Controller::AddPatient.i: 2. Input data for new patients must be validated
+  before creating records.'
+- 'Attribute Controller::AddPatient.i: 3. The controller must use defined data structures
+  when adding new patient records.'
+- 'Attribute Controller::AddPatient.i: 4. The controller must interact with underlying
+  storage or business logic layers to persist new patient data.'
+- 'Attribute Controller::AddPatient.i: 5. Only valid and properly structured input
+  data will result in a new patient record being added to the system.'
+- 'Attribute Controller::AddRecp.i: **Business Rules Extracted:**'
+- 'Attribute Controller::AddRecp.i: 1. The `AddRecp` component is responsible for
+  adding or managing recipients in the application''s controller logic.'
+- 'Attribute Controller::AddRecp.i: 2. The `Controller::AddRecp.i` file must declare
+  the public interface (e.g., function prototypes and macros) for `AddRecp` functionality.'
+- 'Attribute Controller::AddRecp.i: 3. The `Controller::AddRecp.i` file is intended
+  for inclusion in other source files that need to interact with `AddRecp`.'
+- 'Attribute Controller::AddRecp.i: 4. The `Controller::AddRecp.i` file must provide
+  necessary declarations while hiding the implementation details of `AddRecp`.'
+- 'Attribute Controller::AddRecp.i: 5. All interactions with the `AddRecp` component
+  by other modules must occur via the public interface declared in `Controller::AddRecp.i`.'
+- 'Attribute Controller::AddWorker.i: **Extracted Business Rules:**'
+- 'Attribute Controller::AddWorker.i: 1. **A new worker can only be added via the
+  specified method in the `Controller` class.**'
+- 'Attribute Controller::AddWorker.i: 2. **Adding a new worker requires providing
+  worker details, which may include name, role, and identifier.**'
+- 'Attribute Controller::AddWorker.i: 3. **All input data related to the new worker
+  must be validated before processing.**'
+- 'Attribute Controller::AddWorker.i: 4. **Only validated worker details can be used
+  to create a new worker record in the system’s data store.**'
+- 'Attribute Controller::AddWorker.i: 5. **The system must update its data store to
+  include the new worker record upon successful validation.**'
+- 'Attribute Controller::AddWorker.i: 6. **Newly added workers must be registered
+  and made available for subsequent operations within the application workflow.**'
+- 'Attribute Controller::AddWorker.i: 7. **If input validation fails, the worker must
+  not be added to the system.**'
+- 'Attribute Controller::AdminLogin.user: **Business Rules extracted:**'
+- 'Attribute Controller::AdminLogin.user: 1. Only administrators are permitted to
+  access admin-specific functionality via the controller.'
+- 'Attribute Controller::AdminLogin.user: 2. The system must retrieve administrator
+  credentials when an admin login is attempted.'
+- 'Attribute Controller::AdminLogin.user: 3. The system must validate the administrator''s
+  credentials upon login.'
+- 'Attribute Controller::AdminLogin.user: 4. Administrator session details must be
+  managed during the login process.'
+- 'Attribute Controller::AdminLogin.user: 5. Authentication of admin users is mandatory
+  to allow access to the admin interface.'
+- 'Attribute Controller::AdminLogin.user: 6. The application is required to manage
+  login sessions for each authenticated admin user.'
+- 'Attribute Controller::AdminLogin.pass: **Extracted Business Rules:**'
+- 'Attribute Controller::AdminLogin.pass: 1. Only administrators are permitted to
+  log in through this process.'
+- 'Attribute Controller::AdminLogin.pass: 2. Submitted credentials must be verified
+  for authenticity before access is granted.'
+- 'Attribute Controller::AdminLogin.pass: 3. A session must be initiated for the administrator
+  upon successful authentication.'
+- 'Attribute Controller::AdminLogin.pass: 4. The system must provide a response indicating
+  whether authentication succeeded or failed.'
+- 'Attribute Controller::AdminLogin.pass: 5. This authentication process is restricted
+  to internal administrative workflows and is not intended for public or external
+  access.'
+- 'Attribute Controller::AdminRegister.i: **Business Rules Extracted:**'
+- 'Attribute Controller::AdminRegister.i: 1. The system must include an interface
+  named `AdminRegister` within the `Controller` namespace or class.'
+- 'Attribute Controller::AdminRegister.i: 2. The `AdminRegister` interface must define
+  the contract or required methods for administrative registration functionality.'
+- 'Attribute Controller::AdminRegister.i: 3. Any controller implementing the `AdminRegister`
+  interface must provide implementations for all methods specified in the interface.'
+- 'Attribute Controller::AdminRegister.i: 4. The purpose of the `AdminRegister` interface
+  is to standardize the behavior and requirements for administrative registration
+  across implementations.'
+- 'Attribute Controller::UserLogin.user: **Business Rules Extracted:**'
+- 'Attribute Controller::UserLogin.user: 1. The system must associate each user login
+  session with a specific user’s data.'
+- 'Attribute Controller::UserLogin.user: 2. The `Controller::UserLogin.user` element
+  must retrieve information only for the currently authenticated user.'
+- 'Attribute Controller::UserLogin.user: 3. The information returned by `Controller::UserLogin.user`
+  must include, at minimum: user ID, username, and email.'
+- 'Attribute Controller::UserLogin.user: 4. Additional relevant profile information
+  required for session management or authentication may also be included in the user
+  data returned.'
+- 'Attribute Controller::UserLogin.user: 5. Access to `Controller::UserLogin.user`
+  is restricted to the scope of an active user session.'
+- 'Attribute Controller::UserLogin.pass: **Business Rules extracted:**'
+- 'Attribute Controller::UserLogin.pass: 1. User login credentials (such as username
+  and password) must be provided to initiate the login process.'
+- 'Attribute Controller::UserLogin.pass: 2. The system must validate the provided
+  authentication information for every login request.'
+- 'Attribute Controller::UserLogin.pass: 3. If the authentication information is valid,
+  a user session must be started and an appropriate success response must be returned.'
+- 'Attribute Controller::UserLogin.pass: 4. If the authentication information is invalid,
+  the system must return an error message indicating invalid credentials.'
+- 'Attribute Controller::UserLogin.pass: 5. User authentication is a required step
+  in accessing user-protected areas of the application.'
+- 'Attribute Controller::UserRegister.user: **Business Rules extracted:**'
+- 'Attribute Controller::UserRegister.user: 1. During the user registration process,
+  a user instance must be created or manipulated in the `UserRegister` controller.'
+- 'Attribute Controller::UserRegister.user: 2. The user instance should encapsulate
+  all user attributes required for registration.'
+- 'Attribute Controller::UserRegister.user: 3. The system must use this user instance
+  to validate user data before registration is completed.'
+- 'Attribute Controller::UserRegister.user: 4. The system must use this user instance
+  to persist user data into the appropriate storage after successful validation.'
+- 'Attribute Controller::UserRegister.user: 5. The user instance must always be associated
+  with the registration process in the `UserRegister` controller.'
+- 'Attribute Controller::UserRegister.pass: **Business Rules Extracted:**'
+- 'Attribute Controller::UserRegister.pass: 1. The password entered during user registration
+  must be validated against defined criteria for strength and format.'
+- 'Attribute Controller::UserRegister.pass: 2. The password must meet security requirements
+  as specified by organizational policies (e.g., length, complexity, prohibited characters,
+  etc.).'
+- 'Attribute Controller::UserRegister.pass: 3. If the password meets all validation
+  rules, it is accepted and associated with the prospective user account.'
+- 'Attribute Controller::UserRegister.pass: 4. If the password fails validation, the
+  registration process is blocked, and appropriate error messages are returned to
+  inform the user of the specific issues.'
 - 'Attribute Controller::UserRegister.i: **Business Rules Extracted:**'
-- 'Attribute Controller::UserRegister.i: 1. The user registration process must be
-  initialized or instantiated through the `Controller::UserRegister.i` element.'
-- 'Attribute Controller::UserRegister.i: 2. The `Controller::UserRegister.i` element
-  is responsible for setting up all necessary parameters required for user registration.'
-- 'Attribute Controller::UserRegister.i: 3. Before a user can register, required registration
-  data must be prepared by the `Controller::UserRegister.i` element.'
-- 'Attribute Controller::UserRegister.i: 4. All user registration-related actions
-  must be accessed or initiated via the entry point provided by `Controller::UserRegister.i`.'
+- 'Attribute Controller::UserRegister.i: 1. **Singleton Access Rule:** There must
+  be a single, shared instance (`singleton`) of the `UserRegister` controller within
+  the application, accessible via the `.i` accessor.'
+- 'Attribute Controller::UserRegister.i: 2. **Centralized Registration Logic:** All
+  user registration operations must be executed through the centralized `UserRegister`
+  instance (accessed as `Controller::UserRegister.i`), ensuring consistent business
+  logic application.'
+- 'Attribute Controller::UserRegister.i: 3. **Standardized Interface Rule:** The interface
+  for user registration must be standardized and exposed by the `UserRegister` controller,
+  so all modules interact with it in the same way.'
+- 'Attribute Controller::UserRegister.i: 4. **Class-level Availability:** The `.i`
+  accessor should be available at the class level (not per object), promoting ease
+  of access and ensuring there are no unintended multiple controller instances.'
+- 'Attribute Controller::UserRegister.i: 5. **Namespace Encapsulation:** The `UserRegister`
+  controller must be encapsulated within the `Controller` namespace to avoid naming
+  conflicts and to clarify its role within the application''s architecture.'
+- 'Attribute Controller::UserRegister.i: 6. **'
 dependencies:
   Controller::AddDoctor: []
   Controller::AddPatient: []
@@ -515,176 +522,184 @@ data_model:
   attributes:
   - name: i
     type: ''
-    description: "**Enhanced Description:**  \nHandles incoming HTTP requests to register\
-      \ a new doctor in the system. Accepts and parses the payload containing the\
-      \ doctor's details, such as name, credentials, specialty, and contact information.\
-      \ Performs comprehensive validation of the submitted data to ensure compliance\
-      \ with required formats, mandatory fields, and business rules. Upon successful\
-      \ validation, interacts with the service layer to persist the new doctor record\
-      \ in the underlying data store. Generates and returns a structured response,\
-      \ including a success status and the unique identifier of the newly created\
-      \ doctor when appropriate, or detailed error messages in case of validation\
-      \ failure or other processing errors."
+    description: "**Enhanced Description:**  \nProcesses HTTP requests for adding\
+      \ a new doctor to the system. This controller action accepts and deserializes\
+      \ doctor-related data from the client—such as name, specialty, contact information,\
+      \ and credentials—then validates the input against defined business rules and\
+      \ data integrity constraints. If the submission passes all validations, it creates\
+      \ a new doctor record in the database and returns a structured success response,\
+      \ typically with the newly created doctor's identifier and relevant metadata.\
+      \ In cases of validation errors or processing failures, the action responds\
+      \ with clear, actionable error messages and corresponding HTTP status codes\
+      \ to inform the client of the specific issues encountered. This operation ensures\
+      \ that only high-quality, consistent doctor data is persisted in the system."
 - name: Controller::AddPatient
   attributes:
   - name: i
     type: ''
-    description: '**AddPatient (Controller Method)**
-
-
-      Handles the creation of new patient records within the healthcare system. This
-      controller method receives structured patient data from client-side requests,
-      such as from a web form or API call. It performs thorough validation checks
-      on the input data—including mandatory fields (e.g., name, date of birth, contact
-      information), data type consistency, and business rule enforcement (e.g., unique
-      identifiers, age constraints). Upon successful validation, the method persists
-      the patient information to the underlying database, ensuring compliance with
-      data integrity and security standards. The method returns a standardized response
-      object, providing clear feedback to the client regarding the outcome of the
-      operation, including details of the newly created patient record on success,
-      or descriptive error messages if validation fails or an'
+    description: "**Element:** `Controller::AddPatient.i`\n\n**Enhanced Description:**\
+      \  \nThis interface file encapsulates the definition of the `AddPatient` controller\
+      \ within the `Controller` namespace. It outlines the specific operations, methods,\
+      \ and data structures necessary for facilitating the secure and efficient addition\
+      \ of new patient records to the system. The interface includes comprehensive\
+      \ input validation rules, ensuring data integrity and compliance with regulatory\
+      \ standards (e.g., HIPAA, GDPR, if appropriate). Additionally, it details the\
+      \ controller’s interaction protocols with underlying storage mechanisms and\
+      \ business logic layers—such as invoking data persistence routines and triggering\
+      \ relevant domain events—while providing clear interface contracts for downstream\
+      \ processes, service integrations, and potential error handling requirements."
 - name: Controller::AddRecp
   attributes:
   - name: i
     type: ''
-    description: "**Enhanced Description:**  \nFacilitates the inclusion of a new\
-      \ recipient by accepting and processing input data. Conducts comprehensive validation\
-      \ to ensure data completeness, correctness, and adherence to defined business\
-      \ rules. Upon successful validation, seamlessly updates the recipient list by\
-      \ adding the new entry, ensuring consistency and data integrity within the system.\
-      \ Provides informative feedback in cases of validation failure or system errors\
-      \ to support effective error handling and user guidance."
+    description: '**Enhanced Description:**
+
+
+      The `Controller::AddRecp.i` code element is an interface header file associated
+      with the `AddRecp` class or module within the `Controller` namespace. This file
+      serves as the primary declaration point for the public interface of `AddRecp`,
+      defining function prototypes, constants, macros, and any externally visible
+      data structures related to recipient addition or management within the application''s
+      controller logic. By encapsulating these declarations, `Controller::AddRecp.i`
+      allows other components and source files to interact with `AddRecp` functionality—such
+      as adding new recipients or managing recipient data—without exposing the underlying
+      implementation details. This abstraction promotes modularity, maintainability,
+      and separation of concerns within the codebase, ensuring that'
 - name: Controller::AddWorker
   attributes:
   - name: i
     type: ''
-    description: "**Enhanced Description:**  \nRetrieves the current value of the\
-      \ instance variable `@i` from the `AddWorker` controller. This read-only accessor\
-      \ method allows external components to query the internal state maintained by\
-      \ the controller—typically representing a counter, unique identifier, or progress\
-      \ indicator—without permitting direct modification. By exposing `@i` in a controlled\
-      \ manner, it supports encapsulation and facilitates consistent monitoring or\
-      \ reporting of the controller's operational status."
+    description: "**Description (Enhanced):**  \nInitiates the process of registering\
+      \ a new worker through the `Controller` class. This method accepts worker-related\
+      \ input parameters—such as name, role, contact information, and unique identifier—and\
+      \ performs comprehensive validation to ensure all required fields meet predefined\
+      \ business and data integrity rules. Upon successful validation, it creates\
+      \ a new worker record and persists it to the system's designated data store\
+      \ or database. The method also handles potential conflicts (e.g., duplicate\
+      \ identifiers) and implements error handling to provide meaningful feedback\
+      \ in case of invalid input or storage issues. Once completed, the new worker\
+      \ is fully integrated and accessible for all subsequent operations—including\
+      \ assignment, modification, or deletion—within the application's workflow."
 - name: Controller::AdminLogin
   attributes:
   - name: user
     type: ''
-    description: '**Enhanced Description:**
-
-
-      Represents the `user` action or method within the `AdminLogin` controller, serving
-      as a central component for administrative user authentication workflows. This
-      code element is responsible for securely handling incoming login requests from
-      potential admin users. It validates submitted credentials against stored authentication
-      data using established security measures such as password hashing and input
-      sanitization to mitigate security risks. Upon successful verification, it initiates
-      administrative user sessions, assigns appropriate roles and permissions, and
-      provides access to privileged administrative features. In cases of invalid credentials
-      or suspicious activity, it triggers error messaging, logs security events, and
-      enforces access restrictions. Overall, this method ensures that only authorized
-      personnel can access and interact with sensitive administrative functions within
-      the application.'
+    description: "**Enhanced Description:**  \nRepresents the component responsible\
+      \ for handling all user-related operations within the context of the administrative\
+      \ login controller. The `user` attribute is primarily tasked with retrieving,\
+      \ validating, and managing administrator credentials and session information\
+      \ during the authentication process. This includes verifying login credentials,\
+      \ establishing secure authentication sessions, tracking user activity, and facilitating\
+      \ account-related actions such as password resets or login attempt monitoring.\
+      \ By centralizing these functions, the `user` element ensures that only authorized\
+      \ administrative users can access the application’s admin interface, while maintaining\
+      \ robust security and session management practices."
 - name: Controller::AdminLogin
   attributes:
   - name: pass
     type: ''
-    description: '**Controller::AdminLogin.pass**
-
-
-      Manages the authentication workflow for administrative users by securely validating
-      the provided login credentials against stored administrator records. Upon successful
-      verification, the method initiates a privileged admin session, establishes the
-      appropriate access permissions, and redirects the user to the administrative
-      dashboard. In the event of invalid credentials, it responds with a detailed
-      authentication error message or redirects the user back to the login interface,
-      ensuring both security and clear user feedback throughout the process. The method
-      may also incorporate audit logging of authentication attempts for monitoring
-      and compliance purposes.'
+    description: "**Enhanced Description:**  \n**Element:** `Controller::AdminLogin.pass`\n\
+      \n**Description:**  \nManages the secure authentication workflow for administrator\
+      \ accounts. This element receives login credentials (such as username and password),\
+      \ validates them against stored administrative user records, and enforces security\
+      \ measures like password hashing and rate-limiting of login attempts. Upon successful\
+      \ authentication, it initializes an admin session, generates and stores session\
+      \ tokens or cookies as required, and logs relevant authentication events for\
+      \ auditing purposes. In case of authentication failure, it returns descriptive\
+      \ error messages and handles invalid or malformed input gracefully to prevent\
+      \ information leakage. This process is a critical part of the internal administrative\
+      \ authentication system, designed to protect sensitive administrative functions\
+      \ and resources from unauthorized access."
 - name: Controller::AdminRegister
   attributes:
   - name: i
     type: ''
-    description: '**Enhanced description for `Controller::AdminRegister.i`:**
+    description: '**Enhanced Description:**
 
 
-      Returns the singleton instance of the `AdminRegister` controller, ensuring consistent
-      access to its methods and properties across the application. This approach guarantees
-      that only one `AdminRegister` controller instance is ever in use, facilitating
-      centralized management of administrative user registration workflows. The method
-      is typically used to initiate and manage admin-specific registration logic,
-      enforce security protocols, and coordinate related resources required during
-      the admin onboarding process. This design promotes efficient resource management
-      and helps maintain application-wide consistency in all administrative registration
-      operations.'
+      Represents the `iAdminRegister` interface within the `Controller` namespace
+      or class hierarchy. This interface defines the formal contract that the `AdminRegister`
+      controller must adhere to, specifying a set of required methods and behaviors
+      essential for handling administrative registration functionalities. It ensures
+      consistency, maintainability, and scalability by enforcing implementation of
+      core routines such as processing administrative user sign-ups, validating registration
+      data, and managing related business logic across any class that implements this
+      interface.'
 - name: Controller::UserLogin
   attributes:
   - name: user
     type: ''
-    description: "**Enhanced Description:**  \nRepresents the `user` attribute or\
-      \ method within the `UserLogin` controller. This member provides programmatic\
-      \ access to the information pertaining to the current user interacting with\
-      \ the login process. It plays a central role in authenticating user credentials,\
-      \ managing session state, and retrieving user-specific details (such as username,\
-      \ roles, or profile information) required during login and related actions.\
-      \ By encapsulating the current user's data, this attribute or method facilitates\
-      \ secure identification, authorization checks, and personalized handling of\
-      \ login flows within the application’s authentication framework."
+    description: "**Enhanced Description:**  \nThe `Controller::UserLogin.user` element\
+      \ represents the user entity linked to the active login session within the context\
+      \ of the `UserLogin` controller. This attribute provides access to a comprehensive\
+      \ user object encapsulating essential information about the authenticated individual.\
+      \ Typical data elements include user ID, username, email address, and additional\
+      \ profile attributes relevant to the current session. This object is instrumental\
+      \ for managing authentication workflows, authorizing user actions, and maintaining\
+      \ session integrity throughout the user’s interaction with the application.\
+      \ The `user` element is generally retrieved after successful authentication\
+      \ and serves as a central reference point for user-specific data within the\
+      \ login session lifecycle."
 - name: Controller::UserLogin
   attributes:
   - name: pass
     type: ''
-    description: "**Enhanced Description:**  \nResponsible for managing the user login\
-      \ authentication workflow, this method verifies submitted user credentials against\
-      \ stored data to ensure authenticity. It tracks and limits login attempts to\
-      \ prevent unauthorized access, incorporating security measures such as account\
-      \ lockout or delay after repeated failures. Upon processing a login request,\
-      \ it returns a status indicating authentication success or failure, and records\
-      \ relevant authentication events for audit and monitoring purposes. Optional\
-      \ support may include multi-factor authentication and logging of client metadata\
-      \ for enhanced security."
+    description: '**Enhanced Description:**
+
+
+      `Controller::UserLogin.pass` is a controller-layer method that handles the authentication
+      phase of the user login workflow. It accepts incoming login requests containing
+      user credentials (typically a username and password), and performs validation
+      against stored authentication data. Upon successful credential verification,
+      the method establishes a user session—such as generating and returning a session
+      token or setting session cookies—and delivers a positive response to the client.
+      In cases where authentication fails, due to invalid or missing credentials,
+      it returns a structured error response detailing the failure reason (e.g., "invalid
+      username or password") without exposing sensitive information. This method serves
+      as a critical security checkpoint, ensuring that only authorized users gain
+      access to protected application resources. Additionally, it may incorporate
+      auxiliary measures'
 - name: Controller::UserRegister
   attributes:
   - name: user
     type: ''
-    description: "**Enhanced Description:**  \nThe `Controller::UserRegister.user`\
-      \ method is responsible for managing the end-to-end user registration workflow\
-      \ within the application. When invoked, this method receives incoming registration\
-      \ requests, parses and sanitizes the user-provided data, and performs comprehensive\
-      \ validation checks—including required fields, format constraints, and uniqueness\
-      \ of username or email. Upon successful validation, it securely creates a new\
-      \ user record in the database, potentially including additional setup such as\
-      \ initializing user profiles or sending confirmation emails. In all scenarios,\
-      \ the method returns a standardized response: on success, it provides confirmation\
-      \ details and relevant user data; on failure, it generates clear, actionable\
-      \ error messages outlining validation or system issues. This method acts as\
-      \ the central gateway for all user sign-up operations,"
+    description: "**Enhanced Description:**  \nRepresents the user entity instance\
+      \ involved in the registration workflow, as managed by the `UserRegister` controller.\
+      \ This attribute encapsulates all relevant user information—such as username,\
+      \ email, password, and profile details—that are supplied during the registration\
+      \ process. It serves as a data holder for both capturing user input and conveying\
+      \ validated data between application layers. The attribute is pivotal for user\
+      \ object instantiation, validation, and eventual persistence to the data store,\
+      \ ensuring seamless management and integrity of user registration data throughout\
+      \ the process."
 - name: Controller::UserRegister
   attributes:
   - name: pass
     type: ''
-    description: "**Element:** `Controller::UserRegister.pass`\n\n**Description:**\
-      \  \nServes as the primary handler for user registration requests within the\
-      \ application. This method is responsible for receiving and processing registration\
-      \ data submitted by prospective users. It performs comprehensive validation\
-      \ checks on the provided information—such as username uniqueness, password complexity,\
-      \ email format, and any additional business rules—to ensure data integrity and\
-      \ compliance with security requirements. Upon successful validation, it delegates\
-      \ the creation of a new user account to the appropriate service or data persistence\
-      \ layer. The method returns a structured success response, typically including\
-      \ a confirmation message and, if applicable, authentication tokens or user profile\
-      \ data. In cases where validation fails or account creation is unsuccessful\
-      \ due to system errors, it ensures that a clear and informative error response"
+    description: "**Enhanced Description:**  \nThe **`Controller::UserRegister.pass`**\
+      \ element manages the end-to-end processing of user passwords during the registration\
+      \ workflow. It is responsible for enforcing password validation, including adherence\
+      \ to defined security policies such as minimum length, complexity (use of uppercase,\
+      \ lowercase, numerals, and special characters), and protection against common\
+      \ patterns or known breaches. Upon receiving a password input, this function\
+      \ verifies its compliance with current security standards, securely hashes the\
+      \ password using industry best practices (e.g., bcrypt, Argon2), and prepares\
+      \ it for safe storage in the user database. If the password meets all criteria,\
+      \ it is associated with the new user account; if it fails any check, detailed\
+      \ and user-friendly error messages guide users to correct"
 - name: Controller::UserRegister
   attributes:
   - name: i
     type: ''
-    description: "**Enhanced Description:**  \nThe `Controller::UserRegister.i` element\
-      \ represents a method or property within the `UserRegister` controller, responsible\
-      \ for initializing the user registration process. This element typically serves\
-      \ as the entry point for user registration-related actions, handling the setup\
-      \ of required parameters, initializing form data, and ensuring that all prerequisite\
-      \ conditions are met before processing a new user registration. By preparing\
-      \ the necessary context and resources, `UserRegister.i` streamlines the registration\
-      \ workflow, providing a foundation for subsequent operations such as data validation,\
-      \ persistence, and user feedback."
+    description: "**Element Name:** `Controller::UserRegister.i`\n\n**Enhanced Description:**\
+      \  \nA class-level accessor that provides a standardized mechanism to access\
+      \ the singleton instance of the `UserRegister` controller within the `Controller`\
+      \ namespace. The `.i` property—by convention—serves as a globally available\
+      \ entry point to the principal interface and functionality for user registration\
+      \ workflows, ensuring that only one instance of `UserRegister` exists throughout\
+      \ the application's lifecycle. This approach fosters thread safety, maintains\
+      \ a consistent application state, and streamlines the process of initiating\
+      \ or managing user registration operations from any component in the system.\
+      \ By centralizing access in this manner, `.i` promotes reusability, testability,\
+      \ and adherence to the Singleton and Service Locator design patterns for controller"
 ui_requirements: []
