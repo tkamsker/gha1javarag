@@ -196,3 +196,21 @@ python src/main.py
 
 # extract 
 python src/requirement_document_generator.py
+
+## ---- 16 Jun
+
+pip install langchain==0.1.12 langchain-core==0.1.31 langchain-openai==0.0.5 pydantic==2.11.6 python-dotenv==1.0.1
+
+
+The refactored solution now consists of two main components:
+1. Main Application (src/main.py):
+ - Processes Doxygen HTML output
+ - Extracts class information using BeautifulSoup
+ - Stores data in ChromaDB for later use
+ - Handles metadata and class hierarchy
+
+2. Requirement Generator (src/requirement_generator.py):
+ - Accesses stored data from ChromaDB
+ - Generates requirements using LLM
+ - Creates traceability matrix
+ - Generates comprehensive reports
