@@ -5,12 +5,96 @@ from typing import Dict, List, Any
 from dotenv import load_dotenv
 from chromadb_connector import ChromaDBConnector
 from openai import OpenAI
+from bs4 import BeautifulSoup
+import glob
 
 # Load environment variables
 load_dotenv()
 
-# Initialize OpenAI client
+# Initialize OpenAI client with model from .env
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+OPENAI_MODEL = os.getenv('OPENAI_MODEL_NAME', 'gpt-3.5-turbo')
+
+def extract_jsp_requirements(jsp_file_path: str) -> Dict[str, Any]:
+    """
+    Extract requirements from JSP files by analyzing HTML elements.
+    """
+    try:
+        with open(jsp_file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        soup = BeautifulSoup(content, 'html.parser')
+        requirements = {
+            'forms': [],
+            'links': [],
+            'buttons': [],
+            'inputs': [],
+            'tables': []
+        }
+        
+        # Extract form requirements
+        for form in soup.find_all('form'):
+            form_info = {
+                'action': form.get('action', ''),
+                'method': form.get('method', ''),
+                'inputs': []
+            }
+            for input_elem in form.find_all('input'):
+                form_info['inputs'].append({
+                    'type': input_elem.get('type', ''),
+                    'name': input_elem.get('name', ''),
+                    'required': input_elem.get('required', False)
+                })
+            requirements['forms'].append(form_info)
+        
+        # Extract link requirements
+        for link in soup.find_all('a'):
+            requirements['links'].append({
+                'href': link.get('href', ''),
+                'text': link.get_text().strip()
+            })
+        
+        # Extract button requirements
+        for button in soup.find_all('button'):
+            requirements['buttons'].append({
+                'type': button.get('type', ''),
+                'text': button.get_text().strip()
+            })
+        
+        # Extract table requirements
+        for table in soup.find_all('table'):
+            table_info = {
+                'headers': [],
+                'rows': []
+            }
+            headers = table.find_all('th')
+            table_info['headers'] = [h.get_text().strip() for h in headers]
+            for row in table.find_all('tr'):
+                cells = row.find_all('td')
+                if cells:
+                    table_info['rows'].append([cell.get_text().strip() for cell in cells])
+            requirements['tables'].append(table_info)
+        
+        return requirements
+    except Exception as e:
+        print(f"Error processing JSP file {jsp_file_path}: {str(e)}")
+        return {}
+
+def generate_ai_description(text: str) -> str:
+    """Generate AI description using OpenAI API."""
+    try:
+        response = client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[
+                {"role": "system", "content": "You are a technical writer creating software requirements documentation."},
+                {"role": "user", "content": f"Generate a clear and concise description for this code element: {text}"}
+            ],
+            max_tokens=150
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"Error generating AI description: {str(e)}")
+        return ""
 
 def generate_requirements_spec(xml_dir: str, output_dir: str) -> None:
     """
@@ -28,6 +112,12 @@ def generate_requirements_spec(xml_dir: str, output_dir: str) -> None:
     # Extract code artifacts
     artifacts = extract_code_artifacts(data)
     
+    # Process JSP files
+    jsp_files = glob.glob(os.path.join(xml_dir, '**/*.jsp'), recursive=True)
+    jsp_requirements = {}
+    for jsp_file in jsp_files:
+        jsp_requirements[jsp_file] = extract_jsp_requirements(jsp_file)
+    
     # Analyze dependencies
     dependencies = analyze_dependencies(artifacts)
     
@@ -35,13 +125,130 @@ def generate_requirements_spec(xml_dir: str, output_dir: str) -> None:
     business_rules = identify_business_rules(artifacts)
     
     # Generate requirements
-    requirements = generate_requirements(artifacts, dependencies, business_rules)
+    requirements = generate_requirements(artifacts, dependencies, business_rules, jsp_requirements)
     
     # Write the requirements to file
     output_file = os.path.join(output_dir, 'requirements_spec.yaml')
     with open(output_file, 'w') as f:
         yaml.dump(requirements, f, sort_keys=False, allow_unicode=True)
     print(f"Requirements specification written to {output_file}")
+
+def generate_requirements(artifacts: Dict[str, Any], 
+                         dependencies: Dict[str, List[str]], 
+                         business_rules: List[str],
+                         jsp_requirements: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Generate requirements from analyzed artifacts using AI enhancement.
+    """
+    requirements = {
+        'functional_requirements': [],
+        'non_functional_requirements': [],
+        'business_rules': business_rules,
+        'dependencies': dependencies,
+        'data_model': [],
+        'ui_requirements': []
+    }
+    
+    # Generate UI requirements from JSP files
+    for jsp_file, jsp_data in jsp_requirements.items():
+        try:
+            # Use AI to generate UI requirements
+            response = client.chat.completions.create(
+                model=OPENAI_MODEL,
+                messages=[
+                    {"role": "system", "content": "You are a UI/UX requirements engineer. Generate requirements based on the following UI elements."},
+                    {"role": "user", "content": f"Generate UI requirements for file {jsp_file} with elements: {json.dumps(jsp_data, indent=2)}"}
+                ],
+                max_tokens=300
+            )
+            ui_requirements = response.choices[0].message.content.strip()
+            
+            requirements['ui_requirements'].append({
+                'file': jsp_file,
+                'requirements': ui_requirements,
+                'elements': jsp_data
+            })
+        except Exception as e:
+            print(f"Error generating UI requirements for {jsp_file}: {e}")
+
+    # Generate functional requirements from methods
+    for method in artifacts['methods']:
+        try:
+            # Use AI to enhance method description into a requirement
+            response = client.chat.completions.create(
+                model=OPENAI_MODEL,
+                messages=[
+                    {"role": "system", "content": "You are a requirements engineer. Convert the following method description into a functional requirement."},
+                    {"role": "user", "content": f"Convert to requirement: {method['description']}"}
+                ],
+                max_tokens=200
+            )
+            enhanced_description = response.choices[0].message.content.strip()
+            
+            req = {
+                'id': f"FR-{method['class']}-{method['name']}",
+                'description': enhanced_description,
+                'source': f"{method['class']}.{method['name']}",
+                'dependencies': [dep for dep in dependencies.get(method['class'], [])],
+                'parameters': method.get('parameters', []),
+                'return_type': method.get('return_type', '')
+            }
+            requirements['functional_requirements'].append(req)
+        except Exception as e:
+            print(f"Error generating requirement for method {method['class']}.{method['name']}: {e}")
+    
+    # Generate data model from attributes
+    for attr in artifacts['attributes']:
+        try:
+            # Use AI to enhance attribute description
+            response = client.chat.completions.create(
+                model=OPENAI_MODEL,
+                messages=[
+                    {"role": "system", "content": "You are a data modeler. Enhance the following attribute description."},
+                    {"role": "user", "content": f"Enhance description: {attr['description']}"}
+                ],
+                max_tokens=150
+            )
+            enhanced_description = response.choices[0].message.content.strip()
+            
+            entity = {
+                'name': attr['class'],
+                'attributes': [{
+                    'name': attr['name'],
+                    'type': attr['type'],
+                    'description': enhanced_description
+                }]
+            }
+            requirements['data_model'].append(entity)
+        except Exception as e:
+            print(f"Error generating data model for attribute {attr['class']}.{attr['name']}: {e}")
+    
+    # Add non-functional requirements based on dependencies and system characteristics
+    for class_name, deps in dependencies.items():
+        if deps:
+            try:
+                # Use AI to generate non-functional requirements
+                response = client.chat.completions.create(
+                    model=OPENAI_MODEL,
+                    messages=[
+                        {"role": "system", "content": "You are a requirements engineer. Generate non-functional requirements based on the following dependencies."},
+                        {"role": "user", "content": f"Generate NFRs for class {class_name} with dependencies: {', '.join(deps)}"}
+                    ],
+                    max_tokens=200
+                )
+                nfr_description = response.choices[0].message.content.strip()
+                
+                req = {
+                    'id': f"NFR-{class_name}-Dependencies",
+                    'description': nfr_description,
+                    'source': class_name,
+                    'dependencies': deps
+                }
+                requirements['non_functional_requirements'].append(req)
+            except Exception as e:
+                print(f"Error generating NFR for class {class_name}: {e}")
+    
+    return requirements
 
 def generate_ai_requirement(entry):
     """Placeholder function for AI-generated requirements."""
@@ -159,27 +366,11 @@ def generate_markdown_requirements(clusters: Dict[str, List[str]], output_dir: s
             f.write(md_content)
         print(f"Markdown requirements for {cluster_name} written to {output_file}")
 
-def generate_ai_description(text: str) -> str:
-    """Generate AI description using OpenAI API."""
-    try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a technical writer creating software requirements documentation."},
-                {"role": "user", "content": f"Generate a clear and concise description for this code element: {text}"}
-            ],
-            max_tokens=150
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        print(f"Error generating AI description: {str(e)}")
-        return ""
-
 def generate_data_model(attribute_info: dict) -> dict:
     """Generate data model description using OpenAI API."""
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model=OPENAI_MODEL,
             messages=[
                 {"role": "system", "content": "You are a technical writer creating data model documentation."},
                 {"role": "user", "content": f"Generate a data model description for this attribute: {attribute_info}"}
@@ -313,7 +504,7 @@ def identify_business_rules(artifacts: Dict[str, Any]) -> List[str]:
             try:
                 # Use AI to extract business rules from class description
                 response = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
+                    model=OPENAI_MODEL,
                     messages=[
                         {"role": "system", "content": "You are a business analyst. Extract business rules from the following description."},
                         {"role": "user", "content": f"Extract business rules from: {description}"}
@@ -332,7 +523,7 @@ def identify_business_rules(artifacts: Dict[str, Any]) -> List[str]:
             try:
                 # Use AI to extract business rules from method description
                 response = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
+                    model=OPENAI_MODEL,
                     messages=[
                         {"role": "system", "content": "You are a business analyst. Extract business rules from the following method description."},
                         {"role": "user", "content": f"Extract business rules from: {description}"}
@@ -351,7 +542,7 @@ def identify_business_rules(artifacts: Dict[str, Any]) -> List[str]:
             try:
                 # Use AI to extract business rules from attribute description
                 response = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
+                    model=OPENAI_MODEL,
                     messages=[
                         {"role": "system", "content": "You are a business analyst. Extract business rules from the following attribute description."},
                         {"role": "user", "content": f"Extract business rules from: {description}"}
@@ -364,99 +555,6 @@ def identify_business_rules(artifacts: Dict[str, Any]) -> List[str]:
                 print(f"Error extracting business rules from attribute {attr['class']}.{attr['name']}: {e}")
     
     return business_rules
-
-def generate_requirements(artifacts: Dict[str, Any], 
-                         dependencies: Dict[str, List[str]], 
-                         business_rules: List[str]) -> Dict[str, Any]:
-    """
-    Generate requirements from analyzed artifacts using AI enhancement.
-    """
-    requirements = {
-        'functional_requirements': [],
-        'non_functional_requirements': [],
-        'business_rules': business_rules,
-        'dependencies': dependencies,
-        'data_model': []
-    }
-    
-    # Generate functional requirements from methods
-    for method in artifacts['methods']:
-        try:
-            # Use AI to enhance method description into a requirement
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "You are a requirements engineer. Convert the following method description into a functional requirement."},
-                    {"role": "user", "content": f"Convert to requirement: {method['description']}"}
-                ],
-                max_tokens=200
-            )
-            enhanced_description = response.choices[0].message.content.strip()
-            
-            req = {
-                'id': f"FR-{method['class']}-{method['name']}",
-                'description': enhanced_description,
-                'source': f"{method['class']}.{method['name']}",
-                'dependencies': [dep for dep in dependencies.get(method['class'], [])],
-                'parameters': method.get('parameters', []),
-                'return_type': method.get('return_type', '')
-            }
-            requirements['functional_requirements'].append(req)
-        except Exception as e:
-            print(f"Error generating requirement for method {method['class']}.{method['name']}: {e}")
-    
-    # Generate data model from attributes
-    for attr in artifacts['attributes']:
-        try:
-            # Use AI to enhance attribute description
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "You are a data modeler. Enhance the following attribute description."},
-                    {"role": "user", "content": f"Enhance description: {attr['description']}"}
-                ],
-                max_tokens=150
-            )
-            enhanced_description = response.choices[0].message.content.strip()
-            
-            entity = {
-                'name': attr['class'],
-                'attributes': [{
-                    'name': attr['name'],
-                    'type': attr['type'],
-                    'description': enhanced_description
-                }]
-            }
-            requirements['data_model'].append(entity)
-        except Exception as e:
-            print(f"Error generating data model for attribute {attr['class']}.{attr['name']}: {e}")
-    
-    # Add non-functional requirements based on dependencies and system characteristics
-    for class_name, deps in dependencies.items():
-        if deps:
-            try:
-                # Use AI to generate non-functional requirements
-                response = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": "You are a requirements engineer. Generate non-functional requirements based on the following dependencies."},
-                        {"role": "user", "content": f"Generate NFRs for class {class_name} with dependencies: {', '.join(deps)}"}
-                    ],
-                    max_tokens=200
-                )
-                nfr_description = response.choices[0].message.content.strip()
-                
-                req = {
-                    'id': f"NFR-{class_name}-Dependencies",
-                    'description': nfr_description,
-                    'source': class_name,
-                    'dependencies': deps
-                }
-                requirements['non_functional_requirements'].append(req)
-            except Exception as e:
-                print(f"Error generating NFR for class {class_name}: {e}")
-    
-    return requirements
 
 if __name__ == "__main__":
     load_dotenv()

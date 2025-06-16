@@ -250,3 +250,14 @@ Checks for OpenAI API key
 Creates output directory if it doesn't exist
 Better error reporting for AI operations
 To test the enhanced script, you'll need to:
+
+
+# ----- 16 Jun 1542
+
+The script will now:
+- Process both code and JSP files
+- Generate UI requirements from JSP elements
+- Use the configured OpenAI model
+- Create more comprehensive requirements documentation
+
+Would you like me to help you test the improved version or make any additional enhancements?
