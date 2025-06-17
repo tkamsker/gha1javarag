@@ -98,3 +98,12 @@ curl -X POST "https://chromadb.dev.motorenflug.at/api/v2/ingest" -H "Content-Typ
 - Generate index and layer-specific documents
 
 The separation provides better organization and makes it easier to maintain and extend each step independently. The RequirementsAnalyzer class now handles all the complex analysis and documentation generation, while the main script orchestrates the overall process.
+
+
+# new implement 
+ output/
+   └── requirements/
+       ├── step2_index.md
+       ├── index.md
+       ├── home.md
+       └── [other files].md
