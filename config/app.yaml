@@ -1,0 +1,9 @@
+chromadb:
+  persist_directory: "./data/chromadb"
+  collection_name: "java_analysis"
+  
+openai:
+  temperature: 0.2
+  
+app:
+  output_directory: "./output" 
