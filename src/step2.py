@@ -3,11 +3,13 @@ import os
 import json
 import logging
 import re
+import time
 from pathlib import Path
 from typing import Dict, Any, List, Set
 from dotenv import load_dotenv
 from logger_config import setup_logging
 from openai import AsyncOpenAI
+from rate_limiter import RateLimiter, RateLimitConfig
 
 logger = logging.getLogger('java_analysis.step2')
 
@@ -19,6 +21,20 @@ class RequirementsProcessor:
         self.output_dir = os.getenv('OUTPUT_DIR', './output')
         self.md_dir = Path(self.output_dir) / "requirements"
         self.md_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Enhanced rate limiting settings
+        rate_config = RateLimitConfig(
+            requests_per_minute=15,  # Reduced from 20
+            requests_per_hour=800,   # Reduced from 1000
+            delay_between_requests=5.0,  # Increased from 2.0
+            exponential_backoff_base=2.0,
+            max_retries=5
+        )
+        self.rate_limiter = RateLimiter(rate_config)
+        
+        # Batch processing settings
+        self.max_files_per_batch = 3  # Reduced from 5
+        self.max_files_to_process = 50  # Limit total files to process
         
         # Initialize OpenAI client
         api_key = os.getenv('OPENAI_API_KEY')
@@ -39,106 +55,190 @@ class RequirementsProcessor:
             self.metadata = json.load(f)
         logger.info(f"Loaded metadata with {len(self.metadata)} entries")
 
-    def find_landing_page(self) -> Dict[str, Any]:
-        """Find the landing page (index.jsp or home.jsp)"""
-        landing_page = None
-        for item in self.metadata:
-            file_path = item.get('file_path', '').lower()
-            if file_path.endswith('index.jsp') or file_path.endswith('home.jsp'):
-                landing_page = item
-                break
-        return landing_page
-
-    def extract_references(self, content: str) -> List[str]:
-        """Extract file and function references from content"""
-        # Look for common patterns in JSP/HTML files
-        patterns = [
-            r'include\s+file=["\']([^"\']+)["\']',  # JSP includes
-            r'href=["\']([^"\']+)["\']',  # Links
-            r'src=["\']([^"\']+)["\']',  # Script sources
-            r'action=["\']([^"\']+)["\']',  # Form actions
-            r'@include\s+([^\s]+)',  # JSP directives
-            r'jsp:include\s+page=["\']([^"\']+)["\']',  # JSP tags
-            r'function\s+([a-zA-Z0-9_]+)\s*\('  # Function calls
+    def prioritize_files(self) -> List[Dict[str, Any]]:
+        """Prioritize files based on importance and type"""
+        priority_order = [
+            # High priority - core application files
+            lambda f: f.get('file_path', '').endswith('.jsp'),
+            lambda f: f.get('file_path', '').endswith('.java'),
+            lambda f: 'index' in f.get('file_path', '').lower(),
+            lambda f: 'home' in f.get('file_path', '').lower(),
+            lambda f: 'main' in f.get('file_path', '').lower(),
+            # Medium priority - configuration files
+            lambda f: f.get('file_path', '').endswith('.xml'),
+            lambda f: f.get('file_path', '').endswith('.properties'),
+            # Lower priority - other files
+            lambda f: True  # Catch all remaining files
         ]
         
-        references = set()
-        for pattern in patterns:
-            matches = re.finditer(pattern, content, re.IGNORECASE)
-            for match in matches:
-                ref = match.group(1)
-                # Clean up the reference
-                ref = ref.split('?')[0]  # Remove query parameters
-                ref = ref.split('#')[0]  # Remove anchors
-                if ref:
-                    references.add(ref)
+        prioritized = []
+        for priority_func in priority_order:
+            for item in self.metadata:
+                if priority_func(item) and item not in prioritized:
+                    prioritized.append(item)
+                    # Limit total files to process
+                    if len(prioritized) >= self.max_files_to_process:
+                        break
+            if len(prioritized) >= self.max_files_to_process:
+                break
         
-        return list(references)
+        return prioritized
 
-    async def analyze_file(self, file_metadata: Dict[str, Any]) -> None:
-        """Analyze a single file and generate requirements documentation"""
-        file_path = file_metadata.get('file_path', '')
-        if file_path in self.processed_files:
+    def should_skip_file(self, file_path: str) -> bool:
+        """Determine if a file should be skipped to reduce API calls"""
+        skip_patterns = [
+            r'\.git/',
+            r'node_modules/',
+            r'\.DS_Store',
+            r'\.log$',
+            r'\.tmp$',
+            r'\.bak$',
+            r'\.swp$',
+            r'\.swo$',
+            r'\.class$',  # Compiled Java files
+            r'\.jar$',    # JAR files
+            r'\.war$',    # WAR files
+            r'\.ear$',    # EAR files
+        ]
+        
+        for pattern in skip_patterns:
+            if re.search(pattern, file_path, re.IGNORECASE):
+                return True
+        return False
+
+    async def analyze_files_batch(self, files_batch: List[Dict[str, Any]]) -> None:
+        """Analyze multiple files in a single API call with enhanced rate limiting"""
+        if not files_batch:
             return
-
-        logger.info(f"Analyzing file: {file_path}")
+            
+        logger.info(f"Analyzing batch of {len(files_batch)} files")
         
-        try:
-            # Create prompt for AI analysis
-            prompt = f"""We have a requirement, please explain in detail:
-            File: {file_path}
-            Type: {file_metadata.get('file_type', 'Unknown')}
-            Content: {file_metadata.get('content', '')}
+        # Wait for rate limiter before making API call
+        await self.rate_limiter.wait_if_needed()
+        
+        # Create a combined prompt for all files
+        files_content = []
+        for file_meta in files_batch:
+            file_path = file_meta.get('file_path', '')
+            file_type = file_meta.get('file_type', 'Unknown')
+            content = file_meta.get('content', '')[:800]  # Reduced content length
             
-            Please provide a detailed analysis of the requirements this file implements.
-            Include:
-            1. Purpose and functionality
-            2. User interactions
-            3. Data handling
-            4. Business rules
-            5. Dependencies and relationships
-            """
-            
-            # Get AI analysis
-            response = await self.client.chat.completions.create(
-                model=self.model_name,
-                messages=[
-                    {"role": "system", "content": "You are a requirements analysis expert."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.2
-            )
-            
-            analysis = response.choices[0].message.content
-            
-            # Create markdown file
+            files_content.append(f"""
+File: {file_path}
+Type: {file_type}
+Content Preview: {content[:400]}...
+---""")
+        
+        combined_content = "\n".join(files_content)
+        
+        prompt = f"""Analyze the following files and provide requirements documentation for each:
+
+{combined_content}
+
+For each file, provide:
+1. Purpose and functionality
+2. User interactions (if applicable)
+3. Data handling
+4. Business rules
+5. Dependencies and relationships
+
+Format your response as:
+## File: [filename]
+[analysis for this file]
+
+## File: [filename]
+[analysis for this file]
+..."""
+        
+        for attempt in range(self.rate_limiter.config.max_retries):
+            try:
+                # Wait for rate limiter (includes exponential backoff for retries)
+                if attempt > 0:
+                    await self.rate_limiter.wait_if_needed()
+                
+                response = await self.client.chat.completions.create(
+                    model=self.model_name,
+                    messages=[
+                        {"role": "system", "content": "You are a requirements analysis expert. Provide concise but comprehensive analysis."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.2,
+                    max_tokens=2000  # Reduced from 3000
+                )
+                
+                analysis = response.choices[0].message.content
+                
+                # Record successful request
+                self.rate_limiter.record_request()
+                
+                # Parse the response and create individual files
+                await self.parse_batch_response(analysis, files_batch)
+                
+                # Mark files as processed
+                for file_meta in files_batch:
+                    self.processed_files.add(file_meta.get('file_path', ''))
+                
+                logger.info(f"Successfully analyzed batch of {len(files_batch)} files")
+                
+                # Log rate limiting stats
+                stats = self.rate_limiter.get_stats()
+                logger.info(f"Rate limit stats: {stats['requests_last_minute']}/min, {stats['requests_last_hour']}/hour")
+                
+                break
+                
+            except Exception as e:
+                logger.error(f"Error analyzing batch (attempt {attempt + 1}): {str(e)}")
+                self.rate_limiter.record_failure()
+                
+                if attempt == self.rate_limiter.config.max_retries - 1:
+                    logger.error(f"Failed to analyze batch after {self.rate_limiter.config.max_retries} attempts")
+                    # Mark files as processed to avoid infinite retries
+                    for file_meta in files_batch:
+                        self.processed_files.add(file_meta.get('file_path', ''))
+
+    async def parse_batch_response(self, analysis: str, files_batch: List[Dict[str, Any]]) -> None:
+        """Parse the batch response and create individual markdown files"""
+        # Split by file sections
+        sections = re.split(r'## File:\s*', analysis)
+        
+        for i, file_meta in enumerate(files_batch):
+            file_path = file_meta.get('file_path', '')
             md_filename = f"{Path(file_path).stem}.md"
             md_path = self.md_dir / md_filename
             
+            # Get the corresponding section content
+            if i + 1 < len(sections):
+                section_content = sections[i + 1].strip()
+            else:
+                section_content = "Analysis not available for this file."
+            
             with open(md_path, 'w') as f:
                 f.write(f"# Requirements Analysis: {file_path}\n\n")
-                f.write(analysis)
+                f.write(section_content)
             
-            self.processed_files.add(file_path)
-            logger.info(f"Generated requirements document: {md_path}")
-            
-            # Extract and process references
-            references = self.extract_references(file_metadata.get('content', ''))
-            for ref in references:
-                # Find referenced file in metadata
-                for item in self.metadata:
-                    if item.get('file_path', '').endswith(ref):
-                        await self.analyze_file(item)
-                        break
-            
-        except Exception as e:
-            logger.error(f"Error analyzing file {file_path}: {str(e)}")
+            logger.debug(f"Generated requirements document: {md_path}")
 
-    async def process_remaining_files(self) -> None:
-        """Process any remaining files that weren't referenced"""
-        for item in self.metadata:
-            if item.get('file_path') not in self.processed_files:
-                await self.analyze_file(item)
+    async def process_files_with_batching(self) -> None:
+        """Process files in batches to reduce API calls"""
+        prioritized_files = self.prioritize_files()
+        
+        # Filter out files to skip
+        files_to_process = [
+            f for f in prioritized_files 
+            if not self.should_skip_file(f.get('file_path', ''))
+        ]
+        
+        logger.info(f"Processing {len(files_to_process)} files in batches of {self.max_files_per_batch}")
+        
+        # Process files in batches
+        for i in range(0, len(files_to_process), self.max_files_per_batch):
+            batch = files_to_process[i:i + self.max_files_per_batch]
+            await self.analyze_files_batch(batch)
+            
+            # Progress update
+            processed_count = len(self.processed_files)
+            total_count = len(files_to_process)
+            logger.info(f"Progress: {processed_count}/{total_count} files processed")
 
     def generate_index(self) -> None:
         """Generate index file with links to all requirements documents"""
@@ -158,25 +258,15 @@ class RequirementsProcessor:
 
 async def generate_requirements():
     """Main function to generate requirements documentation"""
-    logger = setup_logging(level=logging.DEBUG)
+    logger = setup_logging(level=logging.INFO)  # Reduced logging level
     logger.info("Starting requirements generation process")
     
     try:
         processor = RequirementsProcessor()
         processor.load_metadata()
         
-        # Start with landing page
-        landing_page = processor.find_landing_page()
-        if landing_page:
-            logger.info(f"Found landing page: {landing_page.get('file_path')}")
-            await processor.analyze_file(landing_page)
-        else:
-            logger.warning("No landing page found, starting with first file")
-            if processor.metadata:
-                await processor.analyze_file(processor.metadata[0])
-        
-        # Process remaining files
-        await processor.process_remaining_files()
+        # Process files with batching
+        await processor.process_files_with_batching()
         
         # Generate index
         processor.generate_index()

@@ -10,22 +10,27 @@ from dotenv import load_dotenv
 from logger_config import setup_logging
 import logging
 from rate_limiter import RateLimiter, RateLimitConfig
-from config_loader import load_rate_limit_config
 
-class BatchAIAnalyzer:
-    """Batch AI analyzer with enhanced rate limiting"""
+class TestBatchAIAnalyzer:
+    """Test batch AI analyzer with very conservative rate limiting"""
     
     def __init__(self):
         load_dotenv()
         self.output_dir = os.getenv('OUTPUT_DIR', './output')
         
-        # Load rate limiting configuration
-        self.rate_config = load_rate_limit_config()
+        # Very conservative rate limiting for testing
+        self.rate_config = RateLimitConfig(
+            requests_per_minute=5,  # Very conservative
+            requests_per_hour=200,  # Very conservative
+            delay_between_requests=10.0,  # Long delays
+            exponential_backoff_base=2.0,
+            max_retries=5
+        )
         self.rate_limiter = RateLimiter(self.rate_config)
         
-        # Batch processing settings
-        self.max_files_per_batch = 3  # Process 3 files per API call
-        self.max_files_to_process = 30  # Limit total files to process
+        # Very limited batch processing for testing
+        self.max_files_per_batch = 2  # Only 2 files per API call
+        self.max_files_to_process = 10  # Only 10 files total
         
         # Initialize OpenAI client
         api_key = os.getenv('OPENAI_API_KEY')
@@ -33,40 +38,36 @@ class BatchAIAnalyzer:
             raise ValueError("OPENAI_API_KEY environment variable is not set")
             
         self.model_name = os.getenv('OPENAI_MODEL_NAME', 'gpt-4-turbo-preview')
-        self.client = AIAnalyzer().client  # Reuse the client from AIAnalyzer
+        self.client = AIAnalyzer().client
 
-    def prioritize_files(self, files_metadata: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Prioritize files based on importance and type"""
-        priority_order = [
-            # High priority - core application files
-            lambda f: f.get('file_path', '').endswith('.java'),
-            lambda f: f.get('file_path', '').endswith('.jsp'),
-            lambda f: 'index' in f.get('file_path', '').lower(),
-            lambda f: 'home' in f.get('file_path', '').lower(),
-            lambda f: 'main' in f.get('file_path', '').lower(),
-            # Medium priority - configuration files
-            lambda f: f.get('file_path', '').endswith('.xml'),
-            lambda f: f.get('file_path', '').endswith('.properties'),
-            lambda f: f.get('file_path', '').endswith('.sql'),
-            # Lower priority - other files
-            lambda f: True  # Catch all remaining files
+    def get_important_files(self, files_metadata: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Get only the most important files for testing"""
+        import re
+        
+        # Priority order for file types
+        priority_patterns = [
+            r'\.jsp$',  # JSP files first
+            r'index\.',  # Index files
+            r'home\.',   # Home files
+            r'\.java$',  # Java files
+            r'pom\.xml$',  # Maven config
+            r'web\.xml$',  # Web config
         ]
         
-        prioritized = []
-        for priority_func in priority_order:
+        important_files = []
+        for pattern in priority_patterns:
             for item in files_metadata:
-                if priority_func(item) and item not in prioritized:
-                    prioritized.append(item)
-                    # Limit total files to process
-                    if len(prioritized) >= self.max_files_to_process:
-                        break
-            if len(prioritized) >= self.max_files_to_process:
-                break
+                file_path = item.get('file_path', '')
+                if (re.search(pattern, file_path, re.IGNORECASE) and 
+                    item not in important_files and 
+                    len(important_files) < self.max_files_to_process):
+                    important_files.append(item)
         
-        return prioritized
+        logging.getLogger('java_analysis.test_analyzer').info(f"Selected {len(important_files)} important files for testing")
+        return important_files
 
     def should_skip_file(self, file_path: str) -> bool:
-        """Determine if a file should be skipped to reduce API calls"""
+        """Determine if a file should be skipped"""
         import re
         skip_patterns = [
             r'\.git/',
@@ -77,11 +78,11 @@ class BatchAIAnalyzer:
             r'\.bak$',
             r'\.swp$',
             r'\.swo$',
-            r'\.class$',  # Compiled Java files
-            r'\.jar$',    # JAR files
-            r'\.war$',    # WAR files
-            r'\.ear$',    # EAR files
-            r'package-info\.java$',  # Package info files
+            r'\.class$',
+            r'\.jar$',
+            r'\.war$',
+            r'\.ear$',
+            r'package-info\.java$',
         ]
         
         for pattern in skip_patterns:
@@ -94,8 +95,8 @@ class BatchAIAnalyzer:
         if not files_batch:
             return []
             
-        logger = logging.getLogger('java_analysis.batch_analyzer')
-        logger.info(f"Analyzing batch of {len(files_batch)} files")
+        logger = logging.getLogger('java_analysis.test_analyzer')
+        logger.info(f"Analyzing batch of {len(files_batch)} files (TEST MODE)")
         
         # Wait for rate limiter before making API call
         await self.rate_limiter.wait_if_needed()
@@ -105,12 +106,12 @@ class BatchAIAnalyzer:
         for file_meta in files_batch:
             file_path = file_meta.get('file_path', '')
             file_type = file_meta.get('file_type', 'Unknown')
-            content = file_meta.get('content', '')[:800]  # Limit content length
+            content = file_meta.get('content', '')[:600]  # Very limited content
             
             files_content.append(f"""
 File: {file_path}
 Type: {file_type}
-Content Preview: {content[:400]}...
+Content Preview: {content[:300]}...
 ---""")
         
         combined_content = "\n".join(files_content)
@@ -166,7 +167,7 @@ Format your response as:
                         {"role": "user", "content": prompt}
                     ],
                     temperature=0.2,
-                    max_tokens=2000
+                    max_tokens=1500  # Reduced for testing
                 )
                 
                 analysis = response.choices[0].message.content
@@ -239,20 +240,20 @@ Format your response as:
         return files_batch
 
     async def analyze_files(self, files_metadata: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Analyze files in batches with rate limiting"""
-        logger = logging.getLogger('java_analysis.batch_analyzer')
-        logger.info(f"Starting batch analysis of {len(files_metadata)} files")
+        """Analyze files in batches with very conservative rate limiting"""
+        logger = logging.getLogger('java_analysis.test_analyzer')
+        logger.info(f"Starting test batch analysis of {len(files_metadata)} files")
         
-        # Prioritize and filter files
-        prioritized_files = self.prioritize_files(files_metadata)
+        # Get only important files for testing
+        important_files = self.get_important_files(files_metadata)
         
         # Filter out files to skip
         files_to_process = [
-            f for f in prioritized_files 
+            f for f in important_files 
             if not self.should_skip_file(f.get('file_path', ''))
         ]
         
-        logger.info(f"Processing {len(files_to_process)} files in batches of {self.max_files_per_batch}")
+        logger.info(f"Processing {len(files_to_process)} files in batches of {self.max_files_per_batch} (TEST MODE)")
         
         # Process files in batches
         analyzed_metadata = []
@@ -264,24 +265,24 @@ Format your response as:
             # Progress update
             logger.info(f"Progress: {len(analyzed_metadata)}/{len(files_to_process)} files processed")
         
-        # Add unprocessed files with failed status
+        # Add unprocessed files with skipped status
         processed_paths = {f.get('file_path', '') for f in analyzed_metadata}
         for file_meta in files_metadata:
             if file_meta.get('file_path', '') not in processed_paths:
                 file_meta.update({
                     'analysis_status': 'skipped',
-                    'error': 'File not selected for processing due to rate limiting'
+                    'error': 'File not selected for processing in test mode'
                 })
                 analyzed_metadata.append(file_meta)
         
-        logger.info("Completed batch analysis of all files")
+        logger.info("Completed test batch analysis of all files")
         return analyzed_metadata
 
-async def process_codebase():
-    """Main function to process and analyze the codebase"""
+async def process_codebase_test():
+    """Test function to process and analyze the codebase with conservative settings"""
     # Set up logging
-    logger = setup_logging(level=logging.INFO)  # Reduced logging level
-    logger.info("Starting codebase analysis process")
+    logger = setup_logging(level=logging.INFO)
+    logger.info("Starting codebase analysis process (TEST MODE)")
     
     # Load environment variables
     load_dotenv()
@@ -291,7 +292,7 @@ async def process_codebase():
         # Initialize components
         logger.info("Initializing components...")
         file_processor = FileProcessor()
-        batch_analyzer = BatchAIAnalyzer()  # Use new batch analyzer
+        test_analyzer = TestBatchAIAnalyzer()  # Use test analyzer
         chroma_connector = ChromaDBConnector()
         output_dir = os.getenv('OUTPUT_DIR', './output')
         req_analyzer = RequirementsAnalyzer(output_dir)
@@ -303,9 +304,9 @@ async def process_codebase():
         logger.info("1.1 Processing files and extracting metadata...")
         files_metadata = file_processor.process_files()
         
-        # 1.2 Analyze files with AI using batch processing
-        logger.info("1.2 Analyzing files with AI (batch processing)...")
-        analyzed_metadata = await batch_analyzer.analyze_files(files_metadata)
+        # 1.2 Analyze files with AI using test batch processing
+        logger.info("1.2 Analyzing files with AI (test batch processing)...")
+        analyzed_metadata = await test_analyzer.analyze_files(files_metadata)
         
         # 1.3 Save raw metadata to JSON
         logger.info("1.3 Saving raw metadata to JSON...")
@@ -320,11 +321,11 @@ async def process_codebase():
         logger.info("Step 2: Generating requirements documentation...")
         req_analyzer.analyze_and_generate(analyzed_metadata)
         
-        logger.info("Process completed successfully!")
+        logger.info("Test process completed successfully!")
         
     except Exception as e:
-        logger.error(f"Error during processing: {str(e)}")
+        logger.error(f"Error during test processing: {str(e)}")
         raise
 
 if __name__ == "__main__":
-    asyncio.run(process_codebase()) 
+    asyncio.run(process_codebase_test()) 

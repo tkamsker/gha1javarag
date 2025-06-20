@@ -113,3 +113,17 @@ The separation provides better organization and makes it easier to maintain and 
 we have an requirement please explain in detail "ai_analysis"
 
 # 2025.06.20 Tets of code onlinebookstore 
+
+
+# rate limit 
+# Test the rate limiter
+python src/test_rate_limiter.py
+
+# Run step2 with conservative settings
+RATE_LIMIT_ENV=test python src/step2_test.py
+
+# Run step2 with production settings  
+RATE_LIMIT_ENV=production python src/step2.py
+
+# Emergency mode for very restrictive limits
+RATE_LIMIT_ENV=emergency python src/step2.py
