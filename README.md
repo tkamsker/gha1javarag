@@ -107,3 +107,9 @@ The separation provides better organization and makes it easier to maintain and 
        ├── index.md
        ├── home.md
        └── [other files].md
+
+# 2025.06.18  prompt 
+
+we have an requirement please explain in detail "ai_analysis"
+
+# 2025.06.20 Tets of code onlinebookstore 

@@ -34,7 +34,7 @@ log/
 *.tmp
 *.temp
 .cache/ 
-chroma*
+data/chroma*
 clever*
 data/*
 *.venv*
