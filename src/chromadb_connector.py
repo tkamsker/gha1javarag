@@ -6,6 +6,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import logging
 from typing import List, Dict, Any
+import json
 
 logger = logging.getLogger('java_analysis.chromadb')
 
@@ -60,6 +61,13 @@ class ChromaDBConnector:
             ids = []
             
             for idx, metadata in enumerate(metadata_list):
+                # Convert ai_analysis to string if it's a dict
+                ai_analysis = metadata.get('ai_analysis', '')
+                if isinstance(ai_analysis, dict):
+                    ai_analysis = json.dumps(ai_analysis, indent=2)
+                elif not isinstance(ai_analysis, str):
+                    ai_analysis = str(ai_analysis)
+                
                 # Create document from content and any analysis
                 doc_content = [
                     f"File: {metadata['file_path']}",
@@ -67,7 +75,7 @@ class ChromaDBConnector:
                     "Content:",
                     metadata.get('content', ''),
                     "Analysis:",
-                    metadata.get('ai_analysis', '')
+                    ai_analysis
                 ]
                 documents.append("\n".join(doc_content))
                 
