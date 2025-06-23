@@ -6,15 +6,11 @@ from typing import Dict, List, Set
 import markdown
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from openai import OpenAI
+from ai_providers import create_ai_provider
 from datetime import datetime
 
 # Load environment variables
 load_dotenv()
-
-# Configure OpenAI
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-OPENAI_MODEL = os.getenv("OPENAI_MODEL_NAME", "gpt-4-turbo-preview")
 
 class RequirementsProcessor:
     def __init__(self):
@@ -24,6 +20,10 @@ class RequirementsProcessor:
         self.output_dir = os.getenv("OUTPUT_DIR", "./output")
         self.requirements_dir = os.path.join(self.output_dir, "requirements")
         self.requirements_file = os.path.join(self.output_dir, "modern_requirements.md")
+        
+        # Initialize AI provider using the same pattern as main.py
+        self.ai_provider = create_ai_provider()
+        print(f"Using {self.ai_provider.get_provider_name()} provider with model: {self.ai_provider.get_model_name()}")
         
     def load_index(self, index_file: str) -> None:
         """Load and parse the step2_index.md file"""
@@ -75,7 +75,7 @@ class RequirementsProcessor:
             
         return sections
     
-    def modernize_requirements(self, content: dict) -> dict:
+    async def modernize_requirements(self, content: dict) -> dict:
         """Use AI to modernize requirements for cloud architecture"""
         prompt = f"""
         Convert these Java/JSP requirements into modern cloud architecture requirements using React and Node.js.
@@ -99,8 +99,7 @@ class RequirementsProcessor:
         """
         
         try:
-            response = client.chat.completions.create(
-                model=OPENAI_MODEL,
+            analysis = await self.ai_provider.create_chat_completion(
                 messages=[
                     {"role": "system", "content": "You are an expert in modern cloud architecture and application modernization."},
                     {"role": "user", "content": prompt}
@@ -109,12 +108,12 @@ class RequirementsProcessor:
                 max_tokens=2000
             )
             
-            return json.loads(response.choices[0].message.content)
+            return json.loads(analysis)
         except Exception as e:
             print(f"Error modernizing requirements: {str(e)}")
             return content
     
-    def generate_requirements_document(self) -> None:
+    async def generate_requirements_document(self) -> None:
         """Generate the final requirements document"""
         with open(self.requirements_file, 'w', encoding='utf-8') as f:
             f.write("# Modern Cloud Architecture Requirements\n\n")
@@ -125,7 +124,7 @@ class RequirementsProcessor:
             for file in self.web_files:
                 if file in self.processed_content:
                     content = self.processed_content[file]
-                    modernized = self.modernize_requirements(content)
+                    modernized = await self.modernize_requirements(content)
                     
                     f.write(f"### {os.path.basename(file)}\n\n")
                     for section, content in modernized.items():
@@ -137,14 +136,14 @@ class RequirementsProcessor:
             for file in self.other_files:
                 if file in self.processed_content:
                     content = self.processed_content[file]
-                    modernized = self.modernize_requirements(content)
+                    modernized = await self.modernize_requirements(content)
                     
                     f.write(f"### {os.path.basename(file)}\n\n")
                     for section, content in modernized.items():
                         f.write(f"#### {section}\n\n")
                         f.write(f"{content}\n\n")
     
-    def process_all_files(self) -> None:
+    async def process_all_files(self) -> None:
         """Process all markdown files and generate requirements"""
         # Process web files first
         for file in self.web_files:
@@ -159,9 +158,9 @@ class RequirementsProcessor:
                 self.processed_content[file] = self.process_markdown_file(full_path)
         
         # Generate final requirements document
-        self.generate_requirements_document()
+        await self.generate_requirements_document()
 
-def main():
+async def main():
     processor = RequirementsProcessor()
     
     # Load the index file
@@ -171,9 +170,10 @@ def main():
         return
         
     processor.load_index(index_file)
-    processor.process_all_files()
+    await processor.process_all_files()
     
     print(f"Requirements document generated at: {processor.requirements_file}")
 
 if __name__ == "__main__":
-    main() 
+    import asyncio
+    asyncio.run(main()) 

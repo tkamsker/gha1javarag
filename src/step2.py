@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Set
 from dotenv import load_dotenv
 from logger_config import setup_logging
-from openai import AsyncOpenAI
+from ai_providers import create_ai_provider
 from rate_limiter import RateLimiter, RateLimitConfig
 
 logger = logging.getLogger('java_analysis.step2')
@@ -36,14 +36,9 @@ class RequirementsProcessor:
         self.max_files_per_batch = 3  # Reduced from 5
         self.max_files_to_process = 50  # Limit total files to process
         
-        # Initialize OpenAI client
-        api_key = os.getenv('OPENAI_API_KEY')
-        if not api_key:
-            logger.error("OPENAI_API_KEY environment variable is not set")
-            raise ValueError("OPENAI_API_KEY environment variable is not set")
-            
-        self.model_name = os.getenv('OPENAI_MODEL_NAME', 'gpt-4-turbo-preview')
-        self.client = AsyncOpenAI(api_key=api_key)
+        # Initialize AI provider using the same pattern as main.py
+        self.ai_provider = create_ai_provider()
+        logger.info(f"Using {self.ai_provider.get_provider_name()} provider with model: {self.ai_provider.get_model_name()}")
 
     def load_metadata(self) -> None:
         """Load metadata from JSON file"""
@@ -156,8 +151,7 @@ Format your response as:
                 if attempt > 0:
                     await self.rate_limiter.wait_if_needed()
                 
-                response = await self.client.chat.completions.create(
-                    model=self.model_name,
+                analysis = await self.ai_provider.create_chat_completion(
                     messages=[
                         {"role": "system", "content": "You are a requirements analysis expert. Provide concise but comprehensive analysis."},
                         {"role": "user", "content": prompt}
@@ -165,8 +159,6 @@ Format your response as:
                     temperature=0.2,
                     max_tokens=2000  # Reduced from 3000
                 )
-                
-                analysis = response.choices[0].message.content
                 
                 # Record successful request
                 self.rate_limiter.record_request()
