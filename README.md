@@ -177,3 +177,8 @@ LOG_FILE=logs/java_analysis.log
 # ChromaDB Configuration
 CHROMADB_DIR=./data/chromadb
 CHROMADB_COLLECTION=java_analysis
+
+
+## 2025.06.23 ollama 
+export AI_PROVIDER=ollama
+./lofalassn.sh test
