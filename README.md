@@ -127,3 +127,24 @@ RATE_LIMIT_ENV=production python src/step2.py
 
 # Emergency mode for very restrictive limits
 RATE_LIMIT_ENV=emergency python src/step2.py
+
+
+
+#####
+# 2025.06.23 
+#
+python src/test_rate_limiter.py
+
+# Check your billing first
+# Visit: https://platform.openai.com/account/billing
+
+# Then run with emergency mode (most conservative)
+./lofalassn.sh emergency
+
+# Or test mode (very conservative)
+./lofalassn.sh test
+
+test: 10 req/min, 500 req/hour, 8s delays
+production: 15 req/min, 800 req/hour, 4s delays
+emergency: 5 req/min, 200 req/hour, 10s delays
+

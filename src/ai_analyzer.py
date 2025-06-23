@@ -85,6 +85,17 @@ Please provide the analysis in JSON format with the following structure:
         """Analyze a single file using AI with rate limiting"""
         logger.info(f"Analyzing file: {file_metadata.get('file_path', 'unknown')}")
         
+        # Check if we should continue making requests
+        if not self.rate_limiter.should_continue_requests():
+            stats = self.rate_limiter.get_stats()
+            if stats.get('quota_exceeded'):
+                logger.error("Cannot continue analysis due to quota exceeded. Please check your OpenAI billing.")
+                file_metadata.update({
+                    'analysis_status': 'failed',
+                    'error': 'OpenAI API quota exceeded. Please check billing and plan details.'
+                })
+                return file_metadata
+        
         # Wait for rate limiter before making API call
         await self.rate_limiter.wait_if_needed()
         
@@ -95,6 +106,17 @@ Please provide the analysis in JSON format with the following structure:
 
         for attempt in range(self.rate_limiter.config.max_retries):
             try:
+                # Check if we should continue before each attempt
+                if not self.rate_limiter.should_continue_requests():
+                    stats = self.rate_limiter.get_stats()
+                    if stats.get('quota_exceeded'):
+                        logger.error("Cannot continue analysis due to quota exceeded. Please check your OpenAI billing.")
+                        file_metadata.update({
+                            'analysis_status': 'failed',
+                            'error': 'OpenAI API quota exceeded. Please check billing and plan details.'
+                        })
+                        return file_metadata
+                
                 logger.debug("Sending request to OpenAI API")
                 response = await self.client.chat.completions.create(
                     model=self.model_name,
@@ -128,7 +150,16 @@ Please provide the analysis in JSON format with the following structure:
                 
             except Exception as e:
                 logger.error(f"Analysis failed (attempt {attempt + 1}): {str(e)}")
-                self.rate_limiter.record_failure()
+                self.rate_limiter.record_failure(e)
+                
+                # Check if this is a quota exceeded error
+                if 'insufficient_quota' in str(e).lower() or 'quota' in str(e).lower():
+                    logger.error("QUOTA EXCEEDED: Stopping analysis. Please check your OpenAI billing.")
+                    file_metadata.update({
+                        'analysis_status': 'failed',
+                        'error': 'OpenAI API quota exceeded. Please check billing and plan details.'
+                    })
+                    return file_metadata
                 
                 if attempt == self.rate_limiter.config.max_retries - 1:
                     file_metadata.update({

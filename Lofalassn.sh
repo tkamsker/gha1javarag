@@ -7,10 +7,18 @@ set -e
 MODE=${1:-"test"}  # Default to test mode
 echo "Running in $MODE mode"
 
+# Check OpenAI API key
+if [ -z "$OPENAI_API_KEY" ]; then
+    echo "❌ ERROR: OPENAI_API_KEY environment variable is not set"
+    echo "Please set your OpenAI API key:"
+    echo "export OPENAI_API_KEY='your-api-key-here'"
+    exit 1
+fi
+
 # Start time
 START_TIME=$(date +%s)
 
-echo "Running Python step 1: main.py (with rate limiting)"
+echo "Running Python step 1: main.py (with improved rate limiting)"
 if [ "$MODE" = "test" ]; then
     echo "Using test mode with conservative rate limiting..."
     python src/main_test.py
@@ -27,10 +35,24 @@ else
     python src/main_test.py
 fi
 
+# Check for quota exceeded error
+if [ $? -ne 0 ]; then
+    echo "❌ Step 1 failed. This might be due to:"
+    echo "   - OpenAI API quota exceeded (check billing at https://platform.openai.com/account/billing)"
+    echo "   - Rate limiting issues"
+    echo "   - Network connectivity problems"
+    echo ""
+    echo "💡 Tips:"
+    echo "   - Try running in 'emergency' mode: ./lofalassn.sh emergency"
+    echo "   - Check your OpenAI billing and plan details"
+    echo "   - Wait for quota reset or upgrade your plan"
+    exit 1
+fi
+
 STEP1_TIME=$(($(date +%s) - START_TIME))
 echo "✅ step1 completed in ${STEP1_TIME} seconds"
 
-echo "Running Python step 2: step2.py (with rate limiting)"
+echo "Running Python step 2: step2.py (with improved rate limiting)"
 if [ "$MODE" = "test" ]; then
     echo "Using test mode for step2..."
     export RATE_LIMIT_ENV=test
@@ -49,6 +71,20 @@ else
     python src/step2_test.py
 fi
 
+# Check for quota exceeded error
+if [ $? -ne 0 ]; then
+    echo "❌ Step 2 failed. This might be due to:"
+    echo "   - OpenAI API quota exceeded (check billing at https://platform.openai.com/account/billing)"
+    echo "   - Rate limiting issues"
+    echo "   - Network connectivity problems"
+    echo ""
+    echo "💡 Tips:"
+    echo "   - Try running in 'emergency' mode: ./lofalassn.sh emergency"
+    echo "   - Check your OpenAI billing and plan details"
+    echo "   - Wait for quota reset or upgrade your plan"
+    exit 1
+fi
+
 STEP2_TIME=$(($(date +%s) - START_TIME))
 echo "✅ step2 completed in $((STEP2_TIME - STEP1_TIME)) seconds (total: ${STEP2_TIME}s)"
 
@@ -60,3 +96,9 @@ echo "✅ step3 completed in $((STEP3_TIME - STEP2_TIME)) seconds (total: ${STEP
 echo "🎉 All steps completed successfully in ${STEP3_TIME} seconds"
 echo "Mode used: $MODE"
 echo "Rate limiting applied to prevent API quota exhaustion"
+echo ""
+echo "📊 Rate Limiting Info:"
+echo "   - Environment: $RATE_LIMIT_ENV"
+echo "   - Quota exceeded handling: Enabled"
+echo "   - Intelligent error detection: Enabled"
+echo "   - For more info, see: RATE_LIMITING.md"

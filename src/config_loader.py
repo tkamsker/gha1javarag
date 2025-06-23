@@ -26,7 +26,8 @@ def load_rate_limit_config(environment: str = None) -> RateLimitConfig:
             requests_per_hour=env_config.get('requests_per_hour', 800),
             delay_between_requests=env_config.get('delay_between_requests', 4.0),
             exponential_backoff_base=env_config.get('exponential_backoff_base', 2.0),
-            max_retries=env_config.get('max_retries', 5)
+            max_retries=env_config.get('max_retries', 5),
+            quota_exceeded_wait_time=env_config.get('quota_exceeded_wait_time', 3600)
         )
         
     except FileNotFoundError:
