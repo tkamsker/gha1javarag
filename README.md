@@ -148,3 +148,32 @@ test: 10 req/min, 500 req/hour, 8s delays
 production: 15 req/min, 800 req/hour, 4s delays
 emergency: 5 req/min, 200 req/hour, 10s delays
 
+# new provider ollama run deepseek-r1:32b
+
+# AI Provider Configuration
+# Set this to 'openai' or 'ollama' to switch between providers
+AI_PROVIDER=openai
+
+# OpenAI Configuration (used when AI_PROVIDER=openai)
+OPENAI_API_KEY=your-openai-api-key-here
+OPENAI_MODEL_NAME=gpt-4-turbo-preview
+
+# Ollama Configuration (used when AI_PROVIDER=ollama)
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL_NAME=deepseek-r1:32b
+OLLAMA_TIMEOUT=120
+
+# Rate Limiting Environment
+# Options: production, test, development, emergency
+RATE_LIMIT_ENV=test
+
+# Output Configuration
+OUTPUT_DIR=./output
+
+# Logging Configuration
+LOG_LEVEL=INFO
+LOG_FILE=logs/java_analysis.log
+
+# ChromaDB Configuration
+CHROMADB_DIR=./data/chromadb
+CHROMADB_COLLECTION=java_analysis

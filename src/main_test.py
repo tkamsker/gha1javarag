@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from logger_config import setup_logging
 import logging
 from rate_limiter import RateLimiter, RateLimitConfig
+from ai_providers import create_ai_provider
 
 class TestBatchAIAnalyzer:
     """Test batch AI analyzer with very conservative rate limiting"""
@@ -18,27 +19,36 @@ class TestBatchAIAnalyzer:
         load_dotenv()
         self.output_dir = os.getenv('OUTPUT_DIR', './output')
         
-        # Very conservative rate limiting for testing
-        self.rate_config = RateLimitConfig(
-            requests_per_minute=5,  # Very conservative
-            requests_per_hour=200,  # Very conservative
-            delay_between_requests=10.0,  # Long delays
-            exponential_backoff_base=2.0,
-            max_retries=5
-        )
+        # Initialize AI provider
+        self.ai_provider = create_ai_provider()
+        logger = logging.getLogger('java_analysis.test_analyzer')
+        logger.info(f"Using {self.ai_provider.get_provider_name()} provider with model: {self.ai_provider.get_model_name()}")
+        
+        # Rate limiting configuration based on provider
+        if self.ai_provider.get_provider_name() == "OpenAI":
+            # Very conservative rate limiting for OpenAI
+            self.rate_config = RateLimitConfig(
+                requests_per_minute=5,  # Very conservative
+                requests_per_hour=200,  # Very conservative
+                delay_between_requests=10.0,  # Long delays
+                exponential_backoff_base=2.0,
+                max_retries=5
+            )
+        else:
+            # More relaxed rate limiting for Ollama (local)
+            self.rate_config = RateLimitConfig(
+                requests_per_minute=20,  # Higher limit for local
+                requests_per_hour=500,
+                delay_between_requests=2.0,  # Shorter delays for local
+                exponential_backoff_base=2.0,
+                max_retries=3
+            )
+        
         self.rate_limiter = RateLimiter(self.rate_config)
         
         # Very limited batch processing for testing
         self.max_files_per_batch = 2  # Only 2 files per API call
         self.max_files_to_process = 10  # Only 10 files total
-        
-        # Initialize OpenAI client
-        api_key = os.getenv('OPENAI_API_KEY')
-        if not api_key:
-            raise ValueError("OPENAI_API_KEY environment variable is not set")
-            
-        self.model_name = os.getenv('OPENAI_MODEL_NAME', 'gpt-4-turbo-preview')
-        self.client = AIAnalyzer().client
 
     def get_important_files(self, files_metadata: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Get only the most important files for testing"""
@@ -98,18 +108,19 @@ class TestBatchAIAnalyzer:
         logger = logging.getLogger('java_analysis.test_analyzer')
         logger.info(f"Analyzing batch of {len(files_batch)} files (TEST MODE)")
         
-        # Check if we should continue making requests
-        if not self.rate_limiter.should_continue_requests():
-            stats = self.rate_limiter.get_stats()
-            if stats.get('quota_exceeded'):
-                logger.error("Cannot continue analysis due to quota exceeded. Please check your OpenAI billing.")
-                # Mark files as failed due to quota
-                for file_meta in files_batch:
-                    file_meta.update({
-                        'analysis_status': 'failed',
-                        'error': 'OpenAI API quota exceeded. Please check billing and plan details.'
-                    })
-                return files_batch
+        # Check if we should continue making requests (only for OpenAI)
+        if self.ai_provider.get_provider_name() == "OpenAI":
+            if not self.rate_limiter.should_continue_requests():
+                stats = self.rate_limiter.get_stats()
+                if stats.get('quota_exceeded'):
+                    logger.error("Cannot continue analysis due to quota exceeded. Please check your OpenAI billing.")
+                    # Mark files as failed due to quota
+                    for file_meta in files_batch:
+                        file_meta.update({
+                            'analysis_status': 'failed',
+                            'error': 'OpenAI API quota exceeded. Please check billing and plan details.'
+                        })
+                    return files_batch
         
         # Wait for rate limiter before making API call
         await self.rate_limiter.wait_if_needed()
@@ -169,34 +180,36 @@ Format your response as:
         
         for attempt in range(self.rate_limiter.config.max_retries):
             try:
-                # Check if we should continue before each attempt
-                if not self.rate_limiter.should_continue_requests():
-                    stats = self.rate_limiter.get_stats()
-                    if stats.get('quota_exceeded'):
-                        logger.error("Cannot continue analysis due to quota exceeded. Please check your OpenAI billing.")
-                        # Mark files as failed due to quota
-                        for file_meta in files_batch:
-                            file_meta.update({
-                                'analysis_status': 'failed',
-                                'error': 'OpenAI API quota exceeded. Please check billing and plan details.'
-                            })
-                        return files_batch
+                # Check if we should continue before each attempt (only for OpenAI)
+                if self.ai_provider.get_provider_name() == "OpenAI":
+                    if not self.rate_limiter.should_continue_requests():
+                        stats = self.rate_limiter.get_stats()
+                        if stats.get('quota_exceeded'):
+                            logger.error("Cannot continue analysis due to quota exceeded. Please check your OpenAI billing.")
+                            # Mark files as failed due to quota
+                            for file_meta in files_batch:
+                                file_meta.update({
+                                    'analysis_status': 'failed',
+                                    'error': 'OpenAI API quota exceeded. Please check billing and plan details.'
+                                })
+                            return files_batch
                 
                 # Wait for rate limiter (includes exponential backoff for retries)
                 if attempt > 0:
                     await self.rate_limiter.wait_if_needed()
                 
-                response = await self.client.chat.completions.create(
-                    model=self.model_name,
-                    messages=[
-                        {"role": "system", "content": "You are a code analysis expert. Provide concise but comprehensive analysis in the requested JSON format."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    temperature=0.2,
-                    max_tokens=1500  # Reduced for testing
-                )
+                # Create messages for the AI provider
+                messages = [
+                    {"role": "system", "content": "You are a code analysis expert. Provide concise but comprehensive analysis in the requested JSON format."},
+                    {"role": "user", "content": prompt}
+                ]
                 
-                analysis = response.choices[0].message.content
+                # Get response from AI provider
+                analysis = await self.ai_provider.create_chat_completion(
+                    messages=messages,
+                    temperature=0.2,
+                    max_tokens=1500
+                )
                 
                 # Record successful request
                 self.rate_limiter.record_request()
@@ -215,16 +228,17 @@ Format your response as:
                 logger.error(f"Error analyzing batch (attempt {attempt + 1}): {str(e)}")
                 self.rate_limiter.record_failure(e)
                 
-                # Check if this is a quota exceeded error
-                if 'insufficient_quota' in str(e).lower() or 'quota' in str(e).lower():
-                    logger.error("QUOTA EXCEEDED: Stopping all analysis. Please check your OpenAI billing.")
-                    # Mark all remaining files as failed
-                    for file_meta in files_batch:
-                        file_meta.update({
-                            'analysis_status': 'failed',
-                            'error': 'OpenAI API quota exceeded. Please check billing and plan details.'
-                        })
-                    return files_batch
+                # Check if this is a quota exceeded error (only for OpenAI)
+                if self.ai_provider.get_provider_name() == "OpenAI":
+                    if 'insufficient_quota' in str(e).lower() or 'quota' in str(e).lower():
+                        logger.error("QUOTA EXCEEDED: Stopping all analysis. Please check your OpenAI billing.")
+                        # Mark all remaining files as failed
+                        for file_meta in files_batch:
+                            file_meta.update({
+                                'analysis_status': 'failed',
+                                'error': 'OpenAI API quota exceeded. Please check billing and plan details.'
+                            })
+                        return files_batch
                 
                 if attempt == self.rate_limiter.config.max_retries - 1:
                     logger.error(f"Failed to analyze batch after {self.rate_limiter.config.max_retries} attempts")

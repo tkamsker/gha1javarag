@@ -1,9 +1,9 @@
 import os
 from typing import Dict, Any, List
-from openai import AsyncOpenAI
 from dotenv import load_dotenv
 import logging
 from rate_limiter import RateLimiter, RateLimitConfig
+from ai_providers import create_ai_provider, AIProvider
 
 logger = logging.getLogger('java_analysis.ai_analyzer')
 
@@ -14,27 +14,30 @@ class AIAnalyzer:
         load_dotenv()
         logger.debug("Environment variables loaded")
         
-        # Get OpenAI settings from environment variables
-        api_key = os.getenv('OPENAI_API_KEY')
-        if not api_key:
-            logger.error("OPENAI_API_KEY environment variable is not set")
-            raise ValueError("OPENAI_API_KEY environment variable is not set")
-            
-        self.model_name = os.getenv('OPENAI_MODEL_NAME', 'gpt-4-turbo-preview')
-        logger.info(f"Using OpenAI model: {self.model_name}")
+        # Initialize AI provider
+        self.ai_provider = create_ai_provider()
+        logger.info(f"Using {self.ai_provider.get_provider_name()} provider with model: {self.ai_provider.get_model_name()}")
         
-        # Initialize rate limiter
-        rate_config = RateLimitConfig(
-            requests_per_minute=15,  # Conservative rate limiting
-            requests_per_hour=800,
-            delay_between_requests=4.0,  # 4 seconds between requests
-            exponential_backoff_base=2.0,
-            max_retries=5
-        )
-        self.rate_limiter = RateLimiter(rate_config)
-        
-        # Initialize AsyncOpenAI client
-        self.client = AsyncOpenAI(api_key=api_key)
+        # Initialize rate limiter (only for OpenAI, not needed for Ollama)
+        if self.ai_provider.get_provider_name() == "OpenAI":
+            rate_config = RateLimitConfig(
+                requests_per_minute=15,  # Conservative rate limiting
+                requests_per_hour=800,
+                delay_between_requests=4.0,  # 4 seconds between requests
+                exponential_backoff_base=2.0,
+                max_retries=5
+            )
+            self.rate_limiter = RateLimiter(rate_config)
+        else:
+            # For Ollama, use minimal rate limiting since it's local
+            rate_config = RateLimitConfig(
+                requests_per_minute=60,  # Higher limit for local
+                requests_per_hour=1000,
+                delay_between_requests=1.0,  # Shorter delays for local
+                exponential_backoff_base=2.0,
+                max_retries=3
+            )
+            self.rate_limiter = RateLimiter(rate_config)
 
     def create_file_prompt(self, file_type: str, content: str) -> str:
         """Create an appropriate prompt based on file type"""
@@ -85,16 +88,17 @@ Please provide the analysis in JSON format with the following structure:
         """Analyze a single file using AI with rate limiting"""
         logger.info(f"Analyzing file: {file_metadata.get('file_path', 'unknown')}")
         
-        # Check if we should continue making requests
-        if not self.rate_limiter.should_continue_requests():
-            stats = self.rate_limiter.get_stats()
-            if stats.get('quota_exceeded'):
-                logger.error("Cannot continue analysis due to quota exceeded. Please check your OpenAI billing.")
-                file_metadata.update({
-                    'analysis_status': 'failed',
-                    'error': 'OpenAI API quota exceeded. Please check billing and plan details.'
-                })
-                return file_metadata
+        # Check if we should continue making requests (only for OpenAI)
+        if self.ai_provider.get_provider_name() == "OpenAI":
+            if not self.rate_limiter.should_continue_requests():
+                stats = self.rate_limiter.get_stats()
+                if stats.get('quota_exceeded'):
+                    logger.error("Cannot continue analysis due to quota exceeded. Please check your OpenAI billing.")
+                    file_metadata.update({
+                        'analysis_status': 'failed',
+                        'error': 'OpenAI API quota exceeded. Please check billing and plan details.'
+                    })
+                    return file_metadata
         
         # Wait for rate limiter before making API call
         await self.rate_limiter.wait_if_needed()
@@ -106,31 +110,34 @@ Please provide the analysis in JSON format with the following structure:
 
         for attempt in range(self.rate_limiter.config.max_retries):
             try:
-                # Check if we should continue before each attempt
-                if not self.rate_limiter.should_continue_requests():
-                    stats = self.rate_limiter.get_stats()
-                    if stats.get('quota_exceeded'):
-                        logger.error("Cannot continue analysis due to quota exceeded. Please check your OpenAI billing.")
-                        file_metadata.update({
-                            'analysis_status': 'failed',
-                            'error': 'OpenAI API quota exceeded. Please check billing and plan details.'
-                        })
-                        return file_metadata
+                # Check if we should continue before each attempt (only for OpenAI)
+                if self.ai_provider.get_provider_name() == "OpenAI":
+                    if not self.rate_limiter.should_continue_requests():
+                        stats = self.rate_limiter.get_stats()
+                        if stats.get('quota_exceeded'):
+                            logger.error("Cannot continue analysis due to quota exceeded. Please check your OpenAI billing.")
+                            file_metadata.update({
+                                'analysis_status': 'failed',
+                                'error': 'OpenAI API quota exceeded. Please check billing and plan details.'
+                            })
+                            return file_metadata
                 
-                logger.debug("Sending request to OpenAI API")
-                response = await self.client.chat.completions.create(
-                    model=self.model_name,
-                    messages=[
-                        {"role": "system", "content": "You are a code analysis expert."},
-                        {"role": "user", "content": prompt}
-                    ],
+                logger.debug(f"Sending request to {self.ai_provider.get_provider_name()} API")
+                
+                # Create messages for the AI provider
+                messages = [
+                    {"role": "system", "content": "You are a code analysis expert."},
+                    {"role": "user", "content": prompt}
+                ]
+                
+                # Get response from AI provider
+                analysis = await self.ai_provider.create_chat_completion(
+                    messages=messages,
                     temperature=0.2,
-                    max_tokens=1500  # Reduced from default
+                    max_tokens=1500
                 )
                 
-                # Extract and parse the JSON response
-                analysis = response.choices[0].message.content
-                logger.debug("Successfully received analysis from OpenAI")
+                logger.debug(f"Successfully received analysis from {self.ai_provider.get_provider_name()}")
                 
                 # Record successful request
                 self.rate_limiter.record_request()
@@ -138,7 +145,9 @@ Please provide the analysis in JSON format with the following structure:
                 # Update the metadata with AI analysis
                 file_metadata.update({
                     'ai_analysis': analysis,
-                    'analysis_status': 'completed'
+                    'analysis_status': 'completed',
+                    'ai_provider': self.ai_provider.get_provider_name(),
+                    'ai_model': self.ai_provider.get_model_name()
                 })
                 logger.info(f"Analysis completed for file: {file_metadata.get('file_path', 'unknown')}")
                 
@@ -152,14 +161,15 @@ Please provide the analysis in JSON format with the following structure:
                 logger.error(f"Analysis failed (attempt {attempt + 1}): {str(e)}")
                 self.rate_limiter.record_failure(e)
                 
-                # Check if this is a quota exceeded error
-                if 'insufficient_quota' in str(e).lower() or 'quota' in str(e).lower():
-                    logger.error("QUOTA EXCEEDED: Stopping analysis. Please check your OpenAI billing.")
-                    file_metadata.update({
-                        'analysis_status': 'failed',
-                        'error': 'OpenAI API quota exceeded. Please check billing and plan details.'
-                    })
-                    return file_metadata
+                # Check if this is a quota exceeded error (only for OpenAI)
+                if self.ai_provider.get_provider_name() == "OpenAI":
+                    if 'insufficient_quota' in str(e).lower() or 'quota' in str(e).lower():
+                        logger.error("QUOTA EXCEEDED: Stopping analysis. Please check your OpenAI billing.")
+                        file_metadata.update({
+                            'analysis_status': 'failed',
+                            'error': 'OpenAI API quota exceeded. Please check billing and plan details.'
+                        })
+                        return file_metadata
                 
                 if attempt == self.rate_limiter.config.max_retries - 1:
                     file_metadata.update({
@@ -171,7 +181,7 @@ Please provide the analysis in JSON format with the following structure:
 
     async def analyze_files(self, metadata_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Analyze multiple files using AI with rate limiting"""
-        logger.info(f"Starting analysis of {len(metadata_list)} files")
+        logger.info(f"Starting analysis of {len(metadata_list)} files using {self.ai_provider.get_provider_name()}")
         analyzed_metadata = []
         
         for idx, metadata in enumerate(metadata_list, 1):
