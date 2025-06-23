@@ -182,3 +182,16 @@ CHROMADB_COLLECTION=java_analysis
 ## 2025.06.23 ollama 
 export AI_PROVIDER=ollama
 ./lofalassn.sh test
+
+# improvement of ollama 
+python src/test_ollama_debug.py
+
+export RATE_LIMIT_ENV=emergency && python src/test_ollama_debug.py
+
+export RATE_LIMIT_ENV=production && python src/test_ollama_debug.py
+
+python src/test_ollama_debug.py
+
+export AI_PROVIDER=ollama
+   export RATE_LIMIT_ENV=production
+./lofalassn.sh test

@@ -10,30 +10,46 @@ from dotenv import load_dotenv
 from logger_config import setup_logging
 import logging
 from rate_limiter import RateLimiter, RateLimitConfig
-from config_loader import load_rate_limit_config
+from ai_providers import create_ai_provider
+
+logger = setup_logging()
 
 class BatchAIAnalyzer:
-    """Batch AI analyzer with enhanced rate limiting"""
+    """Batch AI analyzer for processing multiple files efficiently"""
     
     def __init__(self):
         load_dotenv()
         self.output_dir = os.getenv('OUTPUT_DIR', './output')
         
-        # Load rate limiting configuration
-        self.rate_config = load_rate_limit_config()
+        # Initialize AI provider
+        self.ai_provider = create_ai_provider()
+        logger.info(f"Using {self.ai_provider.get_provider_name()} provider with model: {self.ai_provider.get_model_name()}")
+        
+        # Rate limiting configuration based on provider
+        if self.ai_provider.get_provider_name() == "OpenAI":
+            # Conservative rate limiting for OpenAI
+            self.rate_config = RateLimitConfig(
+                requests_per_minute=15,
+                requests_per_hour=800,
+                delay_between_requests=4.0,
+                exponential_backoff_base=2.0,
+                max_retries=5
+            )
+        else:
+            # More relaxed rate limiting for Ollama (local)
+            self.rate_config = RateLimitConfig(
+                requests_per_minute=60,
+                requests_per_hour=1000,
+                delay_between_requests=1.0,
+                exponential_backoff_base=2.0,
+                max_retries=3
+            )
+        
         self.rate_limiter = RateLimiter(self.rate_config)
         
-        # Batch processing settings
+        # Batch processing configuration
         self.max_files_per_batch = 3  # Process 3 files per API call
-        self.max_files_to_process = 30  # Limit total files to process
-        
-        # Initialize OpenAI client
-        api_key = os.getenv('OPENAI_API_KEY')
-        if not api_key:
-            raise ValueError("OPENAI_API_KEY environment variable is not set")
-            
-        self.model_name = os.getenv('OPENAI_MODEL_NAME', 'gpt-4-turbo-preview')
-        self.client = AIAnalyzer().client  # Reuse the client from AIAnalyzer
+        self.max_files_to_process = 50  # Limit total files to process
 
     def prioritize_files(self, files_metadata: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Prioritize files based on importance and type"""
@@ -97,6 +113,20 @@ class BatchAIAnalyzer:
         logger = logging.getLogger('java_analysis.batch_analyzer')
         logger.info(f"Analyzing batch of {len(files_batch)} files")
         
+        # Check if we should continue making requests (only for OpenAI)
+        if self.ai_provider.get_provider_name() == "OpenAI":
+            if not self.rate_limiter.should_continue_requests():
+                stats = self.rate_limiter.get_stats()
+                if stats.get('quota_exceeded'):
+                    logger.error("Cannot continue analysis due to quota exceeded. Please check your OpenAI billing.")
+                    # Mark files as failed due to quota
+                    for file_meta in files_batch:
+                        file_meta.update({
+                            'analysis_status': 'failed',
+                            'error': 'OpenAI API quota exceeded. Please check billing and plan details.'
+                        })
+                    return files_batch
+        
         # Wait for rate limiter before making API call
         await self.rate_limiter.wait_if_needed()
         
@@ -159,17 +189,18 @@ Format your response as:
                 if attempt > 0:
                     await self.rate_limiter.wait_if_needed()
                 
-                response = await self.client.chat.completions.create(
-                    model=self.model_name,
-                    messages=[
-                        {"role": "system", "content": "You are a code analysis expert. Provide concise but comprehensive analysis in the requested JSON format."},
-                        {"role": "user", "content": prompt}
-                    ],
+                # Create messages for the AI provider
+                messages = [
+                    {"role": "system", "content": "You are a code analysis expert. Provide concise but comprehensive analysis in the requested JSON format."},
+                    {"role": "user", "content": prompt}
+                ]
+                
+                # Get response from AI provider
+                analysis = await self.ai_provider.create_chat_completion(
+                    messages=messages,
                     temperature=0.2,
                     max_tokens=2000
                 )
-                
-                analysis = response.choices[0].message.content
                 
                 # Record successful request
                 self.rate_limiter.record_request()
@@ -186,7 +217,19 @@ Format your response as:
                 
             except Exception as e:
                 logger.error(f"Error analyzing batch (attempt {attempt + 1}): {str(e)}")
-                self.rate_limiter.record_failure()
+                self.rate_limiter.record_failure(e)
+                
+                # Check if this is a quota exceeded error (only for OpenAI)
+                if self.ai_provider.get_provider_name() == "OpenAI":
+                    if 'insufficient_quota' in str(e).lower() or 'quota' in str(e).lower():
+                        logger.error("QUOTA EXCEEDED: Stopping all analysis. Please check your OpenAI billing.")
+                        # Mark all remaining files as failed
+                        for file_meta in files_batch:
+                            file_meta.update({
+                                'analysis_status': 'failed',
+                                'error': 'OpenAI API quota exceeded. Please check billing and plan details.'
+                            })
+                        return files_batch
                 
                 if attempt == self.rate_limiter.config.max_retries - 1:
                     logger.error(f"Failed to analyze batch after {self.rate_limiter.config.max_retries} attempts")

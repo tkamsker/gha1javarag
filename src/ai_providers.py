@@ -7,6 +7,8 @@ from typing import Dict, Any, List, Optional
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
 import logging
+import time
+from config_loader import get_ollama_config
 
 logger = logging.getLogger('java_analysis.ai_providers')
 
@@ -74,16 +76,76 @@ class OllamaProvider(AIProvider):
         
         self.base_url = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
         self.model_name = os.getenv('OLLAMA_MODEL_NAME', 'deepseek-r1:32b')
-        self.timeout = int(os.getenv('OLLAMA_TIMEOUT', '120'))  # 2 minutes default
+        
+        # Get timeout from config based on environment
+        ollama_config = get_ollama_config()
+        self.timeout = ollama_config['timeout']
         
         logger.info(f"Initialized Ollama provider with model: {self.model_name}")
         logger.info(f"Ollama base URL: {self.base_url}")
+        logger.info(f"Ollama timeout: {self.timeout} seconds (from {ollama_config['environment']} config)")
+    
+    async def health_check(self) -> dict:
+        """Check Ollama service health and model availability"""
+        try:
+            async with aiohttp.ClientSession() as session:
+                # Check if Ollama is running
+                logger.info("Checking Ollama service health...")
+                async with session.get(f"{self.base_url}/api/tags", timeout=10) as response:
+                    if response.status != 200:
+                        return {
+                            'status': 'error',
+                            'message': f'Ollama service not responding: {response.status}',
+                            'details': await response.text()
+                        }
+                    
+                    models_data = await response.json()
+                    available_models = [model['name'] for model in models_data.get('models', [])]
+                    
+                    logger.info(f"Available Ollama models: {available_models}")
+                    
+                    if self.model_name in available_models:
+                        return {
+                            'status': 'healthy',
+                            'message': f'Model {self.model_name} is available',
+                            'available_models': available_models,
+                            'selected_model': self.model_name
+                        }
+                    else:
+                        return {
+                            'status': 'warning',
+                            'message': f'Model {self.model_name} not found',
+                            'available_models': available_models,
+                            'selected_model': self.model_name
+                        }
+                        
+        except asyncio.TimeoutError:
+            return {
+                'status': 'error',
+                'message': 'Ollama service timeout during health check',
+                'timeout': 10
+            }
+        except Exception as e:
+            return {
+                'status': 'error',
+                'message': f'Ollama health check failed: {str(e)}',
+                'error': str(e)
+            }
     
     async def create_chat_completion(self, messages: List[Dict[str, str]], 
                                    temperature: float = 0.2, 
                                    max_tokens: int = 1500) -> str:
         """Create a chat completion using Ollama API"""
         try:
+            # Perform health check before making request
+            health = await self.health_check()
+            if health['status'] == 'error':
+                logger.error(f"Ollama health check failed: {health['message']}")
+                raise Exception(f"Ollama service unavailable: {health['message']}")
+            elif health['status'] == 'warning':
+                logger.warning(f"Ollama health check warning: {health['message']}")
+                logger.warning(f"Available models: {health.get('available_models', [])}")
+            
             # Convert OpenAI format to Ollama format
             ollama_messages = []
             for msg in messages:
@@ -110,24 +172,76 @@ class OllamaProvider(AIProvider):
                 'stream': False
             }
             
+            # Log request details
+            logger.info(f"Ollama request details:")
+            logger.info(f"  URL: {self.base_url}/api/chat")
+            logger.info(f"  Model: {self.model_name}")
+            logger.info(f"  Temperature: {temperature}")
+            logger.info(f"  Max tokens: {max_tokens}")
+            logger.info(f"  Timeout: {self.timeout} seconds")
+            logger.info(f"  Message count: {len(ollama_messages)}")
+            
+            # Log first message preview for debugging
+            if ollama_messages:
+                first_msg_preview = ollama_messages[0]['content'][:200] + "..." if len(ollama_messages[0]['content']) > 200 else ollama_messages[0]['content']
+                logger.info(f"  First message preview: {first_msg_preview}")
+            
             async with aiohttp.ClientSession() as session:
+                logger.info(f"Sending Ollama request...")
+                start_time = time.time()
+                
                 async with session.post(
                     f"{self.base_url}/api/chat",
                     json=payload,
                     timeout=aiohttp.ClientTimeout(total=self.timeout)
                 ) as response:
+                    request_time = time.time() - start_time
+                    logger.info(f"Ollama response received in {request_time:.2f} seconds")
+                    logger.info(f"  Status code: {response.status}")
+                    logger.info(f"  Content-Type: {response.headers.get('content-type', 'unknown')}")
+                    
                     if response.status != 200:
                         error_text = await response.text()
+                        logger.error(f"Ollama API error response:")
+                        logger.error(f"  Status: {response.status}")
+                        logger.error(f"  Headers: {dict(response.headers)}")
+                        logger.error(f"  Body: {error_text}")
                         raise Exception(f"Ollama API error: {response.status} - {error_text}")
                     
                     result = await response.json()
-                    return result['message']['content']
+                    logger.info(f"Ollama response parsed successfully")
+                    logger.info(f"  Response keys: {list(result.keys())}")
+                    
+                    if 'message' in result and 'content' in result['message']:
+                        response_content = result['message']['content']
+                        response_preview = response_content[:200] + "..." if len(response_content) > 200 else response_content
+                        logger.info(f"  Response preview: {response_preview}")
+                        logger.info(f"  Response length: {len(response_content)} characters")
+                        return response_content
+                    else:
+                        logger.error(f"Unexpected Ollama response structure:")
+                        logger.error(f"  Response: {result}")
+                        raise Exception(f"Unexpected Ollama response structure: {result}")
                     
         except asyncio.TimeoutError:
             logger.error(f"Ollama request timed out after {self.timeout} seconds")
+            logger.error(f"Request details:")
+            logger.error(f"  URL: {self.base_url}/api/chat")
+            logger.error(f"  Model: {self.model_name}")
+            logger.error(f"  Timeout: {self.timeout} seconds")
             raise Exception(f"Ollama request timed out after {self.timeout} seconds")
+        except aiohttp.ClientError as e:
+            logger.error(f"Ollama network error: {str(e)}")
+            logger.error(f"Request details:")
+            logger.error(f"  URL: {self.base_url}/api/chat")
+            logger.error(f"  Model: {self.model_name}")
+            raise Exception(f"Ollama network error: {str(e)}")
         except Exception as e:
             logger.error(f"Ollama API error: {str(e)}")
+            logger.error(f"Request details:")
+            logger.error(f"  URL: {self.base_url}/api/chat")
+            logger.error(f"  Model: {self.model_name}")
+            logger.error(f"  Payload: {payload}")
             raise
     
     def get_provider_name(self) -> str:
