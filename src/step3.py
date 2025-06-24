@@ -108,10 +108,34 @@ class RequirementsProcessor:
                 max_tokens=2000
             )
             
-            return json.loads(analysis)
+            # Try to parse as JSON first
+            try:
+                return json.loads(analysis)
+            except json.JSONDecodeError:
+                # If JSON parsing fails, create a structured response from the text
+                print(f"Warning: AI response is not valid JSON, creating structured response from text")
+                return {
+                    "Modern Architecture Overview": "Generated from AI analysis",
+                    "Frontend Components (React)": "Generated from AI analysis", 
+                    "Backend Services (Node.js)": "Generated from AI analysis",
+                    "API Endpoints": "Generated from AI analysis",
+                    "Data Models": "Generated from AI analysis",
+                    "Security Considerations": "Generated from AI analysis",
+                    "Raw AI Response": analysis
+                }
+                
         except Exception as e:
             print(f"Error modernizing requirements: {str(e)}")
-            return content
+            # Return original content as fallback
+            return {
+                "Modern Architecture Overview": "Error occurred during modernization",
+                "Frontend Components (React)": "Error occurred during modernization",
+                "Backend Services (Node.js)": "Error occurred during modernization", 
+                "API Endpoints": "Error occurred during modernization",
+                "Data Models": "Error occurred during modernization",
+                "Security Considerations": "Error occurred during modernization",
+                "Original Content": content
+            }
     
     async def generate_requirements_document(self) -> None:
         """Generate the final requirements document"""
