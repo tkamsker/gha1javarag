@@ -34,7 +34,7 @@ class RequirementsProcessor:
         
         # Batch processing settings
         self.max_files_per_batch = 3  # Reduced from 5
-        self.max_files_to_process = 50  # Limit total files to process
+        self.max_files_to_process = 500000  # Limit total files to process
         
         # Initialize AI provider using the same pattern as main.py
         self.ai_provider = create_ai_provider()

@@ -48,7 +48,7 @@ class TestBatchAIAnalyzer:
         
         # Very limited batch processing for testing
         self.max_files_per_batch = 2  # Only 2 files per API call
-        self.max_files_to_process = 10  # Only 10 files total
+        self.max_files_to_process = 20  # Only 10 files total
 
     def get_important_files(self, files_metadata: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Get only the most important files for testing"""

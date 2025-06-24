@@ -49,7 +49,7 @@ class BatchAIAnalyzer:
         
         # Batch processing configuration
         self.max_files_per_batch = 3  # Process 3 files per API call
-        self.max_files_to_process = 50  # Limit total files to process
+        self.max_files_to_process = 500000  # Limit total files to process
 
     def prioritize_files(self, files_metadata: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Prioritize files based on importance and type"""
