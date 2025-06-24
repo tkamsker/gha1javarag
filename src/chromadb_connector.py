@@ -42,7 +42,7 @@ class ChromaDBConnector:
         
         # Initialize ChromaDB client
         chromadb_dir = os.getenv('CHROMADB_DIR', './data/chromadb')
-        self.client = chromadb.PersistentClient(path=chromadb_dir)
+        self.client = chromadb.PersistentClient(path=chromadb_dir, settings=Settings(anonymized_telemetry=False))
         logger.info(f"Initialized ChromaDB client with directory: {chromadb_dir}")
         
         # Get or create collection

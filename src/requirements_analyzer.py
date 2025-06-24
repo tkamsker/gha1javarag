@@ -40,40 +40,41 @@ class RequirementsAnalyzer:
                 analysis['components'].append({
                     'path': comp.get('file_path', 'Unknown'),
                     'type': comp.get('file_type', 'Unknown'),
-                    'purpose': comp.get('purpose', '')
+                    'purpose': None if 'ai_analysis' not in comp else comp['ai_analysis'].get('purpose', '')
                 })
-                
-                # Extract features
-                if 'purpose' in comp:
-                    analysis['features'].add(comp['purpose'])
-                
-                # Extract data structures
-                if 'data_structures' in comp:
-                    for struct in comp['data_structures']:
-                        analysis['data_structures'].append({
-                            'name': struct.get('name', 'Unknown'),
-                            'fields': struct.get('fields', []),
-                            'relationships': struct.get('relationships', [])
-                        })
-                
-                # Extract methods/functions
-                if 'components' in comp:
-                    for method in comp['components']:
-                        analysis['methods'].append({
-                            'name': method.get('name', 'Unknown'),
-                            'description': method.get('description', ''),
-                            'parameters': method.get('parameters', []),
-                            'returns': method.get('returns', '')
-                        })
-                
-                # Extract dependencies
-                if 'dependencies' in comp:
-                    analysis['dependencies'].update(comp['dependencies'])
-                
-                # Extract business rules
-                if 'business_rules' in comp:
-                    analysis['business_rules'].extend(comp['business_rules'])
-            
+
+                if 'ai_analysis' in comp:
+                    # Extract features
+                    if 'purpose' in comp['ai_analysis']:
+                        analysis['features'].add(comp['ai_analysis']['purpose'])
+
+                    # Extract data structures
+                    if 'data_structures' in comp['ai_analysis']:
+                        for struct in comp['ai_analysis']['data_structures']:
+                            analysis['data_structures'].append({
+                                'name': struct.get('name', 'Unknown'),
+                                'fields': struct.get('fields', []),
+                                'relationships': struct.get('relationships', [])
+                            })
+
+                    # Extract methods/functions
+                    if 'components' in comp['ai_analysis']:
+                        for method in comp['ai_analysis']['components']:
+                            analysis['methods'].append({
+                                'name': method.get('name', 'Unknown'),
+                                'description': method.get('description', ''),
+                                'parameters': method.get('parameters', []),
+                                'returns': method.get('returns', '')
+                            })
+
+                    # Extract dependencies
+                    if 'dependencies' in comp['ai_analysis']:
+                        analysis['dependencies'].update(comp['ai_analysis']['dependencies'])
+
+                    # Extract business rules
+                    if 'business_rules' in comp['ai_analysis']:
+                        analysis['business_rules'].extend(comp['ai_analysis']['business_rules'])
+
             logger.debug(f"Completed analysis of {layer_name} layer")
             return analysis
             

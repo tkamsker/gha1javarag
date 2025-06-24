@@ -195,3 +195,10 @@ python src/test_ollama_debug.py
 export AI_PROVIDER=ollama
    export RATE_LIMIT_ENV=production
 ./lofalassn.sh test
+
+## 2025.06.24
+# Chroma DB
+Disable anonymized telemetry. 
+Now statistics are not sent to https://us.i.posthog.com:443
+# Documentation generation
+Fixes: extract necessary information from ai_analysis json object.
