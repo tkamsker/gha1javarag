@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test script for AI providers (OpenAI and Ollama)
+Test script for AI providers (OpenAI, Ollama, and Anthropic)
 Tests the provider switching functionality
 """
 
@@ -8,7 +8,7 @@ import asyncio
 import os
 import logging
 from dotenv import load_dotenv
-from ai_providers import create_ai_provider, OpenAIProvider, OllamaProvider
+from ai_providers import create_ai_provider, OpenAIProvider, OllamaProvider, AnthropicProvider
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -58,6 +58,13 @@ async def test_provider_switching():
         logger.warning("⚠️  Skipping OpenAI test - no API key found")
         openai_success = False
     
+    # Test Anthropic (if API key is available)
+    if os.getenv('ANTHROPIC_API_KEY'):
+        anthropic_success = await test_provider('anthropic')
+    else:
+        logger.warning("⚠️  Skipping Anthropic test - no API key found")
+        anthropic_success = False
+    
     # Test Ollama (if available)
     try:
         import aiohttp
@@ -79,15 +86,21 @@ async def test_provider_switching():
     else:
         logger.info("❌ OpenAI provider: Failed or skipped")
     
+    if anthropic_success:
+        logger.info("✅ Anthropic provider: Working")
+    else:
+        logger.info("❌ Anthropic provider: Failed or skipped")
+    
     if ollama_success:
         logger.info("✅ Ollama provider: Working")
     else:
         logger.info("❌ Ollama provider: Failed or skipped")
     
-    if not openai_success and not ollama_success:
+    if not openai_success and not anthropic_success and not ollama_success:
         logger.error("❌ No providers are working!")
         logger.info("💡 Setup instructions:")
         logger.info("   OpenAI: Set OPENAI_API_KEY environment variable")
+        logger.info("   Anthropic: Set ANTHROPIC_API_KEY environment variable")
         logger.info("   Ollama: Start ollama serve and pull a model")
 
 async def test_invalid_provider():

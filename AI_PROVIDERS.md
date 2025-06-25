@@ -2,7 +2,7 @@
 
 ## Overview
 
-The application now supports multiple AI providers through a unified interface, allowing you to easily switch between OpenAI and Ollama (local) for code analysis. This addresses rate limiting issues by providing a local alternative.
+The application now supports multiple AI providers through a unified interface, allowing you to easily switch between OpenAI, Anthropic Claude, and Ollama (local) for code analysis. This addresses rate limiting issues by providing multiple alternatives.
 
 ## Supported Providers
 
@@ -12,7 +12,13 @@ The application now supports multiple AI providers through a unified interface, 
 - **Rate Limiting**: Full rate limiting and quota management
 - **Cost**: Per-token pricing
 
-### 2. Ollama (Local)
+### 2. Anthropic Claude
+- **Use Case**: Production, high-quality analysis with Claude Sonnet 3.7
+- **Requirements**: Anthropic API key
+- **Rate Limiting**: Full rate limiting and quota management
+- **Cost**: Per-token pricing
+
+### 3. Ollama (Local)
 - **Use Case**: Testing, development, offline work
 - **Requirements**: Ollama installed and running
 - **Rate Limiting**: Minimal (local processing)
@@ -26,11 +32,15 @@ Create a `.env` file based on `env.example`:
 
 ```bash
 # AI Provider Selection
-AI_PROVIDER=openai  # or 'ollama'
+AI_PROVIDER=openai  # or 'anthropic' or 'ollama'
 
 # OpenAI Configuration (when AI_PROVIDER=openai)
 OPENAI_API_KEY=your-openai-api-key-here
 OPENAI_MODEL_NAME=gpt-4-turbo-preview
+
+# Anthropic Configuration (when AI_PROVIDER=anthropic)
+ANTHROPIC_API_KEY=your-anthropic-api-key-here
+ANTHROPIC_MODEL_NAME=claude-3-5-sonnet-20241022
 
 # Ollama Configuration (when AI_PROVIDER=ollama)
 OLLAMA_BASE_URL=http://localhost:11434
@@ -47,6 +57,12 @@ RATE_LIMIT_ENV=test  # production, test, development, emergency
 ```bash
 export AI_PROVIDER=openai
 export OPENAI_API_KEY="your-api-key"
+```
+
+#### For Anthropic:
+```bash
+export AI_PROVIDER=anthropic
+export ANTHROPIC_API_KEY="your-api-key"
 ```
 
 #### For Ollama:
@@ -74,6 +90,10 @@ export AI_PROVIDER=ollama
 export AI_PROVIDER=openai
 ./lofalassn.sh test
 
+# Use Anthropic
+export AI_PROVIDER=anthropic
+./lofalassn.sh test
+
 # Use Ollama
 export AI_PROVIDER=ollama
 ./lofalassn.sh test
@@ -82,13 +102,13 @@ export AI_PROVIDER=ollama
 #### Method 2: .env File
 ```bash
 # Edit .env file
-echo "AI_PROVIDER=ollama" > .env
+echo "AI_PROVIDER=anthropic" > .env
 ./lofalassn.sh test
 ```
 
 #### Method 3: Inline
 ```bash
-AI_PROVIDER=ollama ./lofalassn.sh test
+AI_PROVIDER=anthropic ./lofalassn.sh test
 ```
 
 ### Running the Application
@@ -114,6 +134,15 @@ AI_PROVIDER=ollama ./lofalassn.sh test
 - ❌ Requires API key and internet connection
 - ❌ Subject to rate limits and quotas
 
+### Anthropic Provider
+- ✅ Full rate limiting and quota management
+- ✅ Intelligent error handling (quota exceeded, rate limits)
+- ✅ Exponential backoff for retries
+- ✅ Claude Sonnet 3.7 model support
+- ✅ Detailed error messages with billing links
+- ❌ Requires API key and internet connection
+- ❌ Subject to rate limits and quotas
+
 ### Ollama Provider
 - ✅ No API costs or quotas
 - ✅ Works offline
@@ -132,6 +161,12 @@ AI_PROVIDER=ollama ./lofalassn.sh test
 - **Error Recovery**: Exponential backoff and retry logic
 - **Wait Times**: Configurable wait periods for quota exceeded
 
+### Anthropic
+- **Conservative Limits**: 15 req/min, 800 req/hour
+- **Quota Management**: Automatic detection and handling
+- **Error Recovery**: Exponential backoff and retry logic
+- **Wait Times**: Configurable wait periods for quota exceeded
+
 ### Ollama
 - **Relaxed Limits**: 60 req/min, 1000 req/hour
 - **No Quota**: Local processing, no external limits
@@ -142,7 +177,7 @@ AI_PROVIDER=ollama ./lofalassn.sh test
 
 ### Test Provider Setup
 ```bash
-# Test both providers
+# Test all providers
 python src/test_ai_providers.py
 
 # Test rate limiting
@@ -153,6 +188,9 @@ python src/test_rate_limiter.py
 ```bash
 # Test OpenAI
 AI_PROVIDER=openai python src/main_test.py
+
+# Test Anthropic
+AI_PROVIDER=anthropic python src/main_test.py
 
 # Test Ollama
 AI_PROVIDER=ollama python src/main_test.py
@@ -171,6 +209,19 @@ curl -H "Authorization: Bearer $OPENAI_API_KEY" \
 
 # Check billing
 # Visit: https://platform.openai.com/account/billing
+```
+
+### Anthropic Issues
+```bash
+# Check API key
+echo $ANTHROPIC_API_KEY
+
+# Test connection
+curl -H "x-api-key: $ANTHROPIC_API_KEY" \
+     https://api.anthropic.com/v1/models
+
+# Check billing
+# Visit: https://console.anthropic.com/
 ```
 
 ### Ollama Issues
@@ -199,34 +250,26 @@ ollama serve
 curl http://localhost:11434/api/tags
 ```
 
-#### "Model not found"
+#### "Invalid API key"
 ```bash
-# List available models
-ollama list
+# Check your API key format
+echo $ANTHROPIC_API_KEY  # Should start with 'sk-ant-'
 
-# Pull the required model
-ollama pull deepseek-r1:32b
-```
-
-#### "OpenAI API key not set"
-```bash
-# Set the API key
-export OPENAI_API_KEY="your-api-key"
-
-# Or add to .env file
-echo "OPENAI_API_KEY=your-api-key" >> .env
+# Verify key is valid
+curl -H "x-api-key: $ANTHROPIC_API_KEY" \
+     https://api.anthropic.com/v1/models
 ```
 
 ## Performance Comparison
 
-| Aspect | OpenAI | Ollama |
-|--------|--------|--------|
-| **Speed** | Network dependent | Local (faster) |
-| **Quality** | High (GPT-4) | Variable (model dependent) |
-| **Cost** | Per token | Free |
-| **Reliability** | High (with rate limits) | High (local) |
-| **Privacy** | Data sent to OpenAI | Local only |
-| **Setup** | API key only | Install + model download |
+| Aspect | OpenAI | Anthropic | Ollama |
+|--------|--------|-----------|--------|
+| **Speed** | Network dependent | Network dependent | Local (faster) |
+| **Quality** | High (GPT-4) | High (Claude Sonnet 3.7) | Variable (model dependent) |
+| **Cost** | Per token | Per token | Free |
+| **Reliability** | High (with rate limits) | High (with rate limits) | High (local) |
+| **Privacy** | Data sent to OpenAI | Data sent to Anthropic | Local only |
+| **Setup** | API key only | API key only | Install + model download |
 
 ## Best Practices
 
@@ -252,6 +295,7 @@ export RATE_LIMIT_ENV=emergency
 
 ### Model Selection
 - **OpenAI**: Use `gpt-4-turbo-preview` for best quality
+- **Anthropic**: Use `claude-3-5-sonnet-20241022` for high-quality analysis
 - **Ollama**: Use `deepseek-r1:32b` for good balance of quality and speed
 
 ## Migration Guide
@@ -284,6 +328,9 @@ AIProvider (Abstract Base Class)
 │   ├── AsyncOpenAI client
 │   ├── Rate limiting
 │   └── Quota management
+├── AnthropicProvider
+│   ├── HTTP client
+│   └── Rate limiting
 └── OllamaProvider
     ├── HTTP client
     ├── Local processing
