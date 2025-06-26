@@ -1,0 +1,910 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project name="CustomerAccount" resourceRoot="${projectDir}" soapui-version="3.6" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:interface xsi:type="con:WsdlInterface" wsaVersion="NONE" name="CustomerAccountPortTypeHttpBinding" type="wsdl" bindingName="{http://eai.a1telekom.at/CustomerAccount/wsdl}CustomerAccountPortTypeHttpBinding" soapVersion="1_1" anonymous="optional" definition="http://esb-i.telekom.inside:7800/wsdl/CustomerAccount/-/vi/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache type="TEXT" rootPart="http://esb-i.telekom.inside:7800/wsdl/CustomerAccount/-/vi/http"><con:part><con:url>http://esb-i.telekom.inside:7800/wsdl/CustomerAccount/-/vi/http</con:url><con:content><![CDATA[<!--Created by mag ESB WSDL-Generator v3-->
+<!--WSDL version 1.10-->
+<wsdl:definitions targetNamespace="http://eai.a1telekom.at/CustomerAccount/wsdl" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://eai.a1telekom.at/CustomerAccount/wsdl" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:ns0="http://eai.a1telekom.at/CustomerAccount" xmlns:ns1="http://eai.mobilkomaustriagroup.com/common/error" xmlns:ns2="http://cdm.a1telekom.at/common">
+  <wsdl:types>
+    <schema targetNamespace="http://eai.mobilkomaustriagroup.com/common/error" version="1.1" elementFormDefault="qualified" attributeFormDefault="unqualified" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:error="http://eai.mobilkomaustriagroup.com/common/error">
+      <complexType name="ErrorDetailsType">
+        <sequence>
+          <element name="ErrorCode" type="token"/>
+          <element name="ErrorMessage" type="token">
+            <annotation>
+              <documentation>Error-Message</documentation>
+            </annotation>
+          </element>
+          <element name="ErrorDetails" type="string" minOccurs="0">
+            <annotation>
+              <documentation>Optional Error Details</documentation>
+            </annotation>
+          </element>
+          <element name="IsTechnical" type="boolean" minOccurs="0">
+            <annotation>
+              <documentation>1 .. technical error, 0 .. business error</documentation>
+            </annotation>
+          </element>
+          <element name="Repeatable" type="boolean" minOccurs="0">
+            <annotation>
+              <documentation>1 .. execution repeatable, 0 .. non-repeatable</documentation>
+            </annotation>
+          </element>
+          <element name="Additionals" minOccurs="0">
+            <annotation>
+              <documentation>Additional Success/Error Messages</documentation>
+            </annotation>
+            <complexType>
+              <sequence>
+                <element name="Additional" maxOccurs="unbounded">
+                  <complexType>
+                    <sequence>
+                      <element name="Code" type="token"/>
+                      <element name="MessageTxt" type="token" minOccurs="0"/>
+                    </sequence>
+                  </complexType>
+                </element>
+              </sequence>
+            </complexType>
+          </element>
+        </sequence>
+      </complexType>
+      <element name="ErrorDetails" type="error:ErrorDetailsType"/>
+    </schema>
+    <schema targetNamespace="http://cdm.a1telekom.at/common" version="1.1" elementFormDefault="unqualified" attributeFormDefault="unqualified" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://cdm.a1telekom.at/common">
+      <complexType name="CallNumber">
+        <sequence>
+          <element name="CC" type="token">
+            <annotation>
+              <documentation>Country Code</documentation>
+            </annotation>
+          </element>
+          <element name="NDC" type="token">
+            <annotation>
+              <documentation>National Destination Code</documentation>
+            </annotation>
+          </element>
+          <element name="SN" type="token">
+            <annotation>
+              <documentation>Subscriber Number</documentation>
+            </annotation>
+          </element>
+        </sequence>
+      </complexType>
+      <complexType name="Money">
+        <sequence>
+          <element name="Units" type="tns:MoneyUnit"/>
+          <element name="Amount" type="decimal"/>
+        </sequence>
+      </complexType>
+      <simpleType name="MoneyUnit">
+        <restriction base="string">
+          <enumeration value="EUR"/>
+          <enumeration value="PERCENT"/>
+        </restriction>
+      </simpleType>
+      <simpleType name="PeriodType">
+        <restriction base="string">
+          <enumeration value="monthly"/>
+          <enumeration value="one-time"/>
+          <enumeration value="installation"/>
+          <enumeration value="change"/>
+        </restriction>
+      </simpleType>
+      <simpleType name="PresenceType">
+        <restriction base="string">
+          <enumeration value="required"/>
+          <enumeration value="optional"/>
+        </restriction>
+      </simpleType>
+      <complexType name="Quantity">
+        <sequence>
+          <element name="Units" type="string"/>
+          <element name="Amount" type="decimal"/>
+        </sequence>
+      </complexType>
+      <complexType name="TimePeriod">
+        <sequence>
+          <element name="StartDateTime" type="dateTime" minOccurs="0"/>
+          <element name="EndDateTime" type="dateTime" minOccurs="0"/>
+        </sequence>
+      </complexType>
+      <simpleType name="ValueType">
+        <restriction base="string">
+          <enumeration value="string"/>
+          <enumeration value="long"/>
+          <enumeration value="boolean"/>
+          <enumeration value="dateTime"/>
+          <enumeration value="decimal"/>
+          <enumeration value="lkmsId"/>
+          <enumeration value="mbit"/>
+          <enumeration value="mb"/>
+        </restriction>
+      </simpleType>
+      <simpleType name="sidId">
+        <restriction base="token"/>
+      </simpleType>
+      <element name="CallNumber" type="tns:CallNumber"/>
+    </schema>
+    <xs:schema targetNamespace="http://eai.a1telekom.at/CustomerAccount" elementFormDefault="qualified" attributeFormDefault="unqualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:import namespace="http://cdm.a1telekom.at/common"/>
+      <xs:complexType name="ADXAccount">
+        <xs:complexContent>
+          <xs:extension base="ns0:CustomerAccount"/>
+        </xs:complexContent>
+      </xs:complexType>
+      <xs:complexType name="ADXBillingEntity">
+        <xs:complexContent>
+          <xs:extension base="ns0:BillingArrangement">
+            <xs:sequence>
+              <xs:element name="BEN" type="xs:string"/>
+            </xs:sequence>
+          </xs:extension>
+        </xs:complexContent>
+      </xs:complexType>
+      <xs:complexType name="Address">
+        <xs:sequence>
+          <xs:element name="LkmsId" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>KUMS: RECHNUNGSADRESSE
+Description: Stammsitz bei Organisation, Meldeadresse bei Person</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="12"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element name="Street" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>LKMS: STRASSE
+Description: Strassenbezeichnung</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="38"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element name="HouseNumber" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>LKMS: HAUSNUMMER
+Description: Hausnummer</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="7"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element name="Block" type="xs:string" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>LKMS: BLOCK</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="Staircase" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>LKMS: STIEGE
+Description: Stiege</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="3"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element name="FloorNumber" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>LKMS: STOCK
+Description: Stockwerk</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="3"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element name="DoorNumber" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>LKMS: TUER
+Description: Tuer</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="4"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element name="Additional" type="xs:string" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>KUMS: ADRESSEN_EXTRA</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="Postcode" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>LKMS: PLZ
+Description: Postleitzahl</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="12"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element name="City" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>LKMS: PLZORT
+Description: Bezeichnung des Postleitzahlen Ortes</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="38"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element name="Village" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>LKMS: ORT
+Description: Bezeichnung des pol. Ortes</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="38"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element name="Country" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>LKMS: INET_COUNTRY_CD
+Description: 3-stelliger ISO-Code</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="4"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element name="postOfficeBox" type="xs:anyType" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Description: Post Office Box. Number.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="FormattedAddress" type="ns0:FormattedAddress" minOccurs="0"/>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="BNAccount">
+        <xs:complexContent>
+          <xs:extension base="ns0:CustomerAccount"/>
+        </xs:complexContent>
+      </xs:complexType>
+      <xs:complexType name="BNInvoice">
+        <xs:complexContent>
+          <xs:extension base="ns0:BillingArrangement">
+            <xs:sequence>
+              <xs:element name="BNAccountId" type="xs:string"/>
+            </xs:sequence>
+          </xs:extension>
+        </xs:complexContent>
+      </xs:complexType>
+      <xs:complexType name="BankAccount">
+        <xs:sequence>
+          <xs:element name="AccountNumber" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>Bankkontonummer</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="AccountOwner" type="xs:string" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Bankkontobesitzer</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="BankCode" type="xs:token">
+            <xs:annotation>
+              <xs:documentation>Kode der Bank</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="BankName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Name der Bank</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="BillingArrangement" abstract="true">
+        <xs:sequence>
+          <xs:element name="BankAccount" type="ns0:BankAccount"/>
+          <xs:element name="originalInvoiceMedium" type="ns0:InvoiceMedium"/>
+          <xs:element name="duplicateInvoiceMedium" type="ns0:InvoiceMedium" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element name="InvoiceAddress" type="ns0:Address"/>
+          <xs:element name="InvoiceContact" type="ns0:Contact" minOccurs="0"/>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="CDRomInvoice">
+        <xs:complexContent>
+          <xs:extension base="ns0:InvoiceMedium"/>
+        </xs:complexContent>
+      </xs:complexType>
+      <xs:complexType name="Contact">
+        <xs:sequence>
+          <xs:element name="firstName" type="xs:anyType" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>First Name of the Contact</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="lastName" type="xs:anyType" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Last Name of the Contact</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="name" type="xs:anyType">
+            <xs:annotation>
+              <xs:documentation>Full Name of the Contact. For Persons concatenation of First Name and Last Name.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="ContactMedium" abstract="true"/>
+      <xs:complexType name="CustomerAccount">
+        <xs:sequence>
+          <xs:element name="AccountNumber" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>Kundenkontonummer</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="Subscriptions" minOccurs="0">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="Subscription" type="ns0:Subscription" maxOccurs="unbounded"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="BillingArrangements" minOccurs="0">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="BillingArrangement" type="ns0:BillingArrangement" minOccurs="0" maxOccurs="unbounded"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="EmailContact">
+        <xs:complexContent>
+          <xs:extension base="ns0:ContactMedium">
+            <xs:sequence>
+              <xs:element name="EmailAddress">
+                <xs:annotation>
+                  <xs:documentation>KUMS: EMAIL
+Description: Email adresse Im Internet-Format</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="128"/>
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+            </xs:sequence>
+          </xs:extension>
+        </xs:complexContent>
+      </xs:complexType>
+      <xs:complexType name="FaxNumber">
+        <xs:complexContent>
+          <xs:extension base="ns0:ContactMedium">
+            <xs:sequence>
+              <xs:element name="FaxNumber">
+                <xs:annotation>
+                  <xs:documentation>KUMS: FAX
+Description: Rufnummer inkl. Aller Vorwahlen</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="32"/>
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+            </xs:sequence>
+          </xs:extension>
+        </xs:complexContent>
+      </xs:complexType>
+      <xs:complexType name="FormattedAddress">
+        <xs:sequence>
+          <xs:element name="AddressLine1">
+            <xs:annotation>
+              <xs:documentation>LKMS: ADRESS_ZEILE_1
+Description: 1. Zeile der postalischen Anschrift</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="128"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element name="AddressLine2">
+            <xs:annotation>
+              <xs:documentation>LKMS: ADRESS_ZEILE_2
+Description: 2. Zeile der postalischen Anschrift</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="128"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element name="AddressLine3">
+            <xs:annotation>
+              <xs:documentation>LKMS: ADRESS_ZEILE_3
+Description: 3. Zeile der postalischen Anschrift</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="128"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="InvoiceMedium" abstract="true">
+        <xs:sequence>
+          <xs:element name="notification" type="ns0:ContactMedium" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="OnlineInvoice">
+        <xs:complexContent>
+          <xs:extension base="ns0:InvoiceMedium"/>
+        </xs:complexContent>
+      </xs:complexType>
+      <xs:complexType name="PaperInvoice">
+        <xs:complexContent>
+          <xs:extension base="ns0:InvoiceMedium"/>
+        </xs:complexContent>
+      </xs:complexType>
+      <xs:simpleType name="PartyId">
+        <xs:annotation>
+          <xs:documentation>KUMS: PARTNERID
+Description: Kundennummer KUMS</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:token">
+          <xs:maxLength value="12"/>
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:complexType name="Subscription">
+        <xs:sequence>
+          <xs:element name="Id" type="xs:anyType"/>
+          <xs:element ref="ns2:CallNumber"/>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="TelephoneNumber">
+        <xs:complexContent>
+          <xs:extension base="ns0:ContactMedium">
+            <xs:sequence>
+              <xs:element name="PhoneNumber">
+                <xs:annotation>
+                  <xs:documentation>KUMS: TELEFON
+Description: Angaben zur Erreichbarkeit tagsueber.A‚ A‚ Rufnummer inkl. aller Vorwahlen.</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="32"/>
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="Type" type="xs:string"/>
+            </xs:sequence>
+          </xs:extension>
+        </xs:complexContent>
+      </xs:complexType>
+      <xs:complexType name="getBillingArrangementRequest">
+        <xs:choice>
+          <xs:element name="BEN" type="xs:token">
+            <xs:annotation>
+              <xs:documentation>Mobile Billing Arrangement ID</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="BNAccountId" type="xs:token">
+            <xs:annotation>
+              <xs:documentation>Billing Account Number - Fest Netz</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:choice>
+      </xs:complexType>
+      <xs:complexType name="getBillingArrangementResponse">
+        <xs:sequence>
+          <xs:element name="BillingArrangement" minOccurs="0">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="BillingArrangement" type="ns0:BillingArrangement"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="getBillingArrangementsForAccountRequest">
+        <xs:choice>
+          <xs:element name="BAN" type="xs:token">
+            <xs:annotation>
+              <xs:documentation>Billing Account Number - Mobile Netz</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="BNAccountId" type="xs:token">
+            <xs:annotation>
+              <xs:documentation>Billing Account Number - Fest Netz</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:choice>
+      </xs:complexType>
+      <xs:complexType name="getBillingArrangementsForAccountResponse">
+        <xs:sequence>
+          <xs:element name="BillingArrangements" minOccurs="0">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="BillingArrangement" type="ns0:BillingArrangement" minOccurs="0" maxOccurs="unbounded"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="getBillingArrangementsForPartyRequest">
+        <xs:sequence>
+          <xs:element name="PartyId" type="ns0:PartyId"/>
+          <xs:element name="loadOptions">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="GetMobile" type="xs:boolean">
+                  <xs:annotation>
+                    <xs:documentation>true, wenn Mobil Kontos gefordert sind</xs:documentation>
+                  </xs:annotation>
+                </xs:element>
+                <xs:element name="GetFixedLine" type="xs:boolean">
+                  <xs:annotation>
+                    <xs:documentation>true, wenn Festnetz Kontos gefordert sind</xs:documentation>
+                  </xs:annotation>
+                </xs:element>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="getBillingArrangementsForPartyResponse">
+        <xs:sequence>
+          <xs:element name="BillingArrangements">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="BillingArrangement" type="ns0:BillingArrangement" minOccurs="0" maxOccurs="unbounded"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="getBillingArrangementsForSubscriptionRequest">
+        <xs:sequence>
+          <xs:choice>
+            <xs:element name="CallNumber" type="ns2:CallNumber">
+              <xs:annotation>
+                <xs:documentation>Telefonnummer</xs:documentation>
+              </xs:annotation>
+            </xs:element>
+            <xs:element name="SubscriptionId" type="xs:token">
+              <xs:annotation>
+                <xs:documentation>TNV_ID oder contractID</xs:documentation>
+              </xs:annotation>
+            </xs:element>
+          </xs:choice>
+          <xs:element name="SubscriptionType">
+            <xs:annotation>
+              <xs:documentation>Wireline, Mobile, Mixed</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:token">
+                <xs:enumeration value="Wireline"/>
+                <xs:enumeration value="Mobile"/>
+                <xs:enumeration value="Mixed"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="getBillingArrangementsForSubscriptionResponse">
+        <xs:sequence>
+          <xs:element name="BillingArrangements">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="BillingArrangement" type="ns0:BillingArrangement" minOccurs="0" maxOccurs="unbounded"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="getCustomerAccountsForPartyRequest">
+        <xs:sequence>
+          <xs:element name="PartyId" type="ns0:PartyId"/>
+          <xs:element name="loadOptions">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="GetMobile" type="xs:boolean">
+                  <xs:annotation>
+                    <xs:documentation>true, wenn Mobil Kontos gefordert sind</xs:documentation>
+                  </xs:annotation>
+                </xs:element>
+                <xs:element name="GetFixedLine" type="xs:boolean">
+                  <xs:annotation>
+                    <xs:documentation>true, wenn Festnetz Kontos gefordert sind</xs:documentation>
+                  </xs:annotation>
+                </xs:element>
+                <xs:element name="GetBillingArrangements" type="xs:boolean">
+                  <xs:annotation>
+                    <xs:documentation>true, wenn Billing Arrangements gefordert sind</xs:documentation>
+                  </xs:annotation>
+                </xs:element>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="getCustomerAccountsForPartyResponse">
+        <xs:sequence>
+          <xs:element name="CustomerAccounts" minOccurs="0">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="CustomerAccount" type="ns0:CustomerAccount" maxOccurs="unbounded"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:element name="getBillingArrangementRequest" type="ns0:getBillingArrangementRequest"/>
+      <xs:element name="getBillingArrangementResponse" type="ns0:getBillingArrangementResponse"/>
+      <xs:element name="getBillingArrangementsForAccountRequest" type="ns0:getBillingArrangementsForAccountRequest"/>
+      <xs:element name="getBillingArrangementsForAccountResponse" type="ns0:getBillingArrangementsForAccountResponse"/>
+      <xs:element name="getBillingArrangementsForSubscriptionRequest" type="ns0:getBillingArrangementsForSubscriptionRequest"/>
+      <xs:element name="getBillingArrangementsForSubscriptionResponse" type="ns0:getBillingArrangementsForSubscriptionResponse"/>
+      <xs:element name="getCustomerAccountsForPartyRequest" type="ns0:getCustomerAccountsForPartyRequest"/>
+      <xs:element name="getCustomerAccountsForPartyResponse" type="ns0:getCustomerAccountsForPartyResponse"/>
+    </xs:schema>
+  </wsdl:types>
+  <wsdl:message name="getBillingArrangementsForAccountRequest">
+    <wsdl:part name="part1" element="ns0:getBillingArrangementsForAccountRequest"/>
+  </wsdl:message>
+  <wsdl:message name="getBillingArrangementsForAccountResponse">
+    <wsdl:part name="part1" element="ns0:getBillingArrangementsForAccountResponse"/>
+  </wsdl:message>
+  <wsdl:message name="getBillingArrangementsForAccountRequestError">
+    <wsdl:part name="part1" element="ns1:ErrorDetails"/>
+  </wsdl:message>
+  <wsdl:message name="getBillingArrangementsForSubscriptionRequest">
+    <wsdl:part name="part1" element="ns0:getBillingArrangementsForSubscriptionRequest"/>
+  </wsdl:message>
+  <wsdl:message name="getBillingArrangementsForSubscriptionResponse">
+    <wsdl:part name="part1" element="ns0:getBillingArrangementsForSubscriptionResponse"/>
+  </wsdl:message>
+  <wsdl:message name="getBillingArrangementsForSubscriptionError">
+    <wsdl:part name="part1" element="ns1:ErrorDetails"/>
+  </wsdl:message>
+  <wsdl:message name="getBillingArrangementRequest">
+    <wsdl:part name="parameter" element="ns0:getBillingArrangementRequest"/>
+  </wsdl:message>
+  <wsdl:message name="getBillingArrangementResponse">
+    <wsdl:part name="parameter" element="ns0:getBillingArrangementResponse"/>
+  </wsdl:message>
+  <wsdl:message name="getBillingArrangementError">
+    <wsdl:part name="part1" element="ns1:ErrorDetails"/>
+  </wsdl:message>
+  <wsdl:message name="getCustomerAccountsForPartyRequest">
+    <wsdl:part name="part1" element="ns0:getCustomerAccountsForPartyRequest"/>
+  </wsdl:message>
+  <wsdl:message name="getCustomerAccountsForPartyResponse">
+    <wsdl:part name="part1" element="ns0:getCustomerAccountsForPartyResponse"/>
+  </wsdl:message>
+  <wsdl:message name="getCustomerAccountsForPartyError">
+    <wsdl:part name="part1" element="ns1:ErrorDetails"/>
+  </wsdl:message>
+  <wsdl:portType name="CustomerAccountPortType">
+    <wsdl:operation name="getBillingArrangementsForAccount">
+      <wsdl:input message="tns:getBillingArrangementsForAccountRequest"/>
+      <wsdl:output message="tns:getBillingArrangementsForAccountResponse"/>
+      <wsdl:fault name="getBillingArrangementsForAccountRequestError" message="tns:getBillingArrangementsForAccountRequestError"/>
+    </wsdl:operation>
+    <wsdl:operation name="getBillingArrangementsForSubscription">
+      <wsdl:input message="tns:getBillingArrangementsForSubscriptionRequest"/>
+      <wsdl:output message="tns:getBillingArrangementsForSubscriptionResponse"/>
+      <wsdl:fault name="getBillingArrangementsForSubscriptionError" message="tns:getBillingArrangementsForSubscriptionError"/>
+    </wsdl:operation>
+    <wsdl:operation name="getBillingArrangement">
+      <wsdl:input message="tns:getBillingArrangementRequest"/>
+      <wsdl:output message="tns:getBillingArrangementResponse"/>
+      <wsdl:fault name="getBillingArrangementError" message="tns:getBillingArrangementError"/>
+    </wsdl:operation>
+    <wsdl:operation name="getCustomerAccountsForParty">
+      <wsdl:input message="tns:getCustomerAccountsForPartyRequest"/>
+      <wsdl:output message="tns:getCustomerAccountsForPartyResponse"/>
+      <wsdl:fault name="getCustomerAccountsForPartyError" message="tns:getCustomerAccountsForPartyError"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="CustomerAccountPortTypeHttpBinding" type="tns:CustomerAccountPortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="getBillingArrangementsForAccount">
+      <soap:operation style="document" soapAction="/esb/CustomerAccount//getBillingArrangementsForAccount"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="getBillingArrangementsForAccountRequestError">
+        <soap:fault name="getBillingArrangementsForAccountRequestError" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="getBillingArrangementsForSubscription">
+      <soap:operation style="document" soapAction="/esb/CustomerAccount//getBillingArrangementsForSubscription"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="getBillingArrangementsForSubscriptionError">
+        <soap:fault name="getBillingArrangementsForSubscriptionError" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="getBillingArrangement">
+      <soap:operation style="document" soapAction="/esb/CustomerAccount//getBillingArrangement"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="getBillingArrangementError">
+        <soap:fault name="getBillingArrangementError" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="getCustomerAccountsForParty">
+      <soap:operation style="document" soapAction="/esb/CustomerAccount//getCustomerAccountsForParty"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="getCustomerAccountsForPartyError">
+        <soap:fault name="getCustomerAccountsForPartyError" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="CustomerAccount">
+    <wsdl:port name="CustomerAccountPortTypeTa-devViHttpEndpoint" binding="tns:CustomerAccountPortTypeHttpBinding">
+      <soap:address location="http://esb-e.a1telekom.inside:8080/esb/si:ta-dev"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>]]></con:content><con:type>http://schemas.xmlsoap.org/wsdl/</con:type></con:part></con:definitionCache><con:endpoints><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint></con:endpoints><con:operation isOneWay="false" action="/esb/CustomerAccount//getBillingArrangement" name="getBillingArrangement" bindingOperationName="getBillingArrangement" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call name="Request 1"><con:settings/><con:encoding>UTF-8</con:encoding><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cus="http://eai.a1telekom.at/CustomerAccount">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cus:getBillingArrangementRequest>
+         <!--You have a CHOICE of the next 2 items at this level-->
+         <cus:BEN>?</cus:BEN>
+         <cus:BNAccountId>?</cus:BNAccountId>
+      </cus:getBillingArrangementRequest>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:wsaConfig mustUnderstand="NONE" version="200508" action="/esb/CustomerAccount//getBillingArrangement"/></con:call></con:operation><con:operation isOneWay="false" action="/esb/CustomerAccount//getBillingArrangementsForAccount" name="getBillingArrangementsForAccount" bindingOperationName="getBillingArrangementsForAccount" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call name="Request 1"><con:settings/><con:encoding>UTF-8</con:encoding><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cus="http://eai.a1telekom.at/CustomerAccount">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cus:getBillingArrangementsForAccountRequest>
+         <!--You have a CHOICE of the next 2 items at this level-->
+         <cus:BAN>?</cus:BAN>
+         <cus:BNAccountId>?</cus:BNAccountId>
+      </cus:getBillingArrangementsForAccountRequest>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:wsaConfig mustUnderstand="NONE" version="200508" action="/esb/CustomerAccount//getBillingArrangementsForAccount"/></con:call></con:operation><con:operation isOneWay="false" action="/esb/CustomerAccount//getBillingArrangementsForSubscription" name="getBillingArrangementsForSubscription" bindingOperationName="getBillingArrangementsForSubscription" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call name="Request 1"><con:settings/><con:encoding>UTF-8</con:encoding><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cus="http://eai.a1telekom.at/CustomerAccount">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cus:getBillingArrangementsForSubscriptionRequest>
+         <!--You have a CHOICE of the next 2 items at this level-->
+         <cus:CallNumber>
+            <CC>?</CC>
+            <NDC>?</NDC>
+            <SN>?</SN>
+         </cus:CallNumber>
+         <cus:SubscriptionId>?</cus:SubscriptionId>
+         <cus:SubscriptionType>?</cus:SubscriptionType>
+      </cus:getBillingArrangementsForSubscriptionRequest>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:wsaConfig mustUnderstand="NONE" version="200508" action="/esb/CustomerAccount//getBillingArrangementsForSubscription"/></con:call></con:operation><con:operation isOneWay="false" action="/esb/CustomerAccount//getCustomerAccountsForParty" name="getCustomerAccountsForParty" bindingOperationName="getCustomerAccountsForParty" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call name="Request 1"><con:settings/><con:encoding>UTF-8</con:encoding><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cus="http://eai.a1telekom.at/CustomerAccount">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cus:getCustomerAccountsForPartyRequest>
+         <cus:PartyId>?</cus:PartyId>
+         <cus:loadOptions>
+            <cus:GetMobile>?</cus:GetMobile>
+            <cus:GetFixedLine>?</cus:GetFixedLine>
+            <cus:GetBillingArrangements>?</cus:GetBillingArrangements>
+         </cus:loadOptions>
+      </cus:getCustomerAccountsForPartyRequest>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:wsaConfig mustUnderstand="NONE" version="200508" action="/esb/CustomerAccount//getCustomerAccountsForParty"/></con:call></con:operation></con:interface><con:testSuite name="CustomerAccountPortTypeHttpBinding TestSuite"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="getBillingArrangement TestCase" searchProperties="true"><con:settings/><con:testStep type="request" name="getBillingArrangement"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>CustomerAccountPortTypeHttpBinding</con:interface><con:operation>getBillingArrangement</con:operation><con:request name="getBillingArrangement"><con:settings/><con:encoding>UTF-8</con:encoding><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cus="http://eai.a1telekom.at/CustomerAccount">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cus:getBillingArrangementRequest>
+         <!--You have a CHOICE of the next 2 items at this level-->
+         <cus:BEN>?</cus:BEN>
+         <cus:BNAccountId>?</cus:BNAccountId>
+      </cus:getBillingArrangementRequest>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:wsaConfig action="/esb/CustomerAccount//getBillingArrangement"/></con:request></con:config></con:testStep><con:properties/><con:reportParameters/></con:testCase><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="getBillingArrangementsForAccount TestCase" searchProperties="true"><con:settings/><con:testStep type="request" name="getBillingArrangementsForAccount"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>CustomerAccountPortTypeHttpBinding</con:interface><con:operation>getBillingArrangementsForAccount</con:operation><con:request name="getBillingArrangementsForAccount"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cus="http://eai.a1telekom.at/CustomerAccount">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cus:getBillingArrangementsForAccountRequest>
+         <!--You have a CHOICE of the next 2 items at this level-->
+         
+         <cus:BNAccountId>?</cus:BNAccountId>
+      </cus:getBillingArrangementsForAccountRequest>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="/esb/CustomerAccount//getBillingArrangementsForAccount" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/><con:reportParameters/></con:testCase><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="getBillingArrangementsForSubscription TestCase" searchProperties="true"><con:settings/><con:testStep type="request" name="getBillingArrangementsForSubscription"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>CustomerAccountPortTypeHttpBinding</con:interface><con:operation>getBillingArrangementsForSubscription</con:operation><con:request name="getBillingArrangementsForSubscription"><con:settings/><con:encoding>UTF-8</con:encoding><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cus="http://eai.a1telekom.at/CustomerAccount">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cus:getBillingArrangementsForSubscriptionRequest>
+         <!--You have a CHOICE of the next 2 items at this level-->
+         <cus:CallNumber>
+            <CC>?</CC>
+            <NDC>?</NDC>
+            <SN>?</SN>
+         </cus:CallNumber>
+         <cus:SubscriptionId>?</cus:SubscriptionId>
+         <cus:SubscriptionType>?</cus:SubscriptionType>
+      </cus:getBillingArrangementsForSubscriptionRequest>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:wsaConfig action="/esb/CustomerAccount//getBillingArrangementsForSubscription"/></con:request></con:config></con:testStep><con:properties/><con:reportParameters/></con:testCase><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="getCustomerAccountsForParty TestCase" searchProperties="true"><con:settings/><con:testStep type="request" name="getCustomerAccountsForParty - GetMobile true, GetFixedLine true, getBillingArrangements true"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>CustomerAccountPortTypeHttpBinding</con:interface><con:operation>getCustomerAccountsForParty</con:operation><con:request name="getCustomerAccountsForParty - GetMobile true, GetFixedLine true, getBillingArrangements true"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cus="http://eai.a1telekom.at/CustomerAccount">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cus:getCustomerAccountsForPartyRequest>
+         <cus:PartyId>104389355</cus:PartyId>
+         <cus:loadOptions>
+            <cus:GetMobile>true</cus:GetMobile>
+            <cus:GetFixedLine>true</cus:GetFixedLine>
+            <cus:GetBillingArrangements>true</cus:GetBillingArrangements>
+         </cus:loadOptions>
+      </cus:getCustomerAccountsForPartyRequest>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:credentials><con:username>ta-cuco</con:username><con:password>ta</con:password></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="/esb/CustomerAccount//getCustomerAccountsForParty" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:testStep type="request" name="getCustomerAccountsForParty - GetMobile true, GetFixedLine false, getBillingArrangements false"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>CustomerAccountPortTypeHttpBinding</con:interface><con:operation>getCustomerAccountsForParty</con:operation><con:request name="getCustomerAccountsForParty - GetMobile true, GetFixedLine false, getBillingArrangements false"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cus="http://eai.a1telekom.at/CustomerAccount">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cus:getCustomerAccountsForPartyRequest>
+         <cus:PartyId>104389355</cus:PartyId>
+         <cus:loadOptions>
+            <cus:GetMobile>true</cus:GetMobile>
+            <cus:GetFixedLine>false</cus:GetFixedLine>
+            <cus:GetBillingArrangements>false</cus:GetBillingArrangements>
+         </cus:loadOptions>
+      </cus:getCustomerAccountsForPartyRequest>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:credentials><con:username>ta-cuco</con:username><con:password>ta</con:password></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="/esb/CustomerAccount//getCustomerAccountsForParty" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:testStep type="request" name="getCustomerAccountsForParty - GetMobile false, GetFixedLine true, getBillingArrangements false"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>CustomerAccountPortTypeHttpBinding</con:interface><con:operation>getCustomerAccountsForParty</con:operation><con:request name="getCustomerAccountsForParty - GetMobile false, GetFixedLine true, getBillingArrangements false"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cus="http://eai.a1telekom.at/CustomerAccount">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cus:getCustomerAccountsForPartyRequest>
+         <cus:PartyId>104389355</cus:PartyId>
+         <cus:loadOptions>
+            <cus:GetMobile>false</cus:GetMobile>
+            <cus:GetFixedLine>true</cus:GetFixedLine>
+            <cus:GetBillingArrangements>false</cus:GetBillingArrangements>
+         </cus:loadOptions>
+      </cus:getCustomerAccountsForPartyRequest>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:credentials><con:username>ta-cuco</con:username><con:password>ta</con:password></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="/esb/CustomerAccount//getCustomerAccountsForParty" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:testStep type="request" name="getCustomerAccountsForParty - GetMobile false, GetFixedLine false, getBillingArrangements true"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>CustomerAccountPortTypeHttpBinding</con:interface><con:operation>getCustomerAccountsForParty</con:operation><con:request name="getCustomerAccountsForParty - GetMobile false, GetFixedLine false, getBillingArrangements true"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cus="http://eai.a1telekom.at/CustomerAccount">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cus:getCustomerAccountsForPartyRequest>
+         <cus:PartyId>104389355</cus:PartyId>
+         <cus:loadOptions>
+            <cus:GetMobile>false</cus:GetMobile>
+            <cus:GetFixedLine>false</cus:GetFixedLine>
+            <cus:GetBillingArrangements>false</cus:GetBillingArrangements>
+         </cus:loadOptions>
+      </cus:getCustomerAccountsForPartyRequest>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:credentials><con:username>ta-cuco</con:username><con:password>ta</con:password></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="/esb/CustomerAccount//getCustomerAccountsForParty" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:testStep type="request" name="getCustomerAccountsForParty - GetMobile false, GetFixedLine false, getBillingArrangements false"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>CustomerAccountPortTypeHttpBinding</con:interface><con:operation>getCustomerAccountsForParty</con:operation><con:request name="getCustomerAccountsForParty - GetMobile false, GetFixedLine false, getBillingArrangements false"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cus="http://eai.a1telekom.at/CustomerAccount">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cus:getCustomerAccountsForPartyRequest>
+         <cus:PartyId>104389355</cus:PartyId>
+         <cus:loadOptions>
+            <cus:GetMobile>false</cus:GetMobile>
+            <cus:GetFixedLine>false</cus:GetFixedLine>
+            <cus:GetBillingArrangements>true</cus:GetBillingArrangements>
+         </cus:loadOptions>
+      </cus:getCustomerAccountsForPartyRequest>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:credentials><con:username>ta-cuco</con:username><con:password>ta</con:password></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="/esb/CustomerAccount//getCustomerAccountsForParty" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/><con:reportParameters/></con:testCase><con:properties/><con:reportParameters/></con:testSuite><con:requirements/><con:properties/><con:wssContainer/><con:databaseConnectionContainer/><con:reporting><con:xmlTemplates/><con:parameters/></con:reporting></con:soapui-project>

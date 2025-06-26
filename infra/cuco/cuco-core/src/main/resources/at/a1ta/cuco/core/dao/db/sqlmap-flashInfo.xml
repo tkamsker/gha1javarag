@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="FlashInfo">
+
+  <typeAlias alias="flashInfo" type="at.a1ta.cuco.core.shared.dto.FlashInfo" />
+  <typeAlias alias="myFlashInfo" type="at.a1ta.cuco.core.shared.dto.MyFlashInfo" />
+  <typeAlias alias="role" type="at.a1ta.bite.core.shared.dto.security.Role"/>
+  
+  <resultMap class="flashInfo" id="flashInfo-base-result">
+    <result property="id" column="flash_id"/>
+    <result property="title" column="titel"/>
+    <result property="text" column="text"/>
+    <result property="from" column="von"/>
+    <result property="to" column="bis"/>
+    <result property="active" column="aktiv"/>
+    <result property="popup" column="popup"/>
+  </resultMap>
+  
+  <resultMap class="flashInfo" id="flashInfo-admin-result" extends="flashInfo-base-result">
+    <result property="customerBlocks" column="flash_id" select="CustomerBlock.getForFlashInfo"/>
+    <result property="roles" column="flash_id" select="FlashInfo.getRolesForFlash"/>
+    <result property="creator" column="ersteller" select="User.getBiteUserById"/>
+  </resultMap>
+  
+  <resultMap class="flashInfo" id="flashInfo-result" extends="flashInfo-base-result">
+    <result property="viewed" column="viewed"/>
+  </resultMap>
+  
+  <resultMap class="myFlashInfo" id="myFlashInfo-result" extends="flashInfo-base-result">
+    <result property="partyId" column="KUNDE_ID"/>
+    <result property="creatorName" column="ERSTELLERNAME" />
+  </resultMap>
+  
+  <select id="get" parameterClass="long" resultMap="flashInfo-admin-result" fetchSize="100">
+    SELECT * FROM cuco_flash
+    WHERE not ersteller = '84857'
+    AND not ersteller = '85736'
+    <isParameterPresent>
+    AND flash_id = #id#
+    </isParameterPresent>
+    ORDER BY von DESC
+  </select>
+ 
+  <select id="getForUserAndCustomer" parameterClass="java.util.Map" resultMap="flashInfo-result">
+  SELECT 
+    sub.*,
+    (SELECT text FROM CUCO_FLASH WHERE flash_id = sub.flash_id) AS text,
+    (SELECT COUNT(*) FROM cuco_flash_viewed fv WHERE fv.flash_id = sub.flash_id AND fv.kunde_id = #kundeId# AND fv.benutzer_id = #userId#) AS viewed
+  FROM 
+  (
+      SELECT DISTINCT
+          f.flash_id,
+          f.titel,
+          f.von,
+          f.bis,
+          f.aktiv,
+          f.popup,
+          f.ersteller
+      FROM 
+          cuco_flash f,
+          cuco_flash_rolle fr,
+          bite_user_role ur,
+          cuco_flash_kunde fk
+      WHERE
+          f.flash_id = fr.flash_id
+      AND fr.role = ur.role
+      AND ur.user_id= #userId#
+      AND f.flash_id = fk.flash_id
+      AND fk.kunde_id = #kundeId#
+      AND f.aktiv = 1
+      AND f.von &lt; SYSDATE
+      AND f.bis &gt; SYSDATE
+  ) sub
+  ORDER BY 
+    viewed ASC,
+    sub.von ASC
+  </select>
+  
+  <select id="filterFlashInfos" resultMap="flashInfo-base-result">
+    SELECT f.*
+    FROM cuco_flash f
+    WHERE f.flash_id IN (
+      SELECT DISTINCT flash_id
+      FROM cuco_flash_kunde
+      WHERE kunde_id = #partyId#
+    )
+    <isNotEmpty prepend="AND" property="title">
+      LOWER(f.titel) LIKE LOWER('%$title$%')
+    </isNotEmpty>
+  </select>
+  
+  <insert id="insert" parameterClass="flashInfo">
+    <selectKey type="pre" keyProperty="id">SELECT seq_cuco_flash.nextval FROM DUAL</selectKey>
+    INSERT INTO cuco_flash VALUES (#id#,#title#,#text#,#from#,#to#,#active#,#popup#,#creator.id#)
+  </insert>
+  
+  <update id="update" parameterClass="flashInfo">
+    UPDATE cuco_flash SET
+      titel = #title#,
+      text = #text#,
+      von = #from#,
+      bis = #to#,
+      aktiv = #active#,
+      popup = #popup#
+    WHERE flash_id = #id#
+  </update>
+  
+  <delete id="delete" parameterClass="long">
+    DELETE FROM cuco_flash WHERE flash_id = #id#
+  </delete>
+  
+  <insert id="insertFlashKunde" parameterClass="java.util.Map">
+    INSERT INTO cuco_flash_kunde VALUES (#flashId#,#kundeId#)
+  </insert>
+  
+  <delete id="deleteFlashKundeForFlash" parameterClass="long">
+    DELETE FROM cuco_flash_kunde WHERE flash_id = #flashId#
+  </delete>
+  
+  <insert id="insertFlashRolle" parameterClass="java.util.Map">
+    INSERT INTO cuco_flash_rolle VALUES(#flashId#,#roleName#)
+  </insert>
+  
+  <delete id="deleteFlashRolleForFlash" parameterClass="long">
+    DELETE FROM cuco_flash_rolle WHERE flash_id = #flashId#
+  </delete>
+  
+  <insert id="insertView" parameterClass="java.util.Map">
+    INSERT INTO cuco_flash_viewed VALUES (#flashId#,#kundeId#,#userId#,SYSTIMESTAMP)
+  </insert>
+  
+  <!-- Role -->
+  <resultMap id="role-result" class="role">
+    <result property="name" column="name" />
+    <result property="description" column="description" />
+  </resultMap>
+  
+  <select id="getRolesForFlash" parameterClass="long" resultMap="role-result">
+    SELECT r.* FROM 
+      bite_role r,
+      cuco_flash_rolle fr
+    WHERE
+      r.name = fr.role
+    AND
+      fr.flash_id = #flash_id#
+  </select>
+</sqlMap>

@@ -307,3 +307,4 @@ print(f"Consecutive failures: {stats['consecutive_failures']}")
 3. **Use Appropriate Environment**: Match the environment to your OpenAI plan
 4. **Plan Ahead**: Large codebases may take several hours to process
 5. **Resume Capability**: The system can be restarted and will skip already processed files 
+

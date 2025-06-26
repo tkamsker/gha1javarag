@@ -1,0 +1,898 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+ 
+<sqlMap namespace="VisitReport">
+  <typeAlias alias="SBSProductNote" type="at.a1ta.cuco.core.shared.dto.salesinfo.visitreport.sbs.SBSProductNote" />
+  <typeAlias alias="SBSNote" type="at.a1ta.cuco.core.shared.dto.salesinfo.visitreport.sbs.SBSNote" />
+  <typeAlias alias="FileAttachment" type="at.a1ta.cuco.core.shared.dto.salesinfo.visitreport.generic.FileAttachment" />
+  <typeAlias alias="GenericNote" type="at.a1ta.cuco.core.shared.dto.salesinfo.visitreport.generic.GenericNote" />
+  <typeAlias alias="Attribute" type="at.a1ta.cuco.core.shared.dto.Attribute" />
+  <typeAlias alias="SalesInfoNote" type="at.a1ta.cuco.core.shared.dto.salesinfo.SalesInfoNote" />
+  <typeAlias alias="SBSProduct" type="at.a1ta.cuco.core.shared.dto.salesinfo.visitreport.sbs.SBSProduct" />
+  <typeAlias alias="SBSOrgUnit" type="at.a1ta.cuco.core.shared.dto.salesinfo.visitreport.sbs.SBSOrgUnit" />
+  <typeAlias alias="SalesConvNote" type="at.a1ta.cuco.core.shared.dto.salesinfo.salesconvnote.SalesConvNote" />
+  <typeAlias alias="ProductHistoryItem" type="at.a1ta.cuco.core.shared.dto.salesinfo.salesconvnote.ProductHistoryItem" />
+  <typeAlias alias="AppointmentNote" type="at.a1ta.cuco.core.shared.dto.salesinfo.AppointmentNote" />
+  <typeAlias alias="ToDoGroupNote" type="at.a1ta.cuco.core.shared.dto.salesinfo.ToDoGroupNote" />
+  <typeAlias alias="HistoryNote" type="at.a1ta.cuco.core.shared.dto.salesinfo.HistoryNote" />
+  <typeAlias alias="DigitalSellingNote" type="at.a1ta.cuco.core.shared.dto.salesinfo.visitreport.digitalselling.DigitalSellingNote" />
+
+  <cacheModel type="ehcacheProvider" id="sbs-product-notes-cache">
+    <flushOnExecute statement="VisitReport.insertSBSProductNote" />
+    <flushOnExecute statement="VisitReport.updateSBSProductNote" />
+    <flushOnExecute statement="SalesInfo.insertNote" />
+    <flushOnExecute statement="SalesInfo.updateNote" />
+    <flushOnExecute statement="VisitReport.insertFileAttachment" />
+    <flushOnExecute statement="VisitReport.deleteFileAttachment" />
+    <flushInterval minutes="60" />
+    <property name="cache-size" value="20" />
+  </cacheModel>
+
+  <cacheModel type="ehcacheProvider" id="file-attachment-cache">
+    <flushOnExecute statement="VisitReport.insertFileAttachment" />
+    <flushOnExecute statement="VisitReport.deleteFileAttachment" />
+    <flushInterval minutes="60" />
+    <property name="cache-size" value="20" />
+  </cacheModel>
+
+  <cacheModel type="ehcacheProvider" id="generic-note-cache">
+    <flushOnExecute statement="SalesInfo.insertNote" />
+    <flushOnExecute statement="SalesInfo.updateNote" />
+    <flushOnExecute statement="VisitReport.insertGenericNote" />
+    <flushOnExecute statement="VisitReport.insertFileAttachment" />
+    <flushOnExecute statement="VisitReport.deleteFileAttachment" />
+    <flushInterval minutes="60" />
+    <property name="cache-size" value="20" />
+  </cacheModel>
+
+  <cacheModel type="ehcacheProvider" id="sbs-note-cache">
+    <flushOnExecute statement="VisitReport.insertSBSNote" />
+    <flushOnExecute statement="VisitReport.updateSBSNote" />
+    <flushOnExecute statement="SalesInfo.insertNote" />
+    <flushOnExecute statement="SalesInfo.updateNote" />
+    <flushInterval minutes="60" />
+    <property name="cache-size" value="20" />
+  </cacheModel>
+
+  <cacheModel type="ehcacheProvider" id="digital-selling-note-cache">
+    <flushOnExecute statement="SalesInfo.insertNote" />
+    <flushOnExecute statement="SalesInfo.updateNote" />
+    <flushOnExecute statement="VisitReport.insertDigitalSellingNote" />
+    <flushInterval minutes="60" />
+    <property name="cache-size" value="20" />
+  </cacheModel>
+
+  <cacheModel type="ehcacheProvider" id="salesconv-note-cache">
+    <flushOnExecute statement="VisitReport.insertSalesConvNote" />
+    <flushOnExecute statement="VisitReport.updateSalesConvNote" />
+    <flushOnExecute statement="SalesInfo.insertNote" />
+    <flushOnExecute statement="SalesInfo.updateNote" />
+    <flushOnExecute statement="VisitReport.insertFileAttachment" />
+    <flushOnExecute statement="VisitReport.deleteFileAttachment" />
+    <flushInterval minutes="60" />
+    <property name="cache-size" value="20" />
+  </cacheModel>
+
+  <cacheModel type="ehcacheProvider" id="productHistory-cache">
+    <flushOnExecute statement="VisitReport.loadProductHistoryItemsByProdNoteId" />
+    <flushInterval minutes="60" />
+    <property name="cache-size" value="50" />
+  </cacheModel>
+
+  <cacheModel type="ehcacheProvider" id="sbs-products-cache">
+    <flushInterval minutes="60" />
+    <property name="cache-size" value="50" />
+  </cacheModel>
+
+  <cacheModel type="ehcacheProvider" id="sbs-org-unit-cache">
+    <flushInterval minutes="60" />
+    <property name="cache-size" value="2500" />
+  </cacheModel>
+
+  <cacheModel type="ehcacheProvider" id="attribute-cache">
+    <flushOnExecute statement="Attribute.insertConfig" />
+    <flushOnExecute statement="Attribute.updateConfig" />
+    <flushOnExecute statement="VisitReport.insertSBSNote" />
+    <flushOnExecute statement="VisitReport.updateSBSNote" />
+    <flushOnExecute statement="SalesInfo.insertNote" />
+    <flushOnExecute statement="SalesInfo.updateNote" />
+    <flushInterval minutes="60" />
+    <property name="cache-size" value="20" />
+  </cacheModel>
+
+  <cacheModel type="ehcacheProvider" id="teamEmail-cache">
+    <flushInterval minutes="60" />
+    <flushOnExecute statement="SalesInfo.updateTeamEmailAdminGroup" />
+    <flushOnExecute statement="SalesInfo.insertTeamEmailAdminUser" />
+    <flushOnExecute statement="SalesInfo.deleteTeamEmailAdminUsersByTeamEmailId" />
+    <property name="cache-size" value="100" />
+  </cacheModel>
+
+ <resultMap id="sbs-product" class="SBSProduct">
+    <result property="productId" column="product_id" />
+    <result property="productAlternativeId" column="product_alternative_id" />
+    <result property="productDisplayName" column="product_display_name" />
+    <result property="productCategory" column="product_category" />
+    <result property="active" column="active" />
+    <result property="sequence" column="sequence" />
+    <result property="setupTypes" column="setup_type" typeHandler="at.a1ta.cuco.core.dao.util.ListStringTypeHandler" />
+    <result property="setupCategories" column="setup_category" typeHandler="at.a1ta.cuco.core.dao.util.ListStringTypeHandler" />
+    <result property="quoteStatus" column="quote_status" typeHandler="at.a1ta.cuco.core.dao.util.ListStringTypeHandler" />
+    <result property="assigneeTypes" column="assignee_type" typeHandler="at.a1ta.cuco.core.dao.util.ListStringTypeHandler" />
+    <result property="defaultConfig" column="default_config" />
+    <result property="siNoteClass" column="si_note_class" />
+
+  </resultMap>
+
+
+  <resultMap id="productnote-resultmap-experimental" class="SBSProductNote">
+    <result property="salesInfoNoteId" column="si_note_id" />
+    <result property="salesInfoNoteType" column="si_note_class" />
+    <result property="predecessorSalesInfoNoteId" column="predecessor_si_note_id" />
+    <result property="partyId" column="kunde_id" />
+    <result property="noteText" column="note_text" />
+    <result property="finalized"       column="finalized"/>
+    <result property="deleted"       column="deleted"/>
+    <result property="task" column="task_id" select="SalesInfo.getTask" />
+    <result property="creationUser" column="creator" select="User.getBiteUserById" />
+    <result property="creationTimestamp" column="create_date" />
+    <result property="lastModificationUser" column="last_modifier" select="User.getBiteUserById" />
+    <result property="lastModificationTimestamp" column="last_update" />
+    <result property="productId" column="product_id" />
+    <result property="productAlternativeId" column="product_alternative_id" />
+    <result property="productDisplayName" column="product_display_name" />
+    <result property="productCategory" column="product_category" />
+    <result property="setupTypes" column="setup_type" typeHandler="at.a1ta.cuco.core.dao.db.visitreport.SetupTypeSetTypeHandler" />
+    <result property="category" column="setup_category" />
+    <result property="winback" column="winback" />
+    <result property="consultationDesired" column="consultation_desired" />
+    <result property="quoteStatus" column="quote_status" />
+    <result property="purchaseWithoutWrittenQuote" column="purchase_without_written_note" />
+    <result property="turnoverQuantity" column="turnover_quantity" />
+    <result property="turnoverDurationMonths" column="turnover_duration_months" />
+    <result property="turnoverOnetimeCost" column="turnover_onetime_cost" />
+    <result property="turnoverMonthlyCost" column="turnover_monthly_cost" />
+    <result property="turnoverYearlyCost" column="turnover_yearly_cost" />
+    <result property="turnoverSum" column="turnover_sum" />
+    <result property="handlingAssigneeType" column="assignee_type" />
+    <result property="handlingAssigneeOrgUnitId" column="assignee_org_unit_id" />
+    <result property="handlingAssigneeOrgUnitName" column="assignee_org_unit_name" />
+    <result property="handlingAssigneeOrgUnitStreet" column="assignee_org_unit_street" />
+    <result property="handlingAssigneeOrgUnitPostalCode" column="assignee_org_unit_postcode" />
+    <result property="handlingAssigneeOrgUnitCity" column="assignee_org_unit_city" />
+    <result property="historyNotes" column="si_note_id" select="VisitReport.getHistoryNotesByPredecessorNoteId" />
+    <result property="historyItems" column="si_note_id" select="VisitReport.loadProductHistoryItemsByProdNoteId" />
+    <result property="productOffering" column="product_offering" javaType="at.a1ta.cuco.core.shared.dto.ProductOffering" />
+    <result property="contactPerson" column="{kontakt_rolle_id=cuco_contact_person, kunde_id=kunde_id}" select="ContactPerson.GetContactPersonByIdAndKundeId" />
+    <result property="fileAttachments" column="si_note_id" select="VisitReport.loadFileAttachmentsByNote" />
+    <result property="todoGroupNoteId" column="todo_group_note_id" />
+  </resultMap>
+  
+  <resultMap id="productnote-minimal" class="SBSProductNote">
+    <result property="salesInfoNoteId" column="si_note_id" />
+    <result property="salesInfoNoteType" column="si_note_class" />
+    <result property="predecessorSalesInfoNoteId" column="predecessor_si_note_id" />
+    <result property="partyId" column="kunde_id" />
+    <result property="noteText" column="note_text" />
+    <result property="finalized"       column="finalized"/>
+    <result property="deleted"       column="deleted"/>
+    <result property="task" column="task_id" select="SalesInfo.getTask" />
+    <result property="creationUser" column="creator" select="User.getBiteUserById" />
+    <result property="creationTimestamp" column="create_date" />
+    <result property="lastModificationUser" column="last_modifier" select="User.getBiteUserById" />
+    <result property="lastModificationTimestamp" column="last_update" />
+    <result property="productId" column="product_id" />
+    <result property="productAlternativeId" column="product_alternative_id" />
+    <result property="productDisplayName" column="product_display_name" />
+    <result property="productCategory" column="product_category" />
+    <result property="setupTypes" column="setup_type" typeHandler="at.a1ta.cuco.core.dao.db.visitreport.SetupTypeSetTypeHandler" />
+    <result property="category" column="setup_category" />
+    <result property="winback" column="winback" />
+    <result property="consultationDesired" column="consultation_desired" />
+    <result property="quoteStatus" column="quote_status" />
+    <result property="purchaseWithoutWrittenQuote" column="purchase_without_written_note" />
+    <result property="turnoverQuantity" column="turnover_quantity" />
+    <result property="turnoverDurationMonths" column="turnover_duration_months" />
+    <result property="turnoverOnetimeCost" column="turnover_onetime_cost" />
+    <result property="turnoverMonthlyCost" column="turnover_monthly_cost" />
+    <result property="turnoverYearlyCost" column="turnover_yearly_cost" />
+    <result property="turnoverSum" column="turnover_sum" />
+    <result property="handlingAssigneeType" column="assignee_type" />
+    <result property="handlingAssigneeOrgUnitId" column="assignee_org_unit_id" />
+    <result property="handlingAssigneeOrgUnitName" column="assignee_org_unit_name" />
+    <result property="handlingAssigneeOrgUnitStreet" column="assignee_org_unit_street" />
+    <result property="handlingAssigneeOrgUnitPostalCode" column="assignee_org_unit_postcode" />
+    <result property="handlingAssigneeOrgUnitCity" column="assignee_org_unit_city" />
+    <result property="productOffering" column="product_offering" javaType="at.a1ta.cuco.core.shared.dto.ProductOffering" />
+    <result property="contactPerson" column="{kontakt_rolle_id=cuco_contact_person, kunde_id=kunde_id}" select="ContactPerson.GetContactPersonByIdAndKundeId" />
+    <result property="todoGroupNoteId" column="todo_group_note_id" />
+    <result property="fileAttachments" column="si_note_id" select="VisitReport.loadFileAttachmentsByNote" />
+  </resultMap>
+
+  <resultMap id="sbs-note-resultmap-experimental" class="SBSNote">
+    <result property="salesInfoNoteId" column="si_note_id" />
+    <result property="salesInfoNoteType" column="si_note_class" />
+    <result property="predecessorSalesInfoNoteId" column="predecessor_si_note_id" />
+    <result property="partyId" column="kunde_id" />
+    <result property="noteText" column="note_text" />
+    <result property="finalized"       column="finalized"/>
+    <result property="deleted"       column="deleted"/>
+    <result property="task" column="task_id" select="SalesInfo.getTask" />
+    <result property="creationUser" column="creator" select="User.getBiteUserById" />
+    <result property="creationTimestamp" column="create_date" />
+    <result property="lastModificationUser" column="last_modifier" select="User.getBiteUserById" />
+    <result property="lastModificationTimestamp" column="last_update" />
+    <result property="communicationType" column="communication_type" />
+    <result property="communicationChannel" column="communication_channel" />
+    <result property="contactType" column="contact_type" />
+    <result property="historyNotes" column="si_note_id" select="VisitReport.getHistoryNotesForVisitReportByVisitReportNoteId" />
+    <result property="contactSource" column="contact_source" />
+    <result property="productNotes" column="si_note_id" select="VisitReport.loadProductNotesByNote_Experimental" />
+    <result property="tasks" column="si_note_id" select="VisitReport.loadNotesByPredecessorNoteId" />
+    <result property="appointments" column="si_note_id" select="VisitReport.loadAppointmentsByPredecessorNoteId" />
+    <result property="feedbackAttributes" column="{si_note_id=si_note_id, grouping=grouping_feedback" select="VisitReport.loadSalesInfoNoteAttributesByNoteIdAndGrouping" />
+    <result property="feedbackText" column="feedback_text" />
+    <result property="reflectionAttributes" column="{si_note_id=si_note_id, grouping=grouping_reflection" select="VisitReport.loadSalesInfoNoteAttributesByNoteIdAndGrouping" />
+    <result property="reflectionText" column="reflection_text" />
+    <result property="contactPerson" column="{kontakt_rolle_id=cuco_contact_person, kunde_id=kunde_id}" select="ContactPerson.GetContactPersonByIdAndKundeId" />
+    <result property="availableContactPersons" column="{partyId=kunde_id}" select="ContactPerson.GetAllContactPersons4Customer" />
+    <result property="productNoteGroups" column="si_note_id" select="VisitReport.getToDoGroupNotesByPredecessorNoteId" />
+  </resultMap>
+  
+  <resultMap id="sbs-note-minimal" class="SBSNote">
+    <result property="salesInfoNoteId" column="si_note_id" />
+    <result property="salesInfoNoteType" column="si_note_class" />
+    <result property="predecessorSalesInfoNoteId" column="predecessor_si_note_id" />
+    <result property="partyId" column="kunde_id" />
+    <result property="noteText" column="note_text" />
+    <result property="finalized"       column="finalized"/>
+    <result property="deleted"       column="deleted"/>
+    <result property="task" column="task_id" select="SalesInfo.getTask" />
+    <result property="creationUser" column="creator" select="User.getBiteUserById" />
+    <result property="creationTimestamp" column="create_date" />
+    <result property="lastModificationUser" column="last_modifier" select="User.getBiteUserById" />
+    <result property="lastModificationTimestamp" column="last_update" />
+    <result property="communicationType" column="communication_type" />
+    <result property="communicationChannel" column="communication_channel" />
+    <result property="contactType" column="contact_type" />
+    <result property="contactSource" column="contact_source" />
+    <result property="feedbackAttributes" column="{si_note_id=si_note_id, grouping=grouping_feedback" select="VisitReport.loadSalesInfoNoteAttributesByNoteIdAndGrouping" />
+    <result property="feedbackText" column="feedback_text" />
+    <result property="reflectionAttributes" column="{si_note_id=si_note_id, grouping=grouping_reflection" select="VisitReport.loadSalesInfoNoteAttributesByNoteIdAndGrouping" />
+    <result property="reflectionText" column="reflection_text" />
+    <result property="contactPerson" column="{kontakt_rolle_id=cuco_contact_person, kunde_id=kunde_id}" select="ContactPerson.GetContactPersonByIdAndKundeId" />
+  </resultMap>
+
+  <resultMap id="generic-note-resultmap" class="GenericNote">
+    <result property="salesInfoNoteId" column="si_note_id" />
+    <result property="salesInfoNoteType" column="si_note_class" />
+    <result property="predecessorSalesInfoNoteId" column="predecessor_si_note_id" />
+    <result property="partyId" column="kunde_id" />
+    <result property="noteText" column="note_text" />
+    <result property="finalized"       column="finalized"/>
+    <result property="deleted"       column="deleted"/>
+    <result property="task" column="task_id" select="SalesInfo.getTask" />
+    <result property="creationUser" column="creator" select="User.getBiteUserById" />
+    <result property="creationTimestamp" column="create_date" />
+    <result property="lastModificationUser" column="last_modifier" select="User.getBiteUserById" />
+    <result property="lastModificationTimestamp" column="last_update" />
+    <result property="fileAttachments" column="si_note_id" select="VisitReport.loadFileAttachmentsByNote" />
+  </resultMap>
+
+  <resultMap id="file-attachment-resultmap" class="FileAttachment">
+    <result property="salesInfoNoteId" column="si_note_id" />
+    <result property="fileAttachmentId" column="si_file_attachment_id" />
+    <result property="fileName" column="file_name" />
+    <result property="creationUser" column="creator" select="User.getBiteUserById" />
+    <result property="creationTimestamp" column="create_timestamp" />
+  </resultMap>
+
+  <resultMap id="attribute-result" class="Attribute">
+    <result property="attributeId" column="attribute_id" />
+    <result property="attributeConfig" column="attribute_config_id" select="Attribute.getConfigById" />
+    <result property="kundeId" column="kunde_id" />
+    <result property="booleanValue" column="boolean_value" />
+    <result property="textValue"    column="text_value" />
+    <result property="numberValue" column="number_value" />
+    <result property="lastModifier" column="last_modifier" select="User.getBiteUserById" />
+    <result property="lastUpdate" column="last_update" />
+    <result property="hasHistory" column="has_history" />
+  </resultMap>
+
+  <resultMap id="slim-si-note-resultmap" class="SalesInfoNote">
+    <result property="salesInfoNoteId" column="si_note_id" />
+    <result property="salesInfoNoteType" column="si_note_class" />
+    <result property="predecessorSalesInfoNoteId" column="predecessor_si_note_id" />
+    <result property="partyId" column="kunde_id" />
+    <result property="noteText" column="note_text" />
+    <result property="finalized"       column="finalized"/>
+    <result property="deleted"       column="deleted"/>
+    <result property="task" column="task_id" select="SalesInfo.getTask" />
+    <result property="creationUser" column="creator" select="User.getBiteUserById" />
+    <result property="creationTimestamp" column="create_date" />
+    <result property="lastModificationUser" column="last_modifier" select="User.getBiteUserById" />
+    <result property="lastModificationTimestamp" column="last_update" />
+  </resultMap>
+
+  <resultMap id="todo_groupNote-resultmap" class="ToDoGroupNote">
+    <result property="salesInfoNoteId" column="si_note_id" />
+    <result property="salesInfoNoteType" column="si_note_class" />
+    <result property="predecessorSalesInfoNoteId" column="predecessor_si_note_id" />
+    <result property="partyId" column="kunde_id" />
+    <result property="noteText" column="note_text" />
+    <result property="finalized"       column="finalized"/>
+    <result property="deleted"       column="deleted"/>
+    <result property="task" column="task_id" select="SalesInfo.getTask" />
+    <result property="creationUser" column="creator" select="User.getBiteUserById" />
+    <result property="creationTimestamp" column="create_date" />
+    <result property="lastModificationUser" column="last_modifier" select="User.getBiteUserById" />
+    <result property="lastModificationTimestamp" column="last_update" />
+    <result property="toDoGroupName" column="group_name" />
+    <result property="toDoGroupStatus" column="todo_status" typeHandler="at.a1ta.cuco.core.dao.db.visitreport.ToDoGroupStatusHandler" />
+    <result property="creatorNotes" column="creator_note_text" />
+    <result property="assigneeNotes" column="assignee_note_text" />
+    <result property="assignedToUser" column="ASSIGNEE_USER_ID" select="User.getBiteUserById" />
+    <result property="assigneeDealerId" column="ASSIGNEE_SHOP_ID" />
+    <result property="historyNotes" column="si_note_id" select="VisitReport.getHistoryNotesByPredecessorNoteId" />
+    <result property="relatedNotes" column="{todo_group_note_id=si_note_id, predecessor_si_note_id=predecessor_si_note_id" select="VisitReport.loadProductNotesByGroupNoteAndPredecessorNoteId" />
+    <result property="attributes" column="{si_note_id=si_note_id, grouping=grouping_todos}" select="VisitReport.loadOnlySelectedSalesInfoNoteAttributesByNoteIdAndGrouping" />
+
+  </resultMap>
+ 
+  <resultMap id="historyNote-resultmap" class="HistoryNote">
+    <result property="salesInfoNoteId" column="si_note_id" />
+    <result property="salesInfoNoteType" column="si_note_class" />
+    <result property="predecessorSalesInfoNoteId" column="predecessor_si_note_id" />
+    <result property="partyId" column="kunde_id" />
+    <result property="noteText" column="note_text" />
+    <result property="finalized"       column="finalized"/>
+    <result property="deleted"       column="deleted"/>
+    <result property="task" column="task_id" select="SalesInfo.getTask" />
+    <result property="creationUser" column="creator" select="User.getBiteUserById" />
+    <result property="creationTimestamp" column="create_date" />
+    <result property="lastModificationUser" column="last_modifier" select="User.getBiteUserById" />
+    <result property="lastModificationTimestamp" column="last_update" />
+    <result property="level" column="HISTORY_LEVEL" />
+    <result property="historyTitle" column="title" />
+    <result property="historyNoteId" column="history_note_id" />
+  </resultMap>
+
+  <resultMap id="digital-selling-note-resultmap" class="DigitalSellingNote">
+    <result property="salesInfoNoteId" column="si_note_id" />
+    <result property="salesInfoNoteType" column="si_note_class" />
+    <result property="predecessorSalesInfoNoteId" column="predecessor_si_note_id" />
+    <result property="partyId" column="kunde_id" />
+    <result property="noteText" column="note_text" />
+    <result property="finalized" column="finalized"/>
+    <result property="deleted" column="deleted"/>
+    <result property="task" column="task_id" select="SalesInfo.getTask" />
+    <result property="creationUser" column="creator" select="User.getBiteUserById" />
+    <result property="creationTimestamp" column="create_date" />
+    <result property="lastModificationUser" column="last_modifier" select="User.getBiteUserById" />
+    <result property="lastModificationTimestamp" column="last_update" />
+    <result property="content" column="content"/>
+    <result property="historyNotes" column="si_note_id" select="VisitReport.getHistoryNotesByPredecessorNoteId" />
+  </resultMap>
+
+  <select id="getToDoGroupNoteById" resultMap="todo_groupNote-resultmap" parameterClass="java.lang.Long" cacheModel="sbs-product-notes-cache">
+    SELECT /*+ parallel (8,3) */ n.*,groupNote.* ,'VISITREPORT_SBS_TODO_ITEM' as grouping_todos
+    FROM si_note n, si_todo_group_note groupNote
+    WHERE groupNote.si_note_id = #salesInfoNoteId#
+    AND groupNote.si_note_id = n.si_note_id and n.deleted=0
+  </select>
+  
+  <select id="getToDoGroupNoteForHistoryById" resultMap="todo_groupNote-resultmap" parameterClass="java.lang.Long" >
+    SELECT /*+ parallel (8,3) */ n.*,groupNote.* ,'VISITREPORT_SBS_TODO_ITEM' as grouping_todos
+    FROM si_note n, si_todo_group_note groupNote
+    WHERE groupNote.si_note_id = #salesInfoNoteId#
+    AND groupNote.si_note_id = n.si_note_id
+  </select>
+  
+   <select id="getAppointmentNoteForHistoryByNoteId" resultMap="slim-si-note-resultmap" parameterClass="java.lang.Long" >
+    SELECT /*+ parallel (8,3) */ n.*,groupNote.* ,'VISITREPORT_SBS_TODO_ITEM' as grouping_todos
+    FROM si_note n, si_todo_group_note groupNote
+    WHERE groupNote.si_note_id = #salesInfoNoteId#
+    AND groupNote.si_note_id = n.si_note_id
+  </select>
+  
+  <select id="getToDoGroupNotesByPredecessorNoteId" resultMap="todo_groupNote-resultmap" parameterClass="java.lang.Long" cacheModel="sbs-product-notes-cache">
+    SELECT /*+ parallel (8,3) */ n.*,groupNote.* ,'VISITREPORT_SBS_TODO_ITEM' as grouping_todos
+    FROM si_note n, si_todo_group_note groupNote
+    WHERE n.predecessor_si_note_id = #salesInfoNoteId#
+    AND groupNote.si_note_id = n.si_note_id and n.deleted=0
+  </select>
+
+  <select id="getOpenToDoGroupNotesForUser" resultMap="todo_groupNote-resultmap" parameterClass="java.util.HashMap" cacheModel="sbs-product-notes-cache">
+    SELECT /*+ parallel (8,3) */ n.*,gn.* ,'VISITREPORT_SBS_TODO_ITEM' as grouping_todos
+    FROM si_note n, si_todo_group_note gn,bite_user usr
+    where
+    n.deleted=0 and n.si_note_class ='SI_TODO_GROUP_NOTE'
+    and n.si_note_id=gn.si_note_id
+    and lower(usr.user_id) = lower(#userId#)
+    and (usr.user_id = n.creator OR gn.ASSIGNEE_USER_ID=usr.user_id OR gn.ASSIGNEE_SHOP_ID=any(select shop.SHOPID from CUCO_USERSHOPASSIGNMENT shop where shop.USERNAME=usr.LOGIN ))
+     <isNotNull prepend="AND" property="groupStatus">
+        upper(gn.todo_status) =upper(#groupStatus#)
+    </isNotNull>
+     <isNotNull prepend="AND" property="partyId">
+        n.kunde_id=#partyId#
+    </isNotNull>
+    
+ 
+  </select>
+  
+  <select id="getHistoryNotesByPredecessorNoteId" resultMap="historyNote-resultmap" parameterClass="java.lang.Long" >
+    SELECT /*+ parallel (8,3) */ n.*,historyNote.* 
+    FROM si_note n, SI_HISTORY_NOTE historyNote
+    WHERE n.predecessor_si_note_id = #salesInfoNoteId#
+    AND historyNote.si_note_id = n.si_note_id and n.deleted=0
+    Order by n.CREATE_DATE asc
+  </select>
+  
+  <select id="getHistoryNotesForVisitReportByVisitReportNoteId" resultMap="historyNote-resultmap" parameterClass="java.lang.Long" >
+    SELECT n.*,historyNote.* 
+    FROM si_note n
+    JOIN SI_HISTORY_NOTE historyNote on historyNote.si_note_id = n.si_note_id
+    WHERE n.deleted=0 AND
+        (n.predecessor_si_note_id in (select inote.si_note_id from si_note inote where inote.predecessor_si_note_id= #salesInfoNoteId#)
+         OR n.PREDECESSOR_SI_NOTE_ID=#salesInfoNoteId#)
+    Order by n.CREATE_DATE desc
+  </select>
+   <insert id="insertHistoryNote" parameterClass="HistoryNote">
+    insert into SI_HISTORY_NOTE
+    (si_note_id, title, HISTORY_LEVEL,history_note_id)
+    values
+    (#salesInfoNoteId#, #historyTitle#, #level#,#historyNoteId#)
+  </insert>
+  
+  <select id="loadProductNotesByGroupNoteAndPredecessorNoteId" resultMap="productnote-resultmap-experimental" parameterClass="java.util.HashMap">
+    select /*+ parallel (8,3) */ /*+ parallel (pn,8) */ n.*,pn.*,'VISITREPORT_SBS_TODO_ITEM' as grouping_todos,
+    regexp_substr(p.default_config, '"productOfferingId":\s*("(\w| )*")', 1, 1) productOfferingId_1,
+    regexp_replace(regexp_substr(p.default_config, '"productOfferingId":\s*("(\w| )*")', 1, 1), '"productOfferingId":\s*"((\w| )*)"', '\1', 1, 1) AS product_offering
+    from si_note n, si_vi_sbs_product_note pn,si_vi_sbs_product p
+    where pn.todo_group_note_id = #todo_group_note_id#
+    AND pn.si_note_id = n.si_note_id
+    AND n.predecessor_si_note_id=#predecessor_si_note_id#
+    
+    AND pn.product_id = p.product_id
+    AND n.si_note_class = p.si_note_class
+  </select>
+
+  <insert id="insertToDoGroupNote" parameterClass="ToDoGroupNote">
+    insert into si_todo_group_note
+    (si_note_id, group_name, todo_status, creator_note_text,assignee_note_text,ASSIGNEE_USER_ID,ASSIGNEE_SHOP_ID)
+    values
+    (#salesInfoNoteId#, #toDoGroupName#, #toDoGroupstatus,handler=at.a1ta.cuco.core.dao.db.visitreport.ToDoGroupStatusHandler#, #creatorNotes#,#assigneeNotes#, #assignedToUser.id#,#assigneeDealerId#)
+  </insert>
+  
+  
+
+  <resultMap id="sbs-org-unit-resultmap" class="SBSOrgUnit">
+    <result property="id" column="org_unit_id" />
+    <result property="name" column="name" />
+    <result property="street" column="street" />
+    <result property="postalCode" column="postcode" />
+    <result property="city" column="city" />
+  </resultMap>
+
+  <resultMap id="salesconv-note-resultmap" class="SalesConvNote">
+    <result property="salesInfoNoteId" column="si_note_id" />
+    <result property="salesInfoNoteType" column="si_note_class" />
+    <result property="predecessorSalesInfoNoteId" column="predecessor_si_note_id" />
+    <result property="partyId" column="kunde_id" />
+    <result property="noteText" column="note_text" />
+    <result property="finalized"       column="finalized"/>
+    <result property="deleted"       column="deleted"/>
+    <result property="creationUser" column="creator" select="User.getBiteUserById" />
+    <result property="creationTimestamp" column="create_date" />
+    <result property="lastModificationUser" column="last_modifier" select="User.getBiteUserById" />
+    <result property="lastModificationTimestamp" column="last_update" />
+    <result property="campaignId" column="campaign_id" />
+    <result property="campaignName" column="campaign_name" />
+    <result property="campaignCallNumber" column="campaign_callnumber" />
+    <result property="contactType" column="contact_type" />
+    <result property="productNotes" column="si_note_id" select="VisitReport.loadProductNotesByNote" />
+    <result property="feedbackAttributes" column="{si_note_id=si_note_id, grouping=grouping" select="VisitReport.loadSalesInfoNoteAttributesByNoteIdAndGrouping" />
+    <result property="feedbackText" column="feedback_text" />
+    <result property="task" column="task_id" select="SalesInfo.getTask" />
+    <result property="fileAttachments" column="si_note_id" select="VisitReport.loadFileAttachmentsByNote" />
+  </resultMap>
+
+  <resultMap id="salesconv-note-resultmap-experimental" class="SalesConvNote">
+    <result property="salesInfoNoteId" column="si_note_id" />
+    <result property="salesInfoNoteType" column="si_note_class" />
+    <result property="predecessorSalesInfoNoteId" column="predecessor_si_note_id" />
+    <result property="partyId" column="kunde_id" />
+    <result property="noteText" column="note_text" />
+    <result property="finalized"       column="finalized"/>
+    <result property="deleted"       column="deleted"/>
+    <result property="creationUser" column="creator" select="User.getBiteUserById" />
+    <result property="creationTimestamp" column="create_date" />
+    <result property="lastModificationUser" column="last_modifier" select="User.getBiteUserById" />
+    <result property="lastModificationTimestamp" column="last_update" />
+    <result property="campaignId" column="campaign_id" />
+    <result property="campaignName" column="campaign_name" />
+    <result property="campaignCallNumber" column="campaign_callnumber" />
+    <result property="contactType" column="contact_type" />
+    <result property="productNotes" column="si_note_id" select="VisitReport.loadProductNotesByNote_Experimental" />
+    <result property="feedbackAttributes" column="{si_note_id=si_note_id, grouping=grouping" select="VisitReport.loadSalesInfoNoteAttributesByNoteIdAndGrouping" />
+    <result property="feedbackText" column="feedback_text" />
+    <result property="task" column="task_id" select="SalesInfo.getTask" />
+    <result property="fileAttachments" column="si_note_id" select="VisitReport.loadFileAttachmentsByNote" />
+  </resultMap>
+
+  <resultMap id="productHistory-resultmap" class="ProductHistoryItem">
+    <result property="id" column="id" />
+    <result property="productNoteId" column="product_note_id" />
+    <result property="note" column="note" />
+    <result property="creationUser" column="creator_id" select="User.getBiteUserById" />
+    <result property="creationDate" column="create_date" />
+  </resultMap>
+
+  <select id="loadSBSProducts" resultMap="sbs-product" parameterClass="java.lang.String">
+    select *
+    from si_vi_sbs_product
+    where si_note_class = #siNoteClass#
+    order by sequence asc
+  </select>
+  
+  <select id="loadAllSBSProducts" resultMap="sbs-product" parameterClass="java.lang.String">
+    select *
+    from si_vi_sbs_product
+    order by si_note_class asc
+  </select>
+  
+ 
+  <update id="updateSBSProduct" parameterClass="SBSProduct">
+    update si_vi_sbs_product
+    set product_id = #productId#,
+        product_alternative_id=#productAlternativeId#,
+        product_display_name=#productDisplayName#,
+        product_category=#productCategory#,
+        active=#active#,
+        sequence=#sequence#,
+        setup_type=#setupTypes,handler=at.a1ta.cuco.core.dao.util.ListStringTypeHandler#,
+        setup_category=#setupCategories,handler=at.a1ta.cuco.core.dao.util.ListStringTypeHandler#,
+        quote_status=#quoteStatus,handler=at.a1ta.cuco.core.dao.util.ListStringTypeHandler#,
+        assignee_type=#assigneeTypes,handler=at.a1ta.cuco.core.dao.util.ListStringTypeHandler#,
+        default_config=#defaultConfig#,
+        si_note_class=#siNoteClass#
+    where product_id = #productId# and si_note_class=#siNoteClass# 
+  </update>
+  
+   <insert id="insertSBSProduct" parameterClass="SBSProduct">
+    insert into si_vi_sbs_product
+    (product_id, product_alternative_id, product_display_name, product_category, active,sequence,setup_type,setup_category,quote_status,assignee_type,default_config,si_note_class)
+    values
+    (#productId#, #productAlternativeId#, #productDisplayName#, #productCategory#, #active#,#sequence#,#setupTypes,handler=at.a1ta.cuco.core.dao.util.ListStringTypeHandler#,#setupCategories,handler=at.a1ta.cuco.core.dao.util.ListStringTypeHandler#,#quoteStatus,handler=at.a1ta.cuco.core.dao.util.ListStringTypeHandler#,#assigneeTypes,handler=at.a1ta.cuco.core.dao.util.ListStringTypeHandler#,#defaultConfig#,#siNoteClass#)
+  </insert>
+  
+
+  <select id="loadSBSProductConfig" resultClass="java.lang.String" parameterClass="java.util.HashMap" cacheModel="sbs-products-cache">
+    select default_config
+    from si_vi_sbs_product
+    where product_id = #productId#
+    and si_note_class = #siNoteClass#
+  </select>
+
+  <select id="loadSBSOrgUnits" resultMap="sbs-org-unit-resultmap" cacheModel="sbs-org-unit-cache">
+    select *
+    from si_vi_sbs_org_unit
+  </select>
+
+  <select id="hasSuccessorNote" resultClass="java.lang.Integer" parameterClass="java.lang.Long">
+    select count(1)
+    from si_note
+    where predecessor_si_note_id=#noteId# and (si_note_class='SI_VR_SBS_NOTE' or si_note_class='SI_VR_GENERIC_NOTE') and deleted=0
+  </select>
+
+  <select id="loadProductNotesByNote" resultMap="productnote-resultmap-experimental" parameterClass="java.lang.Long">
+    select /*+ parallel (8,3) */ /*+ parallel (pn,8) */ n.*,pn.*,,regexp_substr(p.default_config, '"productOfferingId":\s*("(\w| )*")', 1, 1) productOfferingId_1,
+    regexp_replace(regexp_substr(p.default_config, '"productOfferingId":\s*("(\w| )*")', 1, 1), '"productOfferingId":\s*"((\w| )*)"', '\1', 1, 1) as product_offering
+    from si_note n, si_vi_sbs_product_note pn,
+    si_vi_sbs_product p
+    where n.predecessor_si_note_id = #noteId#
+    AND pn.si_note_id = n.si_note_id
+    AND n.deleted=0
+    AND pn.product_id = p.product_id
+    AND n.si_note_class = p.si_note_class
+  </select>
+
+  <select id="loadProductNotesByNote_Experimental" resultMap="productnote-resultmap-experimental" parameterClass="java.lang.Long">
+    select /*+ parallel (8,3) */ /*+ parallel (pn,8) */ n.*, pn.*,
+    p.default_config,regexp_substr(p.default_config, '"productOfferingId":\s*("(\w| )*")', 1, 1) productOfferingId_1,
+    regexp_replace(regexp_substr(p.default_config, '"productOfferingId":\s*("(\w| )*")', 1, 1), '"productOfferingId":\s*"((\w| )*)"', '\1', 1, 1) as product_offering
+    from si_note n,
+    si_vi_sbs_product_note pn, si_vi_sbs_product p
+    where n.predecessor_si_note_id =#noteId#
+    and pn.si_note_id = n.si_note_id
+    and n.deleted = 0
+    and pn.product_id = p.product_id
+    and n.si_note_class = p.si_note_class
+    and pn.TODO_GROUP_NOTE_ID is null
+  </select>
+  
+   <select id="loadProductNoteForHistoryByProductNoteId" resultMap="productnote-minimal" parameterClass="java.lang.Long" >
+    select /*+ parallel (8,3) */ /*+ parallel (pn,8) */ n.*, pn.*,
+    p.default_config,regexp_substr(p.default_config, '"productOfferingId":\s*("(\w| )*")', 1, 1) productOfferingId_1,
+    regexp_replace(regexp_substr(p.default_config, '"productOfferingId":\s*("(\w| )*")', 1, 1), '"productOfferingId":\s*"((\w| )*)"', '\1', 1, 1) as product_offering
+    from si_note n,
+    si_vi_sbs_product_note pn, si_vi_sbs_product p
+    where n.si_note_id =#noteId#
+    and pn.si_note_id = #noteId#
+    and pn.product_id = p.product_id
+    and n.si_note_class = p.si_note_class
+  </select>
+
+  <select id="loadFileAttachmentsByNote" resultMap="file-attachment-resultmap" parameterClass="java.lang.Long" cacheModel="file-attachment-cache">
+    select *
+    from si_file_attachment
+    where si_note_id = #noteId#
+  </select>
+
+  <select id="loadFileAttachmentById" resultMap="file-attachment-resultmap" cacheModel="file-attachment-cache">
+    select *
+    from si_file_attachment
+    where si_note_id = #noteId# and si_file_attachment_id=#attachmentId#
+  </select>
+
+  <select id="loadGenericNoteByNoteId" resultMap="generic-note-resultmap" parameterClass="java.lang.Long" cacheModel="generic-note-cache">
+    select *
+    from si_note n, si_vi_generic_note g
+    where n.si_note_id = #noteId# AND n.si_note_id = g.si_note_id
+  </select>
+
+  <select id="loadSBSNoteByNoteId" resultMap="sbs-note-resultmap-experimental" parameterClass="java.lang.Long" cacheModel="sbs-note-cache">
+    select n.*, sbsn.*, 'VISITREPORT_SBS_FEEDBACK' as grouping_feedback, 'VISITREPORT_SBS_REFLECTION' as grouping_reflection,'VISITREPORT_SBS_TODO_ITEM' as grouping_todos
+    from si_note n, si_vi_sbs_note sbsn
+    where n.si_note_id = #noteId# AND sbsn.si_note_id = n.si_note_id
+  </select>
+  
+   <select id="loadSBSNoteForHistoryByNoteId" resultMap="sbs-note-minimal" parameterClass="java.lang.Long" >
+    select n.*, sbsn.*, 'VISITREPORT_SBS_FEEDBACK' as grouping_feedback, 'VISITREPORT_SBS_REFLECTION' as grouping_reflection,'VISITREPORT_SBS_TODO_ITEM' as grouping_todos
+    from si_note n, si_vi_sbs_note sbsn
+    where n.si_note_id = #noteId# AND sbsn.si_note_id = n.si_note_id
+  </select>
+
+  <select id="loadSBSNoteByNoteId_Experimental" resultMap="sbs-note-resultmap-experimental" parameterClass="java.lang.Long">
+    select n.*, sbsn.*, 'VISITREPORT_SBS_FEEDBACK' as grouping_feedback, 'VISITREPORT_SBS_REFLECTION' as grouping_reflection,'VISITREPORT_SBS_TODO_ITEM' as grouping_todos
+    from si_note n, si_vi_sbs_note sbsn
+    where n.si_note_id = #noteId# AND sbsn.si_note_id = n.si_note_id
+  </select>
+
+  <select id="loadSalesInfoNoteAttributesByNoteIdAndGrouping" resultMap="attribute-result" parameterClass="java.util.HashMap" cacheModel="attribute-cache">
+    select a.attribute_id, c.attribute_config_id, a.kunde_id as kunde_id, a.boolean_value,a.text_value, a.number_value, a.last_modifier, a.last_update, c.order_num, 0 as has_history
+    from si_attribute a, si_vi_sbs_note_attribute n, si_attribute_config c
+    where n.si_note_id = #si_note_id# and n.attribute_id = a.attribute_id and a.attribute_config_id = c.attribute_config_id and c.grouping = #grouping# and c.active =1 and c.deleted = 0
+    union
+    select null, c.attribute_config_id, null AS kunde_id, null as boolean_value, null as text_value, null as number_value,null as last_modifier, null as last_update, c.order_num, 0 as has_history
+    from si_attribute_config c
+    where not exists (select 1 from si_vi_sbs_note_attribute na, si_attribute naa, si_attribute_config nac where na.si_note_id = #si_note_id# and naa.attribute_id=na.attribute_id and naa.attribute_config_id = nac.attribute_config_id and nac.attribute_config_id = c.attribute_config_id)
+    and c.active = 1
+    and c.deleted = 0
+    and c.grouping = #grouping#
+  </select>
+
+  <select id="loadOnlySelectedSalesInfoNoteAttributesByNoteIdAndGrouping" resultMap="attribute-result" parameterClass="java.util.HashMap" cacheModel="attribute-cache">
+    select a.attribute_id, c.attribute_config_id, a.kunde_id as kunde_id, a.boolean_value, a.number_value,a.text_value, a.last_modifier, a.last_update, c.order_num, 0 as has_history
+    from si_attribute a, si_vi_sbs_note_attribute n, si_attribute_config c
+    where n.si_note_id = #si_note_id# and n.attribute_id = a.attribute_id and a.attribute_config_id = c.attribute_config_id and c.grouping = #grouping# and c.active =1 and c.deleted = 0
+  </select>
+
+  <select id="loadSalesInfoAttributesByGrouping" parameterClass="java.lang.String" resultMap="attribute-result" cacheModel="attribute-cache">
+    select null attribute_id, c.attribute_config_id, null AS kunde_id, null as boolean_value, null as number_value, null as text_value,null as last_modifier, null as last_update, c.order_num, 0 as has_history
+    from si_attribute_config c
+    where c.active = 1
+    and c.deleted = 0
+    and c.grouping = #grouping#
+    order by ORDER_NUM asc
+  </select>
+
+
+  <select id="loadNotesByPredecessorNoteId" resultMap="slim-si-note-resultmap" parameterClass="java.lang.Long">
+    select *
+    from si_note
+    where predecessor_si_note_id = #noteId# AND deleted = 0 and (si_note_class='SI_SIMPLE_NOTE' or si_note_class='SI_COMPETITOR_NOTE')
+  </select>
+
+  <select id="loadAppointmentsByPredecessorNoteId" resultMap="slim-si-note-resultmap" parameterClass="java.lang.Long">
+    select *
+    from si_note
+    where predecessor_si_note_id = #noteId# AND deleted = 0 and ( si_note_class='SI_APPOINTMENT_NOTE')
+  </select>
+
+
+  <insert id="insertSBSNote" parameterClass="SBSNote">
+    insert into si_vi_sbs_note
+    (si_note_id, communication_type, communication_channel, contact_type, contact_source, feedback_text, reflection_text, cuco_contact_person)
+    values
+    (#salesInfoNoteId#, #communicationType#, #communicationChannel#, #contactType#, #contactSource#, #feedbackText#, #reflectionText#,
+    <isNull property="contactPerson">null</isNull>
+    <isNotNull property="contactPerson">#contactPerson.id:NUMERIC#</isNotNull>
+    )
+  </insert>
+
+  <insert id="insertGenericNote" parameterClass="GenericNote">
+    insert into si_vi_generic_note
+    (si_note_id)
+    values
+    (#salesInfoNoteId#)
+  </insert>
+
+  <insert id="insertSBSProductNote" parameterClass="SBSProductNote">
+    insert into si_vi_sbs_product_note
+    (si_note_id, product_id, product_alternative_id, product_display_name, product_category, setup_type, setup_category, winback, consultation_desired, quote_status, purchase_without_written_note, turnover_quantity, turnover_duration_months, turnover_onetime_cost,
+    turnover_monthly_cost, turnover_yearly_cost, turnover_sum, assignee_type, assignee_org_unit_id, assignee_org_unit_name, assignee_org_unit_street, assignee_org_unit_postcode, assignee_org_unit_city,cuco_contact_person,todo_group_note_id)
+    values
+    (#salesInfoNoteId#, #productId#, #productAlternativeId#, #productDisplayName#, #productCategory#, #setupTypes,handler=at.a1ta.cuco.core.dao.db.visitreport.SetupTypeSetTypeHandler#, #category#, #winback#, #consultationDesired#, #quoteStatus#, #purchaseWithoutWrittenQuote#, #turnoverQuantity#, #turnoverDurationMonths#, #turnoverOnetimeCost#,
+    #turnoverMonthlyCost#, #turnoverYearlyCost#, #turnoverSum#, #handlingAssigneeType#, #handlingAssigneeOrgUnitId#, #handlingAssigneeOrgUnitName#, #handlingAssigneeOrgUnitStreet#, #handlingAssigneeOrgUnitPostalCode#, #handlingAssigneeOrgUnitCity#,
+    <isNull property="contactPerson">null</isNull>
+    <isNotNull property="contactPerson">#contactPerson.id:NUMERIC#</isNotNull>
+    ,#todoGroupNoteId#)
+  </insert>
+
+  <insert id="insertFileAttachment" parameterClass="FileAttachment">
+    <selectKey resultClass="long" keyProperty="fileAttachmentId">SELECT seq_si_file_attachment.nextval AS fileAttachmentId FROM dual</selectKey>
+    insert into si_file_attachment
+    (si_file_attachment_id, si_note_id, file_name, creator, create_timestamp)
+    values
+    (#fileAttachmentId#, #salesInfoNoteId#, #fileName#, #creationUser.id:NUMERIC#, #creationTimestamp#)
+  </insert>
+
+  <update id="updateFileAttachmentNotesRelation" parameterClass="FileAttachment">
+    update si_file_attachment
+    set si_note_id = #salesInfoNoteId#
+    where si_file_attachment_id=#fileAttachmentId#
+  </update>
+
+  <insert id="insertNoteAttribute">
+    insert into si_vi_sbs_note_attribute
+    (si_note_id, attribute_id)
+    values
+    (#noteId#, #attributeId#)
+  </insert>
+
+  <update id="updateSBSNote" parameterClass="SBSNote">
+    update si_vi_sbs_note set
+    communication_type = #communicationType#,
+    communication_channel = #communicationChannel#,
+    contact_type = #contactType#,
+    contact_source = #contactSource#,
+    feedback_text = #feedbackText#,
+    reflection_text = #reflectionText#,
+    cuco_contact_person =
+    <isNull property="contactPerson">null</isNull>
+    <isNotNull property="contactPerson">#contactPerson.id:NUMERIC#</isNotNull>
+    where si_note_id = #salesInfoNoteId#
+  </update>
+
+  <update id="updateSBSProductNote" parameterClass="SBSProductNote">
+    update si_vi_sbs_product_note set
+    product_id = #productId#,
+    product_alternative_id = #productAlternativeId#,
+    product_display_name = #productDisplayName#,
+    product_category = #productCategory#,
+    setup_type = #setupTypes,handler=at.a1ta.cuco.core.dao.db.visitreport.SetupTypeSetTypeHandler#,
+    setup_category = #category#,
+    winback = #winback#,
+    consultation_desired = #consultationDesired#,
+    quote_status = #quoteStatus#,
+    purchase_without_written_note = #purchaseWithoutWrittenQuote#,
+    turnover_quantity = #turnoverQuantity#,
+    turnover_duration_months = #turnoverDurationMonths#,
+    turnover_onetime_cost = #turnoverOnetimeCost#,
+    turnover_monthly_cost = #turnoverMonthlyCost#,
+    turnover_yearly_cost = #turnoverYearlyCost#,
+    turnover_sum = #turnoverSum#,
+    assignee_type = #handlingAssigneeType#,
+    assignee_org_unit_id = #handlingAssigneeOrgUnitId#,
+    assignee_org_unit_name = #handlingAssigneeOrgUnitName#,
+    assignee_org_unit_street = #handlingAssigneeOrgUnitStreet#,
+    assignee_org_unit_postcode = #handlingAssigneeOrgUnitPostalCode#,
+    assignee_org_unit_city = #handlingAssigneeOrgUnitCity#,
+    cuco_contact_person =
+    <isNull property="contactPerson">null</isNull>
+    <isNotNull property="contactPerson">#contactPerson.id:NUMERIC#</isNotNull>
+    where si_note_id = #salesInfoNoteId#
+  </update>
+
+  <update id="updateAttribute" parameterClass="Attribute">
+    update si_attribute set
+    boolean_value = #booleanValue#,
+    number_value = #numberValue#,
+    last_modifier = #lastModifier.id#,
+    last_update = #lastUpdate#,
+    text_value=#textValue#
+    where attribute_id = #attributeId#
+  </update>
+
+  <delete id="deleteFileAttachment" parameterClass="long">
+    delete from si_file_attachment
+    where si_file_attachment_id = #fileAttachmentId#
+  </delete>
+
+  <insert id="insertSalesConvNote" parameterClass="SalesConvNote">
+    insert into si_sc_sales_conv_note
+    (si_note_id, campaign_id, campaign_name, campaign_callnumber, contact_type, feedback_text)
+    values
+    (#salesInfoNoteId#, #campaignId#, #campaignName#, #campaignCallNumber#, #contactType#, #feedbackText#)
+  </insert>
+
+  <update id="updateSalesConvNote" parameterClass="SalesConvNote">
+    update si_sc_sales_conv_note set
+    campaign_id = #campaignId#,
+    campaign_name = #campaignName#,
+    campaign_callnumber = #campaignCallNumber#,
+    contact_type = #contactType#,
+    feedback_text = #feedbackText#
+    where si_note_id = #salesInfoNoteId#
+  </update>
+
+  <select id="loadSalesConvNoteByNoteId" resultMap="salesconv-note-resultmap" parameterClass="java.lang.Long" cacheModel="salesconv-note-cache">
+    select n.*, s.*, 'VISITREPORT_SALES_CONV_FEEDBACK' as grouping
+    from si_note n, si_sc_sales_conv_note s
+    where n.si_note_id = #noteId# AND s.si_note_id = n.si_note_id
+  </select>
+
+  <select id="loadSalesConvNoteByNoteId_Experimental" resultMap="salesconv-note-resultmap-experimental" parameterClass="java.lang.Long" cacheModel="salesconv-note-cache">
+    select n.*, s.*, 'VISITREPORT_SALES_CONV_FEEDBACK' as grouping
+    from si_note n, si_sc_sales_conv_note s
+    where n.si_note_id = #noteId# AND s.si_note_id = n.si_note_id
+  </select>
+
+
+  <insert id="insertProductHistoryItem" parameterClass="ProductHistoryItem">
+    <selectKey resultClass="long" keyProperty="id">SELECT seq_si_sc_product_history.nextval AS id FROM dual</selectKey>
+    insert into si_sc_product_history
+    (id, product_note_id, note, creator_id, create_date)
+    values
+    (#id#, #productNoteId#, #note#, #creationUser.id:NUMERIC#, #creationDate#)
+  </insert>
+
+  <update id="updateProductHistoryItemProductNoteID" parameterClass="ProductHistoryItem">
+
+    update si_sc_product_history set product_note_id=#productNoteId# where id=#id#
+  </update>
+
+  <select id="loadProductHistoryItemsByProdNoteId" resultMap="productHistory-resultmap" parameterClass="java.lang.Long" cacheModel="productHistory-cache">
+    select *
+    from si_sc_product_history
+    where product_note_id = #productNoteId#
+    order by create_date
+  </select>
+
+  <select id="getTeamEmailAddress" parameterClass="java.lang.Long" resultClass="java.lang.String" cacheModel="teamEmail-cache">
+    SELECT team_email FROM
+    (
+    SELECT * FROM
+    (
+    SELECT te.team_email, 1 AS order_num
+    FROM si_sc_team_email te, si_sc_team_email_user teu
+    WHERE teu.user_id = #userid#
+    AND teu.TEAM_EMAIL_ID = te.ID
+    UNION
+    SELECT te.team_email, 2 AS order_num
+    FROM si_sc_team_email te
+    WHERE is_default = 1
+    )
+    ORDER BY order_num
+    )
+    WHERE ROWNUM = 1
+  </select>
+  
+  <select id="loadDigitalSellingNoteByNoteId" resultMap="digital-selling-note-resultmap" parameterClass="java.lang.Long" cacheModel="digital-selling-note-cache">
+    select *
+    from si_note n, si_vi_ds_note g
+    where n.si_note_id = #noteId# AND n.si_note_id = g.si_note_id
+  </select>
+  
+  
+  <insert id="insertDigitalSellingNote" parameterClass="DigitalSellingNote">
+    insert into si_vi_ds_note
+    (si_note_id, content)
+    values
+    (#salesInfoNoteId#, #content#)
+  </insert>
+  
+</sqlMap>

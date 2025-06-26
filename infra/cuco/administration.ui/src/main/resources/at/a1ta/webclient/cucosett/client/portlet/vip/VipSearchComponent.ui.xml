@@ -1,0 +1,46 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+             xmlns:g="urn:import:com.google.gwt.user.client.ui"
+             xmlns:m="urn:import:at.a1ta.cuco.ui.common.client.ui.table"
+             xmlns:bite="urn:import:at.a1ta.bite.ui.client.widget">
+
+  <ui:with field='msg' type='at.a1ta.cuco.admin.ui.common.client.bundle.AdminCommonTextPool'/>
+  <ui:with field='style' type='at.a1ta.bite.ui.client.bundle.StyleResources'/>
+  <ui:with field='img' type='at.a1ta.bite.ui.client.bundle.images.ImageResources'/>
+
+	<g:HTMLPanel>
+		<div class="{style.bite_heightPlaceHolder}" />
+    <div class="{style.bite_moduleContent}">
+      <table class="{style.bite_form_flex}">
+		    <tr>
+		      <td width="150px">
+		        <table>
+		          <tr>
+		            <td><bite:Label text="{msg.vipSearchItem}:"/></td>
+                <td><bite:InfoIcon text="{msg.vipSearchTooltip}" /></td>
+              </tr>
+            </table>
+          </td>
+          <td><bite:InputBox ui:field="txtSearch" size="Long" /></td>
+          <td><bite:Button ui:field="btnSearch" text="{msg.vipBtnSearch}" size="Small" /></td>
+			    <td><bite:Button ui:field="btnExport" text="{msg.vipBtnExport}" size="Small" /></td>
+        </tr>
+      </table>
+      <table class="{style.bite_form_flex}">
+        <tr>
+          <td width="150px"><bite:Label text="{msg.vipFrom}:" /></td>
+          <td><bite:DateBox ui:field="dateFrom" size="Long" /></td>
+          <td><bite:Label text="{msg.vipTo}:" /></td>
+          <td><bite:DateBox ui:field="dateTo" size="Long" /></td>
+        </tr>
+        <tr>
+          <td width="150px"><bite:Label text="{msg.vipStatus}:" /></td>
+          <td colspan="3"><bite:ListBox ui:field="comboVipStatus" /></td>
+        </tr>
+      </table>
+    </div>
+    <div class="{style.bite_moduleContent}"> 
+			<m:DataTable ui:field="vipHistoryTable" />
+    </div>
+	</g:HTMLPanel>
+</ui:UiBinder>

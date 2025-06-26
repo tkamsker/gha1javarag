@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Location">
+	<cacheModel id="location-cache" type="ehcacheProvider" readOnly="true" serialize="false">
+		<flushInterval hours="3" />
+		<property name="cache-size" value="1000" />
+	</cacheModel>
+
+	<resultMap id="location-result" class="at.a1ta.bite.data.clarify.shared.dto.Location">
+		<result property="id" column="LOKATION_ID" />
+		<result property="country" column="staat_cd" />
+		<result property="city" column="ort" />
+		<result property="poBox" column="plz" />
+		<result property="street" column="strasse" />
+		<result property="housenumber" column="hausnummer"  />
+	</resultMap>
+
+	<sql id="attributes_v_standort">
+		v_standort.kunde_id, v_standort.lokation_id, v_standort.staat_cd, v_standort.ort, v_standort.plz, v_standort.strasse,  v_standort.hausnummer
+	</sql>
+
+	<select id="CountDistinctLocations4customer" resultClass="java.lang.Long" parameterClass="java.lang.Long" cacheModel="location-cache">
+		select count(*) from (
+         SELECT /*+ parallel (s,8) */ /*+ parallel (b,8) *//*+ parallel (r,8) */ ort, replace(strasse,' ','')||hausnummer FROM v_standort s, v_bestand b, v_rufnummer r
+		 WHERE b.kunde_id=#customerId#
+         and r.kunde_id=#customerId#
+         and s.kunde_id=#customerId#
+         and b.vertrag_id=r.vertrag_id
+         and s.lokation_id=r.lokation_id
+         group by ort, replace(strasse,' ','')||hausnummer
+        )
+	</select>	
+
+    <select id="getLocations4Customers" resultMap="location-result" cacheModel="location-cache">
+      SELECT <include refid="attributes_v_standort" />
+      FROM v_standort
+      WHERE v_standort.kunde_id IN <iterate open="(" close=")" conjunction="," property="customerIds">#customerIds[]#</iterate>
+    </select>
+</sqlMap>

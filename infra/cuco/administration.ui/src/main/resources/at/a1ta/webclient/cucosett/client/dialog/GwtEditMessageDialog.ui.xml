@@ -1,0 +1,63 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui"
+	xmlns:t="urn:import:at.a1ta.cuco.ui.common.client.ui.table"
+    xmlns:bite="urn:import:at.a1ta.bite.ui.client.widget">
+    
+    <ui:with field='style' type='at.a1ta.bite.ui.client.bundle.StyleResources' />
+    <ui:with field='admintextpool' type='at.a1ta.cuco.admin.ui.common.client.bundle.AdminCommonTextPool'/>
+
+	<g:HTMLPanel>
+	<bite:Label text="{admintextpool.systemMessageHeader}" />
+	  <div class="{style.bite_moduleHeader}" style="padding-top:5px;" />
+      <div class="{style.bite_moduleContent}">
+      <table class="{style.bite_form}">
+       <colgroup>
+          <col width="20%" />
+          <col width="40%" />
+          <col width="40%" />
+        </colgroup> 
+      <tr>
+      <td><bite:Label styleName="{style.bite_text}" text="{admintextpool.smTitle}" /></td>
+      <td colspan="2"><bite:InputBox ui:field="title" size="Long" /></td>
+      </tr>
+      <tr>
+      <td><bite:Label styleName="{style.bite_text}" text="{admintextpool.smText}" /></td>
+      <td colspan="2"><bite:TextArea ui:field="txtText" width="100%" height="80px" maxLength="1000" /></td>
+      </tr>
+      <tr>
+          <td><bite:Label styleName="{style.bite_text}" text="{admintextpool.smValidity}"/></td>
+          <td><bite:Label styleName="{style.bite_text}" text="von"/><bite:DateBox ui:field="from" size="Short" /></td>
+          <td><bite:Label styleName="{style.bite_text}" text="bis"/><bite:DateBox ui:field="to" size="Short" /></td>
+      </tr>
+      <tr>
+      <td><bite:Label styleName="{style.bite_text}" text="{admintextpool.smOptions}"/></td>
+      <td><bite:CheckBox ui:field="checkBoxOneTime" text="{admintextpool.smOptionsOneTime}"/></td>
+      </tr>
+      <tr>
+      <td><bite:Label styleName="{style.bite_text}"/></td>
+      <td><bite:CheckBox ui:field="checkBoxOnlyMenue" text="{admintextpool.smOptionsOnlyMenue}"/></td>
+      </tr>
+      <tr>
+      <td><bite:Label styleName="{style.bite_text}" text="{admintextpool.smRoles}"/></td>
+      <td colspan="2"><t:DataTable ui:field="roleStore"/></td>
+      </tr>
+      <tr>
+      <td><bite:Label styleName="{style.bite_text}"/></td>
+      <td></td>
+      <td style="padding-left:12%;"><bite:Button ui:field="bRoles" text="Rollen auswählen" size="Small"/></td>
+      </tr>
+      <tr>
+      <td><bite:Label styleName="{style.bite_text}" text="{admintextpool.smImageFile}"/></td>
+      <td><bite:Button ui:field="bImage" text="Bild auswählen" size="Small"/></td>
+      </tr>
+      </table>
+      <div class="{style.floating_right}">
+      <bite:Button ui:field="bSave" text="{admintextpool.dialogSave}" size="Small"/>
+      <bite:Button ui:field="bCancel" text="{admintextpool.dialogCancel}" size="Small"/>
+      </div>
+      <div class="{style.floating_clear}" />
+      </div>
+      <br/>
+	</g:HTMLPanel>
+</ui:UiBinder>

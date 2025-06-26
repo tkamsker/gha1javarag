@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMapConfig PUBLIC "-//ibatis.apache.org//DTD SQL Map Config 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-config-2.dtd">
+<sqlMapConfig>
+
+  <settings useStatementNamespaces="true" cacheModelsEnabled="true" lazyLoadingEnabled="false" />
+
+  <typeAlias alias="ehcacheProvider" type="at.a1ta.bite.sqlmap.engine.chache.ehcache.EhCacheController" />
+
+  <typeHandler javaType="at.a1ta.cuco.core.shared.dto.ProductOffering" callback="at.a1ta.cuco.core.shared.dto.ProductOfferingTypeHandler"/>
+
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-chargingtype.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-clearingAccount.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-contactPerson.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-credittype.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-customer.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-customerBlock.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-flashInfo.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-image.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-imageSize.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-invoice.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-inventory.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-inventoryProductGroup.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-location.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-mkinteraction.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-payableticket.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-phoneNumber.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-productHierarchy.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-reporting.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-service.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-team.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-unknownareacode.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-vipHistory.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-turnover.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-usageData.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-userInfoStatistics.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-customerUnlockRequest.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-myquote.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-attribute.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-salesInfo.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-mynotes.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/visitreport/sqlmap-visitreport.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-standardAddress.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-user.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-kumsskzshop.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-vbmProducts.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-userShopAssignments.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-textseditor.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-cucoSettings.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-gamification.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-cucoLogs.xml" />
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-cCTOrgStructureElement.xml" /> 
+  <sqlMap resource="at/a1ta/cuco/core/dao/db/sqlmap-linksPortlet.xml" />
+</sqlMapConfig>

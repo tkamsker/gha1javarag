@@ -1,0 +1,10 @@
+delete from kunde1 where kunde_id=999999991;
+delete from kunde2 where kunde_id=999999991;
+delete from kunde1 where kunde_id=999999992;
+delete from kunde2 where kunde_id=999999992;
+delete from kunde1 where kunde_id=999999993;
+delete from kunde2 where kunde_id=999999993;
+delete from kunde1 where kunde_id=999999994;
+delete from kunde2 where kunde_id=999999994;
+delete from kunde1 where kunde_id=999999995;
+delete from kunde2 where kunde_id=999999995;

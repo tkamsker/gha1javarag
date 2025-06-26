@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Gamification">
+  <resultMap id="gamification-result-minimal" class="at.a1ta.cuco.core.shared.dto.GamificationMessage">
+    <result property="messageUid" column="messageUid" />
+    <result property="title" column="title" />
+    <result property="message" column="message" />
+    <result property="url" column="url" />
+    <result property="agentUserId" column="agentUserId"/>
+    <result property="readByAgent" column="readByAgent" />
+  </resultMap>
+
+  <insert id="insert" parameterClass="java.util.HashMap">
+    Insert into GAMIFICATION_MESSAGE_LOG (messageUid,"type",title,message,url,agentUserId,readByAgent,"timestamp")
+    values
+    (#message.messageUid#,'MESSAGE',#message.title#,#message.message#,#message.url#,#agentUserId#,#message.readByAgent#,systimestamp)
+  </insert>
+
+  <select id="getAlreadyStoredMessages" parameterClass="java.util.HashMap" resultClass="at.a1ta.cuco.core.shared.dto.GamificationMessage">
+    SELECT * FROM GAMIFICATION_MESSAGE_LOG WHERE messageUid in <iterate open="(" close=")" conjunction="," property="messageIds">#messageIds[]#</iterate>
+    and agentUserId=#agentUserId# and "type"='MESSAGE'
+  </select>
+  
+  
+  <update id="markMessageAsRead" parameterClass="java.util.HashMap">
+    UPDATE GAMIFICATION_MESSAGE_LOG
+    SET readByAgent=1
+    WHERE messageUid = #messageUid#
+    and agentUserId=#agentUserId#
+  </update>
+  
+  <update id="expireGamificationOneTimeToken" parameterClass="java.util.HashMap">
+    UPDATE GAMIFICATION_MESSAGE_LOG
+    SET expired=1
+    WHERE messageUid = #token# and "type"='AUTH_REQUEST'
+  </update>
+  
+  <select id="getMatchingActiveTokensCount"  resultClass="java.lang.Integer" parameterClass="java.util.HashMap">
+    SELECT count(1) FROM GAMIFICATION_MESSAGE_LOG WHERE messageUid =#token#
+    and expired <![CDATA[<>]]> '1' and "type"='AUTH_REQUEST'
+  </select>
+  
+  <insert id="creatGamificationOneTimeToken" parameterClass="java.util.HashMap">
+    Insert into GAMIFICATION_MESSAGE_LOG (messageUid,"type",title,message,agentUserId,readByAgent,"timestamp",expired)
+    values
+    (#token#,'AUTH_REQUEST','LOGIN','LOGIN',#agentUserId#,'0',systimestamp,'0')
+  </insert>
+</sqlMap>

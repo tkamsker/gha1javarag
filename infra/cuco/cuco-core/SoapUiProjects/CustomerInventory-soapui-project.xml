@@ -1,0 +1,842 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project name="CustomerInventory" resourceRoot="" soapui-version="3.6" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:interface xsi:type="con:WsdlInterface" wsaVersion="NONE" name="CustomerInventoryPortTypeHttpBinding" type="wsdl" bindingName="{http://eai.a1telekom.at/CustomerInventory/wsdl}CustomerInventoryPortTypeHttpBinding" soapVersion="1_1" anonymous="optional" definition="http://esb-i.a1telekom.inside:7800/wsdl/CustomerInventory/-/vi/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache type="TEXT" rootPart="http://esb-i.a1telekom.inside:7800/wsdl/CustomerInventory/-/vi/http"><con:part><con:url>http://esb-i.a1telekom.inside:7800/wsdl/CustomerInventory/-/vi/http</con:url><con:content><![CDATA[<!--Created by mag ESB WSDL-Generator v3-->
+<!--WSDL version 1.11-->
+<wsdl:definitions targetNamespace="http://eai.a1telekom.at/CustomerInventory/wsdl" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://eai.a1telekom.at/CustomerInventory/wsdl" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:ns0="http://eai.a1telekom.at/CustomerInventory" xmlns:ns1="http://cdm.a1telekom.at/common/error" xmlns:ns2="http://cdm.a1telekom.at/common">
+  <wsdl:types>
+    <schema targetNamespace="http://cdm.a1telekom.at/common" version="1.1" elementFormDefault="unqualified" attributeFormDefault="unqualified" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://cdm.a1telekom.at/common">
+      <complexType name="CallNumber">
+        <sequence>
+          <element name="CC" type="token">
+            <annotation>
+              <documentation>Country Code</documentation>
+            </annotation>
+          </element>
+          <element name="NDC" type="token">
+            <annotation>
+              <documentation>National Destination Code</documentation>
+            </annotation>
+          </element>
+          <element name="SN" type="token">
+            <annotation>
+              <documentation>Subscriber Number</documentation>
+            </annotation>
+          </element>
+        </sequence>
+      </complexType>
+      <complexType name="Money">
+        <sequence>
+          <element name="Units" type="tns:MoneyUnit"/>
+          <element name="Amount" type="decimal"/>
+        </sequence>
+      </complexType>
+      <simpleType name="MoneyUnit">
+        <restriction base="string">
+          <enumeration value="EUR"/>
+          <enumeration value="PERCENT"/>
+        </restriction>
+      </simpleType>
+      <simpleType name="PeriodType">
+        <restriction base="string">
+          <enumeration value="monthly"/>
+          <enumeration value="one-time"/>
+          <enumeration value="installation"/>
+          <enumeration value="change"/>
+        </restriction>
+      </simpleType>
+      <simpleType name="PresenceType">
+        <restriction base="string">
+          <enumeration value="required"/>
+          <enumeration value="optional"/>
+        </restriction>
+      </simpleType>
+      <complexType name="Quantity">
+        <sequence>
+          <element name="Units" type="string"/>
+          <element name="Amount" type="decimal"/>
+        </sequence>
+      </complexType>
+      <complexType name="TimePeriod">
+        <sequence>
+          <element name="StartDateTime" type="dateTime" minOccurs="0"/>
+          <element name="EndDateTime" type="dateTime" minOccurs="0"/>
+        </sequence>
+      </complexType>
+      <simpleType name="ValueType">
+        <restriction base="string">
+          <enumeration value="string"/>
+          <enumeration value="long"/>
+          <enumeration value="boolean"/>
+          <enumeration value="dateTime"/>
+          <enumeration value="decimal"/>
+          <enumeration value="lkmsId"/>
+          <enumeration value="mbit"/>
+          <enumeration value="mb"/>
+        </restriction>
+      </simpleType>
+      <simpleType name="sidId">
+        <restriction base="token"/>
+      </simpleType>
+      <element name="CallNumber" type="tns:CallNumber"/>
+    </schema>
+    <schema targetNamespace="http://cdm.a1telekom.at/common/error" version="0.1" elementFormDefault="qualified" attributeFormDefault="unqualified" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:error="http://cdm.a1telekom.at/common/error">
+      <complexType name="ErrorDetailsType">
+        <sequence>
+          <element name="ErrorCode" type="token">
+            <annotation>
+              <documentation>Code of the error. Should consist of "prefix"-"code" (e.g. AAA-12345), where "prefix" is unique code of the service and "code" is code within the service</documentation>
+            </annotation>
+          </element>
+          <element name="ErrorMessage" type="token">
+            <annotation>
+              <documentation>Error-Message</documentation>
+            </annotation>
+          </element>
+          <element name="SourceSystem" type="token" minOccurs="0">
+            <annotation>
+              <documentation>System where the error has its source. If in EAI, then "EAI"</documentation>
+            </annotation>
+          </element>
+          <element name="ErrorDetails" type="string" minOccurs="0">
+            <annotation>
+              <documentation>Optional Error Details</documentation>
+            </annotation>
+          </element>
+          <element name="IsTechnical" type="boolean" minOccurs="0">
+            <annotation>
+              <documentation>1 .. technical error, 0 .. business error. Not present - unknown.</documentation>
+            </annotation>
+          </element>
+          <element name="Repeatable" type="boolean" minOccurs="0">
+            <annotation>
+              <documentation>1 .. execution repeatable, 0 .. non-repeatable. Not present - unknown.</documentation>
+            </annotation>
+          </element>
+          <element name="Additionals" minOccurs="0">
+            <annotation>
+              <documentation>Additional Success/Error Messages</documentation>
+            </annotation>
+            <complexType>
+              <sequence>
+                <element name="Additional" maxOccurs="unbounded">
+                  <complexType>
+                    <sequence>
+                      <element name="Code" type="token"/>
+                      <element name="MessageTxt" type="token" minOccurs="0"/>
+                    </sequence>
+                  </complexType>
+                </element>
+              </sequence>
+            </complexType>
+          </element>
+        </sequence>
+      </complexType>
+      <element name="ErrorDetails" type="error:ErrorDetailsType"/>
+    </schema>
+    <schema targetNamespace="http://eai.a1telekom.at/CustomerInventory" elementFormDefault="qualified" attributeFormDefault="unqualified" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:custinv="http://eai.a1telekom.at/CustomerInventory" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:common="http://cdm.a1telekom.at/common">
+      <import namespace="http://cdm.a1telekom.at/common"/>
+      <complexType name="ADXAccount">
+        <complexContent>
+          <extension base="custinv:CustomerAccount"/>
+        </complexContent>
+      </complexType>
+      <complexType name="AllowanceProdOferPriceAlteration">
+        <complexContent>
+          <extension base="custinv:ProdOfferPriceAlteration"/>
+        </complexContent>
+      </complexType>
+      <complexType name="AtomicProductSpecification" abstract="true">
+        <complexContent>
+          <extension base="custinv:ProductSpecification">
+            <sequence>
+              <element name="CustomerFacingServiceSpec" type="custinv:CustomerFacingServiceSpec" minOccurs="0" maxOccurs="unbounded"/>
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+      <complexType name="BNAccount">
+        <complexContent>
+          <extension base="custinv:CustomerAccount"/>
+        </complexContent>
+      </complexType>
+      <complexType name="BundledProdOfferOption" abstract="true">
+        <sequence>
+          <element name="ProductOffering" type="custinv:ProductOffering"/>
+          <element name="MinCardinality" type="xs:int" minOccurs="0"/>
+          <element name="MaxCardinality" type="xs:int" minOccurs="0"/>
+          <element name="DefaultCardinality" type="xs:int" minOccurs="0"/>
+          <element name="ValidFor" type="common:TimePeriod" minOccurs="0"/>
+        </sequence>
+      </complexType>
+      <complexType name="BundledProductOffering">
+        <complexContent>
+          <extension base="custinv:ProductOffering">
+            <sequence>
+              <element name="BundledProdOfferOption" type="custinv:BundledProdOfferOption" minOccurs="0" maxOccurs="unbounded"/>
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+      <complexType name="ComponentProdOfferPrice" abstract="true">
+        <complexContent>
+          <extension base="custinv:ProductOfferingPrice">
+            <sequence>
+              <element name="PriceType" type="xs:string"/>
+              <element name="Price" type="common:Money"/>
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+      <complexType name="CompositeProductSpecification">
+        <complexContent>
+          <extension base="custinv:ProductSpecification">
+            <sequence>
+              <element name="ProductSpecification" type="custinv:ProductSpecification" minOccurs="0" maxOccurs="unbounded"/>
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+      <complexType name="ConfigurableProductSpeCharacteristic">
+        <complexContent>
+          <extension base="custinv:ProductSpecCharacteristic"/>
+        </complexContent>
+      </complexType>
+      <complexType name="CustomerAccount" abstract="true">
+        <sequence>
+          <element name="AccountNumber" type="xs:string"/>
+        </sequence>
+      </complexType>
+      <complexType name="CustomerFacingServiceSpec" abstract="true">
+        <complexContent>
+          <extension base="custinv:ServiceSpecification"/>
+        </complexContent>
+      </complexType>
+      <complexType name="DiscountProdOferPriceAlteration">
+        <complexContent>
+          <extension base="custinv:ProdOfferPriceAlteration">
+            <sequence>
+              <element name="ProdOfferPriceChargeSidId" type="common:sidId" minOccurs="0" maxOccurs="unbounded">
+                <annotation>
+                  <documentation>The charges that the alteration targets</documentation>
+                </annotation>
+              </element>
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+      <complexType name="DistributionChannel" abstract="true">
+        <sequence>
+          <element name="Name" type="xs:string"/>
+          <element name="Description" type="xs:string" minOccurs="0"/>
+        </sequence>
+      </complexType>
+      <complexType name="FormattedAddress">
+        <sequence>
+          <element name="AddressLine1">
+            <annotation>
+              <documentation>LKMS: ADRESS_ZEILE_1
+Description: 1. Zeile der postalischen Anschrift</documentation>
+            </annotation>
+            <simpleType>
+              <restriction base="xs:string">
+                <maxLength value="128"/>
+              </restriction>
+            </simpleType>
+          </element>
+          <element name="AddressLine2">
+            <annotation>
+              <documentation>LKMS: ADRESS_ZEILE_2
+Description: 2. Zeile der postalischen Anschrift</documentation>
+            </annotation>
+            <simpleType>
+              <restriction base="xs:string">
+                <maxLength value="128"/>
+              </restriction>
+            </simpleType>
+          </element>
+          <element name="AddressLine3">
+            <annotation>
+              <documentation>LKMS: ADRESS_ZEILE_3
+Description: 3. Zeile der postalischen Anschrift</documentation>
+            </annotation>
+            <simpleType>
+              <restriction base="xs:string">
+                <maxLength value="128"/>
+              </restriction>
+            </simpleType>
+          </element>
+        </sequence>
+      </complexType>
+      <complexType name="MarketSegment">
+        <sequence>
+          <element name="Name" type="xs:string"/>
+          <element name="Description" type="xs:string" minOccurs="0"/>
+        </sequence>
+      </complexType>
+      <complexType name="Modem">
+        <complexContent>
+          <extension base="custinv:PhysicalResource"/>
+        </complexContent>
+      </complexType>
+      <complexType name="OneTimeChargeProdOfferPriceCharge" abstract="true">
+        <complexContent>
+          <extension base="custinv:ProdOfferPriceCharge">
+            <sequence>
+              <element name="TaxRate" type="xs:decimal" minOccurs="0"/>
+              <element name="ChangeToProductOfferingSidId" type="common:sidId" minOccurs="0" maxOccurs="unbounded">
+                <annotation>
+                  <documentation>This charge is valid if a change to the specifiedProductOffering is performed</documentation>
+                </annotation>
+              </element>
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+      <complexType name="PhysicalResource" abstract="true">
+        <sequence>
+          <element name="name" type="xs:string"/>
+          <element name="serialNumber" type="xs:token" minOccurs="0"/>
+          <element name="versionNumber" type="xs:token"/>
+          <element name="installationDate" type="xs:date" minOccurs="0"/>
+          <element name="firmwareVersion" type="xs:token"/>
+        </sequence>
+      </complexType>
+      <complexType name="ProdOfferPriceAlteration" abstract="true">
+        <complexContent>
+          <extension base="custinv:ComponentProdOfferPrice">
+            <sequence>
+              <element name="ProdOfferPromotion" type="custinv:ProductPromotion" minOccurs="0"/>
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+      <complexType name="ProdOfferPriceCharge" abstract="true">
+        <complexContent>
+          <extension base="custinv:ComponentProdOfferPrice">
+            <sequence>
+              <element name="Period" type="xs:string" minOccurs="0"/>
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+      <complexType name="Product" abstract="true">
+        <sequence>
+          <element name="Name" type="xs:string"/>
+          <element name="Brand" type="xs:string" minOccurs="0"/>
+          <element name="Description" type="xs:string" minOccurs="0"/>
+          <element name="ProductStatus" type="xs:string" minOccurs="0"/>
+          <element name="ProductSerialNumber" type="xs:string" minOccurs="0"/>
+          <element name="ValidFor" type="common:TimePeriod" minOccurs="0"/>
+          <element name="PhysicalResources" minOccurs="0">
+            <complexType>
+              <sequence>
+                <element ref="custinv:PhysicalResource" maxOccurs="unbounded"/>
+              </sequence>
+            </complexType>
+          </element>
+          <element name="ProductCharacteristicValues" minOccurs="0">
+            <complexType>
+              <sequence>
+                <element name="ProductCharacteristicValue" type="custinv:ProductCharacteristicValue" maxOccurs="unbounded"/>
+              </sequence>
+            </complexType>
+          </element>
+        </sequence>
+      </complexType>
+      <complexType name="ProductBundle">
+        <complexContent>
+          <extension base="custinv:Product">
+            <sequence>
+              <element name="BundledProducts" type="custinv:Product" minOccurs="0" maxOccurs="unbounded"/>
+              <element name="BundledProductOfferingId" type="xs:token" minOccurs="0"/>
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+      <complexType name="ProductCatalog" abstract="true">
+        <sequence>
+          <element name="ValidFor" type="common:TimePeriod" minOccurs="0"/>
+          <element name="Name" type="xs:string"/>
+          <element name="Description" type="xs:string" minOccurs="0"/>
+          <element name="ProductOffering" type="custinv:ProductOffering" minOccurs="0" maxOccurs="unbounded"/>
+        </sequence>
+      </complexType>
+      <complexType name="ProductCategory" abstract="true">
+        <complexContent>
+          <extension base="custinv:ProductSpecificationType"/>
+        </complexContent>
+      </complexType>
+      <complexType name="ProductCharacteristicValue">
+        <sequence>
+          <element name="Value" type="xs:string"/>
+          <element name="ValidFor" type="common:TimePeriod" minOccurs="0"/>
+          <element name="ProductSpecCharacteristic" type="custinv:ProductSpecCharacteristic"/>
+        </sequence>
+      </complexType>
+      <complexType name="ProductComponent">
+        <complexContent>
+          <extension base="custinv:Product">
+            <sequence>
+              <element name="SimpleProductOfferingId" type="xs:token" minOccurs="0"/>
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+      <complexType name="ProductOffering" abstract="true">
+        <sequence>
+          <element name="ProductOfferingId" type="custinv:ProductOfferingId"/>
+          <element name="Name" type="xs:string"/>
+          <element name="Description" type="xs:string" minOccurs="0"/>
+          <element name="ValidFor" type="common:TimePeriod" minOccurs="0"/>
+          <element name="ProductOfferingPrice" type="custinv:ProductOfferingPrice" minOccurs="0" maxOccurs="unbounded"/>
+          <element name="DistributionChannel" type="custinv:DistributionChannel" minOccurs="0" maxOccurs="unbounded"/>
+          <element name="ProductOfferingTerm" type="custinv:ProductOfferingTerm" minOccurs="0" maxOccurs="unbounded"/>
+          <element name="ProductOfferingRelationship" type="custinv:ProductOfferingRelationship" minOccurs="0" maxOccurs="unbounded"/>
+          <element name="MarketSegment" type="custinv:MarketSegment" minOccurs="0" maxOccurs="unbounded"/>
+        </sequence>
+      </complexType>
+      <complexType name="ProductOfferingGroup">
+        <complexContent>
+          <extension base="custinv:BundledProductOffering">
+            <sequence>
+              <element name="MinChoices" default="1" type="xs:int"/>
+              <element name="MaxChoices" default="1" type="xs:int"/>
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+      <simpleType name="ProductOfferingId">
+        <restriction base="xs:token"/>
+      </simpleType>
+      <complexType name="ProductOfferingPrice" abstract="true">
+        <sequence>
+          <element name="Name" type="xs:string"/>
+          <element name="Description" type="xs:string" minOccurs="0"/>
+          <element name="ValidFor" type="common:TimePeriod" minOccurs="0"/>
+        </sequence>
+      </complexType>
+      <complexType name="ProductOfferingRelationship" abstract="true">
+        <sequence>
+          <element name="TypeRelationship" type="xs:string"/>
+          <element name="ValidFor" type="common:TimePeriod" minOccurs="0"/>
+          <choice>
+            <element name="DefaultCardinality" type="xs:int" minOccurs="0"/>
+            <element name="MaxCardinality" type="xs:int" minOccurs="0"/>
+            <element name="MinCardinality" type="xs:int" minOccurs="0"/>
+            <element name="ProductOfferingGroup">
+              <annotation>
+                <documentation>This Group includes several references to a productOffering, where only one of them must be applicable (OR-Relation)</documentation>
+              </annotation>
+              <complexType>
+                <sequence>
+                  <element name="ProductOfferingId" type="common:sidId" maxOccurs="unbounded"/>
+                </sequence>
+              </complexType>
+            </element>
+            <element name="ProductOfferingId" type="common:sidId"/>
+          </choice>
+        </sequence>
+      </complexType>
+      <complexType name="ProductOfferingTerm">
+        <sequence>
+          <element name="Description" type="xs:string" minOccurs="0"/>
+          <element name="Type" type="xs:string"/>
+          <element name="Value" type="xs:string"/>
+        </sequence>
+      </complexType>
+      <complexType name="ProductPromotion" abstract="true">
+        <sequence>
+          <element name="PromotionId" type="xs:string"/>
+          <element name="PromotionName" type="xs:string"/>
+        </sequence>
+      </complexType>
+      <complexType name="ProductSpecCharacteristic">
+        <sequence>
+          <element name="Name" type="xs:string"/>
+          <element name="Description" type="xs:string" minOccurs="0"/>
+          <element name="ValueType" type="common:ValueType"/>
+          <element name="Presence" type="common:PresenceType" minOccurs="0"/>
+          <element name="ProductSpecCharacteristicValue" type="custinv:ProductSpecCharacteristicValue" minOccurs="0" maxOccurs="unbounded"/>
+          <element name="ValidFor" type="common:TimePeriod" minOccurs="0"/>
+          <element name="TranslateToServiceSpecCharacteristic" type="common:sidId" minOccurs="0" maxOccurs="unbounded">
+            <annotation>
+              <documentation>The SID IDs ServiceSpecCharacteristic</documentation>
+            </annotation>
+          </element>
+        </sequence>
+      </complexType>
+      <complexType name="ProductSpecCharacteristicValue" abstract="true">
+        <sequence>
+          <element name="Value" type="xs:string" minOccurs="0"/>
+          <element name="ValidFor" type="common:TimePeriod" minOccurs="0"/>
+          <element name="InfluencedProductOfferingPrice" type="common:sidId" minOccurs="0" maxOccurs="unbounded">
+            <annotation>
+              <documentation>The SID IDs of prices that are influenced by this object</documentation>
+            </annotation>
+          </element>
+        </sequence>
+      </complexType>
+      <complexType name="ProductSpecification">
+        <sequence>
+          <element name="ProductSpecificationId" type="custinv:ProductSpecificationId"/>
+          <element name="Name" type="xs:string"/>
+          <element name="Description" type="xs:string" minOccurs="0"/>
+          <element name="ProductSpecCharacteristic" type="custinv:ProductSpecCharacteristic" minOccurs="0" maxOccurs="unbounded"/>
+          <element name="ValidFor" type="common:TimePeriod" minOccurs="0"/>
+          <element name="productSpecificationType" type="custinv:ProductSpecificationType" minOccurs="0" maxOccurs="unbounded"/>
+        </sequence>
+      </complexType>
+      <simpleType name="ProductSpecificationId">
+        <restriction base="xs:token"/>
+      </simpleType>
+      <complexType name="ProductSpecificationType" abstract="true">
+        <sequence>
+          <element name="Type" type="xs:string"/>
+          <element name="Description" type="xs:string" minOccurs="0"/>
+        </sequence>
+      </complexType>
+      <complexType name="RecurringChargeProdOfferPriceCharge" abstract="true">
+        <complexContent>
+          <extension base="custinv:ProdOfferPriceCharge">
+            <sequence>
+              <element name="TaxRate" type="xs:decimal" minOccurs="0"/>
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+      <complexType name="ServiceSpecCharacteristic" abstract="true">
+        <sequence>
+          <element name="Name" type="xs:string"/>
+          <element name="Presence" type="common:PresenceType" minOccurs="0"/>
+          <element name="ValueType" type="common:ValueType"/>
+          <element name="Description" type="xs:string" minOccurs="0"/>
+          <element name="ValidFor" type="common:TimePeriod" minOccurs="0"/>
+          <element name="ServiceSpecCharacteristicValue" type="custinv:ServiceSpecCharacteristicValue" minOccurs="0" maxOccurs="unbounded"/>
+        </sequence>
+      </complexType>
+      <complexType name="ServiceSpecCharacteristicValue" abstract="true">
+        <sequence>
+          <element name="Value" type="xs:string"/>
+          <element name="ValidFor" type="common:TimePeriod" minOccurs="0"/>
+        </sequence>
+      </complexType>
+      <complexType name="ServiceSpecification" abstract="true">
+        <sequence>
+          <element name="ValidFor" type="common:TimePeriod" minOccurs="0"/>
+          <element name="ServiceSpecCharacteristic" type="custinv:ServiceSpecCharacteristic" minOccurs="0" maxOccurs="unbounded"/>
+        </sequence>
+      </complexType>
+      <complexType name="SimpleProductOffering">
+        <complexContent>
+          <extension base="custinv:ProductOffering">
+            <sequence>
+              <element name="ProductSpecification" type="custinv:ProductSpecification"/>
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+      <complexType name="Subscription">
+        <sequence>
+          <element name="Id" type="xs:token"/>
+          <element name="CustomerAccount" type="custinv:CustomerAccount"/>
+          <element name="Products" minOccurs="0">
+            <complexType>
+              <sequence>
+                <element ref="custinv:Product" maxOccurs="unbounded"/>
+              </sequence>
+            </complexType>
+          </element>
+          <element ref="common:CallNumber" minOccurs="0"/>
+          <element name="AdoId" type="xs:token" minOccurs="0"/>
+          <element name="LocationId" type="xs:token" minOccurs="0"/>
+          <element name="FormattedAddress" type="custinv:FormattedAddress" minOccurs="0"/>
+          <element name="Type" type="xs:token">
+            <annotation>
+              <documentation>e.g. Wireline, Mobile, Mixed</documentation>
+            </annotation>
+          </element>
+        </sequence>
+      </complexType>
+      <complexType name="VoiceProduct">
+        <complexContent>
+          <extension base="custinv:ProductComponent">
+            <sequence>
+              <element name="Type" type="xs:token"/>
+              <element ref="common:CallNumber"/>
+              <element name="UnlistedNumber" type="xs:boolean"/>
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+      <complexType name="getProductsForCustomerLocationRequestType">
+        <complexContent>
+          <extension base="custinv:getProductsRequestType">
+            <sequence>
+              <element name="PartyId" type="xs:token"/>
+              <element name="LocationId" type="xs:token" minOccurs="0"/>
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+      <complexType name="getProductsForCustomerLocationResponseType">
+        <sequence>
+          <element name="Subscription" type="custinv:Subscription" minOccurs="0" maxOccurs="unbounded"/>
+        </sequence>
+      </complexType>
+      <complexType name="getProductsForSubscriptionRequestType">
+        <complexContent>
+          <extension base="custinv:getProductsRequestType">
+            <choice>
+              <element ref="common:CallNumber"/>
+              <element name="SubscriptionId" type="xs:token"/>
+            </choice>
+          </extension>
+        </complexContent>
+      </complexType>
+      <complexType name="getProductsRequestType">
+        <sequence>
+          <element name="LoadOptions">
+            <complexType>
+              <sequence>
+                <element name="GetResources" type="xs:boolean">
+                  <annotation>
+                    <documentation>additionally returns Customer resources when set to true, false by default</documentation>
+                  </annotation>
+                </element>
+                <element name="GetMobileNet" type="xs:boolean"/>
+                <element name="GetFixedNet" type="xs:boolean"/>
+              </sequence>
+            </complexType>
+          </element>
+        </sequence>
+      </complexType>
+      <complexType name="getProductsResponseType">
+        <sequence>
+          <element name="Subscription" type="custinv:Subscription" minOccurs="0"/>
+        </sequence>
+      </complexType>
+      <complexType name="getSubscriptionsForPartyRequestType">
+        <sequence>
+          <element name="PartyId" type="xs:token"/>
+          <choice>
+            <element name="BAN" type="xs:token" minOccurs="0"/>
+            <element name="BNAccountId" type="xs:token" minOccurs="0"/>
+          </choice>
+          <element name="loadOptions">
+            <complexType>
+              <sequence>
+                <element name="GetFixedNet" type="xs:boolean"/>
+                <element name="GetMobileNet" type="xs:boolean"/>
+                <element name="GetProducts" type="xs:boolean"/>
+              </sequence>
+            </complexType>
+          </element>
+        </sequence>
+      </complexType>
+      <complexType name="getSubscriptionsForPartyResponseType">
+        <sequence>
+          <element name="Subscriptions" minOccurs="0">
+            <complexType>
+              <sequence>
+                <element name="Subscription" type="custinv:Subscription" maxOccurs="unbounded"/>
+              </sequence>
+            </complexType>
+          </element>
+        </sequence>
+      </complexType>
+      <complexType name="mediaBox">
+        <complexContent>
+          <extension base="custinv:PhysicalResource"/>
+        </complexContent>
+      </complexType>
+      <element name="CustomerAccount" type="custinv:CustomerAccount"/>
+      <element name="PhysicalResource" type="custinv:PhysicalResource"/>
+      <element name="Product" type="custinv:Product"/>
+      <element name="ProductCatalog" type="custinv:ProductCatalog"/>
+      <element name="ProductOffering" type="custinv:ProductOffering"/>
+      <element name="ProductSpecification" type="custinv:ProductSpecification"/>
+      <element name="getProductsForCustomerLocationRequest" type="custinv:getProductsForCustomerLocationRequestType"/>
+      <element name="getProductsForCustomerLocationResponse" type="custinv:getProductsForCustomerLocationResponseType"/>
+      <element name="getProductsForSubscriptionRequest" type="custinv:getProductsForSubscriptionRequestType"/>
+      <element name="getProductsForSubscriptionResponse" type="custinv:getProductsResponseType"/>
+      <element name="getSubscriptionsForPartyRequest" type="custinv:getSubscriptionsForPartyRequestType"/>
+      <element name="getSubscriptionsForPartyResponse" type="custinv:getSubscriptionsForPartyResponseType"/>
+    </schema>
+  </wsdl:types>
+  <wsdl:message name="getProductsForCustomerLocationRequest">
+    <wsdl:part name="part1" element="ns0:getProductsForCustomerLocationRequest"/>
+  </wsdl:message>
+  <wsdl:message name="getProductsForCustomerLocationResponse">
+    <wsdl:part name="part1" element="ns0:getProductsForCustomerLocationResponse"/>
+  </wsdl:message>
+  <wsdl:message name="Error">
+    <wsdl:part name="part1" element="ns1:ErrorDetails"/>
+  </wsdl:message>
+  <wsdl:message name="getSubscriptionsForPartyRequest">
+    <wsdl:part name="part1" element="ns0:getSubscriptionsForPartyRequest"/>
+  </wsdl:message>
+  <wsdl:message name="getSubscriptionsForPartyResponse">
+    <wsdl:part name="part1" element="ns0:getSubscriptionsForPartyResponse"/>
+  </wsdl:message>
+  <wsdl:message name="getProductsForSubscriptionRequest">
+    <wsdl:part name="part1" element="ns0:getProductsForSubscriptionRequest"/>
+  </wsdl:message>
+  <wsdl:message name="getProductsForSubscriptionResponse">
+    <wsdl:part name="part1" element="ns0:getProductsForSubscriptionResponse"/>
+  </wsdl:message>
+  <wsdl:portType name="CustomerInventoryPortType">
+    <wsdl:operation name="getProductsForCustomerLocation">
+      <wsdl:input message="tns:getProductsForCustomerLocationRequest"/>
+      <wsdl:output message="tns:getProductsForCustomerLocationResponse"/>
+      <wsdl:fault name="Error" message="tns:Error"/>
+    </wsdl:operation>
+    <wsdl:operation name="getSubscriptionsForParty">
+      <wsdl:input message="tns:getSubscriptionsForPartyRequest"/>
+      <wsdl:output message="tns:getSubscriptionsForPartyResponse"/>
+      <wsdl:fault name="Error" message="tns:Error"/>
+    </wsdl:operation>
+    <wsdl:operation name="getProductsForSubscription">
+      <wsdl:input message="tns:getProductsForSubscriptionRequest"/>
+      <wsdl:output message="tns:getProductsForSubscriptionResponse"/>
+      <wsdl:fault name="Error" message="tns:Error"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="CustomerInventoryPortTypeHttpBinding" type="tns:CustomerInventoryPortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="getProductsForCustomerLocation">
+      <soap:operation style="document" soapAction="/esb/CustomerInventory//getProductsForCustomerLocation"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Error">
+        <soap:fault name="Error" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="getSubscriptionsForParty">
+      <soap:operation style="document" soapAction="/esb/CustomerInventory//getSubscriptionsForParty"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Error">
+        <soap:fault name="Error" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="getProductsForSubscription">
+      <soap:operation style="document" soapAction="/esb/CustomerInventory//getProductsForSubscription"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Error">
+        <soap:fault name="Error" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="CustomerInventory">
+    <wsdl:port name="CustomerInventoryPortTypeTa-devViHttpEndpoint" binding="tns:CustomerInventoryPortTypeHttpBinding">
+      <soap:address location="http://esb-e.a1telekom.inside:8080/esb/si:ta-dev"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>]]></con:content><con:type>http://schemas.xmlsoap.org/wsdl/</con:type></con:part></con:definitionCache><con:endpoints><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint></con:endpoints><con:operation isOneWay="false" action="/esb/CustomerInventory//getProductsForCustomerLocation" name="getProductsForCustomerLocation" bindingOperationName="getProductsForCustomerLocation" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call name="Request 1"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cus="http://eai.a1telekom.at/CustomerInventory">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cus:getProductsForCustomerLocationRequest>
+         <cus:LoadOptions>
+            <cus:GetResources>true</cus:GetResources>
+            <cus:GetMobileNet>true</cus:GetMobileNet>
+            <cus:GetFixedNet>true</cus:GetFixedNet>
+         </cus:LoadOptions>
+         <cus:PartyId>104600789</cus:PartyId>
+         <!--Optional:-->
+         
+      </cus:getProductsForCustomerLocationRequest>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="/esb/CustomerInventory//getProductsForCustomerLocation"/><con:wsrmConfig version="1.2"/></con:call></con:operation><con:operation isOneWay="false" action="/esb/CustomerInventory//getProductsForSubscription" name="getProductsForSubscription" bindingOperationName="getProductsForSubscription" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call name="Request 1"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cus="http://eai.a1telekom.at/CustomerInventory" xmlns:com="http://cdm.a1telekom.at/common">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cus:getProductsForSubscriptionRequest>
+         <cus:LoadOptions>
+            <cus:GetResources>true</cus:GetResources>
+            <cus:GetMobileNet>true</cus:GetMobileNet>
+            <cus:GetFixedNet>true</cus:GetFixedNet>
+         </cus:LoadOptions>
+         <!--You have a CHOICE of the next 2 items at this level-->
+ 
+         <cus:SubscriptionId>899999997727713</cus:SubscriptionId>
+         
+      </cus:getProductsForSubscriptionRequest>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="/esb/CustomerInventory//getProductsForSubscription"/><con:wsrmConfig version="1.2"/></con:call></con:operation><con:operation isOneWay="false" action="/esb/CustomerInventory//getSubscriptionsForParty" name="getSubscriptionsForParty" bindingOperationName="getSubscriptionsForParty" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call name="Request 1"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cus="http://eai.a1telekom.at/CustomerInventory">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cus:getSubscriptionsForPartyRequest>
+         <cus:PartyId>104600789</cus:PartyId>
+         <!--You have a CHOICE of the next 2 items at this level-->
+         <!--Optional:-->
+         
+         <!--Optional:-->
+         
+         <cus:loadOptions>
+            <cus:GetFixedNet>true</cus:GetFixedNet>
+            <cus:GetMobileNet>true</cus:GetMobileNet>
+            <cus:GetProducts>true</cus:GetProducts>
+         </cus:loadOptions>
+      </cus:getSubscriptionsForPartyRequest>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="/esb/CustomerInventory//getSubscriptionsForParty"/><con:wsrmConfig version="1.2"/></con:call></con:operation></con:interface><con:testSuite name="CustomerInventoryPortTypeHttpBinding TestSuite"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="CustomerInventoryPortTypeHttpBinding TestSuite" searchProperties="true"><con:settings/><con:testStep type="request" name="getProductsForCustomerLocation"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>CustomerInventoryPortTypeHttpBinding</con:interface><con:operation>getProductsForCustomerLocation</con:operation><con:request name="getProductsForCustomerLocation"><con:settings/><con:encoding>UTF-8</con:encoding><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cus="http://eai.a1telekom.at/CustomerInventory">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cus:getProductsForCustomerLocationRequest>
+         <cus:LoadOptions>
+            <cus:GetResources>?</cus:GetResources>
+            <cus:GetMobileNet>?</cus:GetMobileNet>
+            <cus:GetFixedNet>?</cus:GetFixedNet>
+         </cus:LoadOptions>
+         <cus:PartyId>?</cus:PartyId>
+         <!--Optional:-->
+         <cus:LocationId>?</cus:LocationId>
+      </cus:getProductsForCustomerLocationRequest>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:wsaConfig action="/esb/CustomerInventory//getProductsForCustomerLocation"/></con:request></con:config></con:testStep><con:testStep type="request" name="getProductsForSubscription"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>CustomerInventoryPortTypeHttpBinding</con:interface><con:operation>getProductsForSubscription</con:operation><con:request name="getProductsForSubscription"><con:settings/><con:encoding>UTF-8</con:encoding><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cus="http://eai.a1telekom.at/CustomerInventory" xmlns:com="http://cdm.a1telekom.at/common">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cus:getProductsForSubscriptionRequest>
+         <cus:LoadOptions>
+            <cus:GetResources>?</cus:GetResources>
+            <cus:GetMobileNet>?</cus:GetMobileNet>
+            <cus:GetFixedNet>?</cus:GetFixedNet>
+         </cus:LoadOptions>
+         <!--You have a CHOICE of the next 2 items at this level-->
+         <com:CallNumber>
+            <CC>?</CC>
+            <NDC>?</NDC>
+            <SN>?</SN>
+         </com:CallNumber>
+         <cus:SubscriptionId>?</cus:SubscriptionId>
+      </cus:getProductsForSubscriptionRequest>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:wsaConfig action="/esb/CustomerInventory//getProductsForSubscription"/></con:request></con:config></con:testStep><con:testStep type="request" name="getSubscriptionsForParty"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>CustomerInventoryPortTypeHttpBinding</con:interface><con:operation>getSubscriptionsForParty</con:operation><con:request name="getSubscriptionsForParty"><con:settings/><con:encoding>UTF-8</con:encoding><con:endpoint>http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cus="http://eai.a1telekom.at/CustomerInventory">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cus:getSubscriptionsForPartyRequest>
+         <cus:PartyId>?</cus:PartyId>
+         <!--You have a CHOICE of the next 2 items at this level-->
+         <!--Optional:-->
+         <cus:BAN>?</cus:BAN>
+         <!--Optional:-->
+         <cus:BNAccountId>?</cus:BNAccountId>
+         <cus:loadOptions>
+            <cus:GetFixedNet>?</cus:GetFixedNet>
+            <cus:GetMobileNet>?</cus:GetMobileNet>
+            <cus:GetProducts>?</cus:GetProducts>
+         </cus:loadOptions>
+      </cus:getSubscriptionsForPartyRequest>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:wsaConfig action="/esb/CustomerInventory//getSubscriptionsForParty"/></con:request></con:config></con:testStep><con:properties/><con:reportParameters/></con:testCase><con:properties/><con:reportParameters/></con:testSuite><con:endpointStrategy xsi:type="con:DefaultEndpointStrategy" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:endpoint mode="COMPLEMENT" username="ta-cuco" password="ta">http://esb-e.a1telekom.inside:8080/esb/si:ta-dev</con:endpoint></con:endpointStrategy><con:properties/><con:wssContainer/><con:databaseConnectionContainer/></con:soapui-project>

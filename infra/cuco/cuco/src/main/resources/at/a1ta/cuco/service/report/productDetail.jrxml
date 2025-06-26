@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Produktdetails" printOrder="Vertical" columnCount="1" pageWidth="950" pageHeight="595" orientation="Landscape" columnWidth="700" leftMargin="25" rightMargin="25" topMargin="25" bottomMargin="25">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<template><![CDATA[$P{templateFile}]]></template>
+	<parameter name="templateFile" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["\\styles.jrtx"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="PartySubreport" class="net.sf.jasperreports.engine.JasperReport" isForPrompting="false"/>
+	<parameter name="bgLogo" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["\\bg_logo_cuco.png"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="nameOfUser" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Barbara Ortmayr"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="rowHeaderCustomer" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Kunde"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="rowHeaderLocation" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Produktstandorte"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="rowHeaderServiceNumber" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Produktnummer"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="rowHeaderCategory" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Art"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="rowHeaderProductName" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Produktname"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="rowHeaderProductNumber" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Zugehoerige Produktnummer"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="rowHeaderSecretLevel" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Geheim"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="rowHeaderBan" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["BAN"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="rowHeaderDescription" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Services/Dienste/Pakete/Tarife"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="rowHeaderProductDetails" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Produktdetails"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="rowHeaderIndexation" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Indexierung"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="rowHeaderValidFrom" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Gueltig ab"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="rowHeaderBinding" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Bindung"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="mkLabel" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Mobilfunk"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="fixedLineLabel" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Festnetz"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="bobLabel" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Bob"]]></defaultValueExpression>
+	</parameter>
+	
+	<parameter name="IndexedLabel" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Ja"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="IndexdNotStartedLabel" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Möglich"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="NotIndexedLabel" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Nein"]]></defaultValueExpression>
+	</parameter>
+	
+	<field name="party" class="at.a1ta.cuco.core.shared.dto.Party"/>
+	<field name="partyId" class="java.lang.Long"/>
+	<field name="location" class="java.lang.String"/>
+	<field name="serviceNumber" class="java.lang.String"/>
+	<field name="category" class="java.lang.String"/>
+	<field name="productName" class="java.lang.String"/>
+	<field name="aonCustomerNumber" class="java.lang.String"/>
+	<field name="secretLevel" class="java.lang.String"/>
+	<field name="ban" class="java.lang.String"/>
+	<field name="description" class="java.lang.String"/>
+	<field name="details" class="java.lang.String"/>
+	<field name="indexation" class="java.lang.String"/>
+	<field name="validFrom" class="java.util.Date"/>
+	<field name="binding" class="java.util.Date"/>
+	<field name="customerType" class="java.lang.String"/>
+	<field name="addressLinkData" class="at.a1ta.cuco.core.shared.model.AddressLinkData"/>
+	<group name="PartyGroup" isStartNewPage="true" isReprintHeaderOnEachPage="false">
+		<groupExpression><![CDATA[$F{partyId}]]></groupExpression>
+		<groupHeader>
+			<band height="29">
+				<subreport>
+					<reportElement isPrintRepeatedValues="true" x="0" y="0" width="875" height="29" isRemoveLineWhenBlank="false" backcolor="#FFFFFF"/>
+					<parametersMapExpression><![CDATA[$P{REPORT_PARAMETERS_MAP}]]></parametersMapExpression>
+					<subreportParameter name="party">
+						<subreportParameterExpression><![CDATA[$F{party}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="partyId">
+						<subreportParameterExpression><![CDATA[$F{partyId}]]></subreportParameterExpression>
+					</subreportParameter>
+					<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.JREmptyDataSource()]]></dataSourceExpression>
+					<subreportExpression class="net.sf.jasperreports.engine.JasperReport"><![CDATA[$P{PartySubreport}]]></subreportExpression>
+				</subreport>
+			</band>
+		</groupHeader>
+	</group>
+	<group name="PartyGroup2" isStartNewPage="false" isReprintHeaderOnEachPage="true">
+		<groupExpression><![CDATA[$F{party}]]></groupExpression>
+		<groupHeader>
+			<band height="15" splitType="Stretch">
+				<elementGroup>
+					<textField isStretchWithOverflow="true">
+						<reportElement style="important" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="true" x="0" y="0" width="115" height="14" backcolor="#FFFFFF"/>
+						<textElement verticalAlignment="Middle"/>
+						<textFieldExpression><![CDATA[$P{rowHeaderLocation}]]></textFieldExpression>
+					</textField>
+					<textField isStretchWithOverflow="true">
+						<reportElement style="important" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="true" x="115" y="0" width="85" height="14" backcolor="#FFFFFF"/>
+						<textElement verticalAlignment="Middle"/>
+						<textFieldExpression><![CDATA[$P{rowHeaderServiceNumber}]]></textFieldExpression>
+					</textField>
+					<textField isStretchWithOverflow="true">
+						<reportElement style="important" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="true" x="200" y="0" width="55" height="14" backcolor="#FFFFFF"/>
+						<textElement verticalAlignment="Middle" textAlignment="Center"/>
+						<textFieldExpression><![CDATA[$P{rowHeaderCategory}]]></textFieldExpression>
+					</textField>
+					<textField isStretchWithOverflow="true">
+						<reportElement style="important" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="true" x="255" y="0" width="95" height="14" backcolor="#FFFFFF"/>
+						<textElement verticalAlignment="Middle"/>
+						<textFieldExpression><![CDATA[$P{rowHeaderProductName}]]></textFieldExpression>
+					</textField>
+					<textField isStretchWithOverflow="true">
+						<reportElement style="important" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="true" x="350" y="0" width="85" height="14" backcolor="#FFFFFF"/>
+						<textElement verticalAlignment="Middle"/>
+						<textFieldExpression><![CDATA[$P{rowHeaderProductNumber}]]></textFieldExpression>
+					</textField>
+					<textField isStretchWithOverflow="true">
+						<reportElement style="important" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="true" x="435" y="0" width="40" height="14" backcolor="#FFFFFF"/>
+						<textElement verticalAlignment="Middle"/>
+						<textFieldExpression><![CDATA[$P{rowHeaderSecretLevel}]]></textFieldExpression>
+					</textField>
+					<textField isStretchWithOverflow="true">
+						<reportElement style="important" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="true" x="470" y="0" width="75" height="14" backcolor="#FFFFFF"/>
+						<textElement verticalAlignment="Middle" textAlignment="Center"/>
+						<textFieldExpression><![CDATA[$P{rowHeaderBan}]]></textFieldExpression>
+					</textField>
+					<textField isStretchWithOverflow="true">
+						<reportElement style="important" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="true" x="545" y="0" width="105" height="14" backcolor="#FFFFFF"/>
+						<textElement verticalAlignment="Middle"/>
+						<textFieldExpression><![CDATA[$P{rowHeaderDescription}]]></textFieldExpression>
+					</textField>
+					<textField isStretchWithOverflow="true">
+						<reportElement style="important" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="true" x="660" y="0" width="65" height="14" backcolor="#FFFFFF"/>
+						<textElement verticalAlignment="Middle"/>
+						<textFieldExpression><![CDATA[$P{rowHeaderIndexation}]]></textFieldExpression>
+					</textField>
+					<textField isStretchWithOverflow="true">
+						<reportElement style="important" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="true" x="720" y="0" width="65" height="14" backcolor="#FFFFFF"/>
+						<textElement verticalAlignment="Middle" textAlignment="Center"/>
+						<textFieldExpression><![CDATA[$P{rowHeaderValidFrom}]]></textFieldExpression>
+					</textField>
+					<textField isStretchWithOverflow="true">
+						<reportElement style="important" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="true" x="800" y="0" width="65" height="14" backcolor="#FFFFFF"/>
+						<textElement verticalAlignment="Middle" textAlignment="Center"/>
+						<textFieldExpression><![CDATA[$P{rowHeaderBinding}]]></textFieldExpression>
+					</textField>
+					<line>
+						<reportElement positionType="Float" x="0" y="0" width="900" height="1" forecolor="#333333"/>
+					</line>
+					<line>
+						<reportElement positionType="Float" x="0" y="14" width="900" height="1" forecolor="#333333"/>
+					</line>
+				</elementGroup>
+			</band>
+		</groupHeader>
+	</group>
+	<title>
+		<band height="55">
+			<staticText>
+				<reportElement style="title" x="0" y="0" width="900" height="40"/>
+				<textElement/>
+				<text><![CDATA[Customer Cockpit Report]]></text>
+			</staticText>
+			<image>
+				<reportElement x="626" y="0" width="156" height="40"/>
+				<imageExpression><![CDATA[$P{bgLogo}]]></imageExpression>
+			</image>
+			<line>
+				<reportElement x="0" y="40" width="900" height="1"/>
+			</line>
+			<staticText>
+				<reportElement x="627" y="40" width="60" height="15"/>
+				<textElement textAlignment="Right"/>
+				<text><![CDATA[Report vom: ]]></text>
+			</staticText>
+			<textField pattern="dd.MM.yyyy HH:mm:ss">
+				<reportElement style="date" x="647" y="40" width="135" height="15"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="30">
+			<staticText>
+				<reportElement style="pageTitle" x="0" y="0" width="800" height="30"/>
+				<textElement/>
+				<text><![CDATA[Report: Produktdetails]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="15" splitType="Stretch">
+			<elementGroup>
+				<textField isStretchWithOverflow="true">
+					<reportElement style="normal" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="0" y="0" width="115" height="14" backcolor="#FFFFFF">
+						<printWhenExpression><![CDATA[Boolean.valueOf($F{location} != null && $F{location}.trim().length() > 0)]]></printWhenExpression>
+					</reportElement>
+					<textElement verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[($F{addressLinkData}.getStreet() == null ? "" : $F{addressLinkData}.getStreet()) + " " + ($F{addressLinkData}.getHouseNumber() == null ? "" : $F{addressLinkData}.getHouseNumber()) + ", " + ($F{addressLinkData}.getZipCode() == null ? "" : $F{addressLinkData}.getZipCode()) + " " + ($F{addressLinkData}.getCity() == null ? "" : $F{addressLinkData}.getCity())]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true">
+					<reportElement style="normal" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="115" y="0" width="85" height="14" backcolor="#FFFFFF"/>
+					<textElement verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$F{category}.contains("B") ? $F{aonCustomerNumber} : $F{serviceNumber}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true">
+					<reportElement style="normal" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="200" y="0" width="55" height="14" backcolor="#FFFFFF"/>
+					<textElement verticalAlignment="Middle" textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{customerType}.equals("TA") ? $P{fixedLineLabel} : ($F{customerType}.equals("A1") ? $P{mkLabel} : ($F{customerType}.equals("BOB") ? $P{bobLabel} : ""))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true">
+					<reportElement style="normal" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="255" y="0" width="95" height="14" backcolor="#FFFFFF">
+						<printWhenExpression><![CDATA[Boolean.valueOf($F{productName} != null)]]></printWhenExpression>
+					</reportElement>
+					<textElement verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$F{productName}.trim()]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true">
+					<reportElement style="normal" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="350" y="0" width="85" height="14" backcolor="#FFFFFF"/>
+					<textElement verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$F{category}.contains("B") ? $F{serviceNumber} : ($F{aonCustomerNumber} != null ? $F{aonCustomerNumber} : "")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true">
+					<reportElement style="normal" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="true" x="435" y="0" width="35" height="14" backcolor="#FFFFFF"/>
+					<textElement verticalAlignment="Middle" textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{secretLevel} != null && !$F{secretLevel}.equals("N") ? "ja" : ""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true">
+					<reportElement style="normal" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="470" y="0" width="75" height="14" backcolor="#FFFFFF">
+					</reportElement>
+					<textElement verticalAlignment="Middle" textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{ban} == null ? "" : $F{ban}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true">
+					<reportElement style="normal" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="true" x="545" y="0" width="75" height="14" backcolor="#FFFFFF">
+						<printWhenExpression><![CDATA[Boolean.valueOf($F{description} != null)]]></printWhenExpression>
+					</reportElement>
+					<textElement verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$F{description}.trim()]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true">
+					<reportElement style="normal" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="true" x="620" y="0" width="30" height="14" backcolor="#FFFFFF">
+						<printWhenExpression><![CDATA[Boolean.valueOf($F{details} != null)]]></printWhenExpression>
+					</reportElement>
+					<textElement verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$F{details}.trim()]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true">
+					<reportElement style="normal" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="660" y="0" width="65" height="14" backcolor="#FFFFFF">
+					<printWhenExpression><![CDATA[Boolean.valueOf($F{indexation} != null)]]></printWhenExpression>
+					</reportElement>
+					<textElement verticalAlignment="Middle" textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{indexation} == null? "": $F{indexation}.equals("INDEXED_PRODUCTS") ? $P{IndexedLabel} : ($F{indexation}.equals("INDEXED_PRODUCTS_NOT_USED") ? $P{IndexdNotStartedLabel} : ($F{indexation}.equals("EXCLUDED") ? $P{NotIndexedLabel} : ""))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="dd.MM.yyyy">
+					<reportElement style="normal" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="true"  x="720" y="0" width="65" height="14" backcolor="#FFFFFF">
+						<printWhenExpression><![CDATA[Boolean.valueOf($F{validFrom} != null)]]></printWhenExpression>
+					</reportElement>
+					<textElement verticalAlignment="Middle" textAlignment="Center"/>
+					<textFieldExpression class="java.util.Date"><![CDATA[$F{validFrom}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="dd.MM.yyyy">
+					<reportElement style="normal" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="true" x="800" y="0" width="65" height="14" backcolor="#FFFFFF">
+						<printWhenExpression><![CDATA[Boolean.valueOf($F{binding} != null)]]></printWhenExpression>
+					</reportElement>
+					<textElement verticalAlignment="Middle" textAlignment="Center"/>
+					<textFieldExpression class="java.util.Date"><![CDATA[$F{binding}]]></textFieldExpression>
+				</textField>
+				<line>
+					<reportElement positionType="Float" x="115" y="0" width="667" height="1" forecolor="#BBBBBB">
+						<printWhenExpression><![CDATA[!$F{productName}.equals("")]]></printWhenExpression>
+					</reportElement>
+				</line>
+				<line>
+					<reportElement positionType="Float" x="0" y="0" width="792" height="1" forecolor="#333333">
+						<printWhenExpression><![CDATA[!$F{location}.equals("")]]></printWhenExpression>
+					</reportElement>
+				</line>
+				<line>
+					<reportElement positionType="Float" x="545" y="0" width="235" height="1" forecolor="#BBBBBB">
+						<printWhenExpression><![CDATA[$F{productName} == null || $F{productName}.equals("")]]></printWhenExpression>
+					</reportElement>
+				</line>
+			</elementGroup>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="15">
+			<line>
+				<reportElement x="0" y="0" width="900" height="1"/>
+			</line>
+			<textField>
+				<reportElement x="0" y="0" width="70" height="15"/>
+				<textElement/>
+				<textFieldExpression><![CDATA["Seite " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="0" width="900" height="15"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA["Reporter: " + $P{nameOfUser}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+</jasperReport>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<!-- @author: rene.weidinger@telekom.at -->
+<sqlMap namespace="Turnover">
+	<typeAlias alias="turnover" type="at.a1ta.cuco.core.shared.dto.Turnover"/>
+	
+	<cacheModel id="turnover-cache" type="ehcacheProvider" readOnly="false" serialize="true">
+		<flushInterval hours="2" />
+		<property name="cache-size" value="5000" />
+	</cacheModel>
+
+	<resultMap id="turnover-result" class="turnover">
+		<result property="partyId" column="KUNDE_ID" />
+		<result property="month" column="MONAT" />
+		<result property="turnoverTa" column="UMSATZ_TA" />
+		<result property="marginTa" column="DECKUNGSBEITRAG_TA" />
+		<result property="turnoverMk" column="UMSATZ_MK" />
+		<result property="marginMk" column="DECKUNGSBEITRAG_MK" />
+	</resultMap>
+
+	<select id="get" resultMap="turnover-result" cacheModel="turnover-cache" parameterClass="java.lang.Long">
+		SELECT kunde_id, monat, umsatz_ta, deckungsbeitrag_ta, umsatz_mk, deckungsbeitrag_mk
+		FROM v_umsatz
+		<isParameterPresent>
+		WHERE kunde_id=#id#
+		</isParameterPresent>
+        order by monat asc
+	</select>
+
+</sqlMap>

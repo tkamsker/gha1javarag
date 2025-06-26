@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ImageSize">
+	<cacheModel id="imagesize-cache" type="ehcacheProvider" readOnly="true" serialize="false">
+		<flushInterval hours="3"/>
+		<property name="cache-size" value="1000"/>
+	</cacheModel>
+
+	<resultMap id="imagesize-result-imagesizes" class="at.a1ta.cuco.core.shared.dto.ImageSize">
+		<result property="id" column="id"/>
+		<result property="name" column="name"/>
+		<result property="width" column="width"/>
+		<result property="height" column="height"/>
+	</resultMap>
+
+	<select id="GetImageSizes" resultMap="imagesize-result-imagesizes" cacheModel="imagesize-cache">
+		SELECT *
+		  FROM app_image_size
+	</select>
+</sqlMap>

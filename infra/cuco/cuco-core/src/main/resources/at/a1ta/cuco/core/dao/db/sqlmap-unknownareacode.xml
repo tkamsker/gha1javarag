@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<!-- @author: rene.weidinger@telekom.at -->
+<sqlMap namespace="UnknownAreaCode">
+	<typeAlias alias="unknownareacode" type="at.a1ta.cuco.core.shared.dto.UnknownAreaCode"/>
+	
+	<cacheModel id="unknownareacode-cache" type="ehcacheProvider" readOnly="true">
+		<flushInterval hours="3" />
+		<flushOnExecute statement="UnknownAreaCode.delete"/>
+		<flushOnExecute statement="UnknownAreaCode.update"/>
+		<flushOnExecute statement="UnknownAreaCode.insert"/>
+		<property name="cache-size" value="20" />
+	</cacheModel>
+
+	<resultMap id="unknownareacode-result" class="unknownareacode">
+		<result property="id" column="ungueltigevorwahl_id" />
+		<result property="areaCode" column="vorwahl" />
+		<result property="description" column="beschreibung" />
+	</resultMap>
+
+	<select id="get" resultMap="unknownareacode-result" cacheModel="unknownareacode-cache" parameterClass="java.lang.Long">
+		SELECT ungueltigevorwahl_id,vorwahl,beschreibung
+		FROM cuco_ungueltigevorwahl
+		<isParameterPresent>
+		WHERE ungueltigevorwahl_id=#id#
+		</isParameterPresent>
+	</select>
+
+	<insert id="insert" parameterClass="unknownareacode">
+		<selectKey resultClass="long" keyProperty="id">SELECT seq_cuco_ungueltigevorwahl.nextval AS id FROM dual</selectKey>
+		INSERT INTO cuco_ungueltigevorwahl(ungueltigevorwahl_id,vorwahl,beschreibung)
+		VALUES (#id#, #areaCode#,#description#)
+	</insert>
+
+	<update id="update" parameterClass="unknownareacode">
+		UPDATE cuco_ungueltigevorwahl
+		SET vorwahl=#areaCode#,
+			beschreibung=#description#
+		WHERE ungueltigevorwahl_id=#id#
+	</update>
+
+	<delete id="delete" parameterClass="java.lang.Long">
+		DELETE FROM cuco_ungueltigevorwahl
+		WHERE ungueltigevorwahl_id=#id#
+	</delete>
+</sqlMap>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration>
+<configuration debug="true" scan="true">
+  
+ <appender name="AUDITLOG" class="at.a1ta.bite.audit.core.RollingFileAuditAppender">
+    <!-- encoder is optional if not specified default layout will be used -->
+    <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+      <layout class="at.a1ta.bite.audit.core.AuditEventLayout" />
+    </encoder>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <!-- minutely rollover for local testing -->
+      <fileNamePattern>D:/logs/cuco/cuco.audit.%d{yyyy-MM-dd_HH-mm}.log</fileNamePattern>
+      <maxHistory>30</maxHistory>
+    </rollingPolicy>
+  </appender>
+
+  <logger name="AUDIT" level="INFO" additivity="false">
+    <appender-ref ref="AUDITLOG" />
+  </logger>
+
+  <root>
+    <level value="INFO" />
+    <appender-ref ref="FILE" />
+    <appender-ref ref="STDOUT" />
+  </root>
+
+</configuration>

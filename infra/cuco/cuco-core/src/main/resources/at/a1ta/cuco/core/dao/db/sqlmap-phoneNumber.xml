@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="PhoneNumber">
+  <cacheModel id="phonenumber-cache" type="ehcacheProvider" readOnly="true" serialize="false">
+    <flushInterval hours="3" />
+    <property name="cache-size" value="1000" />
+  </cacheModel>
+  
+  <cacheModel type="ehcacheProvider" id="parser-cache">
+    <property name="cache-size" value="10" />
+  </cacheModel>
+
+  <resultMap id="phonenumber-result" class="at.a1ta.cuco.core.shared.dto.PhoneNumber">
+    <result property="contractNumber" column="vertrag_id" />
+    <result property="customerId" column="kunde_id" />
+    <result property="locationId" column="lokation_id" />
+    <result property="countryIdentificationNumber" column="lkz" />
+    <result property="cityIdentificationNumber" column="onkz" />
+    <result property="subscriberNumber" column="tn_num" />
+    <result property="unlistedNumberIdentification" column="geheimnummer_jn" />
+    <result property="connectorSpecification" column="aspez_bes" />
+    <result property="tarifDescription" column="tarif_bes" />
+    <result property="broadbandPossible" column="bb_moeglich_jn" typeHandler="at.a1ta.cuco.core.dao.util.YNNullableBooleanTypeHandler" />
+    <result property="tvPossible" column="tv_moeglich_kunde_jn" typeHandler="at.a1ta.cuco.core.dao.util.YNNullableBooleanTypeHandler" />
+    <result property="maxDownloadRate" column="maximaler_download" />
+    <result property="maxUploadRate" column="maximaler_upload" />
+    <result property="nrSTBPossible" column="moegliche_anzahl_settopbox" />
+    <result property="phoneNumberSystemCd" column="rufnummernsystem_cd" />
+    <result property="banId" column="ban_id" />
+     <result property="indexation" column="cpi_status" />
+  </resultMap>
+
+  <resultMap class="at.a1ta.cuco.core.shared.dto.BillingAccountNumber" id="ban-result" groupBy="ban">
+    <result property="ban" column="ban_id"/>
+    <result property="brands" resultMap="PhoneNumber.string-result"/>
+  </resultMap>
+  
+  <resultMap class="java.lang.String" id="string-result">
+    <result property="" column="rufnummernsystem_cd"/>
+  </resultMap>
+  
+  <resultMap class="at.a1ta.cuco.core.shared.dto.MobileChurnLikeliness" id="mobilechurn-result">
+    <result property="countryIdentification" column="lkz"/>
+    <result property="cityIdentification" column="onkz"/>
+    <result property="callNumber" column="tn_num"/>
+    <result property="churnLikeliness" column="churngefahr_mobil_cd"/>
+  </resultMap>
+
+  <sql id="attributes_v_rufnummer">
+    v_rufnummer.vertrag_id, v_rufnummer.kunde_id , v_rufnummer.lokation_id,
+    v_rufnummer.lkz , v_rufnummer.onkz ,
+    v_rufnummer.tn_num ,
+    v_rufnummer.geheimnummer_jn , v_rufnummer.aspez_bes , v_rufnummer.tarif_bes ,
+    v_rufnummer.bb_moeglich_jn ,
+    v_rufnummer.tv_moeglich_kunde_jn , v_rufnummer.maximaler_download ,
+    v_rufnummer.maximaler_upload , moegliche_anzahl_settopbox ,
+    v_rufnummer.rufnummernsystem_cd, v_rufnummer.ban_id,v_rufnummer.cpi_status
+  </sql>
+
+  <select id="getOnkzs" resultClass="string" cacheModel="parser-cache">
+    SELECT DISTINCT(onkz) FROM v_rufnummer where onkz not like '0%' order by 1 desc
+  </select>
+  <select id="getSpecialOnkzs" resultClass="string" cacheModel="parser-cache">
+    SELECT DISTINCT(onkz) FROM v_rufnummer where onkz like '0%' order by 1 desc
+  </select>
+  <select id="getCountryCodes" resultClass="string" cacheModel="parser-cache">
+    SELECT DISTINCT(lkz) FROM v_rufnummer order by 1 desc
+  </select>
+
+  <select id="findByTN" resultClass="string" parameterClass="java.util.HashMap">
+    SELECT tn_num FROM v_rufnummer where onkz = #onkz# and tn_num in
+    <iterate open="(" close=")" conjunction="," property="numbers">#numbers[]#</iterate>
+  </select>
+
+  <select id="GetPhoneNumbers" resultMap="phonenumber-result" parameterClass="java.util.HashMap" cacheModel="phonenumber-cache">
+    SELECT
+    <include refid="attributes_v_rufnummer" />
+    FROM v_rufnummer
+    <dynamic prepend="WHERE">
+      <isNotNull prepend="AND" property="customerId">
+        v_rufnummer.KUNDE_ID=#customerId#
+	  </isNotNull>
+      <isNotNull prepend="AND" property="customerIds">
+        v_rufnummer.KUNDE_ID IN <iterate open="(" close=")" conjunction="," property="customerIds">#customerIds[]#</iterate>
+      </isNotNull>
+      <isNotNull prepend="AND" property="locationId">
+        v_rufnummer.LOKATION_ID=#locationId#
+      </isNotNull>
+      <isNotNull prepend="AND" property="subscriberNumber">
+        v_rufnummer.TN_NUM=#subscriberNumber#
+      </isNotNull>
+      <isNotNull prepend="AND" property="contractNumber">
+        v_rufnummer.VERTRAG_ID=#contractNumber#
+      </isNotNull>
+      <isNotNull prepend="AND" property="filter.ban">
+        to_char(v_rufnummer.ban_id) like ('%$filter.ban$%')
+      </isNotNull>
+      <isNotNull prepend="AND" property="filter.lkz">
+        v_rufnummer.lkz=#filter.lkz#
+      </isNotNull>
+      <isNotNull prepend="AND" property="filter.okz">
+        v_rufnummer.onkz=#filter.okz#
+      </isNotNull>
+      <isNotNull prepend="AND" property="filter.callNumber">
+        v_rufnummer.tn_num=#filter.callNumber#
+      </isNotNull>
+      <isNotNull prepend="AND" property="filter.customerType">
+        v_rufnummer.rufnummernsystem_cd=#filter.customerType#
+      </isNotNull>
+      <isNotNull prepend="AND" property="filter.indexation">
+        v_rufnummer.cpi_status=#filter.indexation#
+      </isNotNull>
+    </dynamic>
+    ORDER BY v_rufnummer.onkz ASC, v_rufnummer.tn_num ASC, v_rufnummer.tarif_bes ASC
+  </select>
+
+
+  <select id="getBillingAccountNumbersForParty" parameterClass="java.lang.Long" resultMap="ban-result">
+    select ban_id, rufnummernsystem_cd from v_rufnummer where kunde_id = #partyId# and ban_id is not null group by ban_id, rufnummernsystem_cd
+  </select>
+  
+  
+  <select id="getBillingAccountNumberForPhoneNumber" resultClass="java.lang.Long" parameterClass="java.util.HashMap">
+  	select ban_id from v_rufnummer where lkz = #countryCode# and onkz = #onkz# and tn_num = #number#
+  </select>
+
+  <select id="getPhoneNumbersForClearingAccountId" parameterClass="long" resultClass="String" cacheModel="phonenumber-cache">
+    SELECT rufnummer FROM v_konto_rufnummer WHERE konto_id = #clearingAccountId#
+  </select>
+  
+  <select id="getPhoneNumbersForBillingAccountNumber" resultMap="phonenumber-result" parameterClass="long" cacheModel="phonenumber-cache">
+    SELECT
+      <include refid="attributes_v_rufnummer" />
+    FROM v_rufnummer
+    WHERE
+      ban_id = #ban#
+    ORDER BY
+      v_rufnummer.lkz, 
+      v_rufnummer.onkz,
+      v_rufnummer.tn_num
+  </select>
+  
+  <select id="getMobileChurnLikelinessForParty" parameterClass="java.lang.Long" resultMap="mobilechurn-result">
+    select lkz, onkz, tn_num, churngefahr_mobil_cd from v_rufnummer where kunde_id = #partyId# and lower(rufnummernsystem_cd) not like 'ta' order by churngefahr_mobil_cd
+  </select>
+  
+  <select id="GetNumberOfCustomersWithChurnForSupportUser" resultClass="java.lang.Integer" parameterClass="java.lang.String">
+    SELECT count(distinct kunde_gesamt.kunde_id)
+    FROM kunde_gesamt, v_rufnummer
+    WHERE betreuer_uuser_cd=#uUser# AND
+      kunde_gesamt.kunde_id = v_rufnummer.kunde_id AND
+      v_rufnummer.churngefahr_mobil_cd in ('HIGH', 'MEDIUM', 'LOW') and kunde_gesamt.churngefahr_cd not in ('1. Sehr Hoch','2. Hoch','3. Mittel','4. Niedrig')
+  </select>
+</sqlMap>

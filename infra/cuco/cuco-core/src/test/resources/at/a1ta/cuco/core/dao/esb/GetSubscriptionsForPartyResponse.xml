@@ -1,0 +1,51 @@
+ <ns0:getSubscriptionsForPartyResponse xmlns:ns0="http://eai.a1telekom.at/CustomerInventory">
+   <ns0:Subscriptions>
+      <pfx:Subscription xmlns:pfx="http://eai.a1telekom.at/CustomerInventory">
+         <pfx:Id>899999997212761</pfx:Id>
+         <pfx:CustomerAccount xsi:type="pfx:BNAccount" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <pfx:AccountNumber>200007874513</pfx:AccountNumber>
+         </pfx:CustomerAccount>
+         <ns1:CallNumber xmlns:ns1="http://cdm.a1telekom.at/common">
+            <CC>43</CC>
+            <NDC>7229</NDC>
+            <SN>63651</SN>
+         </ns1:CallNumber>
+         <pfx:LocationId>4598890</pfx:LocationId>
+          <pfx:Address xmlns:pfx="http://eai.a1telekom.at/CustomerInventory">
+                  <pfx:Postcode>6060</pfx:Postcode>
+                  <pfx:City>Hall in Tirol</pfx:City>
+                 <pfx:FormattedAddress>
+            <pfx:AddressLine1>Gewerbepark-Wagram 7</pfx:AddressLine1>
+            <pfx:AddressLine2>4061 Pasching</pfx:AddressLine2>
+            <pfx:AddressLine3/>
+         </pfx:FormattedAddress>
+               </pfx:Address>
+         
+        
+         <pfx:Type>Wireline</pfx:Type>
+      </pfx:Subscription>
+      <pfx:Subscription xmlns:pfx="http://eai.a1telekom.at/CustomerInventory">
+         <pfx:Id>899999997712675</pfx:Id>
+         <pfx:CustomerAccount xsi:type="pfx:BNAccount" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <pfx:AccountNumber>200007874513</pfx:AccountNumber>
+         </pfx:CustomerAccount>
+         <ns1:CallNumber xmlns:ns1="http://cdm.a1telekom.at/common">
+            <CC>43</CC>
+            <NDC>9499</NDC>
+            <SN>36008</SN>
+         </ns1:CallNumber>
+         <pfx:LocationId>4598890</pfx:LocationId>
+                 <pfx:Address xmlns:pfx="http://eai.a1telekom.at/CustomerInventory">
+                  <pfx:Postcode>6060</pfx:Postcode>
+                  <pfx:City>Hall in Tirol</pfx:City>
+                 <pfx:FormattedAddress>
+            <pfx:AddressLine1>Gewerbepark-Wagram 7</pfx:AddressLine1>
+            <pfx:AddressLine2>4061 Pasching</pfx:AddressLine2>
+            <pfx:AddressLine3/>
+         </pfx:FormattedAddress>
+               </pfx:Address>
+         
+         <pfx:Type>Wireline</pfx:Type>
+      </pfx:Subscription>
+   </ns0:Subscriptions>
+</ns0:getSubscriptionsForPartyResponse>

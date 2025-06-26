@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+	<!-- @author: rene.weidinger@telekom.at -->
+<sqlMap namespace="Reporting">
+	<typeAlias alias="Reporting" type="at.a1ta.cuco.core.bean.Reporting"/>
+
+	<resultMap id="reporting-result" class="Reporting">
+		<result property="id" column="reporting_id" />
+		<result property="name" column="name" />
+		<result property="query" column="query" />
+		<result property="longRunning" column="long_running" />
+		<result property="tableName" column="tablename" />
+	</resultMap>
+
+	<select id="get" resultMap="reporting-result" parameterClass="java.lang.Long">
+		SELECT *
+		FROM app_reporting
+		<isParameterPresent>
+	    	WHERE reporting_id = #id#
+	    </isParameterPresent>
+	    order by reporting_id desc
+	</select>
+
+	<!-- The LinkedHashMap is used because it provides predictable ordering. This is necessary because otherwise
+		the column-order on the client would be different to the queries order
+		-->
+	<select id="execute" remapResults="true" resultClass="java.util.LinkedHashMap" parameterClass="java.lang.String">
+		$stmt$
+	</select>
+
+</sqlMap>

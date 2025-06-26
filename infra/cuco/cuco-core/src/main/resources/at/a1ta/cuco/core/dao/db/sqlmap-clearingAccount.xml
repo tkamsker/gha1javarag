@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap
+ PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+ "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<!-- @author: christoph.strobl@telekom.at -->
+<sqlMap namespace="ClearingAccount">
+    <cacheModel id="clearingAccount-cache" type="ehcacheProvider" readOnly="false" serialize="true">
+        <flushInterval hours="3"/>
+        <property name="cache-size" value="300"/>
+    </cacheModel>
+    
+    <resultMap id="clearingAccount-result" class="at.a1ta.cuco.core.shared.dto.ClearingAccount">        
+        <result property="accountNumber" column="KONTO_ID"/>
+        <result property="partyId" column="KUNDE_ID"/>
+		<result property="ban" column="BAN_ID" />
+		<result property="ben" column="BEN_ID" />
+        <result property="invoiceType" column="MEDIUM_BES"/>
+        <result property="invoiceReceiverSalution" column="ANREDE_BES" />
+        <result property="invoiceReceiverTitle" column="TITEL_BES" />
+        <result property="invoiceReceiverName" column="KUNDE_NAM" />
+        <result property="invoiceAddressLine1" column="ADRESSE_2ZEILIG_1" />
+        <result property="invoiceAddressLine2" column="ADRESSE_2ZEILIG_2" />
+        <result property="active" column="aktiv_cd" nullValue="false"/>
+    </resultMap>
+    
+    <sql id="attributes_v_konto">
+	   v_konto.KONTO_ID,
+	   v_konto.BAN_ID,
+	   v_konto.BEN_ID,
+	   v_konto.KUNDE_ID,
+	   v_konto.MEDIUM_BES,
+	   v_konto.ANREDE_BES,
+	   v_konto.TITEL_BES,
+	   v_konto.KUNDE_NAM,
+	   v_konto.ADRESSE_2ZEILIG_1,
+	   v_konto.ADRESSE_2ZEILIG_2,
+	   v_konto.aktiv_cd
+    </sql>
+    
+    <select id="getByPartyIds" parameterClass="java.util.HashMap" resultMap="clearingAccount-result" cacheModel="clearingAccount-cache">
+        SELECT <include refid="attributes_v_konto"/> FROM v_konto 
+				WHERE v_konto.kunde_id in <iterate open="(" close=")" conjunction="," property="partyIds">#partyIds[]#</iterate>
+				ORDER BY v_konto.KONTO_ID ASC
+    </select>
+    
+    <select id="getActiveTaByPartyId" parameterClass="long" resultMap="clearingAccount-result" cacheModel="clearingAccount-cache">
+        SELECT <include refid="attributes_v_konto"/> FROM v_konto 
+        WHERE v_konto.kunde_id = #partyId#
+        AND aktiv_cd = 1
+        AND ban_id IS NULL
+        ORDER BY v_konto.KONTO_ID ASC
+    </select> 
+		
+	<select id="getByAccountNumber" parameterClass="java.lang.Long" resultMap="clearingAccount-result" cacheModel="clearingAccount-cache">
+        SELECT <include refid="attributes_v_konto"/> FROM v_konto WHERE v_konto.konto_id = #accountNumber#
+    </select>    
+    
+    <select id="GetForPhonenumber" parameterClass="string" resultMap="clearingAccount-result" cacheModel="clearingAccount-cache">
+        SELECT <include refid="attributes_v_konto"/> FROM v_konto, v_konto_rufnummer kr WHERE v_konto.konto_id = kr.konto_id AND kr.rufnummer=#phonenumber#
+    </select>    
+</sqlMap>

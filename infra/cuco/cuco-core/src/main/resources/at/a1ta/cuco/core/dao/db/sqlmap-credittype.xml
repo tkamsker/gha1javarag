@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<!-- @author: rene.weidinger@telekom.at -->
+<sqlMap namespace="CreditType">
+	<typeAlias alias="creditType" type="at.a1ta.cuco.core.shared.dto.CreditType"/>
+	
+	<cacheModel id="credittype-cache" type="ehcacheProvider" readOnly="true">
+		<flushInterval minutes="15" />
+		<flushOnExecute statement="CreditType.insert"/>
+		<flushOnExecute statement="CreditType.update"/>
+		<flushOnExecute statement="CreditType.delete"/>
+		<property name="cache-size" value="30" />
+	</cacheModel>
+
+	<resultMap id="credittype-result" class="creditType">
+		<result property="id" column="dienstleistungsart_ID" />
+		<result property="name" column="name" />
+		<result property="description" column="beschreibung" />
+		<result property="active" column="aktiv" />
+	</resultMap>
+
+	<select id="get" resultMap="credittype-result" cacheModel="credittype-cache" parameterClass="java.lang.Long">
+		SELECT dienstleistungsart_id,name,beschreibung,aktiv
+		FROM cuco_dienstleistungsart
+		<isParameterPresent>
+		WHERE dienstleistungsart_id=#id#
+		</isParameterPresent>
+	</select>
+
+	<insert id="insert" parameterClass="creditType">
+		<selectKey resultClass="long" keyProperty="id">SELECT seq_cuco_dienstleistungsart.nextval AS id FROM dual</selectKey>
+		INSERT INTO cuco_dienstleistungsart(dienstleistungsart_id,name,beschreibung,aktiv)
+		VALUES (#id#, #name#,#description#,#active#)
+	</insert>
+
+	<update id="update" parameterClass="creditType">
+		UPDATE cuco_dienstleistungsart
+		SET name=#name#,
+			beschreibung=#description#,
+			aktiv=#active#
+		WHERE dienstleistungsart_id=#id#
+	</update>
+
+	<delete id="delete" parameterClass="java.lang.Long">
+		DELETE FROM cuco_dienstleistungsart
+		WHERE dienstleistungsart_id=#id#
+	</delete>
+</sqlMap>

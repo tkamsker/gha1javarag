@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+	<!-- @author: gerald.sigmundl@telekom.at -->
+<sqlMap namespace="Service">	
+	<typeAlias alias="service" type="at.a1ta.cuco.core.shared.dto.Service"/>
+	
+	<cacheModel id="service-cache" type="ehcacheProvider" readOnly="true">
+		<flushInterval minutes="15" />
+		<flushOnExecute statement="Service.insert"/>
+		<flushOnExecute statement="Service.update"/>
+		<flushOnExecute statement="Service.delete"/>
+		<property name="cache-size" value="300" />
+	</cacheModel>
+	
+	<resultMap id="service-result" class="at.a1ta.cuco.core.shared.dto.Service">
+		<result property="id" column="dienstleistung_id" />
+		<result property="name" column="NAME" />
+		<result property="validity.validStartDate" column="AKTIV_VON" />
+		<result property="validity.validUntilDate" column="AKTIV_BIS" />
+		<result property="productCode" column="PRODUKTCODE" />
+		<result property="product" column="PRODUKT" />
+		<result property="costs" column="KOSTEN" />
+		<result property="comment" column="KOMMENTARTEXT" />
+		<result property="reason1" column="GRUND1" />
+		<result property="reason2" column="GRUND2" />
+		<result property="reason3" column="GRUND3" />
+		<result property="result" column="ERGEBNIS" />
+		<result property="multi" column="multiplikator"/>
+		<result property="ticketcount" column="ticketcount"/>
+		<result property="employeeinfo" column="mitarbeiterinfo"/>
+		<result property="chargingType" column="this2verrechnungsart"  select="ChargingType.get"/>
+		<result property="creditType" column="this2dienstleistungsart" select="CreditType.get"/>		
+	</resultMap>
+	
+	<sql id="attributes">
+		dienstleistung_id,aktiv_von,aktiv_bis,name,produktcode,kosten,
+		kommentartext,produkt,grund1,grund2,grund3,ergebnis,
+		this2verrechnungsart,this2dienstleistungsart,multiplikator,mitarbeiterinfo
+	</sql>
+	
+	<select id="get" resultMap="service-result" parameterClass="java.lang.Long">
+		select 
+			<include refid="attributes"/>,
+			(select count(1) from cuco_gula where this2dienstleistung = dienstleistung_id) as ticketcount
+		from 
+		CUCO_dienstleistung
+		<isParameterPresent>
+		WHERE dienstleistung_ID=#id#
+		</isParameterPresent>
+	</select>
+	
+	<select id="getValidForUser" resultMap="service-result" parameterClass="java.lang.Long">
+		select
+			d.*,
+			0 as ticketcount
+		from
+			cuco_dienstleistung d,
+			cuco_team_dienstleistung td,
+			cuco_team_user tu
+		where
+			d.dienstleistung_id = td.dienstleistung_id
+		and
+			td.team_id = tu.team_id
+		and
+			d.aktiv_von &lt; sysdate
+		and
+			d.aktiv_bis &gt; sysdate
+		and
+			tu.user_id = #user_id#
+		order by
+			d.name asc
+	</select>
+	
+	<insert id="insert" parameterClass="at.a1ta.cuco.core.shared.dto.Service">
+		<selectKey keyProperty="id" resultClass="java.lang.Long" type="pre">SELECT SEQ_CUCO_dienstleistung.NEXTVAL AS id FROM DUAL</selectKey>
+		insert into CUCO_dienstleistung VALUES(#id#, #validity.validStartDate#, #validity.validUntilDate#, #name#,
+		#productCode#, #costs#, #comment#, #product#, #reason1#, #reason2#, #reason3#, #result#, #chargingType.id#, #creditType.id#,nvl(#multi#,1),#employeeinfo#)  
+	</insert>
+	
+	<update id="update" parameterClass="at.a1ta.cuco.core.shared.dto.Service">
+		update CUCO_dienstleistung set 
+			AKTIV_VON = #validity.validStartDate#, 
+			AKTIV_BIS = #validity.validUntilDate#,
+			NAME = #name#, 
+			PRODUKTCODE = #productCode#, 
+			KOSTEN = #costs#, 
+			KOMMENTARTEXT = #comment#, 
+			PRODUKT = #product#,
+			GRUND1 = #reason1#, GRUND2 = #reason2#, GRUND3 = #reason3#, 
+			ERGEBNIS = #result#,
+			multiplikator = nvl(#multi#,1),
+			mitarbeiterinfo = #employeeinfo#,
+			this2verrechnungsart = #chargingType.id#,
+			this2dienstleistungsart = #creditType.id# 
+		where 
+			dienstleistung_ID = #id#
+	</update>
+	
+	<delete id="delete" parameterClass="java.lang.Long">
+		delete from CUCO_dienstleistung where dienstleistung_ID = #serviceId#
+	</delete>
+	
+<select id="search" resultMap="service-result" parameterClass="java.lang.String">
+		select s.*, 0 as ticketcount from CUCO_dienstleistung s where lower(s.Name) like lower(#service#)
+	</select>
+</sqlMap>

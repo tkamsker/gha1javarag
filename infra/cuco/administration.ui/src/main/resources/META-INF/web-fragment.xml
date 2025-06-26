@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-fragment xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+  http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-fragment_3_0.xsd" version="3.0" metadata-complete="false">
+
+  <servlet>
+    <servlet-name>userShopAssignmentUploadServlet</servlet-name>
+    <servlet-class>at.a1ta.cuco.admin.ui.common.server.UserShopAssignmentUploadServlet</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>userShopAssignmentDownloadServlet</servlet-name>
+    <servlet-class>at.a1ta.cuco.admin.ui.common.server.UserShopAssignmentDownloadServlet</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>userShopAssignmentUploadServlet</servlet-name>
+    <url-pattern>/admin/userShopAssignmentUploadServlet</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>userShopAssignmentDownloadServlet</servlet-name>
+    <url-pattern>/admin/userShopAssignmentDownloadServlet</url-pattern>
+  </servlet-mapping>
+  
+  <servlet>
+    <servlet-name>cCTOrgStructureElementUploadServlet</servlet-name>
+    <servlet-class>at.a1ta.cuco.admin.ui.common.server.CCTOrgStructureElementUploadServlet</servlet-class>
+  </servlet>
+  <!--
+  <servlet>
+    <servlet-name>cCTOrgStructureElementDownloadServlet</servlet-name>
+    <servlet-class>at.a1ta.cuco.admin.ui.common.server.CCTOrgStructureElementDownloadServlet</servlet-class>
+  </servlet>
+  -->
+  <servlet-mapping>
+    <servlet-name>cCTOrgStructureElementUploadServlet</servlet-name>
+    <url-pattern>/admin/cCTOrgStructureElementUploadServlet</url-pattern>
+  </servlet-mapping>
+  <!--
+  <servlet-mapping>
+    <servlet-name>cCTOrgStructureElementDownloadServlet</servlet-name>
+    <url-pattern>/admin/cCTOrgStructureElementDownloadServlet</url-pattern>
+  </servlet-mapping>
+  -->
+</web-fragment>

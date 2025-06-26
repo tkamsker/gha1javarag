@@ -1,0 +1,47 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui"
+	xmlns:t="urn:import:at.a1ta.cuco.ui.common.client.ui.table"
+    xmlns:bite="urn:import:at.a1ta.bite.ui.client.widget">
+    
+    <ui:with field='admintextpool' type='at.a1ta.cuco.admin.ui.common.client.bundle.AdminCommonTextPool'/>
+    <ui:with field='style' type='at.a1ta.bite.ui.client.bundle.StyleResources' />
+
+	<g:HTMLPanel>
+      <div class="{style.floating_left}" style="width:50%; padding-right: 1px;">
+      <bite:Label ui:field="lHeader" />
+      
+      <table>
+       <colgroup>
+          <col width="110px" />
+          <col width="150px" />
+        </colgroup> 
+      <tr>
+      <td style="padding-bottom: 5px; padding-top: 5px;"><bite:Label text="{admintextpool.segSettingsName}" /></td>
+      <td style="padding-bottom: 5px; padding-top: 5px;"><bite:InputBox ui:field="name" size="Medium" /></td>
+      </tr>
+      <tr>
+      <td><bite:Label text="{admintextpool.segSettingsDescription}" /></td>
+      <td><bite:InputBox ui:field="description" size="Medium" /></td>
+      </tr>
+      </table>
+      
+      <br/>
+      <bite:Label ui:field="lRoleHeader" text="Rollen:" />
+      <t:DataTable ui:field="dtRoles"/>
+      </div>
+      
+      <div class="{style.floating_right}" style="width:49%; padding-top: 78px;">
+      <bite:Label ui:field="lAuthHeader" text="Rechte:" />
+      <t:DataTable ui:field="dtAuth"/>
+      </div>
+      
+      <div class="{style.floating_right}" style="padding-right: 1%; padding-top: 1%;">
+      <bite:Button ui:field="bSave" text="Speichern" size="Small"/>
+      <bite:Button ui:field="bCancel" text="Abbrechen" size="Small"/>
+      </div>
+      
+      <div class="{style.floating_clear}" />
+      
+	</g:HTMLPanel>
+</ui:UiBinder>

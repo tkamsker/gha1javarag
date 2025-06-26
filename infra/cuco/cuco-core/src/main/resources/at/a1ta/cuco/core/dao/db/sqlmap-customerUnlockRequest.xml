@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CustomerUnlockRequest">
+
+  <typeAlias alias="customerUnlockRequest" type="at.a1ta.cuco.core.shared.dto.access.ContextAwareCustomerUnlockRequest" />
+
+  <resultMap class="customerUnlockRequest" id="customerUnlockRequest-result">
+    <result property="customerId" column="kunde_id" />
+    <result property="user" column="user_id" select="User.getBiteUserById" />
+    <result property="jobId" column="job_ref_num" />
+    <result property="sessionKey" column="kontext_ref_num" />
+    <result property="context" column="kontext_radius" />
+    <result property="created" column="anfrage_erzeugt" />
+    <result property="finished" column="anfrage_erledigt" />
+    <result property="state" column="anfrage_status" />
+  </resultMap>
+
+  <select id="findCustomerUnlockRequestByCustomerIdAndUsernameAndJobIdAndSessionKey" parameterClass="java.util.Map" resultMap="customerUnlockRequest-result">
+    SELECT * FROM cuco_freischaltung
+     WHERE kunde_id = #customerId#
+       AND user_id = #userId#
+       AND job_ref_num = #jobId#
+       AND kontext_ref_num = #sessionKey#
+  </select>
+  
+  <select id="findCustomerUnlockRequestByCustomerIdAndUsernameAndSessionKey" parameterClass="java.util.Map" resultMap="customerUnlockRequest-result">
+    SELECT * FROM cuco_freischaltung
+     WHERE kunde_id = #customerId#
+       AND user_id = #userId#
+       AND kontext_ref_num = #sessionKey#
+  </select>
+  
+  <insert id="insert" parameterClass="customerUnlockRequest">
+    INSERT INTO cuco_freischaltung (kunde_id, user_id, job_ref_num, kontext_ref_num, kontext_radius, anfrage_erzeugt, anfrage_status)
+         VALUES (#customerId#,#user.id#,#jobId#,#sessionKey#,#context#,#created#,#state#)
+  </insert>
+  
+  <update id="update" parameterClass="customerUnlockRequest">
+    UPDATE cuco_freischaltung SET
+      anfrage_erledigt = #finished#,
+      anfrage_status = #state#
+    WHERE kunde_id = #customerId#
+       AND user_id = #user.id#
+       AND job_ref_num = #jobId#
+       AND kontext_ref_num = #sessionKey#
+  </update>
+ 
+</sqlMap> 
+  
