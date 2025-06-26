@@ -308,13 +308,3 @@ print(f"Consecutive failures: {stats['consecutive_failures']}")
 4. **Plan Ahead**: Large codebases may take several hours to process
 5. **Resume Capability**: The system can be restarted and will skip already processed files 
 
-### 
-# 2025.06.26 falsk 
-
- ./run_flask.sh
-curl -X POST http://localhost:8000/chat \
-  -H "Content-Type: application/json" \
-  -d '{"question": "What does this project do?"}'
-
-
-  ./run_fastapi.sh

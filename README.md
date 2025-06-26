@@ -235,3 +235,18 @@ Get AI-powered answers based on your ChromaDB documentation
 See which AI provider is being used (OpenAI, Anthropic, Ollama)
 Monitor server status and connection health
 The web interface will automatically detect your AI provider configuration from the .env file and display it in the interface!
+
+
+### 
+# 2025.06.26 falsk 
+
+ ./run_flask.sh
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What does this project do?"}'
+
+
+  ./run_fastapi.sh
+
+  better ./start_web.sh
+  
