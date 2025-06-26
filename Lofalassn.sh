@@ -26,6 +26,29 @@ if [ "$AI_PROVIDER" = "openai" ]; then
         exit 1
     fi
     echo "✅ OpenAI API key configured"
+elif [ "$AI_PROVIDER" = "anthropic" ]; then
+    # Check Anthropic API key
+    if [ -z "$ANTHROPIC_API_KEY" ]; then
+        echo "❌ ERROR: ANTHROPIC_API_KEY environment variable is not set"
+        echo "Please set your Anthropic API key:"
+        echo "export ANTHROPIC_API_KEY='your-api-key-here'"
+        echo "Or add it to your .env file"
+        exit 1
+    fi
+    echo "✅ Anthropic API key configured"
+    
+    # Validate API key format (should start with 'sk-ant-')
+    if [[ ! "$ANTHROPIC_API_KEY" =~ ^sk-ant- ]]; then
+        echo "⚠️  WARNING: Anthropic API key format appears incorrect"
+        echo "Expected format: sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        echo "Current format: ${ANTHROPIC_API_KEY:0:10}..."
+        echo ""
+        echo "Continue anyway? (y/N)"
+        read -r response
+        if [[ ! "$response" =~ ^[Yy]$ ]]; then
+            exit 1
+        fi
+    fi
 elif [ "$AI_PROVIDER" = "ollama" ]; then
     # Check if Ollama is running
     if ! curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
@@ -58,7 +81,7 @@ elif [ "$AI_PROVIDER" = "ollama" ]; then
     fi
 else
     echo "❌ ERROR: Invalid AI_PROVIDER: $AI_PROVIDER"
-    echo "Supported providers: 'openai', 'ollama'"
+    echo "Supported providers: 'openai', 'anthropic', 'ollama'"
     exit 1
 fi
 
@@ -82,7 +105,7 @@ else
     python src/main_test.py
 fi
 
-# Check for quota exceeded error (only for OpenAI)
+# Check for quota exceeded error (for OpenAI and Anthropic)
 if [ $? -ne 0 ]; then
     if [ "$AI_PROVIDER" = "openai" ]; then
         echo "❌ Step 1 failed. This might be due to:"
@@ -94,6 +117,21 @@ if [ $? -ne 0 ]; then
         echo "   - Try running in 'emergency' mode: ./lofalassn.sh emergency"
         echo "   - Check your OpenAI billing and plan details"
         echo "   - Wait for quota reset or upgrade your plan"
+        echo "   - Switch to Anthropic: export AI_PROVIDER=anthropic"
+        echo "   - Switch to Ollama for local testing: export AI_PROVIDER=ollama"
+    elif [ "$AI_PROVIDER" = "anthropic" ]; then
+        echo "❌ Step 1 failed. This might be due to:"
+        echo "   - Anthropic API quota exceeded (check billing at https://console.anthropic.com/)"
+        echo "   - Rate limiting issues"
+        echo "   - Network connectivity problems"
+        echo "   - Invalid API key"
+        echo ""
+        echo "💡 Tips:"
+        echo "   - Try running in 'emergency' mode: ./lofalassn.sh emergency"
+        echo "   - Check your Anthropic billing and plan details"
+        echo "   - Verify your API key format (should start with 'sk-ant-')"
+        echo "   - Wait for quota reset or upgrade your plan"
+        echo "   - Switch to OpenAI: export AI_PROVIDER=openai"
         echo "   - Switch to Ollama for local testing: export AI_PROVIDER=ollama"
     else
         echo "❌ Step 1 failed. This might be due to:"
@@ -105,6 +143,8 @@ if [ $? -ne 0 ]; then
         echo "   - Check if Ollama is running: ollama serve"
         echo "   - Verify model is available: ollama list"
         echo "   - Check Ollama logs for errors"
+        echo "   - Switch to OpenAI: export AI_PROVIDER=openai"
+        echo "   - Switch to Anthropic: export AI_PROVIDER=anthropic"
     fi
     exit 1
 fi
@@ -131,7 +171,7 @@ else
     python src/step2_test.py
 fi
 
-# Check for quota exceeded error (only for OpenAI)
+# Check for quota exceeded error (for OpenAI and Anthropic)
 if [ $? -ne 0 ]; then
     if [ "$AI_PROVIDER" = "openai" ]; then
         echo "❌ Step 2 failed. This might be due to:"
@@ -143,6 +183,21 @@ if [ $? -ne 0 ]; then
         echo "   - Try running in 'emergency' mode: ./lofalassn.sh emergency"
         echo "   - Check your OpenAI billing and plan details"
         echo "   - Wait for quota reset or upgrade your plan"
+        echo "   - Switch to Anthropic: export AI_PROVIDER=anthropic"
+        echo "   - Switch to Ollama for local testing: export AI_PROVIDER=ollama"
+    elif [ "$AI_PROVIDER" = "anthropic" ]; then
+        echo "❌ Step 2 failed. This might be due to:"
+        echo "   - Anthropic API quota exceeded (check billing at https://console.anthropic.com/)"
+        echo "   - Rate limiting issues"
+        echo "   - Network connectivity problems"
+        echo "   - Invalid API key"
+        echo ""
+        echo "💡 Tips:"
+        echo "   - Try running in 'emergency' mode: ./lofalassn.sh emergency"
+        echo "   - Check your Anthropic billing and plan details"
+        echo "   - Verify your API key format (should start with 'sk-ant-')"
+        echo "   - Wait for quota reset or upgrade your plan"
+        echo "   - Switch to OpenAI: export AI_PROVIDER=openai"
         echo "   - Switch to Ollama for local testing: export AI_PROVIDER=ollama"
     else
         echo "❌ Step 2 failed. This might be due to:"
@@ -154,6 +209,8 @@ if [ $? -ne 0 ]; then
         echo "   - Check if Ollama is running: ollama serve"
         echo "   - Verify model is available: ollama list"
         echo "   - Check Ollama logs for errors"
+        echo "   - Switch to OpenAI: export AI_PROVIDER=openai"
+        echo "   - Switch to Anthropic: export AI_PROVIDER=anthropic"
     fi
     exit 1
 fi
@@ -175,11 +232,13 @@ echo "📊 Configuration Info:"
 echo "   - AI Provider: $AI_PROVIDER"
 if [ "$AI_PROVIDER" = "openai" ]; then
     echo "   - OpenAI Model: ${OPENAI_MODEL_NAME:-'gpt-4-turbo-preview'}"
+elif [ "$AI_PROVIDER" = "anthropic" ]; then
+    echo "   - Anthropic Model: ${ANTHROPIC_MODEL_NAME:-'claude-3-5-sonnet-20241022'}"
 elif [ "$AI_PROVIDER" = "ollama" ]; then
     echo "   - Ollama Model: ${OLLAMA_MODEL_NAME:-'deepseek-r1:32b'}"
     echo "   - Ollama URL: ${OLLAMA_BASE_URL:-'http://localhost:11434'}"
 fi
 echo "   - Rate Limit Environment: $RATE_LIMIT_ENV"
-echo "   - Quota exceeded handling: Enabled (OpenAI only)"
+echo "   - Quota exceeded handling: Enabled (OpenAI and Anthropic)"
 echo "   - Intelligent error detection: Enabled"
 echo "   - For more info, see: RATE_LIMITING.md"

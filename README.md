@@ -202,3 +202,16 @@ Disable anonymized telemetry.
 Now statistics are not sent to https://us.i.posthog.com:443
 # Documentation generation
 Fixes: extract necessary information from ai_analysis json object.
+
+# 2025.06.25 antropic 
+# Test Anthropic provider
+AI_PROVIDER=anthropic python src/test_ai_providers.py
+
+# Run main application with Anthropic
+AI_PROVIDER=anthropic python src/main.py
+
+# Run step2 with Anthropic
+AI_PROVIDER=anthropic python src/step2.py
+
+# Run step3 with Anthropic
+AI_PROVIDER=anthropic python src/step3.py

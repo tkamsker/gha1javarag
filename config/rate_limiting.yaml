@@ -3,13 +3,13 @@
 
 # Production settings (conservative)
 production:
-  requests_per_minute: 15
-  requests_per_hour: 800
-  delay_between_requests: 4.0
+  requests_per_minute: 30
+  requests_per_hour: 1600
+  delay_between_requests: 2.0
   exponential_backoff_base: 2.0
   max_retries: 5
   quota_exceeded_wait_time: 3600  # 1 hour wait when quota exceeded
-  ollama_timeout: 120  # 2 minutes for Ollama requests
+  ollama_timeout: 60  # 2 minutes for Ollama requests
 
 # Test settings (very conservative)
 test:

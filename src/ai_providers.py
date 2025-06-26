@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 import logging
 import time
 from config_loader import get_ollama_config
+import anthropic
 
 logger = logging.getLogger('java_analysis.ai_providers')
 
@@ -64,6 +65,91 @@ class OpenAIProvider(AIProvider):
     
     def get_provider_name(self) -> str:
         return "OpenAI"
+    
+    def get_model_name(self) -> str:
+        return self.model_name
+
+class AnthropicProvider(AIProvider):
+    """Anthropic Claude provider implementation"""
+    
+    def __init__(self):
+        load_dotenv()
+        
+        api_key = os.getenv('ANTHROPIC_API_KEY')
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY environment variable is not set")
+            
+        self.model_name = os.getenv('ANTHROPIC_MODEL_NAME', 'claude-3-5-sonnet-20241022')
+        self.client = anthropic.AsyncAnthropic(api_key=api_key)
+        self.timeout = 360  # 6 minutes timeout for Anthropic
+        
+        logger.info(f"Initialized Anthropic provider with model: {self.model_name}")
+    
+    async def create_chat_completion(self, messages: List[Dict[str, str]], 
+                                   temperature: float = 0.2, 
+                                   max_tokens: int = 1500) -> str:
+        """Create a chat completion using Anthropic Claude API"""
+        try:
+            # Convert OpenAI format to Anthropic format
+            anthropic_messages = []
+            system_message = None
+            
+            for msg in messages:
+                if msg['role'] == 'system':
+                    system_message = msg['content']
+                else:
+                    anthropic_messages.append({
+                        'role': msg['role'],
+                        'content': msg['content']
+                    })
+            
+            # Log request details
+            logger.info(f"Anthropic request details:")
+            logger.info(f"  Model: {self.model_name}")
+            logger.info(f"  Temperature: {temperature}")
+            logger.info(f"  Max tokens: {max_tokens}")
+            logger.info(f"  Timeout: {self.timeout} seconds")
+            logger.info(f"  Message count: {len(anthropic_messages)}")
+            
+            # Log first message preview for debugging
+            if anthropic_messages:
+                first_msg_preview = anthropic_messages[0]['content'][:200] + "..." if len(anthropic_messages[0]['content']) > 200 else anthropic_messages[0]['content']
+                logger.info(f"  First message preview: {first_msg_preview}")
+            
+            logger.info(f"Sending Anthropic request...")
+            start_time = time.time()
+            
+            response = await self.client.messages.create(
+                model=self.model_name,
+                messages=anthropic_messages,
+                system=system_message,
+                temperature=temperature,
+                max_tokens=max_tokens
+            )
+            
+            request_time = time.time() - start_time
+            logger.info(f"Anthropic response received in {request_time:.2f} seconds")
+            
+            if response.content and len(response.content) > 0:
+                response_content = response.content[0].text
+                response_preview = response_content[:200] + "..." if len(response_content) > 200 else response_content
+                logger.info(f"  Response preview: {response_preview}")
+                logger.info(f"  Response length: {len(response_content)} characters")
+                return response_content
+            else:
+                logger.error(f"Empty response from Anthropic API")
+                raise Exception("Empty response from Anthropic API")
+                
+        except Exception as e:
+            logger.error(f"Anthropic API error: {str(e)}")
+            logger.error(f"Request details:")
+            logger.error(f"  Model: {self.model_name}")
+            logger.error(f"  Temperature: {temperature}")
+            logger.error(f"  Max tokens: {max_tokens}")
+            raise
+    
+    def get_provider_name(self) -> str:
+        return "Anthropic"
     
     def get_model_name(self) -> str:
         return self.model_name
@@ -262,5 +348,8 @@ def create_ai_provider() -> AIProvider:
     elif ai_provider == 'openai':
         logger.info("Creating OpenAI AI provider")
         return OpenAIProvider()
+    elif ai_provider == 'anthropic':
+        logger.info("Creating Anthropic AI provider")
+        return AnthropicProvider()
     else:
-        raise ValueError(f"Unsupported AI provider: {ai_provider}. Supported providers: 'openai', 'ollama'") 
+        raise ValueError(f"Unsupported AI provider: {ai_provider}. Supported providers: 'openai', 'ollama', 'anthropic'") 

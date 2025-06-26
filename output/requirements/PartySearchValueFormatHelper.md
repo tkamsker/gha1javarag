@@ -1,0 +1,16 @@
+# Requirements Analysis: cuco-core/src/main/java/at/a1ta/cuco/core/service/PartySearchValueFormatHelper.java
+
+PartySearchValueFormatHelper.java
+1. Purpose: Helper component for formatting and standardizing party search values, particularly phone numbers
+2. User Interactions: No direct user interactions; supports backend search functionality
+3. Data Handling:
+- Processes phone number formats
+- Likely handles standardization of search input values
+4. Business Rules:
+- Appears to have specific formatting rules for phone numbers
+- Contains logic for handling leading zeros
+5. Dependencies:
+- Spring Framework (@Component, @Autowired)
+- PhoneNumberDao
+- PhoneNumberParser
+- PhoneNumberStructure DTO

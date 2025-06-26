@@ -1,0 +1,24 @@
+# Requirements Analysis: cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/AccessToken.java
+
+AccessToken.java
+1. Purpose and functionality:
+- Manages access tokens for system authentication
+- Provides token validation functionality
+- Includes special NONE token for invalid/no access cases
+
+2. User interactions:
+- No direct user interactions, used for system authentication
+
+3. Data handling:
+- Stores target system identifier
+- Maintains token information
+- Special handling for NONE token case
+
+4. Business rules:
+- NONE token always returns false for validation
+- Tokens are associated with specific target systems
+- Supports token validation checking
+
+5. Dependencies:
+- No external dependencies beyond Java standard library
+- Used by authentication and authorization services
