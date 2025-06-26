@@ -62,6 +62,9 @@ class BatchAIAnalyzer:
             lambda f: 'main' in f.get('file_path', '').lower(),
             # Medium priority - configuration files
             lambda f: f.get('file_path', '').endswith('.xml'),
+            lambda f: f.get('file_path', '').endswith('.xsd'),
+            lambda f: f.get('file_path', '').endswith('.wsdl'),
+            lambda f: f.get('file_path', '').endswith('.xslt'),
             lambda f: f.get('file_path', '').endswith('.properties'),
             lambda f: f.get('file_path', '').endswith('.sql'),
             # Lower priority - other files
