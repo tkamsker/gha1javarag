@@ -1,7 +1,7 @@
 import asyncio
 from file_processor import FileProcessor
 from ai_analyzer import AIAnalyzer
-from chromadb_connector import ChromaDBConnector
+from chromadb_connector import ChromaDBConnector, EnhancedChromaDBConnector
 from requirements_analyzer import RequirementsAnalyzer
 import json
 import os
@@ -364,9 +364,45 @@ async def process_codebase_test():
         metadata_file = os.path.join(output_dir, 'metadata.json')
         file_processor.save_metadata(analyzed_metadata, metadata_file)
         
-        # 1.4 Store in ChromaDB
-        logger.info("1.4 Storing in ChromaDB...")
-        chroma_connector.store_metadata(analyzed_metadata)
+        # 1.4 Store in ChromaDB with enhanced chunking
+        logger.info("1.4 Storing in ChromaDB with enhanced chunking...")
+        try:
+            # Try to use enhanced connector
+            enhanced_connector = EnhancedChromaDBConnector()
+            
+            # Get the source directory from environment variable
+            java_source_dir = os.getenv('JAVA_SOURCE_DIR', '.')
+            logger.info(f"Using JAVA_SOURCE_DIR: {java_source_dir}")
+            
+            for file_meta in analyzed_metadata:
+                file_path = file_meta.get('file_path', '')
+                content = file_meta.get('content', '')
+                ai_analysis = file_meta.get('ai_analysis', {})
+                
+                if file_path and content:
+                    try:
+                        enhanced_connector.store_enhanced_metadata(file_path, content, ai_analysis)
+                        logger.debug(f"Stored enhanced metadata for: {file_path}")
+                        file_meta['chromadb_status'] = 'success'
+                    except Exception as e:
+                        logger.error(f"Error storing enhanced metadata for {file_path}: {e}")
+                        file_meta['chromadb_status'] = 'failed'
+                        file_meta['chromadb_error'] = str(e)
+                else:
+                    logger.warning(f"Skipping ChromaDB storage for {file_path}: missing content")
+                    file_meta['chromadb_status'] = 'skipped'
+                    
+        except ImportError:
+            # Fallback to legacy connector
+            logger.warning("EnhancedChromaDBConnector not available, using legacy connector")
+            chroma_connector = ChromaDBConnector()
+            chroma_connector.store_metadata(analyzed_metadata)
+        except Exception as e:
+            logger.error(f"Error initializing ChromaDB connector: {e}")
+            # Continue without ChromaDB storage
+            for file_meta in analyzed_metadata:
+                file_meta['chromadb_status'] = 'failed'
+                file_meta['chromadb_error'] = str(e)
         
         # Step 2: Generate requirements documentation
         logger.info("Step 2: Generating requirements documentation...")

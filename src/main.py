@@ -364,6 +364,11 @@ async def process_codebase():
         
         # 1.4 Store in ChromaDB with enhanced chunking
         logger.info("1.4 Storing in ChromaDB with enhanced chunking...")
+        
+        # Get the source directory from environment variable
+        java_source_dir = os.getenv('JAVA_SOURCE_DIR', '.')
+        logger.info(f"Using JAVA_SOURCE_DIR: {java_source_dir}")
+        
         for file_meta in analyzed_metadata:
             file_path = file_meta.get('file_path', '')
             content = file_meta.get('content', '')

@@ -55,107 +55,75 @@ class EnhancedChromaDBConnector:
         logger.info(f"Using collection: {collection_name}")
 
     def store_enhanced_metadata(self, file_path: str, content: str, ai_analysis: Dict[str, Any] = None) -> None:
-        """Store enhanced metadata using intelligent code chunking"""
-        logger.info(f"Storing enhanced metadata for: {file_path}")
-        
+        """Store enhanced metadata with intelligent code chunking"""
         try:
-            # Use intelligent chunking to create code chunks
+            # Get the source directory from environment variable
+            java_source_dir = os.getenv('JAVA_SOURCE_DIR', '.')
+            
+            # Construct absolute file path
+            if os.path.isabs(file_path):
+                absolute_file_path = file_path
+            else:
+                absolute_file_path = os.path.join(java_source_dir, file_path)
+            
+            # If content is not provided, try to read from file
+            if not content:
+                if os.path.exists(absolute_file_path):
+                    try:
+                        with open(absolute_file_path, 'r', encoding='utf-8') as f:
+                            content = f.read()
+                        logger.info(f"Read content from file: {absolute_file_path}")
+                    except Exception as e:
+                        logger.warning(f"Could not read file {absolute_file_path}: {e}")
+                        content = f"# File: {file_path}\n# Content not available: {str(e)}"
+                else:
+                    logger.warning(f"File not found: {absolute_file_path}")
+                    content = f"# File: {file_path}\n# File not found at: {absolute_file_path}"
+            
+            # Use intelligent code chunking
             chunks = self.chunker.chunk_code(content, file_path)
+            
+            if not chunks:
+                logger.warning(f"No chunks created for {file_path}")
+                return
+            
             logger.info(f"Created {len(chunks)} chunks for {file_path}")
             
-            # Prepare data for ChromaDB
+            # Prepare documents and metadata for ChromaDB
             documents = []
             metadatas = []
             ids = []
             
             for chunk in chunks:
-                # Create enhanced document content
-                doc_content = [
-                    f"File: {chunk.file_path}",
-                    f"Type: {chunk.chunk_type}",
-                    f"Language: {chunk.language}",
-                ]
-                
-                # Add specific metadata based on chunk type
-                if chunk.function_name:
-                    doc_content.append(f"Function: {chunk.function_name}")
-                if chunk.class_name:
-                    doc_content.append(f"Class: {chunk.class_name}")
-                if chunk.parent_context:
-                    doc_content.append(f"Parent: {chunk.parent_context}")
-                
-                doc_content.extend([
-                    "Content:",
-                    chunk.content,
-                ])
-                
-                # Add AI analysis if available
-                if ai_analysis:
-                    doc_content.extend([
-                        "Analysis:",
-                        json.dumps(ai_analysis, indent=2) if isinstance(ai_analysis, dict) else str(ai_analysis)
-                    ])
-                
-                documents.append("\n".join(doc_content))
-                
-                # Prepare enhanced metadata
-                meta = {
-                    'file_path': chunk.file_path,
-                    'chunk_type': chunk.chunk_type,
+                # Convert metadata to strings for ChromaDB compatibility
+                metadata = {
+                    'file_path': file_path,
                     'language': chunk.language,
-                    'start_line': chunk.start_line,
-                    'end_line': chunk.end_line,
-                    'complexity_score': chunk.complexity_score,
-                    'chunk_id': chunk.chunk_id,
+                    'chunk_type': chunk.chunk_type,
+                    'start_line': str(chunk.start_line),
+                    'end_line': str(chunk.end_line),
+                    'complexity_score': str(chunk.complexity_score),
+                    'function_name': chunk.function_name or '',
+                    'class_name': chunk.class_name or '',
+                    'parent_context': chunk.parent_context or '',
+                    'ai_analysis': json.dumps(ai_analysis) if ai_analysis else ''
                 }
                 
-                # Add optional fields
-                if chunk.function_name:
-                    meta['function_name'] = chunk.function_name
-                if chunk.class_name:
-                    meta['class_name'] = chunk.class_name
-                if chunk.parent_context:
-                    meta['parent_context'] = chunk.parent_context
-                if chunk.imports:
-                    meta['imports'] = ', '.join(chunk.imports) if chunk.imports else ''
-                if chunk.dependencies:
-                    meta['dependencies'] = ', '.join(chunk.dependencies) if chunk.dependencies else ''
-                if chunk.metadata:
-                    # Ensure all metadata values are ChromaDB-compatible
-                    for key, value in chunk.metadata.items():
-                        if isinstance(value, list):
-                            meta[key] = ', '.join(str(v) for v in value) if value else ''
-                        elif isinstance(value, (str, int, float, bool)):
-                            meta[key] = value
-                        else:
-                            meta[key] = str(value) if value is not None else ''
-                
-                # Add file-level metadata
-                file_stats = os.stat(file_path)
-                meta.update({
-                    'file_size_bytes': file_stats.st_size,
-                    'file_last_modified': file_stats.st_mtime,
-                    'file_extension': Path(file_path).suffix,
-                })
-                
-                metadatas.append(meta)
+                documents.append(chunk.content)
+                metadatas.append(metadata)
                 ids.append(chunk.chunk_id)
             
-            # Store in batches of 100 to avoid memory issues
-            batch_size = 100
-            for i in range(0, len(documents), batch_size):
-                batch_end = min(i + batch_size, len(documents))
-                self.collection.add(
-                    documents=documents[i:batch_end],
-                    metadatas=metadatas[i:batch_end],
-                    ids=ids[i:batch_end]
-                )
-                logger.debug(f"Stored batch {i//batch_size + 1} ({batch_end - i} chunks)")
+            # Store in ChromaDB
+            self.collection.add(
+                documents=documents,
+                metadatas=metadatas,
+                ids=ids
+            )
             
-            logger.info(f"Successfully stored {len(documents)} enhanced chunks in ChromaDB")
+            logger.info(f"Successfully stored {len(chunks)} enhanced chunks in ChromaDB")
             
         except Exception as e:
-            logger.error(f"Error storing enhanced metadata in ChromaDB: {str(e)}")
+            logger.error(f"Error storing enhanced metadata in ChromaDB: {e}")
             raise
 
     def query_enhanced_similar(self, query: str, n_results: int = 5, 
@@ -258,19 +226,42 @@ class EnhancedChromaDBConnector:
 # Backward compatibility - keep the old function names
 def store_metadata(metadata_list: List[Dict[str, Any]]) -> None:
     """Legacy function for backward compatibility"""
+    print("⚠️  WARNING: Using legacy store_metadata method. Consider upgrading to EnhancedChromaDBConnector.")
     connector = EnhancedChromaDBConnector()
     
+    # Get the source directory from environment variable
+    java_source_dir = os.getenv('JAVA_SOURCE_DIR', '.')
+    
     for metadata in metadata_list:
-        file_path = metadata['file_path']
+        file_path = metadata.get('file_path', '')
         content = metadata.get('content', '')
-        ai_analysis = metadata.get('ai_analysis')
+        ai_analysis = metadata.get('ai_analysis', {})
         
         # Read file content if not provided
-        if not content and os.path.exists(file_path):
-            with open(file_path, 'r', encoding='utf-8') as f:
-                content = f.read()
+        if not content:
+            # Construct absolute file path
+            if os.path.isabs(file_path):
+                absolute_file_path = file_path
+            else:
+                absolute_file_path = os.path.join(java_source_dir, file_path)
+            
+            if os.path.exists(absolute_file_path):
+                try:
+                    with open(absolute_file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                except Exception as e:
+                    logger.warning(f"Could not read file {absolute_file_path}: {e}")
+                    continue
+            else:
+                logger.warning(f"File not found: {absolute_file_path}")
+                continue
         
-        connector.store_enhanced_metadata(file_path, content, ai_analysis)
+        if file_path and content:
+            try:
+                connector.store_enhanced_metadata(file_path, content, ai_analysis)
+                logger.debug(f"Stored enhanced metadata for: {file_path}")
+            except Exception as e:
+                logger.error(f"Error storing enhanced metadata for {file_path}: {e}")
 
 def _format_enhanced_results(results: Dict[str, Any]) -> str:
     """Format enhanced query results for display"""
@@ -323,7 +314,18 @@ def query_chromadb(question: str, n_results: int = 5) -> str:
         logger.error(f"Error in enhanced query_chromadb: {str(e)}")
         return f"Error querying ChromaDB: {str(e)}"
 
-# Legacy class for backward compatibility
-class ChromaDBConnector(EnhancedChromaDBConnector):
-    """Legacy class name for backward compatibility"""
-    pass 
+# Legacy ChromaDBConnector class for backward compatibility
+class ChromaDBConnector:
+    """Legacy ChromaDB connector for backward compatibility"""
+    
+    def __init__(self):
+        self.enhanced_connector = EnhancedChromaDBConnector()
+        logger.warning("Using legacy ChromaDBConnector. Consider upgrading to EnhancedChromaDBConnector.")
+    
+    def store_metadata(self, metadata_list: List[Dict[str, Any]]) -> None:
+        """Legacy method that delegates to enhanced connector"""
+        store_metadata(metadata_list)
+    
+    def query_chromadb(self, question: str, n_results: int = 5) -> str:
+        """Legacy query method that delegates to enhanced connector"""
+        return query_chromadb(question, n_results) 
