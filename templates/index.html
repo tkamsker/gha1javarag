@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project AI Assistant</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .chat-form {
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            resize: vertical;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .response {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .server-info {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Project AI Assistant</h1>
+        
+        <div class="server-info">
+            <strong>Server:</strong> <span id="serverStatus">Checking...</span><br>
+            <strong>AI Provider:</strong> <span id="aiProvider">Unknown</span><br>
+            <strong>Model:</strong> <span id="aiModel">Unknown</span>
+        </div>
+
+        <form class="chat-form" id="chatForm">
+            <div class="form-group">
+                <label for="question">Ask about your project:</label>
+                <textarea 
+                    id="question" 
+                    name="question" 
+                    placeholder="e.g., What does this project do? What are the main features? How is the code structured?"
+                    required
+                ></textarea>
+            </div>
+            <button type="submit" id="submitBtn">Ask AI Assistant</button>
+        </form>
+
+        <div id="response" style="display: none;"></div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin; // Use same host/port as the page
+        
+        // Check server status on page load
+        async function checkServerStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question: 'Hello, this is a test message to check if the server is working.'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('serverStatus').textContent = '✅ Connected';
+                    document.getElementById('aiProvider').textContent = data.provider || 'Unknown';
+                    document.getElementById('aiModel').textContent = data.model || 'Unknown';
+                } else {
+                    document.getElementById('serverStatus').textContent = '❌ Error';
+                }
+            } catch (error) {
+                document.getElementById('serverStatus').textContent = '❌ Not connected';
+                console.error('Server check failed:', error);
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('chatForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const question = document.getElementById('question').value.trim();
+            const submitBtn = document.getElementById('submitBtn');
+            const responseDiv = document.getElementById('response');
+            
+            if (!question) return;
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Thinking...';
+            responseDiv.style.display = 'block';
+            responseDiv.innerHTML = '<div class="loading">🤔 AI is thinking...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    responseDiv.innerHTML = `
+                        <div class="success">
+                            <strong>✅ AI Response:</strong><br><br>
+                            <div class="response">${data.answer}</div>
+                            <br><small><strong>Provider:</strong> ${data.provider} | <strong>Model:</strong> ${data.model}</small>
+                        </div>
+                    `;
+                } else {
+                    responseDiv.innerHTML = `
+                        <div class="error">
+                            <strong>❌ Error:</strong><br>
+                            ${data.answer || 'Unknown error occurred'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                responseDiv.innerHTML = `
+                    <div class="error">
+                        <strong>❌ Network Error:</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Ask AI Assistant';
+            }
+        });
+
+        // Check server status when page loads
+        checkServerStatus();
+    </script>
+</body>
+</html> 

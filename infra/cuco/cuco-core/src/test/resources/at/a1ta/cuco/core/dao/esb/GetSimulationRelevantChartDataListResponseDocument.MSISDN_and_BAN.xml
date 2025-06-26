@@ -1,0 +1,41 @@
+<GetSimulationRelevantChartDataListResponse xmlns="http://bit.mobilkom.at/TariffGuide/">
+   <GetSimulationRelevantChartDataListResult>
+      <DataPairItem>
+         <SegmentDescription>Min. inkl. EU</SegmentDescription>
+         <SegmentValue>144.77776666666666</SegmentValue>
+      </DataPairItem>
+      <DataPairItem>
+         <SegmentDescription>A1 o. Banintern</SegmentDescription>
+         <SegmentValue>75.88890000000000</SegmentValue>
+      </DataPairItem>
+      <DataPairItem>
+         <SegmentDescription>Festnetz</SegmentDescription>
+         <SegmentValue>35.22223333333333</SegmentValue>
+      </DataPairItem>
+      <DataPairItem>
+         <SegmentDescription>SMS Inland</SegmentDescription>
+         <SegmentValue>30.88890000000000</SegmentValue>
+      </DataPairItem>
+      <DataPairItem>
+         <SegmentDescription>to other mobiles</SegmentDescription>
+         <SegmentValue>24.33330000000000</SegmentValue>
+      </DataPairItem>
+      <DataPairItem>
+         <SegmentDescription>Banintern</SegmentDescription>
+         <SegmentValue>5.22223333333333</SegmentValue>
+      </DataPairItem>
+      <DataPairItem>
+         <SegmentDescription>mobilbox</SegmentDescription>
+         <SegmentValue>4.00000000000000</SegmentValue>
+      </DataPairItem>
+      <DataPairItem>
+         <SegmentDescription>Ausland EU</SegmentDescription>
+         <SegmentValue>0.11110000000000</SegmentValue>
+      </DataPairItem>
+      <DataPairItem>
+         <SegmentDescription>SMS Ausland</SegmentDescription>
+         <SegmentValue>0.00000000000000</SegmentValue>
+      </DataPairItem>
+   </GetSimulationRelevantChartDataListResult>
+</GetSimulationRelevantChartDataListResponse>
+         

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Created by mag ESB WSDL-Generator v2--> 
+<!--WSDL version 1.2 --> 
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://eai.telekom.at/BusinessCustomerEquipment/wsdl " xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:ns0="http://eai.telekom.at/BusinessCustomerEquipment/xsd" targetNamespace="http://eai.telekom.at/BusinessCustomerEquipment/wsdl ">
+  <wsdl:types>
+    <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://eai.telekom.at/BusinessCustomerEquipment/xsd" targetNamespace="http://eai.telekom.at/BusinessCustomerEquipment/xsd" version="1.0" elementFormDefault="unqualified" attributeFormDefault="unqualified">
+      <xsd:complexType name="EquipmentItem">
+        <xsd:sequence>
+          <xsd:element name="Equipmentnummer" type="xsd:string" minOccurs="0" />
+          <xsd:element name="Equipmentbezeichnung" type="xsd:string" minOccurs="0" />
+          <xsd:element name="UbergeorgnetesEquipment" type="xsd:string" minOccurs="0" />
+          <xsd:element name="Serialnummer" type="xsd:string" minOccurs="0" />
+          <xsd:element name="Systemstatus" type="xsd:string" minOccurs="0" />
+          <xsd:element name="Anwenderstatus" type="xsd:string" minOccurs="0" />
+          <xsd:element name="GewahrleistungsdatumBegin" type="xsd:date" minOccurs="0" />
+          <xsd:element name="GewahrleistungsdatumEnde" type="xsd:date" minOccurs="0" />
+          <xsd:element name="Materialnummer" type="xsd:string" minOccurs="0" />
+          <xsd:element name="Materialbezeichnung" type="xsd:string" minOccurs="0" />
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="EquipmentRequest">
+        <xsd:sequence>
+          <xsd:element name="Warenempfanger" type="xsd:string" />
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="EquipmentResponse">
+        <xsd:sequence>
+          <xsd:element name="EquipmentItem" type="tns:EquipmentItem" minOccurs="0" maxOccurs="unbounded" />
+          <xsd:element name="Merkmaltem" type="tns:Merkmaltem" minOccurs="0" maxOccurs="unbounded" />
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="Merkmaltem">
+        <xsd:sequence>
+          <xsd:element name="Equipmentnummer" type="xsd:string" minOccurs="0" />
+          <xsd:element name="Merkmalsname" type="xsd:string" minOccurs="0" />
+          <xsd:element name="Merkmalswert" type="xsd:string" minOccurs="0" />
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="PartnerItem">
+        <xsd:sequence>
+          <xsd:element name="Warenempfanger" type="xsd:string" />
+          <xsd:element name="Anredeschlussel" type="xsd:string" minOccurs="0" />
+          <xsd:element name="Name1" type="xsd:string" minOccurs="0" />
+          <xsd:element name="Name2" type="xsd:string" minOccurs="0" />
+          <xsd:element name="PostZahl" type="xsd:string" minOccurs="0" />
+          <xsd:element name="Ort" type="xsd:string" minOccurs="0" />
+          <xsd:element name="Strasse" type="xsd:string" minOccurs="0" />
+          <xsd:element name="Hausnummer" type="xsd:string" minOccurs="0" />
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="PartnerRequest">
+        <xsd:sequence>
+          <xsd:element name="Auftraggeber" type="xsd:string" />
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="PartnerResponse">
+        <xsd:sequence>
+          <xsd:element name="PartnerItem" type="tns:PartnerItem" minOccurs="0" maxOccurs="unbounded" />
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:element name="getEquipmentRequest" type="tns:EquipmentRequest" />
+      <xsd:element name="getEquipmentResponse" type="tns:EquipmentResponse" />
+      <xsd:element name="getPartnersRequest" type="tns:PartnerRequest" />
+      <xsd:element name="getPartnersResponse" type="tns:PartnerResponse" />
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="getEquipmentRequest">
+    <wsdl:part name="parameters" element="ns0:getEquipmentRequest" />
+  </wsdl:message>
+  <wsdl:message name="getEquipmentResponse">
+    <wsdl:part name="parameters" element="ns0:getEquipmentResponse" />
+  </wsdl:message>
+  <wsdl:message name="getPartnersRequest">
+    <wsdl:part name="parameters" element="ns0:getPartnersRequest" />
+  </wsdl:message>
+  <wsdl:message name="getPartnersResponse">
+    <wsdl:part name="parameters" element="ns0:getPartnersResponse" />
+  </wsdl:message>
+  <wsdl:portType name="BusinessCustomerEquipmentPortType">
+    <wsdl:operation name="getEquipment">
+      <wsdl:input message="tns:getEquipmentRequest" />
+      <wsdl:output message="tns:getEquipmentResponse" />
+    </wsdl:operation>
+    <wsdl:operation name="getPartners">
+      <wsdl:input message="tns:getPartnersRequest" />
+      <wsdl:output message="tns:getPartnersResponse" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="BusinessCustomerEquipmentPortTypeHttpBinding" type="tns:BusinessCustomerEquipmentPortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="getEquipment">
+      <soap:operation style="document" soapAction="/esb/BusinessCustomerEquipment//getEquipment" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="getPartners">
+      <soap:operation style="document" soapAction="/esb/BusinessCustomerEquipment//getPartners" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="BusinessCustomerEquipment">
+    <wsdl:port name="BusinessCustomerEquipmentPortTypeTa-devViHttpEndpoint" binding="tns:BusinessCustomerEquipmentPortTypeHttpBinding">
+      <soap:address location="http://esb-e.a1telekom.inside:8080/esb/si:ta-dev" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

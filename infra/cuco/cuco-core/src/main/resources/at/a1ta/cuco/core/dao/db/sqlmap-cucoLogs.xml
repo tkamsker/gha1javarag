@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CucoLogs">
+
+	<parameterMap id="cucoLogEntry-insert" class="java.util.Map">
+		<parameter property="kunde_id"/>
+		<parameter property="name" jdbcType="VARCHAR"/>
+		<parameter property="user_id"/>
+		<parameter property="passwordType"/>
+		<parameter property="ban"/>
+		<parameter property="log_Type"/>
+	</parameterMap>
+
+	<insert id="InsertLogEntry" parameterMap="cucoLogEntry-insert">
+		INSERT INTO cuco_logs (kunde_id, name, user_id, passwordType, ban, log_Type)
+			 VALUES (?, ?, ?, ?, ?, ?)
+	</insert>
+</sqlMap>

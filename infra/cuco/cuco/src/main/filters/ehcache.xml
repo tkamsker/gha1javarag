@@ -1,0 +1,99 @@
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://www.ehcache.org/ehcache.xsd">
+
+  <cacheManagerPeerProviderFactory
+       class="net.sf.ehcache.distribution.jms.JMSCacheManagerPeerProviderFactory"
+       properties="initialContextFactoryName=at.a1ta.bite.core.server.util.EhCacheReplicationActiveMQInitialContextFactory,
+           providerURL=tcp://${jmsBrokerAddress}:${jmsBrokerPort},
+           replicationTopicConnectionFactoryBindingName=topicConnectionFactory,
+           getQueueConnectionFactoryBindingName=queueConnectionFactory,
+           getQueueBindingName=ehcacheGetQueue,
+           replicationTopicBindingName=ehcache"
+       propertySeparator=","
+       />
+  
+    <defaultCache
+    maxElementsInMemory="10000"
+    eternal="false"
+    overflowToDisk="false"
+    memoryStoreEvictionPolicy="LRU"
+    statistics="true">
+    <cacheEventListenerFactory
+     class="net.sf.ehcache.distribution.jms.JMSCacheReplicatorFactory"
+     properties="replicateAsynchronously=true,
+                 replicatePuts=true,
+                 replicateUpdates=true,
+                 replicateUpdatesViaCopy=true,
+                 replicateRemovals=true,
+                 asynchronousReplicationIntervalMillis=1000"
+      propertySeparator=","/>
+  </defaultCache>
+    
+  <cache name="ldapCache" maxElementsInMemory="10000" overflowToDisk="false" timeToLiveSeconds="86400" eternal="false">
+    <cacheEventListenerFactory
+     class="net.sf.ehcache.distribution.jms.JMSCacheReplicatorFactory"
+     properties="replicateAsynchronously=true,
+                 replicatePuts=true,
+                 replicateUpdates=true,
+                 replicateUpdatesViaCopy=true,
+                 replicateRemovals=true,
+                 asynchronousReplicationIntervalMillis=1000"
+      propertySeparator=","/>
+  </cache>
+  <cache name="orgUnitCache" maxElementsInMemory="10000" overflowToDisk="false" timeToLiveSeconds="86400" eternal="false">
+    <cacheEventListenerFactory
+     class="net.sf.ehcache.distribution.jms.JMSCacheReplicatorFactory"
+     properties="replicateAsynchronously=true,
+                 replicatePuts=true,
+                 replicateUpdates=true,
+                 replicateUpdatesViaCopy=true,
+                 replicateRemovals=true,
+                 asynchronousReplicationIntervalMillis=1000"
+      propertySeparator=","/>
+  </cache>
+  <cache name="at.a1ta.cusi.bom.addresstypes.Country" maxElementsInMemory="10000" overflowToDisk="false" timeToLiveSeconds="0" eternal="true"/>
+  <cache name="customerEquipmentCache" maxElementsInMemory="1000" overflowToDisk="false" timeToLiveSeconds="3600" eternal="false">
+    <cacheEventListenerFactory
+     class="net.sf.ehcache.distribution.jms.JMSCacheReplicatorFactory"
+     properties="replicateAsynchronously=true,
+                 replicatePuts=true,
+                 replicateUpdates=true,
+                 replicateUpdatesViaCopy=true,
+                 replicateRemovals=true,
+                 asynchronousReplicationIntervalMillis=1000"
+      propertySeparator=","/>
+  </cache>
+  <cache name="phoneNumberCache" maxElementsInMemory="200" overflowToDisk="false" timeToLiveSeconds="36000" eternal="false">
+    <cacheEventListenerFactory
+     class="net.sf.ehcache.distribution.jms.JMSCacheReplicatorFactory"
+     properties="replicateAsynchronously=true,
+                 replicatePuts=true,
+                 replicateUpdates=true,
+                 replicateUpdatesViaCopy=true,
+                 replicateRemovals=true,
+                 asynchronousReplicationIntervalMillis=1000"
+      propertySeparator=","/>
+  </cache>
+  <cache name="VIPCache" maxElementsInMemory="2000" overflowToDisk="false" timeToLiveSeconds="86400" eternal="false"/>
+  <cache name="mobilPoints" maxElementsInMemory="2000" overflowToDisk="false" timeToLiveSeconds="86400" eternal="false">
+    <cacheEventListenerFactory
+     class="net.sf.ehcache.distribution.jms.JMSCacheReplicatorFactory"
+     properties="replicateAsynchronously=true,
+                 replicatePuts=true,
+                 replicateUpdates=true,
+                 replicateUpdatesViaCopy=true,
+                 replicateRemovals=true,
+                 asynchronousReplicationIntervalMillis=1000"
+      propertySeparator=","/>
+  </cache>
+  <cache name="UDPCache" maxElementsInMemory="100" overflowToDisk="false" timeToLiveSeconds="86400" eternal="false">
+    <cacheEventListenerFactory
+     class="net.sf.ehcache.distribution.jms.JMSCacheReplicatorFactory"
+     properties="replicateAsynchronously=true,
+                 replicatePuts=true,
+                 replicateUpdates=true,
+                 replicateUpdatesViaCopy=true,
+                 replicateRemovals=true,
+                 asynchronousReplicationIntervalMillis=1000"
+      propertySeparator=","/>
+  </cache>
+</ehcache>

@@ -1,0 +1,653 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="SalesInfo">
+  <typeAlias alias="SalesInfoNote" type="at.a1ta.cuco.core.shared.dto.salesinfo.SalesInfoNote" />
+  <typeAlias alias="SimpleNote" type="at.a1ta.cuco.core.shared.dto.salesinfo.SimpleNote" />
+  <typeAlias alias="CompetitorNote" type="at.a1ta.cuco.core.shared.dto.salesinfo.CompetitorNote" />
+  <typeAlias alias="Task" type="at.a1ta.cuco.core.shared.dto.salesinfo.Task" />
+  <typeAlias alias="StandardAddress" type="at.a1ta.cuco.core.shared.dto.StandardAddress" />
+  <typeAlias alias="SbsNoteReportRow" type="at.a1ta.cuco.core.shared.dto.salesinfo.SbsNoteReportRow" />
+  <typeAlias alias="TeamEmailAdminGroup" type="at.a1ta.cuco.core.shared.dto.salesinfo.salesconvnote.TeamEmailAdminGroup" />
+  <typeAlias alias="SalesConvNoteReportRow" type="at.a1ta.cuco.core.shared.dto.salesinfo.SalesConvNoteReportRow" />
+  <typeAlias alias="SalesConvProductNoteRow" type="at.a1ta.cuco.core.shared.dto.salesinfo.SalesConvProductNoteRow" />
+  <typeAlias alias="FeedbackQuestionsRow" type="at.a1ta.cuco.core.shared.dto.salesinfo.FeedbackQuestionsRow" />
+  <typeAlias alias="AppointmentNote" type="at.a1ta.cuco.core.shared.dto.salesinfo.AppointmentNote" />
+
+  <cacheModel type="ehcacheProvider" id="sales-info-cache">
+    <flushOnExecute statement="SalesInfo.insertNote"/>
+    <flushOnExecute statement="SalesInfo.updateNote"/>
+    <flushInterval minutes="60" />
+    <property name="cache-size" value="20" />
+  </cacheModel>
+  
+  <cacheModel type="ehcacheProvider" id="simple-note-cache">
+    <flushOnExecute statement="SalesInfo.insertNote"/>
+    <flushOnExecute statement="SalesInfo.updateNote"/>
+    <flushOnExecute statement="SalesInfo.insertSimpleNote"/>
+    <flushInterval minutes="60" />
+    <property name="cache-size" value="20" />
+  </cacheModel>
+  
+  <cacheModel type="ehcacheProvider" id="competitor-note-cache">
+    <flushOnExecute statement="SalesInfo.insertNote"/>
+    <flushOnExecute statement="SalesInfo.updateNote"/>
+    <flushOnExecute statement="SalesInfo.insertCompetitorNote"/>
+    <flushOnExecute statement="SalesInfo.updateCompetitorNote"/>
+    <flushOnExecute statement="SalesInfo.updateBindingPeriodReminderMailSentDate"/>
+    <flushInterval minutes="60" />
+    <property name="cache-size" value="20" />
+  </cacheModel>
+   <cacheModel type="ehcacheProvider" id="appointment-note-cache">
+    <flushOnExecute statement="SalesInfo.insertNote"/>
+    <flushOnExecute statement="SalesInfo.updateNote"/>
+    <flushOnExecute statement="SalesInfo.insertAppointmentNote"/>
+    <flushOnExecute statement="SalesInfo.updateAppointmentNote"/>
+    <flushInterval minutes="60" />
+    <property name="cache-size" value="20" />
+  </cacheModel>
+  
+  <cacheModel type="ehcacheProvider" id="task-cache">
+    <flushOnExecute statement="SalesInfo.insertTask"/>
+    <flushOnExecute statement="SalesInfo.updateTask"/>
+    <flushOnExecute statement="SalesInfo.updateTaskReminderMailSentDate"/>
+    <flushOnExecute statement="SalesInfo.updateTaskVcalMailSentInfo"/>
+    <flushInterval minutes="60" />
+    <property name="cache-size" value="20" />
+  </cacheModel>
+  
+  <!-- For Reminder Mails -->
+  
+  <resultMap id="mail-note-resultmap" class="SalesInfoNote">
+     <result property="salesInfoNoteId"             column="si_note_id" />
+     <result property="partyId"                     column="kunde_id" />
+     <result property="noteText"                    column="note_text" />
+     <result property="task"                        column="si_task_id" select="SalesInfo.getTask" />
+     <result property="lastModificationUser"        column="last_modifier" select="User.getBiteUserById"/>
+  </resultMap>
+  
+    <resultMap id="mail-salesconvnote-resultmap" class="SalesInfoNote">
+     <result property="salesInfoNoteId"             column="si_note_id" />
+     <result property="partyId"                     column="kunde_id" />
+     <result property="noteText"                    column="note_text" />
+     <result property="lastModificationUser"        column="last_modifier" select="User.getBiteUserById"/>
+  </resultMap>
+  
+    <resultMap id="mail-competitornote-resultmap" class="CompetitorNote">
+     <result property="salesInfoNoteId"             column="si_note_id" />
+     <result property="partyId"                     column="kunde_id" />
+     <result property="noteText"                    column="note_text" />
+     <result property="lastModificationUser"        column="last_modifier" select="User.getBiteUserById"/>
+     <result property="name"                        column="name" />
+     <result property="bindingDate"                 column="binding_date" />
+  </resultMap>
+  
+   <select id="getNotesForReminderMail" resultMap="mail-note-resultmap" parameterClass="java.lang.Long">
+      SELECT n.si_note_id, n.kunde_id, n.note_text, t.si_task_id, n.last_modifier
+        FROM si_note n, si_task t
+       WHERE n.deleted = 0
+         AND n.task_id = t.si_task_id
+         AND t.active = 1
+         AND t.send_reminder_mail = 1
+         AND t.reminder_mail_sent_date IS NULL
+         AND t.date_start IS NOT NULL
+         AND TRUNC(t.date_start) &lt; SYSDATE
+  </select>
+  
+   <select id="getNotesForBindingPeriodReminderMail" resultMap="mail-competitornote-resultmap" parameterClass="java.util.HashMap">
+      SELECT n.si_note_id, n.kunde_id, n.note_text, n.last_modifier, c.binding_date, c.name
+        FROM si_note n, si_competitor_note c
+       WHERE n.deleted = 0
+         AND c.si_note_id = n.si_note_id
+         AND c.reminder_mail_sent_date IS NULL
+         AND c.binding_date is not null
+         AND <![CDATA[c.binding_date <= trunc(sysdate) + #numDays# + 23/24 + 59/24/60 + 59/24/60/60]]>  
+  </select>
+  
+  <select id="getSalesConvNotesForReminderMail" resultMap="mail-salesconvnote-resultmap">
+    SELECT n.* 
+      FROM si_note n, si_sc_sales_conv_note scn, si_note np, si_vi_sbs_product_note p
+     WHERE  n.deleted = 0
+       AND scn.last_reminder_mail_sent &lt; SYSDATE - 5
+       AND scn.si_note_id = np.PREDECESSOR_SI_NOTE_ID
+       AND np.si_note_id = p.si_note_id
+       AND p.QUOTE_STATUS = 'OPEN'
+       AND n.si_note_id = scn.si_note_id
+  </select>   
+  
+  <update id="updateLastReminderMailSentDateForSalesConvNote" parameterClass="java.lang.Long">
+    UPDATE si_sc_sales_conv_note
+       SET last_reminder_mail_sent = SYSDATE
+     WHERE si_note_id = #salesConvNoteId#
+  </update>
+  
+  <update id="updateTaskReminderMailSentDate" parameterClass="Task">
+    update si_task 
+       set reminder_mail_sent_date = #reminderMailSentDate#
+     WHERE si_task_id = #taskId#
+  </update>
+     
+  <update id="updateTaskVcalMailSentInfo" parameterClass="Task">
+    update si_task 
+       set vcal_mail_sent_date = #vCalMailSentDate#,
+           vcal_mail_to = #vCalMailTo#,
+           vcal_mail_cc = #vCalMailCC#
+     WHERE si_task_id = #taskId#
+  </update>   
+  
+  <!-- For Overview -->
+  
+  <resultMap id="slim-si-note-resultmap" class="SalesInfoNote">
+     <result property="salesInfoNoteId"             column="si_note_id" />
+     <result property="salesInfoNoteType"           column="si_note_class" />
+     <result property="predecessorSalesInfoNoteId"  column="predecessor_si_note_id" />
+     <result property="partyId"                     column="kunde_id" />
+     <result property="noteText"                    column="note_text" />
+     <result property="task"                        column="task_id" select="SalesInfo.getTaskSlim" />
+     <result property="lastModificationUser"        column="last_modifier" select="User.getBiteUserById"/>
+     <result property="lastModificationTimestamp"   column="last_update" />
+     <result property="overviewStatus"              column="overviewStatus" />
+     <result property="statusBasedOnCaregory"       column="statusBasedOnCaregory"/>
+     <result property="finalized"       column="finalized"/>
+     <result property="deleted"       column="deleted"/>
+  </resultMap>
+    
+  <select id="getNotesByPartyId" resultMap="slim-si-note-resultmap" parameterClass="java.util.HashMap" cacheModel="sales-info-cache">
+            SELECT  nvl(CASE n.si_note_class 
+               WHEN 'SI_VR_SBS_NOTE' THEN
+                 CASE
+          (SELECT COUNT(*)
+          FROM si_note groupNote,
+            SI_ATTRIBUTE si_attribute,
+            SI_VI_SBS_NOTE_ATTRIBUTE note_attrib_mappings
+          WHERE groupNote.PREDECESSOR_SI_NOTE_ID=n.si_note_id
+          AND groupNote.SI_NOTE_CLASS           ='SI_TODO_GROUP_NOTE'
+          AND groupNote.deleted                 =0
+          AND groupNote.SI_NOTE_ID              =note_attrib_mappings.SI_NOTE_ID
+          AND note_attrib_mappings.attribute_id =si_attribute.ATTRIBUTE_ID
+          AND (si_attribute.BOOLEAN_VALUE      IS NULL
+          OR si_attribute.BOOLEAN_VALUE        <![CDATA[<>'1']]>)
+          )
+        WHEN 0
+        THEN
+          (SELECT
+            CASE
+                (SELECT MIN(
+                  CASE quote_status
+                    WHEN 'OPEN'
+                    THEN '1'
+                    WHEN 'PUT'
+                    THEN '2'
+                    WHEN 'POST_CREATION'
+                    THEN '3'
+                    ELSE '4'
+                  END) AS min_stat
+                FROM si_note n2,
+                  SI_VI_SBS_PRODUCT_NOTE p
+                WHERE n2.PREDECESSOR_SI_NOTE_ID = n.SI_NOTE_ID
+                AND p.si_note_id                = n2.si_note_id
+                AND n2.DELETED                  =0
+                )
+              WHEN '1'
+              THEN 'OPEN'
+              WHEN '2'
+              THEN 'PUT'
+              WHEN '3'
+              THEN 'POST_CREATION'
+              WHEN '4'
+              THEN 'CLOSED'
+            END
+          FROM dual
+          )
+        ELSE 'IN_PROCESS'
+      END
+                  
+              WHEN 'SI_SALES_CONV_NOTE' THEN
+                (SELECT CASE (SELECT MIN(CASE quote_status 
+                   WHEN 'OPEN' THEN '1'
+                   WHEN 'PUT' THEN '2'
+                   WHEN 'ACCEPTED' THEN '3'
+                   WHEN 'DECLINED' THEN '4'
+                   ELSE '5' END) as min_stat
+                 FROM si_note n2, SI_VI_SBS_PRODUCT_NOTE p
+                WHERE n2.PREDECESSOR_SI_NOTE_ID =  n.SI_NOTE_ID
+                  AND p.si_note_id = n2.si_note_id AND n2.DELETED=0) 
+                  WHEN '1' THEN 'OPEN'
+                  WHEN '2' THEN 'PUT'
+                  WHEN '3' THEN 'ACCEPTED'
+                  WHEN '4' THEN 'DECLINED'
+                  WHEN '5' THEN 'NONE' END FROM dual)
+               WHEN 'SI_SIMPLE_NOTE' THEN
+                 (SELECT CASE status 
+                   WHEN 'NONE' THEN 'NONE'
+                   WHEN 'OPEN' THEN 'OPEN'
+                   WHEN 'WORKING' THEN 'WORKING'
+                   WHEN 'DONE' THEN 'DONE' END
+                    FROM si_task t
+                   WHERE t.si_task_id = n.task_id 
+                     and active = 1)
+               ELSE 'NONE'
+              END, 'NONE') as overviewStatus             
+               , nvl(CASE n.si_note_class 
+              
+              WHEN 'SI_SALES_CONV_NOTE' THEN
+                (SELECT CASE (SELECT MIN(CASE  SETUP_CATEGORY 
+                   WHEN 'SERVICE' THEN '1'
+                   WHEN 'INFORMATION' THEN '1'
+                   ELSE '0' END) as min_stat
+                 FROM si_note n2, SI_VI_SBS_PRODUCT_NOTE p
+                WHERE n2.PREDECESSOR_SI_NOTE_ID =  n.SI_NOTE_ID
+                  AND p.si_note_id = n2.si_note_id AND n2.DELETED=0) 
+                  WHEN '0' THEN 'EDITABLE'
+                  WHEN '1' THEN 'READ_ONLY'
+                  END FROM dual)
+
+               ELSE 'EDITABLE'
+              END, 'EDITABLE') as statusBasedOnCaregory 
+              ,n.*
+        FROM si_note n
+       WHERE kunde_id = #partyId#
+       and SI_NOTE_CLASS in <iterate open="(" close=")" conjunction="," property="salesInfoNoteTypesToLoad">#salesInfoNoteTypesToLoad[]#</iterate>
+         and deleted = 0
+       ORDER BY last_update DESC
+  </select> 
+  
+  <select id="getSalesInfoNote" resultMap="slim-si-note-resultmap" parameterClass="java.lang.Long" cacheModel="sales-info-cache">
+      SELECT si_note.*,'NONE' as overviewStatus,'EDITABLE' as statusBasedOnCaregory FROM si_note WHERE si_note.si_note_id = #salesInfoNoteId#
+  </select>
+  
+  
+  <insert id="insertNote" parameterClass="SalesInfoNote">
+    <selectKey resultClass="long" keyProperty="salesInfoNoteId">SELECT seq_si_note.nextval AS salesInfoNoteId FROM dual</selectKey>
+    insert into si_note 
+     (si_note_id, predecessor_si_note_id, si_note_class, kunde_id, note_text, task_id, creator, create_date, last_modifier, last_update, deleted,"finalized")
+    values 
+     (#salesInfoNoteId#, #predecessorSalesInfoNoteId#, #salesInfoNoteType#, #partyId#, #noteText#, <isNotNull property="task">#task.taskId:NUMBER#</isNotNull><isNull property="task">null</isNull>, #creationUser.id#, #creationTimestamp#, #lastModificationUser.id#, #lastModificationTimestamp#, #deleted#,#finalized#)
+  </insert>
+  
+  <update id="updateNote" parameterClass="SalesInfoNote">
+    update si_note 
+       set predecessor_si_note_id = #predecessorSalesInfoNoteId#,
+           si_note_class = #salesInfoNoteType#,
+           kunde_id = #partyId#,
+           note_text = #noteText#,
+           <isNotNull property="task">task_id = #task.taskId:NUMBER#,</isNotNull>
+           last_modifier = #lastModificationUser.id#,
+           last_update = #lastModificationTimestamp#,
+           deleted = #deleted#,
+           "finalized" = #finalized#
+     WHERE si_note_id = #salesInfoNoteId#
+  </update>  
+  
+  <update id="markNoteAsDeleted" parameterClass="SalesInfoNote">
+    update si_note 
+       set last_modifier = #lastModificationUser.id#,
+           last_update = #lastModificationTimestamp#,
+           deleted = #deleted#
+     WHERE si_note_id = #salesInfoNoteId#
+  </update>  
+  
+  <!--  For SimpleNote Detail Popup  -->
+  
+  <resultMap id="si-simple-note-resultmap" class="SimpleNote">
+     <result property="salesInfoNoteId"             column="si_note_id" />
+     <result property="salesInfoNoteType"           column="si_note_class" />
+     <result property="predecessorSalesInfoNoteId"  column="predecessor_si_note_id" />
+     <result property="partyId"                     column="kunde_id" />
+     <result property="noteText"                    column="note_text" />
+     <result property="task"                        column="task_id" select="SalesInfo.getTask" />
+     <result property="creationUser"                column="creator" select="User.getBiteUserById"/>
+     <result property="creationTimestamp"           column="create_date" />
+     <result property="lastModificationUser"        column="last_modifier" select="User.getBiteUserById"/>
+     <result property="lastModificationTimestamp"   column="last_update" />
+  </resultMap>
+  
+  <select id="getSimpleNoteByNoteId" resultMap="si-simple-note-resultmap" parameterClass="java.lang.Long" cacheModel="simple-note-cache">
+       SELECT * 
+        FROM si_note n, si_simple_note sn
+       WHERE sn.si_note_id = #salesInfoNoteId#
+         AND sn.si_note_id = n.si_note_id
+  </select>
+  
+  <insert id="insertSimpleNote" parameterClass="SimpleNote">
+    insert into si_simple_note 
+     (si_note_id)
+    values 
+     (#salesInfoNoteId#)
+  </insert>
+  
+  <!-- For CompetitorNote Detail Popup -->
+  
+  <resultMap id="si-competitor-note-resultmap" class="CompetitorNote">
+     <result property="salesInfoNoteId"             column="si_note_id" />
+     <result property="salesInfoNoteType"           column="si_note_class" />
+     <result property="predecessorSalesInfoNoteId"  column="predecessor_si_note_id" />
+     <result property="partyId"                     column="kunde_id" />
+     <result property="noteText"                    column="note_text" />
+     <result property="name"                        column="name" />
+     <result property="productGroupName"            column="product_group_name" />
+     <result property="productName"                 column="product_name" />
+     <result property="bindingDate"                 column="binding_date" />
+     <result property="task"                        column="task_id" select="SalesInfo.getTask" />
+     <result property="creationUser"                column="creator" select="User.getBiteUserById"/>
+     <result property="creationTimestamp"           column="create_date" />
+     <result property="lastModificationUser"        column="last_modifier" select="User.getBiteUserById"/>
+     <result property="lastModificationTimestamp"   column="last_update" />
+     <result property="reminderMailSentDate"        column="reminder_mail_sent_date" />
+  </resultMap>
+  
+   <resultMap id="si-appointment-note-resultmap" class="AppointmentNote">
+     <result property="salesInfoNoteId"             column="si_note_id" />
+     <result property="salesInfoNoteType"           column="si_note_class" />
+     <result property="predecessorSalesInfoNoteId"  column="predecessor_si_note_id" />
+     <result property="partyId"                     column="kunde_id" />
+     <result property="noteText"                    column="note_text" />
+     <result property="communicationType"           column="communication_type" />
+     <result property="communicationChannel"        column="communication_channel" />
+     <result property="contactType"                 column="contact_type" />
+     <result property="task"                        column="task_id" select="SalesInfo.getTask" />
+     <result property="creationUser"                column="creator" select="User.getBiteUserById"/>
+     <result property="creationTimestamp"           column="create_date" />
+     <result property="lastModificationUser"        column="last_modifier" select="User.getBiteUserById"/>
+     <result property="lastModificationTimestamp"   column="last_update" />
+  </resultMap>
+  
+  <select id="getAppointmentNoteByNoteId" resultMap="si-appointment-note-resultmap" parameterClass="java.lang.Long" cacheModel="appointment-note-cache">
+      SELECT * 
+        FROM si_note n, si_appointment_note cn
+       WHERE cn.si_note_id = #salesInfoNoteId#
+         AND cn.si_note_id = n.si_note_id
+         AND n.deleted=0
+  </select>
+  
+  
+  <select id="getAppointmentNoteForHistoryByNoteId" resultMap="si-appointment-note-resultmap" parameterClass="java.lang.Long" cacheModel="appointment-note-cache">
+      SELECT * 
+        FROM si_note n, si_appointment_note cn
+       WHERE cn.si_note_id = #salesInfoNoteId#
+         AND cn.si_note_id = n.si_note_id
+  </select>
+  
+  <select id="getSimpleNoteForHistoryByNoteId" resultMap="si-simple-note-resultmap" parameterClass="java.lang.Long" cacheModel="simple-note-cache">
+       SELECT * 
+        FROM si_note n, si_simple_note sn
+       WHERE sn.si_note_id = #salesInfoNoteId#
+         AND sn.si_note_id = n.si_note_id
+  </select>
+  
+  <select id="getCompetitorNoteForHistoryByNoteId" resultMap="si-competitor-note-resultmap" parameterClass="java.lang.Long" cacheModel="appointment-note-cache">
+        SELECT * 
+        FROM si_note n, si_competitor_note cn
+       WHERE cn.si_note_id = #salesInfoNoteId#
+         AND cn.si_note_id = n.si_note_id
+  </select>
+  
+  <select id="getCompetitorNoteByNoteId" resultMap="si-competitor-note-resultmap" parameterClass="java.lang.Long" cacheModel="competitor-note-cache">
+      SELECT * 
+        FROM si_note n, si_competitor_note cn
+       WHERE cn.si_note_id = #salesInfoNoteId#
+         AND cn.si_note_id = n.si_note_id
+  </select>
+  
+
+
+  <insert id="insertCompetitorNote" parameterClass="CompetitorNote">
+    insert into si_competitor_note 
+     (si_note_id, name, product_group_name, product_name, binding_date)
+    values 
+     (#salesInfoNoteId#, #name#, #productGroupName#, #productName#, #bindingDate#)
+  </insert>
+  
+  <insert id="insertAppointmentNote" parameterClass="AppointmentNote">
+    insert into si_appointment_note 
+     (si_note_id, communication_type, communication_channel, contact_type)
+    values 
+     (#salesInfoNoteId#, #communicationType#, #communicationChannel#, #contactType#)
+  </insert>
+  
+  <update id="updateCompetitorNote" parameterClass="CompetitorNote">
+    update si_competitor_note 
+       set name = #name#,
+           product_group_name = #productGroupName#,
+           product_name = #productName#,
+           binding_date = #bindingDate#,
+           reminder_mail_sent_date = #reminderMailSentDate#
+     WHERE si_note_id = #salesInfoNoteId#
+  </update> 
+  
+  <update id="updateAppointmentNote" parameterClass="AppointmentNote">
+    update si_appointment_note 
+       set communication_type = #communicationType#,
+           communication_channel = #communicationChannel#,
+           contact_type = #contactType#
+       WHERE si_note_id = #salesInfoNoteId#
+  </update>  
+  
+   <update id="updateBindingPeriodReminderMailSentDate" parameterClass="CompetitorNote">
+    update si_competitor_note 
+       set reminder_mail_sent_date = #reminderMailSentDate#
+     WHERE si_note_id = #salesInfoNoteId#
+  </update>
+  
+  <!-- For Task -->
+  
+  <resultMap id="slim-task-resultmap" class="Task">
+    <result property="taskId" column="si_task_id" />
+    <result property="startDate" column="date_start" />
+    <result property="active" column="active" />
+  </resultMap>
+  
+  <resultMap id="si-task-resultmap" class="Task">
+    <result property="taskId" column="si_task_id" />
+    <result property="active" column="active" />
+    <result property="status" column="status" />
+    <result property="type" column="type" />
+    <result property="assigneeUser" column="assignee_user" select="User.getBiteUserById" />
+    <result property="startDate" column="date_start" />
+    <result property="endDate" column="date_end" />
+    <result property="sendReminderMail" column="send_reminder_mail" />
+    <result property="sendVCalendarMail" column="send_vcal_mail" />
+    <result property="address" column="address_id" select="StandardAddress.getAddress" />
+    <result property="reminderMailSentDate" column="reminder_mail_sent_date" />
+    <result property="vCalMailSentDate" column="vcal_mail_sent_date" />
+    <result property="vCalMailTo" column="vcal_mail_to" />
+    <result property="vCalMailCC" column="vcal_mail_cc" />
+  </resultMap>
+  
+  <select id="getTaskSlim" resultMap="slim-task-resultmap" parameterClass="java.lang.Long" cacheModel="task-cache">
+      SELECT si_task_id, date_start, active 
+        FROM si_task
+       WHERE si_task_id = #taskId#
+  </select>
+  
+  <select id="getTask" resultMap="si-task-resultmap" parameterClass="java.lang.Long" cacheModel="task-cache">
+      SELECT *  
+        FROM si_task
+       WHERE si_task_id = #taskId#
+  </select>
+    
+  <insert id="insertTask" parameterClass="Task">
+    <selectKey resultClass="long" keyProperty="taskId">SELECT seq_si_task.nextval AS taskId FROM dual</selectKey>
+    insert into si_task 
+     (si_task_id, active, status, type, assignee_user, date_start, date_end, send_reminder_mail, send_vcal_mail, 
+      address_id, reminder_mail_sent_date, vcal_mail_sent_date)
+    values 
+     (#taskId#, #active#, #status#, #type#, #assigneeUser.id:NUMERIC#, #startDate#, #endDate#, #sendReminderMail#, #sendVCalendarMail#, 
+     #address.addressId:NUMERIC#, #reminderMailSentDate#, #vCalMailSentDate#)
+  </insert>
+  
+  <update id="updateTask" parameterClass="Task">
+    update si_task 
+       set active = #active#,
+           status = #status#,
+           type = #type#,
+           assignee_user = #assigneeUser.id:NUMERIC#,
+           date_start = #startDate#,
+           date_end = #endDate#,
+           send_reminder_mail = #sendReminderMail#,
+           send_vcal_mail = #sendVCalendarMail#,  
+           address_id = #address.addressId:NUMERIC#,
+           reminder_mail_sent_date = #reminderMailSentDate#,
+           vcal_mail_sent_date = #vCalMailSentDate#
+     WHERE si_task_id = #taskId#
+  </update>  
+  
+  <!-- Report -->
+  
+  <resultMap id="sbsnote-report-resultmap" class="SbsNoteReportRow">
+    <result property="userName" column="user_name" />
+    <result property="me1" column="me1" />
+    <result property="me2" column="me2" />
+    <result property="me3" column="me3" />
+    <result property="me4" column="me4" />
+    <result property="communicationType" column="communication_type" />
+    <result property="communicationChannel" column="communication_channel" />
+    <result property="contactType" column="contact_type" />
+    <result property="contactSource" column="contact_source" />
+    <result property="startDate" column="start_date" />
+  </resultMap>
+  
+  <select id="getSbsNoteReportData" resultMap="sbsnote-report-resultmap">
+    SELECT u.firstname||' '||u.lastname||' ('||upper(u.login)||')' as user_name, 
+           (CASE WHEN u.ml1_orgunit_id IS NULL THEN 'Unbekannt' ELSE u.ml1_orgunit_desc||' ('||u.ml1_orgunit_short||')' END) AS me1,
+           (CASE WHEN u.ml2_orgunit_id IS NULL THEN 'Unbekannt' ELSE u.ml2_orgunit_desc||' ('||u.ml2_orgunit_short||')' END) AS me2,
+           (CASE WHEN u.ml3_orgunit_id IS NULL THEN 'Unbekannt' ELSE u.ml3_orgunit_desc||' ('||u.ml3_orgunit_short||')' END) AS me3,
+           (CASE WHEN u.ml4_orgunit_id IS NULL THEN 'Unbekannt' ELSE u.ml4_orgunit_desc||' ('||u.ml4_orgunit_short||')' END) as me4,
+           sbs.communication_type, sbs.communication_channel, sbs.contact_type, sbs.contact_source, t.date_start as start_date
+      FROM si_vi_sbs_note sbs, si_note n, si_task t, bite_user u 
+     WHERE n.si_note_id = sbs.si_note_id 
+       AND t.si_task_id = n.task_id
+       AND t.assignee_user = u.user_id
+       AND t.date_start between #begin# and #end#
+  </select>
+  
+   <resultMap id="salesinfo-teamEmailAdminGroups-resultmap" class="TeamEmailAdminGroup">
+    <result property="id" column="id" />
+    <result property="teamName" column="team_name" />
+    <result property="teamEmail" column="team_email" />
+    <result property="userList" column="user_list" />
+    <result property="isDefault" column="is_default" />
+  </resultMap>
+  
+  <select id="getTeamEmailAdminGroups" resultMap="salesinfo-teamEmailAdminGroups-resultmap">
+    WITH groups AS (
+      SELECT te.id AS id, LISTAGG(u.login, ';') WITHIN GROUP (order by 1) AS user_list
+        FROM si_sc_team_email te, si_sc_team_email_user teu, bite_user u
+       WHERE teu.team_email_id (+)= te.id
+         AND u.user_id (+)= teu.user_id
+         GROUP BY (te.id))
+    SELECT te.*, g.user_list
+      FROM si_sc_team_email te, groups g
+     where te.id = g.id
+       AND te.is_default = 0
+  </select>
+  
+   <update id="updateTeamEmailAdminGroup" parameterClass="TeamEmailAdminGroup">
+     UPDATE si_sc_team_email SET 
+       team_name = #teamName#,
+       team_email = #teamEmail#
+      where id = #id#
+   </update>
+   
+   <insert id="insertTeamEmailAdminUser" parameterClass="java.util.HashMap">
+     INSERT INTO si_sc_team_email_user (team_email_id, user_id)
+     VALUES (#teamEmailId#, #userId#)
+   </insert>
+   
+   <delete id="deleteTeamEmailAdminUsersByTeamEmailId" parameterClass="java.lang.Long">
+     DELETE si_sc_team_email_user
+      WHERE team_email_id = #teamEmailId#
+   </delete>
+   
+  <resultMap id="salesConvNote-report-resultmap" class="SalesConvNoteReportRow">
+    <result property="siNoteId" column="si_note_id" />
+    <result property="predecessorSiNoteId" column="predecessor_si_note_id" />
+    <result property="deleted" column="deleted" />
+    <result property="finalized" column="finalized" />
+    <result property="campaignId" column="campaign_id" />
+    <result property="campaignName" column="campaign_name" />
+    <result property="lastUpdate" column="last_update" />
+    <result property="lastModUser" column="last_modifier" select="User.getBiteUserById"/>
+    <result property="customerId" column="kunde_id" />
+    <result property="customerFirstName" column="kunde_vorname" />
+    <result property="customerLastName" column="kunde_nam" />
+    <result property="contactType" column="contact_type" />
+    <result property="taskActive" column="active" />
+    <result property="taskStartDate" column="date_start" />
+    <result property="productNotes" column="si_note_id" select="SalesInfo.getSalesConvProductNoteReportData"/>
+    <result property="feedbackQuestions" column="si_note_id"  select="SalesInfo.getSalesConvFBReportData"/> 
+  </resultMap>
+  
+  <select id="getSalesConvNoteReportData" resultMap="salesConvNote-report-resultmap">
+    SELECT scn.si_note_id,
+           n.predecessor_si_note_id,
+           n.deleted,
+           n."finalized",
+           scn.campaign_id,
+           scn.campaign_name,
+           n.last_update,
+           n.last_modifier,
+           k.kunde_id,
+           k.kunde_vorname,
+           k.kunde_nam,
+           scn.contact_type,
+           t.active,
+           t.date_start
+      FROM si_sc_sales_conv_note scn, si_note n, v_kunde k, si_task t
+     WHERE n.si_note_id = scn.si_note_id
+       AND k.kunde_id (+) = n.kunde_id
+       AND t.si_task_id = n.task_id
+       AND n.last_update between #begin# and #end#
+        START WITH n.predecessor_si_note_id is null
+          CONNECT BY n.predecessor_si_note_id = PRIOR  n.SI_NOTE_ID
+   </select>
+   
+   <resultMap id="salesConvProductNote-report-resultmap" class="SalesConvProductNoteRow">
+    <result property="productNoteId" column="productNoteId" />
+    <result property="predecessorSiNoteId" column="predecessorSiNoteId" />
+    <result property="deleted" column="deleted" />
+    <result property="productCategory" column="product_category" />
+    <result property="productDisplayName" column="product_display_name" />
+    <result property="setupCategory" column="setup_category" />
+    <result property="quoteStatus" column="quote_status" />
+    <result property="turnoverQuantity" column="turnover_quantity" />
+    <result property="assigneeType" column="assignee_type" />
+    <result property="contactCount" column="contact_count" />
+  </resultMap>
+   
+   <select id="getSalesConvProductNoteReportData" parameterClass="java.lang.Long" resultMap="salesConvProductNote-report-resultmap">
+     SELECT pn.si_note_id AS productNoteId,
+            n.predecessor_si_note_id AS predecessorSiNoteId,
+            n.deleted,
+            n."finalized",
+            pn.product_category,
+            pn.product_display_name,
+            pn.setup_category,
+            pn.quote_status,
+            pn.turnover_quantity,
+            pn.assignee_type,
+            (SELECT count(*) FROM custc.si_sc_product_history h WHERE h.product_note_id = n.si_note_id) AS contact_count
+       FROM si_note n, si_vi_sbs_product_note pn
+      WHERE n.predecessor_si_note_id = #noteId#
+        AND pn.si_note_id = n.si_note_id
+   </select>
+   
+  <resultMap id="salesConvFB-report-resultmap" class="FeedbackQuestionsRow">
+    <result property="attributeName" column="attribute_name" />
+    <result property="attributeType" column="attribute_type" />
+    <result property="numberValue" column="number_value" />
+    <result property="booleanValue" column="boolean_value" />
+    <result property="textValue" column="text_value" />
+  </resultMap>
+   
+   <select id="getSalesConvFBReportData" parameterClass="java.lang.Long" resultMap="salesConvFB-report-resultmap">
+     SELECT ac.attribute_name, ac.attribute_type, a.number_value, a.boolean_value,a.text_value 
+       FROM si_attribute a, si_attribute_config ac, si_vi_sbs_note_attribute n2a
+      WHERE n2a.si_note_id = #noteId#
+        AND n2a.attribute_id = a.attribute_id
+        AND a.attribute_config_id = ac.attribute_config_id
+   </select>
+   
+</sqlMap>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+  
+<sqlMap namespace="CCTOrgStructureElement">
+       
+       <typeAlias alias="cctOrgStructureElement" type="at.a1ta.cuco.core.shared.dto.product.CCTOrgStructureElement" />
+       
+    <insert id="insertCCTOrgStructureElements" parameterClass="cctOrgStructureElement">
+    insert into CCT_APPROVER_HIERARCHY 
+     (USER_ID,USER_NAME,ROLLE,ROLE,TREE_LEVEL,TEAM,SAP_ORG_ID,SUPERVISOR_ID,SUPERVISOR_NAME)
+    VALUES  (#userID#, #user#, #rolle#, #role#, #approvalLevel#, #team#, #orgId#, #supervisorUserID#, #supervisor#)
+  </insert>
+  
+  <delete id="eraseOldEntries">
+    DELETE FROM CCT_APPROVER_HIERARCHY
+  </delete>
+  
+</sqlMap>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Team">
+
+	<resultMap id="team-result" class="at.a1ta.cuco.core.shared.dto.Team">
+		<result property="id" column="TEAM_ID" />
+		<result property="name" column="NAME" />
+		<result property="description" column="BESCHREIBUNG" />
+		<result property="creator" column="creator" select="User.getBiteUserById" />
+		<result property="createDate" column="ERSTELLT_AM" />
+	</resultMap>
+	
+	<resultMap id="service-result" class="at.a1ta.cuco.core.shared.dto.Service">
+		<result property="id" column="SERVICE_ID" />
+		<result property="name" column="NAME" />
+		<result property="validity.validStartDate" column="AKTIV_VON" />
+		<result property="validity.validUntilDate" column="AKTIV_BIS" />
+		<result property="product" column="PRODUKT" />
+		<result property="costs" column="KOSTEN" />
+	</resultMap>
+	
+	<select id="GetAllTeams" resultMap="team-result">
+		select * from CUCO_TEAM 
+	</select>
+	
+	<delete id="RemoveMember" parameterClass="java.util.Map">
+		delete from CUCO_TEAM_USER where USER_ID = #userId# and TEAM_ID = #teamId# 
+	</delete>
+	
+	<insert id="AddMember" parameterClass="java.util.Map">
+		insert into CUCO_TEAM_USER VALUES (#teamId#, #userId#)
+	</insert>
+	
+	<delete id="RemoveService" parameterClass="java.util.Map">
+		delete from cuco_team_dienstleistung where dienstleistung_ID = #serviceId# and TEAM_ID = #teamId# 
+	</delete>
+	
+	<insert id="AddService" parameterClass="java.util.Map">
+		insert into cuco_team_dienstleistung VALUES (#teamId#, #serviceId#)
+	</insert>
+	
+	<delete id="DeleteTeam" parameterClass="java.lang.Long">
+		delete from CUCO_TEAM where TEAM_ID = #teamId#
+	</delete>
+	
+	<insert id="AddTeam" parameterClass="at.a1ta.cuco.core.shared.dto.Team">
+		<selectKey keyProperty="id" resultClass="java.lang.Long" type="pre">
+			SELECT SEQ_CUCO_TEAM.NEXTVAL AS id FROM DUAL
+		</selectKey>
+		insert into CUCO_TEAM VALUES(#id#, #name#, #description#, #createDate#, #creator.id#)
+	</insert>
+	
+	<select id="GetTeam" resultMap="team-result" parameterClass="java.lang.Long">
+		select * from CUCO_TEAM where TEAM_ID = #teamId#	
+	</select>
+	
+	<select id="GetTeamForUser" resultMap="team-result" parameterClass="java.lang.Long">
+		select c.* 
+		from 
+			cuco_team c,
+			cuco_team_user tu
+		where
+			tu.team_id = c.team_id
+		and
+			tu.user_id = #id#
+	</select>
+	
+	<select id="GetServicesForTeam" resultMap="service-result" parameterClass="java.lang.Long">
+		select s.DIENSTLEISTUNG_ID SERVICE_ID, s.NAME NAME, AKTIV_VON, AKTIV_BIS, PRODUKT, KOSTEN from  CUCO_dienstleistung s, cuco_team t, cuco_team_dienstleistung ts
+		where s.dienstleistung_id = ts.dienstleistung_id and t.team_id = ts.team_id
+		and t.team_id = #teamId#
+	</select>	
+	
+	<update id="UpdateTeam" parameterClass="at.a1ta.cuco.core.shared.dto.Team">
+		update CUCO_TEAM set NAME = #name#, BESCHREIBUNG = #description# where TEAM_ID = #id#
+	</update>
+	
+	<delete id="RemoveAllMembers" parameterClass="java.lang.Long">
+		delete from CUCO_TEAM_USER where TEAM_ID = #teamId#
+	</delete>
+	
+	<delete id="RemoveAllServices" parameterClass="java.lang.Long">
+		delete from cuco_team_dienstleistung where TEAM_ID = #teamId#
+	</delete>
+	
+	<delete id="removeUserFromTeam" parameterClass="java.lang.Long">
+		delete from cuco_team_user where user_id = #userId#
+	</delete>
+	
+	<select id="GetNotLinkedServices" parameterClass="java.lang.Long" resultMap="service-result">
+		select s.DIENSTLEISTUNG_ID SERVICE_ID, s.NAME NAME, s.AKTIV_VON, s.AKTIV_BIS, s.PRODUKT, s.KOSTEN from 
+		CUCO_dienstleistung s where s.dienstleistung_id not in (select dienstleistung_id from cuco_team_dienstleistung ts where ts.team_id = #teamId#)
+	</select>
+	
+	<select id="getService" parameterClass="java.lang.String" resultMap="service-result">
+	    select s.DIENSTLEISTUNG_ID SERVICE_ID, s.NAME NAME, s.AKTIV_VON, s.AKTIV_BIS, s.PRODUKT, s.KOSTEN from CUCO_dienstleistung s where lower(s.Name) like lower(#service#)
+	</select>
+</sqlMap>

@@ -1,0 +1,10 @@
+delete from BESTAND1 where kunde_id=999999991;
+delete from BESTAND2 where kunde_id=999999991;
+delete from BESTAND1 where kunde_id=999999992;
+delete from BESTAND2 where kunde_id=999999992;
+delete from BESTAND1 where kunde_id=999999993;
+delete from BESTAND2 where kunde_id=999999993;
+delete from BESTAND1 where kunde_id=999999994;
+delete from BESTAND2 where kunde_id=999999994;
+delete from BESTAND1 where kunde_id=999999995;
+delete from BESTAND2 where kunde_id=999999995;

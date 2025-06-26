@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+    http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+    http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
+    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd">
+
+
+  <bean id="metricsRegistry" class="com.codahale.metrics.SharedMetricRegistries" factory-method="getOrCreate">
+    <constructor-arg type="java.lang.String" value="OFFERSERVERMETRICS" />
+  </bean>
+  <context:property-placeholder location="classpath:configuration.properties" />
+  <import resource="classpath:/at/a1ta/bite/core/applicationContext-bite-core.xml" />
+  <import resource="classpath:/at/a1ta/bite/data/cusco/applicationContext-bite-data-cusco.xml" />
+  <import resource="classpath:/at/a1ta/bite/data/clarify/service/applicationContext-clarify-service.xml" />
+  <import resource="classpath:/at/a1ta/cuco/core/dao/db/applicationContext-cuco-dao-db.xml" />
+  <import resource="classpath:/at/a1ta/cuco/core/dao/billingcycle/applicationContext-cuco-dao-bc.xml" />
+  
+  <context:component-scan base-package="at.a1ta.cuco.core.dao.esb"/>
+  <context:component-scan base-package="at.a1ta.cuco.core.service"/>
+
+</beans>

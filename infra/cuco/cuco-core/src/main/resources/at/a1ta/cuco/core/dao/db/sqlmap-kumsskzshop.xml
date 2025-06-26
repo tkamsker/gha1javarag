@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="KumsSkzShop">
+
+  <typeAlias alias="kumsSkzShop" type="at.a1ta.bite.core.shared.dto.KumsSkzShop" />
+  
+   
+  <cacheModel id="kumsSkzShop-cache" type="ehcacheProvider" readOnly="true">
+    <flushInterval hours="1" />
+    <property name="cache-size" value="300" />
+  </cacheModel>
+  
+  <resultMap id="kumsSkzShop-result" class="kumsSkzShop">
+    <result property="betreuteStelleCd" column="betreuende_stelle_cd"/>
+    <result property="betreuteStelleNam" column="betreuende_stelle_nam"/>
+    <result property="shopBetreut" column="shop_betreut_jn"/>
+    <result property="created" column="created"/>
+  </resultMap>
+  
+  <select id="getShop" resultMap="kumsSkzShop-result" parameterClass="String" cacheModel="kumsSkzShop-cache">
+    SELECT * 
+      FROM cuco_kums_skz_shop
+     WHERE betreuende_stelle_cd = #betreuteStelleCd#
+       AND rownum = 1
+  </select>
+  
+</sqlMap>

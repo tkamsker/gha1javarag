@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<!-- @author: rene.weidinger@telekom.at -->
+<sqlMap namespace="ChargingType">
+	<typeAlias alias="chargingType" type="at.a1ta.cuco.core.shared.dto.ChargingType"/>
+	
+	<cacheModel id="chargingtype-cache" type="ehcacheProvider" readOnly="true" serialize="false">
+		<flushInterval minutes="10" />
+		<property name="cache-size" value="5" />
+	</cacheModel>
+
+	<resultMap id="chargingtype-result" class="chargingType">
+		<result property="id" column="verrechnungsart_id" />
+		<result property="name" column="name" />
+		<result property="description" column="beschreibung" />
+	</resultMap>
+
+	<select id="get" resultMap="chargingtype-result" cacheModel="chargingtype-cache" parameterClass="java.lang.Long">
+		SELECT verrechnungsart_id,name,beschreibung
+		FROM cuco_verrechnungsart
+		<isParameterPresent>
+		WHERE verrechnungsart_id=#id#
+		</isParameterPresent>
+	</select>
+</sqlMap>

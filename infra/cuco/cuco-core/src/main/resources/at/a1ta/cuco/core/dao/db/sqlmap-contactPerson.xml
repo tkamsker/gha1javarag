@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ContactPerson">
+  <cacheModel id="contact-cache" type="ehcacheProvider" readOnly="true" serialize="false">
+    <flushInterval hours="3" />
+    <property name="cache-size" value="1000" />
+  </cacheModel>
+
+  <resultMap id="contactperson-result" class="at.a1ta.cuco.core.shared.dto.ContactPerson">
+    <result property="customerId" column="kunde_id" />
+    <result property="id" column="KONTAKT_ROLLE_ID" />
+    <result property="isMainContact" column="hauptanprechpartner_jn" typeHandler="at.a1ta.cuco.core.dao.util.YNBooleanTypeHandler" />
+    <result property="TARoleName" column="rolle_bei_ta_bes" />
+    <result property="customerRole" column="ROLLE_BEIM_KUNDEN_BES" />
+    <result property="salutation" column="anrede_bes" />
+    <result property="title" column="titel_bes" />
+    <result property="lastname" column="FAMILY_NAME" />
+    <result property="firstname" column="GIVEN_NAME" />
+    <result property="addressLine1" column="adresse_2zeilig_1" />
+    <result property="addressLine2" column="adresse_2zeilig_2" />
+    <result property="birthdate" column="geburts_dat" />
+    <result property="mobilephoneNumber" column="mobil_bes" />
+    <result property="dayPhoneNumber" column="rufnummer_tag_bes" />
+    <result property="nightPhoneNumber" column="rufnummer_abend_bes" />
+    <result property="faxNumber" column="fax_bes" />
+    <result property="mail" column="email_bes" />
+    <result property="source" column="quelle_cd" />
+    <result property="active" column="AKTIVE" typeHandler="at.a1ta.cuco.core.dao.util.BooleanTypeHandler" />
+    <result property="lastModifier" column="BETREUER_UUSER_CD" select="User.getBiteUserById" />
+    </resultMap>
+
+  <insert id="InsertLocalContact" parameterClass="at.a1ta.cuco.core.shared.dto.ContactPerson">
+    <selectKey resultClass="long" keyProperty="id">SELECT custc.seq_cuco_contacts_id.nextval AS id FROM dual</selectKey>
+    Insert into CUCO_ANSPRECHPARTNER (CUCO_ANSPRECHPARTNER_ID,KUNDE_ID,ROLLE_BEI_TA_BES,ANREDE_BES,TITEL_BES,FAMILY_NAME,GIVEN_NAME,ADRESSE_2ZEILIG_1,ADRESSE_2ZEILIG_2,GEBURTS_DAT,MOBIL_BES,RUFNUMMER_TAG_BES,RUFNUMMER_ABEND_BES,FAX_BES,EMAIL_BES,ROLLE_BEIM_KUNDEN_BES,AKTIVE,BETREUER_UUSER_CD,LAST_UPDATE_TS,DELETED)
+    values
+    (#id#,#customerId#,#TARoleName#,#salutation#,#title#,#lastname#,#firstname#,#addressLine1#,#addressLine2#,#birthdate#,#mobilephoneNumber#,#dayPhoneNumber#,#nightPhoneNumber#,#faxNumber#,#mail#,#customerRole#,#active#,#lastModifier.id#,systimestamp,0)
+  </insert>
+
+  <update id="updateLocalContactPersonStatus" parameterClass="at.a1ta.cuco.core.shared.dto.ContactPerson">
+    UPDATE CUCO_ANSPRECHPARTNER
+    SET aktive=#active#,
+    BETREUER_UUSER_CD=#lastModifier.id#,
+    LAST_UPDATE_TS=systimestamp
+    WHERE kunde_id = #customerId#
+    and CUCO_ANSPRECHPARTNER_ID=#id#
+  </update>
+
+  <update id="markLocalContactPersonDeleted" parameterClass="at.a1ta.cuco.core.shared.dto.ContactPerson">
+    UPDATE CUCO_ANSPRECHPARTNER
+    SET deleted=#deleted#,
+    BETREUER_UUSER_CD=#lastModifier.id#,
+    LAST_UPDATE_TS=systimestamp
+    WHERE kunde_id = #customerId#
+    and CUCO_ANSPRECHPARTNER_ID=#id#
+  </update>
+
+  <update id="updateDWHContactPersonStatus" parameterClass="at.a1ta.cuco.core.shared.dto.ContactPerson">
+    UPDATE ANSPRECHPARTNER_STATUS
+    SET aktive=#active#,
+    BETREUER_UUSER_CD=#lastModifier.id#,
+    LAST_UPDATE_TS=systimestamp
+    WHERE kunde_id = #customerId#
+    and kontakt_rolle_id=#id#
+  </update>
+
+  <insert id="insertDWHContactPersonStatus" parameterClass="at.a1ta.cuco.core.shared.dto.ContactPerson">
+    Insert into ANSPRECHPARTNER_STATUS (KUNDE_ID,KONTAKT_ROLLE_ID,AKTIVE,BETREUER_UUSER_CD,LAST_UPDATE_TS)
+    values (#customerId#,#id#,#active#,#lastModifier.id#,systimestamp)
+  </insert>
+
+  <select id="getDWHContactPersonStatusEntryCount" parameterClass="at.a1ta.cuco.core.shared.dto.ContactPerson" resultClass="java.lang.Integer">
+    SELECT COUNT(*) FROM ANSPRECHPARTNER_STATUS WHERE kunde_id = #customerId#
+    and kontakt_rolle_id=#id#
+  </select>
+
+  <update id="updateLocalContact" parameterClass="at.a1ta.cuco.core.shared.dto.ContactPerson">
+    UPDATE CUCO_ANSPRECHPARTNER
+    SET aktive=#active#,
+    BETREUER_UUSER_CD=#lastModifier.id#,
+    LAST_UPDATE_TS=systimestamp,
+    CUCO_ANSPRECHPARTNER_ID=#id#,
+    KUNDE_ID=#customerId#,
+    ROLLE_BEI_TA_BES=#TARoleName#,
+    ANREDE_BES=#salutation#,
+    TITEL_BES=#title#,
+    FAMILY_NAME=#lastname#,
+    GIVEN_NAME=#firstname#,
+    ADRESSE_2ZEILIG_1=#addressLine1#,
+    ADRESSE_2ZEILIG_2=#addressLine2#,
+    GEBURTS_DAT=#birthdate#,
+    MOBIL_BES=#mobilephoneNumber#,
+    RUFNUMMER_TAG_BES=#dayPhoneNumber#,
+    RUFNUMMER_ABEND_BES=#nightPhoneNumber#,
+    FAX_BES=#faxNumber#,
+    EMAIL_BES=#mail#,
+    ROLLE_BEIM_KUNDEN_BES=#customerRole#,
+    deleted=#deleted#
+    WHERE kunde_id = #customerId#
+    and CUCO_ANSPRECHPARTNER_ID=#id#
+  </update>
+
+  <delete id="deleteLocalContact" parameterClass="at.a1ta.cuco.core.shared.dto.ContactPerson">
+    DELETE FROM CUCO_ANSPRECHPARTNER
+    WHERE kunde_id = #customerId#
+    and CUCO_ANSPRECHPARTNER_ID=#id#
+  </delete>
+
+
+  <sql id="attributes_v_ansprechpartner">
+    kunde_id, kontakt_rolle_id, hauptanprechpartner_jn, rolle_bei_ta_bes, anrede_bes, titel_bes, family_name,given_name, adresse_2zeilig_1,
+    adresse_2zeilig_2, geburts_dat, mobil_bes, rufnummer_tag_bes, rufnummer_abend_bes, fax_bes, email_bes,
+    rolle_beim_kunden_bes, quelle_cd,aktive,betreuer_uuser_cd,deleted
+  </sql>
+
+  <sql id="attributes_cuco_ansprechpartner">
+    kunde_id, CUCO_ANSPRECHPARTNER_ID as kontakt_rolle_id, hauptanprechpartner_jn, rolle_bei_ta_bes, anrede_bes, titel_bes, family_name,given_name, adresse_2zeilig_1,
+    adresse_2zeilig_2, geburts_dat, mobil_bes, rufnummer_tag_bes, rufnummer_abend_bes, fax_bes, email_bes,
+    rolle_beim_kunden_bes, quelle_cd,aktive,betreuer_uuser_cd,deleted
+  </sql>
+
+  <select id="GetContactPersons4Customer" resultMap="contactperson-result">
+    SELECT
+    <include refid="attributes_v_ansprechpartner" />
+    FROM v_ansprechpartner
+    WHERE kunde_id IN
+    <iterate open="(" close=")" conjunction="," property="partyIds">#partyIds[]#</iterate>
+    AND deleted!=1
+    ORDER BY hauptanprechpartner_jn ASC, NAME ASC
+  </select>
+
+  <select id="GetContactPersons4CustomerIncludingDeleted" resultMap="contactperson-result" >
+    SELECT
+    <include refid="attributes_v_ansprechpartner" />
+    FROM v_ansprechpartner
+    WHERE kunde_id IN
+    <iterate open="(" close=")" conjunction="," property="partyIds">#partyIds[]#</iterate>
+    ORDER BY hauptanprechpartner_jn ASC, NAME ASC
+  </select>
+
+
+  <select id="GetAllContactPersons4Customers" resultMap="contactperson-result">
+    SELECT
+    <include refid="attributes_v_ansprechpartner" />
+    FROM v_ansprechpartner
+    WHERE kunde_id IN
+    <iterate open="(" close=")" conjunction="," property="partyIds">#partyIds[]#</iterate>
+    AND deleted!=1
+  </select>
+
+  <select id="GetAllContactPersons4CustomersIncludingDeleted" resultMap="contactperson-result">
+    SELECT
+    <include refid="attributes_v_ansprechpartner" />
+    FROM v_ansprechpartner
+    WHERE kunde_id IN
+    <iterate open="(" close=")" conjunction="," property="partyIds">#partyIds[]#</iterate>
+  </select>
+
+  <select id="GetAllContactPersons4Customer" resultMap="contactperson-result">
+    SELECT
+    <include refid="attributes_v_ansprechpartner" />
+    FROM v_ansprechpartner
+    WHERE kunde_id = #partyId#
+    AND deleted!=1
+  </select>
+
+  <select id="GetAllContactPersons4CustomerIncludingDeleted" resultMap="contactperson-result">
+    SELECT
+    <include refid="attributes_v_ansprechpartner" />
+    FROM v_ansprechpartner
+    WHERE kunde_id = #partyId#
+  </select>
+
+
+  <select id="GetContactPersonById" resultMap="contactperson-result">
+    SELECT
+    <include refid="attributes_v_ansprechpartner" />
+    FROM v_ansprechpartner
+    WHERE kontakt_rolle_id=#contactPersonId#
+  </select>
+
+  <select id="GetLocalContactPersonById" resultMap="contactperson-result" >
+    SELECT
+    <include refid="attributes_v_ansprechpartner" />
+    FROM v_ansprechpartner
+    WHERE kontakt_rolle_id=#contactPersonId#
+  </select>
+
+  <select id="GetContactPersonByIdAndKundeId" resultMap="contactperson-result">
+    SELECT
+    <include refid="attributes_v_ansprechpartner" />
+    FROM v_ansprechpartner
+    WHERE v_ansprechpartner.kontakt_rolle_id = #kontakt_rolle_id#
+    AND v_ansprechpartner.kunde_id = #kunde_id#
+    UNION
+    SELECT
+    <include refid="attributes_cuco_ansprechpartner" />
+    FROM cuco_ansprechpartner
+    WHERE cuco_ansprechpartner.kunde_id = #kunde_id#
+    AND cuco_ansprechpartner.CUCO_ANSPRECHPARTNER_ID = #kontakt_rolle_id#
+  </select>
+
+ <select id="CheckReferenceInSBSNoteAndProductNote"  resultClass="java.lang.Integer"  parameterClass="java.util.HashMap" >
+    select CASE WHEN count(*)>0 THEN '1' ELSE '0' END from
+    (  select SI_Note_id from si_vi_sbs_note where SI_NOTE_ID =any(select SI_NOTE_ID from SI_NOTE where Deleted=0) and CUCO_CONTACT_PERSON= #id#
+    UNION
+        select SI_Note_id from SI_VI_SBS_PRODUCT_NOTE where SI_NOTE_ID =any(select SI_NOTE_ID from SI_NOTE where Deleted=0) and CUCO_CONTACT_PERSON= #id#
+    )
+  </select>
+</sqlMap>

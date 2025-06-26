@@ -1,0 +1,30 @@
+/*
+ * Copyright 2009 - 2012 by A1 Telekom Austria AG
+ * All Rights Reserved.
+ * 
+ * The Software is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * All information contained herein is, and remains the property of
+ * A1 Telekom Austria AG and its suppliers, if any.
+ * The intellectual and technical concepts contained herein are proprietary
+ * to A1 Telekom Austria AG and its suppliers and may be covered by
+ * intertional or national patents, patents in process, and are protected
+ * by trade secret or copyright law. Dissemination of this information or
+ * reproduction of this material is strictly forbidden unless prior written
+ * permission is obtained from A1 Telekom Austria AG.
+ */
+package at.a1ta.cuco.core.dao.cusco;
+
+import at.a1ta.bite.core.shared.dto.UserInfo;
+import at.a1ta.bite.data.cusco.http.CusCoHttpOperations;
+import at.a1ta.cuco.core.shared.dto.Customer;
+
+public interface CusCoDao {
+
+  CusCoResponse checkStatusForSigned(String jobId);
+
+  CusCoHttpOperations getOperations();
+
+  CusCoResponse prepareForSign(Customer customer, UserInfo userInfo, String contactPerson, String templateId);
+
+}

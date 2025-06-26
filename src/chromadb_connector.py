@@ -126,4 +126,34 @@ class ChromaDBConnector:
             return results
         except Exception as e:
             logger.error(f"Error querying ChromaDB: {str(e)}")
-            raise 
+            raise
+
+def query_chromadb(question: str, n_results: int = 5) -> str:
+    """Query ChromaDB for relevant context based on a question"""
+    try:
+        # Create ChromaDB connector instance
+        connector = ChromaDBConnector()
+        
+        # Query for similar documents
+        results = connector.query_similar(question, n_results)
+        
+        # Format the results
+        if results and results['documents'] and results['documents'][0]:
+            context_parts = []
+            for i, doc in enumerate(results['documents'][0]):
+                metadata = results['metadatas'][0][i] if results['metadatas'] and results['metadatas'][0] else {}
+                distance = results['distances'][0][i] if results['distances'] and results['distances'][0] else 0
+                
+                context_parts.append(f"Document {i+1} (similarity: {1-distance:.3f}):")
+                context_parts.append(f"File: {metadata.get('file_path', 'Unknown')}")
+                context_parts.append(f"Type: {metadata.get('file_type', 'Unknown')}")
+                context_parts.append(f"Content: {doc[:500]}...")  # Truncate long content
+                context_parts.append("---")
+            
+            return "\n".join(context_parts)
+        else:
+            return "No relevant documents found in ChromaDB."
+            
+    except Exception as e:
+        logger.error(f"Error in query_chromadb: {str(e)}")
+        return f"Error querying ChromaDB: {str(e)}" 

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap
+  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<!-- @author: christoph.strobl@telekom.at -->
+<sqlMap namespace="Invoice">
+	<cacheModel id="invoice-cache" type="ehcacheProvider" readOnly="true" serialize="false">
+		<flushInterval hours="3" />
+		<property name="cache-size" value="1000" />
+	</cacheModel>
+
+	<resultMap id="invoice-result" class="at.a1ta.cuco.core.shared.dto.Invoice">
+		<result property="invoiceId" column="rechnung_id" />
+		<result property="clearingAccountNumber" column="konto_id" />
+		<result property="customerId" column="kunde_id" />
+		<result property="invoiceDate" column="rechnung_lauf_dat" />
+		<result property="invoiceRunId" column="rechnung_lauf_id" />
+		<result property="paymentDate" column="faelligkeit_dat" />
+		<result property="totalFee" column="gesamt_bet" nullValue="0"/>
+		<result property="totalGrossFee" column="GesamtBruttobetrag_Bet" nullValue="0"/>
+		<result property="totalPaymentFee" column="zuzahlender_bet" nullValue="0"/>
+	</resultMap>
+
+	<sql id="attributes_v_rechnung">
+      v_rechnung.rechnung_id, v_rechnung.kunde_id, v_rechnung.konto_id, v_rechnung.rechnung_lauf_dat, v_rechnung.faelligkeit_dat, v_rechnung.gesamt_bet, v_rechnung.rechnung_lauf_id, v_rechnung.GesamtBruttobetrag_Bet, v_rechnung.zuzahlender_bet
+    </sql>
+
+	<select id="getByPartyIds" resultMap="invoice-result" cacheModel="invoice-cache">
+		SELECT <include refid="attributes_v_rechnung" />
+		  FROM v_rechnung
+		  <dynamic prepend="WHERE">
+		  	<isNotEmpty prepend="AND" property="partyIds">
+		  		kunde_id in <iterate open="(" close=")" conjunction="," property="partyIds">#partyIds[]#</iterate>
+		  	</isNotEmpty>
+		  </dynamic>
+	      ORDER BY rechnung_lauf_dat DESC
+	</select>
+	
+	<select id="getById" resultMap="invoice-result" cacheModel="invoice-cache">
+    SELECT <include refid="attributes_v_rechnung" /> FROM v_rechnung WHERE v_rechnung.rechnung_id = #id#
+  </select>
+</sqlMap>

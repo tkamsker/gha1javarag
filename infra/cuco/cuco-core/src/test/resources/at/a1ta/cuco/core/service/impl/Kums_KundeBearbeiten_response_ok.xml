@@ -1,0 +1,8 @@
+<xml-fragment xmlns:ns0="WSKUMS_S_WSToKUMSKundeBearbeiten_WSKUMS_S_WSToKUMSKundeBearbeiten" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+  <WS_KUMS_KUNDE_BEARBEITEN>
+    <WS_KUMS_KUNDE_BEARBEITEN_Output>
+      <Kundennummer>103678446</Kundennummer>
+      <Meldung>Kundendaten geändert</Meldung>
+    </WS_KUMS_KUNDE_BEARBEITEN_Output>
+  </WS_KUMS_KUNDE_BEARBEITEN>
+</xml-fragment>

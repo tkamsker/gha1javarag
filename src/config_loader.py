@@ -1,7 +1,7 @@
 import os
 import yaml
 from typing import Dict, Any
-from rate_limiter import RateLimitConfig
+from .rate_limiter import RateLimitConfig
 
 def load_rate_limit_config(environment: str = None) -> RateLimitConfig:
     """Load rate limiting configuration from YAML file"""

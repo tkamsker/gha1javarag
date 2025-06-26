@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd">
+
+	<import resource="classpath:/at/a1ta/bite/core/applicationContext-bite-core.xml" />
+	<import resource="classpath:/at/a1ta/cuco/core/dao/db/applicationContext-cuco-dao-db.xml" />
+	<import resource="classpath:/at/a1ta/cuco/core/dao/billingcycle/applicationContext-cuco-dao-bc.xml" />
+    <import resource="classpath:/at/a1ta/cuco/core/dao/cmdb/applicationContext-cuco-dao-cmdb.xml" />
+	<import resource="classpath:/at/a1ta/bite/data/clarify/service/applicationContext-clarify-service.xml" />
+	
+    <context:component-scan base-package="at.a1ta.cuco.core.configuration"/>
+	<context:component-scan base-package="at.a1ta.cuco.core.dao.esb"/>
+	<context:component-scan base-package="at.a1ta.cuco.core.service"/>
+	<context:component-scan base-package="at.a1ta.cuco.core.mail"/>
+    <bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor"/>
+    
+    <bean id="cusCoDao" class="at.a1ta.cuco.core.dao.cusco.impl.HttpPostCusCoDao">
+        <property name="endpoint" value="${cusco.host}" />
+        <property name="config">
+            <bean class="at.a1ta.bite.data.cusco.CusCoConfigurtationBean">
+                <constructor-arg><value>${cusco.user}</value></constructor-arg>
+                <constructor-arg><value>${cusco.password}</value></constructor-arg>
+            </bean>
+        </property>
+    </bean>
+    
+    <bean id="cuscoOperations" class="at.a1ta.bite.data.cusco.http.CusCoHttpTemplate" />
+    
+    <bean id="imageService" class="at.a1ta.cuco.core.service.impl.ImageServiceImpl">
+        <constructor-arg><ref bean="imageDao"/></constructor-arg>
+    </bean>
+    <bean id="imageSizeService" class="at.a1ta.cuco.core.service.impl.ImageSizeServiceImpl">
+        <constructor-arg><ref bean="imageSizeDao"/></constructor-arg>
+    </bean>
+</beans>

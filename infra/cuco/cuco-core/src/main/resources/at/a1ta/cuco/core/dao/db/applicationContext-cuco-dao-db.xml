@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+  xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd">
+
+  <bean id="dataSourceCuCo" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+        <!-- use default oracle jdbc driver -->
+        <property name="driverClass">
+            <value>${db.driverClass}</value>
+        </property>
+        <property name="jdbcUrl">
+            <value>jdbc:${db.dbms}:thin:@
+                (DESCRIPTION =
+                (ADDRESS_LIST =
+                (source_route=off)
+                (FAILOVER = ON)
+                (LOAD_BALANCE=ON)
+                (ADDRESS =
+                (PROTOCOL = TCP)(HOST = ${db.host})(PORT = ${db.port}))
+                )
+                (CONNECT_DATA =
+                (service_name = ${db.servicename})
+                (failover_mode =
+                (type=select))
+                )
+                )
+            </value>
+        </property>
+    
+        <property name="user" value="${db.username}" />
+        <property name="password" value="${db.password}" />
+        <!-- always keep 5 connections to database open -->
+        <property name="minPoolSize">
+            <value>5</value>
+        </property>
+        <!-- use max 250 connections to database -->
+        <property name="maxPoolSize">
+            <value>${db.maxPoolSize}</value>
+        </property>
+        <!-- increment connections by this number if there is lack of them -->
+        <property name="acquireIncrement">
+            <value>5</value>
+        </property>
+        <!-- number of threads used for asyncronous database access -->
+        <property name="numHelperThreads">
+            <value>25</value>
+        </property>
+        <!--
+            use the wrapper with caution as it may increase execution time far
+            more than it saves
+        -->
+        <property name="maxStatementsPerConnection">
+            <value>25</value>
+        </property>
+        <!--
+            allow connections to exeed after 3 hours (value given in seconds)
+        -->
+        <property name="maxIdleTime">
+            <value>10800</value>
+        </property>
+    </bean>
+
+  <bean id="appDataSource" class="org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy">
+    <property name="targetDataSource">
+      <ref local="dataSourceCuCo" />
+    </property>
+  </bean>
+
+  <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <property name="dataSource">
+      <ref local="appDataSource" />
+    </property>
+  </bean>
+
+  <bean id="sqlMapClient4CuCo" class="org.springframework.orm.ibatis.SqlMapClientFactoryBean">
+    <property name="configLocation" value="classpath:/at/a1ta/cuco/core/dao/db/sqlmap-config.xml" />
+    <property name="dataSource">
+      <ref bean="appDataSource" />
+    </property>
+  </bean>
+
+  <bean id="cucoCustomerDao" class="at.a1ta.cuco.core.dao.db.impl.PartyDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+
+  <bean id="contactPersonDao" class="at.a1ta.cuco.core.dao.db.impl.ContactPersonDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+
+  <bean id="imageDao" class="at.a1ta.cuco.core.dao.db.impl.ImageDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+
+  <bean id="imageSizeDao" class="at.a1ta.cuco.core.dao.db.impl.ImageSizeDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+
+  <bean id="phoneNumberDao" class="at.a1ta.cuco.core.dao.db.impl.PhoneNumberDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+
+  <bean id="locationDao" class="at.a1ta.cuco.core.dao.db.impl.LocationDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+
+  <bean id="inventoryDao" class="at.a1ta.cuco.core.dao.db.impl.InventoryDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  
+  <bean id="cCTOrgStructureElementDao" class="at.a1ta.cuco.core.dao.db.impl.CCTOrgStructureElementDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+
+  <bean id="invoiceDao" class="at.a1ta.cuco.core.dao.db.impl.InvoiceDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+
+  <bean id="clearingAccountDao" class="at.a1ta.cuco.core.dao.db.impl.ClearingAccountDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+
+  <bean id="categoryDao" class="at.a1ta.cuco.core.dao.db.impl.CategoryDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  <bean id="segmentDao" class="at.a1ta.cuco.core.dao.db.impl.SegmentDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+
+  <bean id="creditTypeDao" class="at.a1ta.cuco.core.dao.db.impl.CreditTypeDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+
+  <bean id="teamDao" class="at.a1ta.cuco.core.dao.db.impl.TeamDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+
+  <bean id="serviceDao" class="at.a1ta.cuco.core.dao.db.impl.ServiceDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+
+  <bean id="chargingTypeDao" class="at.a1ta.cuco.core.dao.db.impl.ChargingTypeDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+
+  <bean id="payableTicketDao" class="at.a1ta.cuco.core.dao.db.impl.PayableTicketDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+
+  <bean id="unknownAreaCodeDao" class="at.a1ta.cuco.core.dao.db.impl.UnknownAreaCodeDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+
+  <bean id="vipHistoryDao" class="at.a1ta.cuco.core.dao.db.impl.VIPHistoryDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  <bean id="inventoryProductGroupDao" class="at.a1ta.cuco.core.dao.db.impl.InventoryProductGroupDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  <bean id="productHierarchyDao" class="at.a1ta.cuco.core.dao.db.impl.ProductHierarchyDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  <bean id="turnoverDao" class="at.a1ta.cuco.core.dao.db.impl.TurnoverDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  <bean id="usageDataDao" class="at.a1ta.cuco.core.dao.db.impl.UsageDataDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  <bean id="mkInteractionDao" class="at.a1ta.cuco.core.dao.db.impl.MKInteractionDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  <bean id="customerBlockDao" class="at.a1ta.cuco.core.dao.db.impl.CustomerBlockDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  <bean id="flashInfoDao" class="at.a1ta.cuco.core.dao.db.impl.FlashInfoDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  <bean id="linksPortletDao" class="at.a1ta.cuco.core.dao.db.impl.LinksPortletDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  <bean id="userInfoStatisticsDao" class="at.a1ta.cuco.core.dao.db.impl.UserInfoStatisticsDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  <bean id="reportingDao" class="at.a1ta.cuco.core.dao.db.impl.ReportingDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  <bean id="customerUnlockRequestDao" class="at.a1ta.cuco.core.dao.db.impl.CustomerUnlockRequestDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  <bean id="mycucoQuoteDao" class="at.a1ta.cuco.core.dao.db.impl.MyQuoteDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  <bean id="mycucoNotesDao" class="at.a1ta.cuco.core.dao.db.impl.MyNotesDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  <bean id="attributeDao" class="at.a1ta.cuco.core.dao.db.impl.AttributeDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  <bean id="salesInfoDao" class="at.a1ta.cuco.core.dao.db.impl.SalesInfoDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  <bean id="standardAddressDao" class=" at.a1ta.cuco.core.dao.db.impl.StandardAddressDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  
+  <bean id="visitReportDao" class="at.a1ta.cuco.core.dao.db.visitreport.VisitReportDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  
+  <bean id="vbmProductsDao" class="at.a1ta.cuco.core.dao.db.impl.VbmProductsDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  
+  <bean id="userShopAssignmentDao" class="at.a1ta.cuco.core.dao.db.impl.UserShopAssignmentDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  
+  <bean id="uiTextsEditorDAO" class="at.a1ta.cuco.core.dao.db.impl.UITextsEditorDAOImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  
+  <bean id="settingsEditorDAO" class="at.a1ta.cuco.core.dao.db.impl.SettingsEditorDAOImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  
+  <bean id="myToDoNotesDao" class="at.a1ta.cuco.core.dao.db.impl.MyToDoNotesDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  
+  <bean id="gamificationLocalDao" class="at.a1ta.cuco.core.dao.db.impl.GamificationLocalDAOImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  
+    <bean id="cucoLogsDao" class="at.a1ta.cuco.core.dao.db.impl.CucoLogsDaoImpl">
+    <property name="sqlMapClient" ref="sqlMapClient4CuCo" />
+  </bean>
+  
+   
+  
+
+  
+	<!-- SOLR -->
+	<bean id="solrServer" abstract="true">
+		<constructor-arg value="${solr.host}" />
+		<property name="connectionTimeout" value="100" />
+		<property name="defaultMaxConnectionsPerHost" value="100" />
+		<property name="maxTotalConnections" value="1000" />
+	</bean>
+
+	<bean id="solrPartyTemplate" class="at.a1ta.bite.data.solr.core.SolrTemplate">
+		<constructor-arg>
+			<bean class="org.apache.solr.client.solrj.impl.CommonsHttpSolrServer"
+				parent="solrServer" />
+		</constructor-arg>
+		<constructor-arg>
+			<value type="java.lang.String">party</value>
+		</constructor-arg>
+	</bean>
+
+	<bean id="solrPartyWithPhoneNumbersTemplate" class="at.a1ta.bite.data.solr.core.SolrTemplate">
+		<constructor-arg>
+			<bean class="org.apache.solr.client.solrj.impl.CommonsHttpSolrServer"
+				parent="solrServer" />
+		</constructor-arg>
+		<constructor-arg>
+			<value type="java.lang.String">phone</value>
+		</constructor-arg>
+	</bean>
+
+	<bean id="partySolrRepository" class="at.a1ta.cuco.core.dao.solr.SolrPartyRepository">
+		<property name="solrTemplate" ref="solrPartyTemplate" />
+	</bean>
+
+	<bean id="partySolrRepositoryWithPhoneNumbers"
+		class="at.a1ta.cuco.core.dao.solr.SolrPartyRepositoryWithPhoneNumbers">
+		<property name="solrTemplate" ref="solrPartyWithPhoneNumbersTemplate" />
+	</bean>
+</beans>

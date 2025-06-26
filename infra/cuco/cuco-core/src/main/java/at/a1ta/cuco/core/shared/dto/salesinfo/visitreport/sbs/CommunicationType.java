@@ -1,0 +1,5 @@
+package at.a1ta.cuco.core.shared.dto.salesinfo.visitreport.sbs;
+
+public enum CommunicationType {
+  WRITTEN, PERSONAL, TELEPHONIC
+}

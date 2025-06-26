@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Produktdetails" printOrder="Vertical" columnCount="1" pageWidth="595" pageHeight="842" orientation="Portrait" columnWidth="535" leftMargin="35" rightMargin="25" topMargin="30" bottomMargin="30">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<template><![CDATA[$P{templateFile}]]></template>
+	<parameter name="templateFile" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["\\styles.jrtx"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="PartySubreport" class="net.sf.jasperreports.engine.JasperReport" isForPrompting="false"/>
+	<parameter name="bgLogo" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["\\bg_logo_cuco.png"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="nameOfUser" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Barbara Ortmayr"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="headerAllProducts" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Alle Produkte"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="headerFixedLine" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Festnetz"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="headerMobile" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Mobilfunk"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="headerConnectionMinutes" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Verbindungsminuten der letzten 12 Monate"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="headerConnectionFees" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Verbindungsentgeltverlauf der letzten 12 Monate"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="headerTransfer" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Datenvolumen der letzten 12 Monate"]]></defaultValueExpression>
+	</parameter>
+	<field name="productNode" class="at.a1ta.cuco.core.shared.dto.usagedata.ProductNode"/>
+	<field name="connectionMinutesVoiceFixedLine" class="java.awt.image.BufferedImage"/>
+	<field name="connectionMinutesMobile" class="java.awt.image.BufferedImage"/>
+	<field name="connectionFeesChartVoiceFixedLine" class="java.awt.image.BufferedImage"/>
+	<field name="connectionFeesChartMobile" class="java.awt.image.BufferedImage"/>
+	<field name="transferVolumeChartVoiceFixedLine" class="java.awt.image.BufferedImage"/>
+	<field name="transferVolumeChartVoiceMobile" class="java.awt.image.BufferedImage"/>
+	<group name="PartyGroup" isStartNewPage="true" isReprintHeaderOnEachPage="false">
+		<groupExpression><![CDATA[$F{productNode}.getParty().getId()]]></groupExpression>
+		<groupHeader>
+			<band height="35">
+				<subreport>
+					<reportElement isPrintRepeatedValues="true" x="0" y="0" width="535" height="28" isRemoveLineWhenBlank="false" backcolor="#FFFFFF">
+						<printWhenExpression><![CDATA[Boolean.valueOf($F{productNode}.getParty() != null)]]></printWhenExpression>
+					</reportElement>
+					<parametersMapExpression><![CDATA[$P{REPORT_PARAMETERS_MAP}]]></parametersMapExpression>
+					<subreportParameter name="party">
+						<subreportParameterExpression><![CDATA[$F{productNode}.getParty()]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="partyId">
+						<subreportParameterExpression><![CDATA[$F{productNode}.getParty().getId()]]></subreportParameterExpression>
+					</subreportParameter>
+					<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.JREmptyDataSource()]]></dataSourceExpression>
+					<subreportExpression class="net.sf.jasperreports.engine.JasperReport"><![CDATA[$P{PartySubreport}]]></subreportExpression>
+				</subreport>
+				<line>
+					<reportElement x="0" y="0" width="535" height="1" isRemoveLineWhenBlank="true">
+						<printWhenExpression><![CDATA[Boolean.valueOf($F{productNode}.getParty() == null)]]></printWhenExpression>
+					</reportElement>
+				</line>
+				<textField>
+					<reportElement style="h3" x="0" y="0" width="535" height="20" isRemoveLineWhenBlank="true">
+						<printWhenExpression><![CDATA[Boolean.valueOf($F{productNode}.getParty() == null)]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$P{headerAllProducts}]]></textFieldExpression>
+				</textField>
+				<line>
+					<reportElement x="0" y="20" width="535" height="1" isRemoveLineWhenBlank="true">
+						<printWhenExpression><![CDATA[Boolean.valueOf($F{productNode}.getParty() == null)]]></printWhenExpression>
+					</reportElement>
+				</line>
+			</band>
+		</groupHeader>
+	</group>
+	<title>
+		<band height="60">
+			<staticText>
+				<reportElement style="title" x="0" y="0" width="535" height="40"/>
+				<textElement/>
+				<text><![CDATA[Customer Cockpit Report]]></text>
+			</staticText>
+			<image>
+				<reportElement x="379" y="0" width="156" height="40"/>
+				<imageExpression><![CDATA[$P{bgLogo}]]></imageExpression>
+			</image>
+			<line>
+				<reportElement x="0" y="40" width="535" height="1"/>
+			</line>
+			<staticText>
+				<reportElement x="380" y="40" width="60" height="20"/>
+				<textElement textAlignment="Right"/>
+				<text><![CDATA[Report vom: ]]></text>
+			</staticText>
+			<textField pattern="dd.MM.yyyy HH:mm:ss">
+				<reportElement style="date" x="400" y="40" width="135" height="20"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="30">
+			<staticText>
+				<reportElement style="pageTitle" x="0" y="0" width="535" height="30"/>
+				<textElement/>
+				<text><![CDATA[Report: Produktnutzung]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="14" splitType="Prevent">
+			<elementGroup>
+				<textField>
+					<reportElement style="important" x="0" y="0" width="260" height="14"/>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$P{headerFixedLine}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement style="important" x="270" y="0" width="260" height="14"/>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$P{headerMobile}]]></textFieldExpression>
+				</textField>
+			</elementGroup>
+		</band>
+		<band height="209" splitType="Prevent">
+			<elementGroup>
+				<textField>
+					<reportElement x="0" y="0" width="260" height="14" mode="Opaque" backcolor="#DDDDDD"/>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$P{headerConnectionMinutes}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="270" y="0" width="260" height="14" mode="Opaque" backcolor="#DDDDDD"/>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$P{headerConnectionMinutes}]]></textFieldExpression>
+				</textField>
+				<image>
+					<reportElement x="0" y="14" width="260" height="195"/>
+					<imageExpression class="java.awt.image.BufferedImage"><![CDATA[$F{connectionMinutesVoiceFixedLine}]]></imageExpression>
+				</image>
+				<image>
+					<reportElement x="270" y="14" width="260" height="195"/>
+					<imageExpression class="java.awt.image.BufferedImage"><![CDATA[$F{connectionMinutesMobile}]]></imageExpression>
+				</image>
+			</elementGroup>
+		</band>
+		<band height="219" splitType="Prevent">
+			<elementGroup>
+				<textField>
+					<reportElement x="0" y="10" width="260" height="14" mode="Opaque" backcolor="#DDDDDD"/>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$P{headerConnectionFees}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="270" y="10" width="260" height="14" mode="Opaque" backcolor="#DDDDDD"/>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$P{headerConnectionFees}]]></textFieldExpression>
+				</textField>
+				<image>
+					<reportElement x="0" y="24" width="260" height="195"/>
+					<imageExpression class="java.awt.image.BufferedImage"><![CDATA[$F{connectionFeesChartVoiceFixedLine}]]></imageExpression>
+				</image>
+				<image>
+					<reportElement x="270" y="24" width="260" height="195"/>
+					<imageExpression class="java.awt.image.BufferedImage"><![CDATA[$F{connectionFeesChartMobile}]]></imageExpression>
+				</image>
+			</elementGroup>
+		</band>
+		<band height="219" splitType="Prevent">
+			<elementGroup>
+				<textField>
+					<reportElement x="0" y="10" width="260" height="14" mode="Opaque" backcolor="#DDDDDD"/>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$P{headerTransfer}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="270" y="10" width="260" height="14" mode="Opaque" backcolor="#DDDDDD"/>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$P{headerTransfer}]]></textFieldExpression>
+				</textField>
+				<image>
+					<reportElement x="0" y="24" width="260" height="195"/>
+					<imageExpression class="java.awt.image.BufferedImage"><![CDATA[$F{transferVolumeChartVoiceFixedLine}]]></imageExpression>
+				</image>
+				<image>
+					<reportElement x="270" y="24" width="260" height="195"/>
+					<imageExpression class="java.awt.image.BufferedImage"><![CDATA[$F{transferVolumeChartVoiceMobile}]]></imageExpression>
+				</image>
+			</elementGroup>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="20">
+			<line>
+				<reportElement x="0" y="0" width="535" height="1"/>
+			</line>
+			<textField>
+				<reportElement x="0" y="5" width="70" height="15"/>
+				<textElement/>
+				<textFieldExpression><![CDATA["Seite " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="5" width="535" height="15"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA["Reporter: " + $P{nameOfUser}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+</jasperReport>

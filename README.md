@@ -215,3 +215,23 @@ AI_PROVIDER=anthropic python src/step2.py
 
 # Run step3 with Anthropic
 AI_PROVIDER=anthropic python src/step3.py
+
+curl -X POST http://127.0.0.1:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What does this project do?"}'
+
+  Step 3: Open your browser
+Navigate to: http://localhost:8000
+Features of the Web Interface
+✅ Modern, responsive design with a clean UI
+✅ Real-time server status showing connection and AI provider info
+✅ Interactive chat form with loading states
+✅ Error handling with clear error messages
+✅ Works with both Flask and FastAPI
+✅ Shows AI provider and model information in responses
+What You Can Do
+Ask questions about your project in natural language
+Get AI-powered answers based on your ChromaDB documentation
+See which AI provider is being used (OpenAI, Anthropic, Ollama)
+Monitor server status and connection health
+The web interface will automatically detect your AI provider configuration from the .env file and display it in the interface!

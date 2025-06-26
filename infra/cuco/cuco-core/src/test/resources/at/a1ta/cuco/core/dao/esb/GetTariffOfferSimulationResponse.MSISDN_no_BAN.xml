@@ -1,0 +1,15 @@
+<GetTariffOfferSimulationResponse xmlns="http://bit.mobilkom.at/TariffGuide/">
+  <GetTariffOfferSimulationResult>
+    <CurrentTariff />
+    <AdditionalInformation />
+    <SimulatedTariffs />
+    <CurrentBaseFee>
+		<Gross>0</Gross>
+		<Net>0</Net> 
+	</CurrentBaseFee>
+    <CurrentAvgInvoiceAmount>
+    	<Gross>0</Gross>
+    	<Net>0</Net>		
+	</CurrentAvgInvoiceAmount>
+  </GetTariffOfferSimulationResult>
+</GetTariffOfferSimulationResponse>
