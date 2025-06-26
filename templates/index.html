@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project AI Assistant</title>
+    <title>Enhanced Project AI Assistant</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f5f5f5;
@@ -43,6 +43,26 @@
             border-radius: 5px;
             font-size: 14px;
             resize: vertical;
+        }
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .filter-group label {
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+        select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
         }
         button {
             background-color: #007bff;
@@ -98,16 +118,91 @@
             margin-bottom: 20px;
             font-size: 14px;
         }
+        .chunk-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        .chunk-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .meta-item {
+            background-color: #f8f9fa;
+            padding: 5px 8px;
+            border-radius: 3px;
+            border-left: 3px solid #007bff;
+        }
+        .meta-label {
+            font-weight: bold;
+            color: #495057;
+        }
+        .meta-value {
+            color: #6c757d;
+        }
+        .chunk-content {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 3px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🤖 Project AI Assistant</h1>
+        <h1>🤖 Enhanced Project AI Assistant</h1>
         
         <div class="server-info">
             <strong>Server:</strong> <span id="serverStatus">Checking...</span><br>
             <strong>AI Provider:</strong> <span id="aiProvider">Unknown</span><br>
             <strong>Model:</strong> <span id="aiModel">Unknown</span>
+        </div>
+
+        <div class="stats" id="statsContainer" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-number" id="totalChunks">0</div>
+                <div class="stat-label">Total Chunks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="uniqueFiles">0</div>
+                <div class="stat-label">Unique Files</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="avgComplexity">0</div>
+                <div class="stat-label">Avg Complexity</div>
+            </div>
         </div>
 
         <form class="chat-form" id="chatForm">
@@ -116,10 +211,47 @@
                 <textarea 
                     id="question" 
                     name="question" 
-                    placeholder="e.g., What does this project do? What are the main features? How is the code structured?"
+                    placeholder="e.g., What does this project do? Show me the main function. What classes are available? How is the code structured?"
                     required
                 ></textarea>
             </div>
+            
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="chunkTypeFilter">Chunk Type:</label>
+                    <select id="chunkTypeFilter">
+                        <option value="">All Types</option>
+                        <option value="function">Functions</option>
+                        <option value="class">Classes</option>
+                        <option value="method">Methods</option>
+                        <option value="import">Imports</option>
+                        <option value="section">Sections</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="languageFilter">Language:</label>
+                    <select id="languageFilter">
+                        <option value="">All Languages</option>
+                        <option value="python">Python</option>
+                        <option value="java">Java</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="yaml">YAML</option>
+                        <option value="markdown">Markdown</option>
+                        <option value="xml">XML</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="maxResults">Max Results:</label>
+                    <select id="maxResults">
+                        <option value="3">3</option>
+                        <option value="5" selected>5</option>
+                        <option value="10">10</option>
+                        <option value="15">15</option>
+                    </select>
+                </div>
+            </div>
+            
             <button type="submit" id="submitBtn">Ask AI Assistant</button>
         </form>
 
@@ -127,9 +259,9 @@
     </div>
 
     <script>
-        const API_BASE = window.location.origin; // Use same host/port as the page
+        const API_BASE = window.location.origin;
         
-        // Check server status on page load
+        // Check server status and get statistics on page load
         async function checkServerStatus() {
             try {
                 const response = await fetch(`${API_BASE}/chat`, {
@@ -147,6 +279,9 @@
                     document.getElementById('serverStatus').textContent = '✅ Connected';
                     document.getElementById('aiProvider').textContent = data.provider || 'Unknown';
                     document.getElementById('aiModel').textContent = data.model || 'Unknown';
+                    
+                    // Get statistics
+                    await loadStatistics();
                 } else {
                     document.getElementById('serverStatus').textContent = '❌ Error';
                 }
@@ -156,11 +291,30 @@
             }
         }
 
+        async function loadStatistics() {
+            try {
+                const response = await fetch(`${API_BASE}/stats`);
+                if (response.ok) {
+                    const stats = await response.json();
+                    document.getElementById('totalChunks').textContent = stats.total_chunks || 0;
+                    document.getElementById('uniqueFiles').textContent = stats.unique_files || 0;
+                    document.getElementById('avgComplexity').textContent = 
+                        stats.avg_complexity ? stats.avg_complexity.toFixed(2) : '0';
+                    document.getElementById('statsContainer').style.display = 'grid';
+                }
+            } catch (error) {
+                console.error('Failed to load statistics:', error);
+            }
+        }
+
         // Handle form submission
         document.getElementById('chatForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const question = document.getElementById('question').value.trim();
+            const chunkType = document.getElementById('chunkTypeFilter').value;
+            const language = document.getElementById('languageFilter').value;
+            const maxResults = parseInt(document.getElementById('maxResults').value);
             const submitBtn = document.getElementById('submitBtn');
             const responseDiv = document.getElementById('response');
             
@@ -170,15 +324,24 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Thinking...';
             responseDiv.style.display = 'block';
-            responseDiv.innerHTML = '<div class="loading">🤔 AI is thinking...</div>';
+            responseDiv.innerHTML = '<div class="loading">🤔 AI is analyzing your project with enhanced chunking...</div>';
             
             try {
+                const requestBody = {
+                    question: question,
+                    max_results: maxResults
+                };
+                
+                // Add filters if specified
+                if (chunkType) requestBody.chunk_type = chunkType;
+                if (language) requestBody.language = language;
+                
                 const response = await fetch(`${API_BASE}/chat`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ question })
+                    body: JSON.stringify(requestBody)
                 });
                 
                 const data = await response.json();

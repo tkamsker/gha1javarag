@@ -25,18 +25,55 @@ except Exception as e:
     print(f"Warning: Could not initialize AI provider: {e}")
     ai_provider = None
 
+# Create enhanced ChromaDB connector
+try:
+    chromadb_connector_instance = chromadb_connector.EnhancedChromaDBConnector()
+    print("Initialized enhanced ChromaDB connector")
+except Exception as e:
+    print(f"Warning: Could not initialize ChromaDB connector: {e}")
+    chromadb_connector_instance = None
+
 @app.route('/')
 def index():
     """Serve the web interface"""
     return render_template('index.html')
 
+@app.route('/stats')
+def get_stats():
+    """Get ChromaDB statistics"""
+    if chromadb_connector_instance is None:
+        return jsonify({'error': 'ChromaDB not available'}), 500
+    
+    try:
+        stats = chromadb_connector_instance.get_chunk_statistics()
+        return jsonify(stats)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/chat', methods=['POST'])
 def chat():
     data = request.get_json()
     question = data.get('question', '')
+    max_results = data.get('max_results', 5)
+    chunk_type = data.get('chunk_type', '')
+    language = data.get('language', '')
     
-    # Get relevant context from ChromaDB
-    context = chromadb_connector.query_chromadb(question)
+    # Build filters for enhanced querying
+    filters = {}
+    if chunk_type:
+        filters['chunk_type'] = chunk_type
+    if language:
+        filters['language'] = language
+    
+    # Get relevant context from ChromaDB with enhanced filtering
+    if chromadb_connector_instance:
+        try:
+            results = chromadb_connector_instance.query_enhanced_similar(question, max_results, filters)
+            context = chromadb_connector._format_enhanced_results(results)
+        except Exception as e:
+            context = f"Error querying ChromaDB: {str(e)}"
+    else:
+        context = "ChromaDB not available"
     
     # Check if AI provider is available
     if ai_provider is None:
@@ -48,12 +85,12 @@ def chat():
     # Compose a focused prompt
     system_prompt = """You are an expert on this application. Only answer questions about this specific project, using the provided context and metadata. Do not answer questions outside the scope of this project. If the context doesn't contain relevant information, say so clearly."""
     
-    user_prompt = f"""Context from project documentation:
+    user_prompt = f"""Context from project documentation (with enhanced chunking):
 {context}
 
 Question: {question}
 
-Please provide a clear, concise answer based only on the project context above."""
+Please provide a clear, concise answer based only on the project context above. If the context shows specific functions, classes, or code structures, mention them in your answer."""
     
     # Prepare messages for AI provider
     messages = [
@@ -73,7 +110,12 @@ Please provide a clear, concise answer based only on the project context above."
         return jsonify({
             'answer': answer,
             'provider': ai_provider.get_provider_name(),
-            'model': ai_provider.get_model_name()
+            'model': ai_provider.get_model_name(),
+            'filters_applied': {
+                'chunk_type': chunk_type,
+                'language': language,
+                'max_results': max_results
+            }
         })
         
     except Exception as e:

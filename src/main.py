@@ -1,7 +1,7 @@
 import asyncio
 from file_processor import FileProcessor
 from ai_analyzer import AIAnalyzer
-from chromadb_connector import ChromaDBConnector
+from chromadb_connector import EnhancedChromaDBConnector
 from requirements_analyzer import RequirementsAnalyzer
 import json
 import os
@@ -24,6 +24,10 @@ class BatchAIAnalyzer:
         # Initialize AI provider
         self.ai_provider = create_ai_provider()
         logger.info(f"Using {self.ai_provider.get_provider_name()} provider with model: {self.ai_provider.get_model_name()}")
+        
+        # Initialize enhanced ChromaDB connector
+        self.chromadb_connector = EnhancedChromaDBConnector()
+        logger.info("Initialized enhanced ChromaDB connector with intelligent code chunking")
         
         # Rate limiting configuration based on provider
         if self.ai_provider.get_provider_name() == "OpenAI":
@@ -338,7 +342,7 @@ async def process_codebase():
         logger.info("Initializing components...")
         file_processor = FileProcessor()
         batch_analyzer = BatchAIAnalyzer()  # Use new batch analyzer
-        chroma_connector = ChromaDBConnector()
+        chroma_connector = EnhancedChromaDBConnector()
         output_dir = os.getenv('OUTPUT_DIR', './output')
         req_analyzer = RequirementsAnalyzer(output_dir)
         
@@ -358,9 +362,24 @@ async def process_codebase():
         metadata_file = os.path.join(output_dir, 'metadata.json')
         file_processor.save_metadata(analyzed_metadata, metadata_file)
         
-        # 1.4 Store in ChromaDB
-        logger.info("1.4 Storing in ChromaDB...")
-        chroma_connector.store_metadata(analyzed_metadata)
+        # 1.4 Store in ChromaDB with enhanced chunking
+        logger.info("1.4 Storing in ChromaDB with enhanced chunking...")
+        for file_meta in analyzed_metadata:
+            file_path = file_meta.get('file_path', '')
+            content = file_meta.get('content', '')
+            ai_analysis = file_meta.get('ai_analysis', {})
+            
+            if file_path and content:
+                try:
+                    chroma_connector.store_enhanced_metadata(file_path, content, ai_analysis)
+                    logger.debug(f"Stored enhanced metadata for: {file_path}")
+                except Exception as e:
+                    logger.error(f"Error storing enhanced metadata for {file_path}: {e}")
+                    file_meta['chromadb_status'] = 'failed'
+                    file_meta['chromadb_error'] = str(e)
+            else:
+                logger.warning(f"Skipping ChromaDB storage for {file_path}: missing content")
+                file_meta['chromadb_status'] = 'skipped'
         
         # Step 2: Generate requirements documentation
         logger.info("Step 2: Generating requirements documentation...")
