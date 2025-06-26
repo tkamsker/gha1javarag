@@ -63,21 +63,68 @@ class IntelligentCodeChunker:
             'cpp': [r'\.(cpp|cc|cxx|h|hpp)$', r'class\s+\w+', r'int\s+main', r'#include', r'namespace\s+']
         }
     
-    def detect_language(self, file_path: str, content: str) -> str:
+    def detect_language(self, file_path: str, content: str = "") -> str:
         """Detect programming language based on file extension and content"""
-        file_ext = Path(file_path).suffix.lower()
+        # Handle None content
+        if content is None:
+            content = ""
         
-        # First check by file extension
-        for lang, patterns in self.language_patterns.items():
-            if any(re.search(pattern, file_path, re.IGNORECASE) for pattern in patterns[:1]):
-                return lang
+        # Ensure content is string
+        if not isinstance(content, str):
+            content = str(content)
         
-        # Then check by content patterns
-        for lang, patterns in self.language_patterns.items():
-            if any(re.search(pattern, content, re.MULTILINE | re.IGNORECASE) for pattern in patterns[1:]):
-                return lang
-        
-        return 'unknown'
+        try:
+            # Check file extension first
+            file_extension = os.path.splitext(file_path)[1].lower()
+            
+            # Extension-based detection
+            if file_extension in ['.py', '.pyw']:
+                return 'python'
+            elif file_extension in ['.java']:
+                return 'java'
+            elif file_extension in ['.js']:
+                return 'javascript'
+            elif file_extension in ['.ts']:
+                return 'typescript'
+            elif file_extension in ['.sql']:
+                return 'sql'
+            elif file_extension in ['.xml']:
+                return 'xml'
+            elif file_extension in ['.yaml', '.yml']:
+                return 'yaml'
+            elif file_extension in ['.json']:
+                return 'json'
+            elif file_extension in ['.md']:
+                return 'markdown'
+            elif file_extension in ['.properties']:
+                return 'properties'
+            elif file_extension in ['.html', '.htm']:
+                return 'html'
+            elif file_extension in ['.css']:
+                return 'css'
+            elif file_extension in ['.php']:
+                return 'php'
+            elif file_extension in ['.rb']:
+                return 'ruby'
+            elif file_extension in ['.go']:
+                return 'go'
+            elif file_extension in ['.rs']:
+                return 'rust'
+            elif file_extension in ['.cs']:
+                return 'csharp'
+            elif file_extension in ['.cpp', '.cc', '.cxx', '.h', '.hpp']:
+                return 'cpp'
+            
+            # Content-based detection if extension doesn't match
+            for language, patterns in self.language_patterns.items():
+                for pattern in patterns:
+                    if re.search(pattern, content, re.IGNORECASE):
+                        return language
+            
+            return 'unknown'
+        except Exception as e:
+            logger.error(f"Error detecting language for {file_path}: {e}")
+            return 'unknown'
     
     def chunk_python_code(self, content: str, file_path: str) -> List[CodeChunk]:
         """Chunk Python code based on AST analysis"""
@@ -428,20 +475,49 @@ class IntelligentCodeChunker:
     
     def chunk_code(self, content: str, file_path: str) -> List[CodeChunk]:
         """Main method to chunk code based on detected language"""
+        # Handle None content
+        if content is None:
+            logger.warning(f"Content is None for {file_path}, returning empty chunks")
+            return []
+        
+        # Ensure content is string
+        if not isinstance(content, str):
+            logger.warning(f"Content is not string for {file_path}, converting")
+            content = str(content)
+        
+        # Handle empty content
+        if not content.strip():
+            logger.warning(f"Content is empty for {file_path}, returning empty chunks")
+            return []
+        
         language = self.detect_language(file_path, content)
         
-        if language == 'python':
-            return self.chunk_python_code(content, file_path)
-        elif language == 'java':
-            return self.chunk_java_code(content, file_path)
-        elif language == 'javascript':
-            return self.chunk_javascript_code(content, file_path)
-        elif language == 'typescript':
-            return self.chunk_typescript_code(content, file_path)
-        elif language == 'sql':
-            return self.chunk_sql_code(content, file_path)
-        else:
-            return self.chunk_generic_file(content, file_path, language)
+        try:
+            if language == 'python':
+                return self.chunk_python_code(content, file_path)
+            elif language == 'java':
+                return self.chunk_java_code(content, file_path)
+            elif language == 'javascript':
+                return self.chunk_javascript_code(content, file_path)
+            elif language == 'typescript':
+                return self.chunk_typescript_code(content, file_path)
+            elif language == 'sql':
+                return self.chunk_sql_code(content, file_path)
+            else:
+                return self.chunk_generic_file(content, file_path, language)
+        except Exception as e:
+            logger.error(f"Error chunking code for {file_path}: {e}")
+            # Return a fallback chunk
+            return [CodeChunk(
+                content=content[:1000] + "..." if len(content) > 1000 else content,
+                chunk_id=f"{file_path}:fallback:1",
+                file_path=file_path,
+                language=language or 'unknown',
+                chunk_type='fallback',
+                start_line=1,
+                end_line=1,
+                complexity_score=1.0
+            )]
     
     def _calculate_complexity(self, node) -> float:
         """Calculate complexity score for a code node"""

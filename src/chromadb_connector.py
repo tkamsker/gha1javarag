@@ -70,9 +70,25 @@ class EnhancedChromaDBConnector:
             if not content:
                 if os.path.exists(absolute_file_path):
                     try:
+                        # Try UTF-8 first
                         with open(absolute_file_path, 'r', encoding='utf-8') as f:
                             content = f.read()
                         logger.info(f"Read content from file: {absolute_file_path}")
+                    except UnicodeDecodeError:
+                        try:
+                            # Fallback to Windows codepage (cp1252)
+                            with open(absolute_file_path, 'r', encoding='cp1252') as f:
+                                content = f.read()
+                            logger.info(f"Read content from file (cp1252): {absolute_file_path}")
+                        except UnicodeDecodeError:
+                            try:
+                                # Fallback to latin-1 (very permissive)
+                                with open(absolute_file_path, 'r', encoding='latin-1') as f:
+                                    content = f.read()
+                                logger.info(f"Read content from file (latin-1): {absolute_file_path}")
+                            except Exception as e:
+                                logger.warning(f"Could not read file {absolute_file_path} with any encoding: {e}")
+                                content = f"# File: {file_path}\n# Content not available: encoding error"
                     except Exception as e:
                         logger.warning(f"Could not read file {absolute_file_path}: {e}")
                         content = f"# File: {file_path}\n# Content not available: {str(e)}"
@@ -80,8 +96,32 @@ class EnhancedChromaDBConnector:
                     logger.warning(f"File not found: {absolute_file_path}")
                     content = f"# File: {file_path}\n# File not found at: {absolute_file_path}"
             
+            # Handle None content
+            if content is None:
+                logger.warning(f"Content is None for {file_path}, using placeholder")
+                content = f"# File: {file_path}\n# Content is None"
+            
+            # Ensure content is string
+            if not isinstance(content, str):
+                logger.warning(f"Content is not string for {file_path}, converting")
+                content = str(content)
+            
             # Use intelligent code chunking
-            chunks = self.chunker.chunk_code(content, file_path)
+            try:
+                chunks = self.chunker.chunk_code(content, file_path)
+            except Exception as e:
+                logger.error(f"Error chunking code for {file_path}: {e}")
+                # Create a fallback chunk
+                chunks = [CodeChunk(
+                    content=content[:1000] + "..." if len(content) > 1000 else content,
+                    chunk_id=f"{file_path}:fallback:1",
+                    file_path=file_path,
+                    language='unknown',
+                    chunk_type='fallback',
+                    start_line=1,
+                    end_line=1,
+                    complexity_score=1.0
+                )]
             
             if not chunks:
                 logger.warning(f"No chunks created for {file_path}")
@@ -95,23 +135,26 @@ class EnhancedChromaDBConnector:
             ids = []
             
             for chunk in chunks:
+                # Ensure chunk content is not None
+                chunk_content = chunk.content if chunk.content is not None else ""
+                
                 # Convert metadata to strings for ChromaDB compatibility
                 metadata = {
                     'file_path': file_path,
-                    'language': chunk.language,
-                    'chunk_type': chunk.chunk_type,
-                    'start_line': str(chunk.start_line),
-                    'end_line': str(chunk.end_line),
-                    'complexity_score': str(chunk.complexity_score),
+                    'language': chunk.language or 'unknown',
+                    'chunk_type': chunk.chunk_type or 'unknown',
+                    'start_line': str(chunk.start_line or 1),
+                    'end_line': str(chunk.end_line or 1),
+                    'complexity_score': str(chunk.complexity_score or 1.0),
                     'function_name': chunk.function_name or '',
                     'class_name': chunk.class_name or '',
                     'parent_context': chunk.parent_context or '',
                     'ai_analysis': json.dumps(ai_analysis) if ai_analysis else ''
                 }
                 
-                documents.append(chunk.content)
+                documents.append(chunk_content)
                 metadatas.append(metadata)
-                ids.append(chunk.chunk_id)
+                ids.append(chunk.chunk_id or f"{file_path}:chunk:{len(ids)+1}")
             
             # Store in ChromaDB
             self.collection.add(
@@ -124,7 +167,9 @@ class EnhancedChromaDBConnector:
             
         except Exception as e:
             logger.error(f"Error storing enhanced metadata in ChromaDB: {e}")
-            raise
+            # Don't raise the exception, just log it and continue
+            logger.error(f"File: {file_path}, Error: {str(e)}")
+            return
 
     def query_enhanced_similar(self, query: str, n_results: int = 5, 
                              filters: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -247,8 +292,22 @@ def store_metadata(metadata_list: List[Dict[str, Any]]) -> None:
             
             if os.path.exists(absolute_file_path):
                 try:
+                    # Try UTF-8 first
                     with open(absolute_file_path, 'r', encoding='utf-8') as f:
                         content = f.read()
+                except UnicodeDecodeError:
+                    try:
+                        # Fallback to Windows codepage (cp1252)
+                        with open(absolute_file_path, 'r', encoding='cp1252') as f:
+                            content = f.read()
+                    except UnicodeDecodeError:
+                        try:
+                            # Fallback to latin-1 (very permissive)
+                            with open(absolute_file_path, 'r', encoding='latin-1') as f:
+                                content = f.read()
+                        except Exception as e:
+                            logger.warning(f"Could not read file {absolute_file_path} with any encoding: {e}")
+                            continue
                 except Exception as e:
                     logger.warning(f"Could not read file {absolute_file_path}: {e}")
                     continue
@@ -256,12 +315,23 @@ def store_metadata(metadata_list: List[Dict[str, Any]]) -> None:
                 logger.warning(f"File not found: {absolute_file_path}")
                 continue
         
+        # Handle None content
+        if content is None:
+            logger.warning(f"Content is None for {file_path}, skipping")
+            continue
+        
+        # Ensure content is string
+        if not isinstance(content, str):
+            logger.warning(f"Content is not string for {file_path}, converting")
+            content = str(content)
+        
         if file_path and content:
             try:
                 connector.store_enhanced_metadata(file_path, content, ai_analysis)
                 logger.debug(f"Stored enhanced metadata for: {file_path}")
             except Exception as e:
                 logger.error(f"Error storing enhanced metadata for {file_path}: {e}")
+                # Continue with next file instead of failing completely
 
 def _format_enhanced_results(results: Dict[str, Any]) -> str:
     """Format enhanced query results for display"""
