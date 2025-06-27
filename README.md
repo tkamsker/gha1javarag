@@ -250,3 +250,5 @@ curl -X POST http://localhost:8000/chat \
 
   better ./start_web.sh
   
+
+  ./Step2.sh test

@@ -10,17 +10,21 @@ from dotenv import load_dotenv
 from logger_config import setup_logging
 from ai_providers import create_ai_provider
 from rate_limiter import RateLimiter, RateLimitConfig
+from chromadb_connector import EnhancedChromaDBConnector
 
 logger = logging.getLogger('java_analysis.step2')
 
 class RequirementsProcessor:
     def __init__(self):
         load_dotenv()
-        self.metadata = None
         self.processed_files: Set[str] = set()
         self.output_dir = os.getenv('OUTPUT_DIR', './output')
         self.md_dir = Path(self.output_dir) / "requirements"
         self.md_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Initialize enhanced ChromaDB connector
+        self.chromadb_connector = EnhancedChromaDBConnector()
+        logger.info("Initialized enhanced ChromaDB connector with intelligent code chunking")
         
         # Enhanced rate limiting settings
         rate_config = RateLimitConfig(
@@ -40,17 +44,116 @@ class RequirementsProcessor:
         self.ai_provider = create_ai_provider()
         logger.info(f"Using {self.ai_provider.get_provider_name()} provider with model: {self.ai_provider.get_model_name()}")
 
-    def load_metadata(self) -> None:
-        """Load metadata from JSON file"""
+    def load_metadata_from_chromadb(self) -> List[Dict[str, Any]]:
+        """Load metadata from ChromaDB with enhanced chunking information"""
+        try:
+            # Get chunk statistics to understand what's available
+            stats = self.chromadb_connector.get_chunk_statistics()
+            logger.info(f"ChromaDB statistics: {stats}")
+            
+            # Query for all chunks to get the metadata
+            # We'll use a broad query to get all documents
+            results = self.chromadb_connector.query_enhanced_similar(
+                query="requirements analysis documentation",
+                n_results=1000,  # Get a large number of results
+                filters=None  # No filters to get all chunks
+            )
+            
+            if not results or not results.get('documents') or not results['documents'][0]:
+                logger.warning("No documents found in ChromaDB")
+                return []
+            
+            # Convert ChromaDB results to metadata format
+            metadata = []
+            documents = results['documents'][0]
+            metadatas = results['metadatas'][0]
+            ids = results['ids'][0]
+            
+            # Group by file_path to create file-level metadata
+            file_groups = {}
+            for i, doc_id in enumerate(ids):
+                if i < len(metadatas):
+                    metadata_item = metadatas[i]
+                    file_path = metadata_item.get('file_path', 'unknown')
+                    
+                    if file_path not in file_groups:
+                        file_groups[file_path] = {
+                            'file_path': file_path,
+                            'file_type': self._get_file_type(file_path),
+                            'content': '',
+                            'chunks': [],
+                            'ai_analysis': {},
+                            'chromadb_status': 'loaded'
+                        }
+                    
+                    # Add chunk information
+                    chunk_info = {
+                        'chunk_id': doc_id,
+                        'content': documents[i] if i < len(documents) else '',
+                        'language': metadata_item.get('language', 'unknown'),
+                        'chunk_type': metadata_item.get('chunk_type', 'unknown'),
+                        'start_line': metadata_item.get('start_line', '1'),
+                        'end_line': metadata_item.get('end_line', '1'),
+                        'function_name': metadata_item.get('function_name', ''),
+                        'class_name': metadata_item.get('class_name', ''),
+                        'complexity_score': metadata_item.get('complexity_score', '1.0')
+                    }
+                    file_groups[file_path]['chunks'].append(chunk_info)
+                    
+                    # Combine content from all chunks
+                    if chunk_info['content']:
+                        file_groups[file_path]['content'] += chunk_info['content'] + '\n\n'
+                    
+                    # Parse AI analysis if available
+                    ai_analysis_str = metadata_item.get('ai_analysis', '')
+                    if ai_analysis_str:
+                        try:
+                            ai_analysis = json.loads(ai_analysis_str)
+                            if ai_analysis:
+                                file_groups[file_path]['ai_analysis'] = ai_analysis
+                        except json.JSONDecodeError:
+                            logger.warning(f"Could not parse AI analysis for {file_path}")
+            
+            # Convert to list
+            metadata = list(file_groups.values())
+            logger.info(f"Loaded {len(metadata)} files from ChromaDB with enhanced metadata")
+            return metadata
+            
+        except Exception as e:
+            logger.error(f"Error loading metadata from ChromaDB: {e}")
+            # Fallback to JSON file if ChromaDB fails
+            return self._load_metadata_fallback()
+
+    def _load_metadata_fallback(self) -> List[Dict[str, Any]]:
+        """Fallback method to load metadata from JSON file"""
         metadata_file = os.path.join(self.output_dir, 'metadata.json')
         if not os.path.exists(metadata_file):
             raise FileNotFoundError(f"Metadata file not found: {metadata_file}")
             
         with open(metadata_file, 'r') as f:
-            self.metadata = json.load(f)
-        logger.info(f"Loaded metadata with {len(self.metadata)} entries")
+            metadata = json.load(f)
+        logger.info(f"Loaded metadata from JSON file with {len(metadata)} entries")
+        return metadata
 
-    def prioritize_files(self) -> List[Dict[str, Any]]:
+    def _get_file_type(self, file_path: str) -> str:
+        """Determine file type from extension"""
+        ext = Path(file_path).suffix.lower()
+        type_mapping = {
+            '.java': 'Java source file',
+            '.jsp': 'JSP file',
+            '.xml': 'XML file',
+            '.properties': 'Properties file',
+            '.sql': 'SQL file',
+            '.html': 'HTML file',
+            '.js': 'JavaScript file',
+            '.css': 'CSS file',
+            '.json': 'JSON file',
+            '.yaml': 'YAML file',
+            '.yml': 'YAML file'
+        }
+        return type_mapping.get(ext, 'Unknown file type')
+
+    def prioritize_files(self, metadata: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Prioritize files based on importance and type"""
         priority_order = [
             # High priority - core application files
@@ -68,7 +171,7 @@ class RequirementsProcessor:
         
         prioritized = []
         for priority_func in priority_order:
-            for item in self.metadata:
+            for item in metadata:
                 if priority_func(item) and item not in prioritized:
                     prioritized.append(item)
                     # Limit total files to process
@@ -111,16 +214,23 @@ class RequirementsProcessor:
         # Wait for rate limiter before making API call
         await self.rate_limiter.wait_if_needed()
         
-        # Create a combined prompt for all files
+        # Create a combined prompt for all files with enhanced metadata
         files_content = []
         for file_meta in files_batch:
             file_path = file_meta.get('file_path', '')
             file_type = file_meta.get('file_type', 'Unknown')
             content = file_meta.get('content', '')[:800]  # Reduced content length
             
+            # Include chunk information if available
+            chunks_info = ""
+            if 'chunks' in file_meta and file_meta['chunks']:
+                chunks_info = f"\nChunks: {len(file_meta['chunks'])} chunks"
+                for chunk in file_meta['chunks'][:3]:  # Show first 3 chunks
+                    chunks_info += f"\n  - {chunk.get('chunk_type', 'unknown')}: {chunk.get('function_name', '') or chunk.get('class_name', '')}"
+            
             files_content.append(f"""
 File: {file_path}
-Type: {file_type}
+Type: {file_type}{chunks_info}
 Content Preview: {content[:400]}...
 ---""")
         
@@ -212,7 +322,9 @@ Format your response as:
 
     async def process_files_with_batching(self) -> None:
         """Process files in batches to reduce API calls"""
-        prioritized_files = self.prioritize_files()
+        metadata = self.load_metadata_from_chromadb()
+        
+        prioritized_files = self.prioritize_files(metadata)
         
         # Filter out files to skip
         files_to_process = [
@@ -255,7 +367,6 @@ async def generate_requirements():
     
     try:
         processor = RequirementsProcessor()
-        processor.load_metadata()
         
         # Process files with batching
         await processor.process_files_with_batching()
