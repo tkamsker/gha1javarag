@@ -8,6 +8,8 @@ set -e
 MODE=${1:-"test"}  # Default to test mode
 echo "Running in $MODE mode"
 
+export TOKENIZERS_PARALLELISM=false
+
 # Load environment variables
 if [ -f .env ]; then
     export $(cat .env | grep -v '^#' | xargs)

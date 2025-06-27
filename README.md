@@ -252,3 +252,11 @@ curl -X POST http://localhost:8000/chat \
   
 
   ./Step2.sh test
+
+  ### 2025.06.27 
+
+  ./Step2.sh test 
+  and in strictdoc 
+  Web.sh 
+
+  

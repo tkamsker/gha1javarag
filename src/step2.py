@@ -11,6 +11,7 @@ from logger_config import setup_logging
 from ai_providers import create_ai_provider
 from rate_limiter import RateLimiter, RateLimitConfig
 from chromadb_connector import EnhancedChromaDBConnector
+import uuid
 
 logger = logging.getLogger('java_analysis.step2')
 
@@ -21,6 +22,13 @@ class RequirementsProcessor:
         self.output_dir = os.getenv('OUTPUT_DIR', './output')
         self.md_dir = Path(self.output_dir) / "requirements"
         self.md_dir.mkdir(parents=True, exist_ok=True)
+        
+        # StrictDoc configuration
+        self.strictdoc_enabled = os.getenv('STRICTDOC', 'false').lower() == 'true'
+        if self.strictdoc_enabled:
+            self.strictdoc_dir = Path(self.output_dir) / "strictdoc"
+            self.strictdoc_dir.mkdir(parents=True, exist_ok=True)
+            logger.info("StrictDoc generation enabled")
         
         # Initialize enhanced ChromaDB connector
         self.chromadb_connector = EnhancedChromaDBConnector()
@@ -43,6 +51,134 @@ class RequirementsProcessor:
         # Initialize AI provider using the same pattern as main.py
         self.ai_provider = create_ai_provider()
         logger.info(f"Using {self.ai_provider.get_provider_name()} provider with model: {self.ai_provider.get_model_name()}")
+
+    def get_subdirectory_for_file(self, file_path: str) -> str:
+        """Get subdirectory name based on first directory in file path relative to JAVA_SOURCE_DIR"""
+        try:
+            java_source_dir = os.getenv('JAVA_SOURCE_DIR', '.')
+            java_source_path = Path(java_source_dir).resolve()
+            file_path_obj = Path(file_path).resolve()
+            
+            # Try to make file path relative to JAVA_SOURCE_DIR
+            try:
+                relative_path = file_path_obj.relative_to(java_source_path)
+            except ValueError:
+                # If file is not under JAVA_SOURCE_DIR, use the first directory in the path
+                relative_path = Path(file_path)
+            
+            # Get the first directory component
+            path_parts = relative_path.parts
+            if len(path_parts) > 0:
+                return path_parts[0]
+            else:
+                return "unknown"
+                
+        except Exception as e:
+            logger.warning(f"Error determining subdirectory for {file_path}: {e}")
+            return "unknown"
+
+    def get_unique_filename(self, base_dir: Path, filename: str, extension: str = '.md') -> Path:
+        """Get unique filename with numbering if file exists"""
+        base_name = filename
+        counter = 0
+        
+        while True:
+            if counter == 0:
+                full_filename = f"{base_name}{extension}"
+            else:
+                full_filename = f"{base_name}-{counter}{extension}"
+            
+            file_path = base_dir / full_filename
+            if not file_path.exists():
+                return file_path
+            
+            counter += 1
+
+    def convert_to_strictdoc(self, markdown_content: str, file_path: str) -> str:
+        """Convert markdown content to StrictDoc format"""
+        # Extract title from markdown
+        title_match = re.search(r'^#\s+(.+)$', markdown_content, re.MULTILINE)
+        title = title_match.group(1) if title_match else f"Requirements Analysis: {file_path}"
+        
+        # Remove the first heading line
+        content_without_title = re.sub(r'^#\s+.+$', '', markdown_content, count=1, flags=re.MULTILINE).strip()
+        
+        # Generate a unique UID for the document
+        uid = Path(file_path).stem.lower().replace('_', '-').replace('.', '-')
+        
+        # Parse the content to extract different sections
+        sections = self._parse_content_sections(content_without_title)
+        
+        # Convert markdown to proper StrictDoc format
+        # Using only valid StrictDoc fields with proper order
+        strictdoc_content = f"""[DOCUMENT]
+TITLE: {title}
+UID: REQ-ANALYSIS-{uid.upper()}
+
+"""
+        
+        # Add requirements based on parsed sections
+        req_counter = 1
+        for section_name, section_content in sections.items():
+            if section_content.strip():
+                req_uid = f"REQ-{req_counter:03d}"
+                
+                # Clean up the content to avoid parsing issues
+                clean_content = section_content.strip().replace('\n', ' ').replace('  ', ' ')
+                if len(clean_content) > 150:
+                    clean_content = clean_content[:150] + "..."
+                
+                # Generate a simple MID (Machine ID)
+                mid = str(uuid.uuid4()).replace('-', '')[:16]
+                
+                # Use heredoc format for STATEMENT to handle multi-line content properly
+                strictdoc_content += f"""[REQUIREMENT]
+MID: {mid}
+UID: {req_uid}
+TITLE: {section_name}
+STATEMENT: >>>
+{clean_content}
+<<<
+[/REQUIREMENT]
+
+"""
+                req_counter += 1
+        
+        strictdoc_content += "[/DOCUMENT]"
+        return strictdoc_content
+    
+    def _parse_content_sections(self, content: str) -> dict:
+        """Parse content into sections based on numbered lists and headers"""
+        sections = {}
+        
+        # Split by numbered sections (1., 2., 3., etc.)
+        lines = content.split('\n')
+        current_section = None
+        current_content = []
+        
+        for line in lines:
+            # Check for numbered section headers
+            section_match = re.match(r'^(\d+)\.\s+(.+)$', line.strip())
+            if section_match:
+                # Save previous section
+                if current_section:
+                    sections[current_section] = '\n'.join(current_content).strip()
+                
+                # Start new section
+                current_section = section_match.group(2).strip()
+                current_content = []
+            elif current_section:
+                current_content.append(line)
+        
+        # Save last section
+        if current_section:
+            sections[current_section] = '\n'.join(current_content).strip()
+        
+        # If no sections found, create a default one
+        if not sections:
+            sections["General Requirements"] = content
+        
+        return sections
 
     def load_metadata_from_chromadb(self) -> List[Dict[str, Any]]:
         """Load metadata from ChromaDB with enhanced chunking information"""
@@ -299,14 +435,21 @@ Format your response as:
                         self.processed_files.add(file_meta.get('file_path', ''))
 
     async def parse_batch_response(self, analysis: str, files_batch: List[Dict[str, Any]]) -> None:
-        """Parse the batch response and create individual markdown files"""
+        """Parse the batch response and create individual markdown files with subdirectory structure"""
         # Split by file sections
         sections = re.split(r'## File:\s*', analysis)
         
         for i, file_meta in enumerate(files_batch):
             file_path = file_meta.get('file_path', '')
-            md_filename = f"{Path(file_path).stem}.md"
-            md_path = self.md_dir / md_filename
+            
+            # Get subdirectory based on file path
+            subdir_name = self.get_subdirectory_for_file(file_path)
+            subdir_path = self.md_dir / subdir_name
+            subdir_path.mkdir(parents=True, exist_ok=True)
+            
+            # Get unique filename
+            base_filename = Path(file_path).stem
+            md_file_path = self.get_unique_filename(subdir_path, base_filename, '.md')
             
             # Get the corresponding section content
             if i + 1 < len(sections):
@@ -314,11 +457,27 @@ Format your response as:
             else:
                 section_content = "Analysis not available for this file."
             
-            with open(md_path, 'w') as f:
-                f.write(f"# Requirements Analysis: {file_path}\n\n")
-                f.write(section_content)
+            # Create markdown content
+            markdown_content = f"# Requirements Analysis: {file_path}\n\n{section_content}"
             
-            logger.debug(f"Generated requirements document: {md_path}")
+            # Write markdown file
+            with open(md_file_path, 'w') as f:
+                f.write(markdown_content)
+            
+            logger.debug(f"Generated requirements document: {md_file_path}")
+            
+            # Generate StrictDoc version if enabled
+            if self.strictdoc_enabled:
+                strictdoc_subdir_path = self.strictdoc_dir / subdir_name
+                strictdoc_subdir_path.mkdir(parents=True, exist_ok=True)
+                
+                strictdoc_file_path = self.get_unique_filename(strictdoc_subdir_path, base_filename, '.sdoc')
+                strictdoc_content = self.convert_to_strictdoc(markdown_content, file_path)
+                
+                with open(strictdoc_file_path, 'w') as f:
+                    f.write(strictdoc_content)
+                
+                logger.debug(f"Generated StrictDoc document: {strictdoc_file_path}")
 
     async def process_files_with_batching(self) -> None:
         """Process files in batches to reduce API calls"""
@@ -351,14 +510,44 @@ Format your response as:
         with open(index_path, 'w') as f:
             f.write("# Requirements Documentation Index\n\n")
             f.write(f"Total files processed: {len(self.processed_files)}\n\n")
-            f.write("## Requirements Documents\n\n")
+            f.write("## Requirements Documents by Subdirectory\n\n")
             
-            # Sort files for consistent ordering
+            # Group files by subdirectory
+            subdir_files = {}
             for file_path in sorted(self.processed_files):
-                md_filename = f"{Path(file_path).stem}.md"
-                f.write(f"- [{file_path}](./{md_filename})\n")
+                subdir_name = self.get_subdirectory_for_file(file_path)
+                if subdir_name not in subdir_files:
+                    subdir_files[subdir_name] = []
+                subdir_files[subdir_name].append(file_path)
+            
+            # Write index by subdirectory
+            for subdir_name in sorted(subdir_files.keys()):
+                f.write(f"### {subdir_name}\n\n")
+                for file_path in subdir_files[subdir_name]:
+                    md_filename = f"{Path(file_path).stem}.md"
+                    f.write(f"- [{file_path}](./{subdir_name}/{md_filename})\n")
+                f.write("\n")
         
         logger.info(f"Generated index file: {index_path}")
+        
+        # Generate StrictDoc index if enabled
+        if self.strictdoc_enabled:
+            strictdoc_index_path = self.strictdoc_dir / "step2_strictdoc_index.md"
+            
+            with open(strictdoc_index_path, 'w') as f:
+                f.write("# StrictDoc Documentation Index\n\n")
+                f.write(f"Total files processed: {len(self.processed_files)}\n\n")
+                f.write("## StrictDoc Documents by Subdirectory\n\n")
+                
+                # Group files by subdirectory
+                for subdir_name in sorted(subdir_files.keys()):
+                    f.write(f"### {subdir_name}\n\n")
+                    for file_path in subdir_files[subdir_name]:
+                        sdoc_filename = f"{Path(file_path).stem}.sdoc"
+                        f.write(f"- [{file_path}](./{subdir_name}/{sdoc_filename})\n")
+                    f.write("\n")
+            
+            logger.info(f"Generated StrictDoc index file: {strictdoc_index_path}")
 
 async def generate_requirements():
     """Main function to generate requirements documentation"""

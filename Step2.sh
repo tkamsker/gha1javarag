@@ -12,6 +12,8 @@ if [ -f .env ]; then
     export $(cat .env | grep -v '^#' | xargs)
 fi
 
+export TOKENIZERS_PARALLELISM=false
+
 # Check AI provider configuration
 AI_PROVIDER=${AI_PROVIDER:-"openai"}
 echo "Using AI Provider: $AI_PROVIDER"

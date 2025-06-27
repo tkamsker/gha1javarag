@@ -1,0 +1,12 @@
+[DOCUMENT]
+TITLE: Requirements Analysis: cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/marketplace/v1/shared/MarketplaceProductGenerator.java
+UID: MarketplaceProductGenerator
+
+[REQUIREMENT]
+MID: 5f6991b40aa544d8
+UID: REQ-001
+TITLE: Requirements Summary
+STATEMENT: # Requirements Analysis: cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/marketplace/v1/shared/MarketplaceProductGenerator.java Requirements Analysis for MarketplaceProductGenerator 1. Purpose and Functionality - Primary purpose appears to be generating marketplace...
+[/REQUIREMENT]
+
+[/DOCUMENT]

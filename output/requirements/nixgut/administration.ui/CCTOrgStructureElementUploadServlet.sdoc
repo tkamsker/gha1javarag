@@ -1,0 +1,12 @@
+[DOCUMENT]
+TITLE: Requirements Analysis: administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/server/CCTOrgStructureElementUploadServlet.java
+UID: CCTOrgStructureElementUploadServlet
+
+[REQUIREMENT]
+MID: 5e9e1d34cee74166
+UID: REQ-001
+TITLE: Requirements Summary
+STATEMENT: # Requirements Analysis: administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/server/CCTOrgStructureElementUploadServlet.java Requirements Analysis for CCTOrgStructureElementUploadServlet: 1. Purpose and Functionality - Appears to be a servlet handling organizational...
+[/REQUIREMENT]
+
+[/DOCUMENT]

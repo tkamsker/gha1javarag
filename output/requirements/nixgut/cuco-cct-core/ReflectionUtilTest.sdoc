@@ -1,0 +1,12 @@
+[DOCUMENT]
+TITLE: Requirements Analysis: cuco-cct-core/src/test/java/at/a1ta/cuco/cct/util/ReflectionUtilTest.java
+UID: ReflectionUtilTest
+
+[REQUIREMENT]
+MID: 5c64254c26394234
+UID: REQ-001
+TITLE: Requirements Summary
+STATEMENT: # Requirements Analysis: cuco-cct-core/src/test/java/at/a1ta/cuco/cct/util/ReflectionUtilTest.java Here's the requirements analysis for the ReflectionUtilTest file: 1. Purpose and Functionality - Test class for...
+[/REQUIREMENT]
+
+[/DOCUMENT]
