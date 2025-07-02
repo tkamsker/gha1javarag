@@ -54,9 +54,11 @@ def get_stats():
 def chat():
     data = request.get_json()
     question = data.get('question', '')
-    max_results = data.get('max_results', 5)
+    max_results = data.get('max_results', 10)
     chunk_type = data.get('chunk_type', '')
     language = data.get('language', '')
+    file_path = data.get('file_path', '')
+    search_mode = data.get('search_mode', 'semantic')
     
     # Build filters for enhanced querying
     filters = {}
@@ -64,11 +66,24 @@ def chat():
         filters['chunk_type'] = chunk_type
     if language:
         filters['language'] = language
+    if file_path:
+        filters['file_path'] = file_path
     
     # Get relevant context from ChromaDB with enhanced filtering
     if chromadb_connector_instance:
         try:
-            results = chromadb_connector_instance.query_enhanced_similar(question, max_results, filters)
+            # Adjust query based on search mode
+            if search_mode == 'keyword':
+                # For keyword search, use the question as-is
+                query = question
+            elif search_mode == 'exact':
+                # For exact match, wrap in quotes
+                query = f'"{question}"'
+            else:
+                # For semantic search, use the question as-is
+                query = question
+            
+            results = chromadb_connector_instance.query_enhanced_similar(query, max_results, filters)
             context = chromadb_connector._format_enhanced_results(results)
         except Exception as e:
             context = f"Error querying ChromaDB: {str(e)}"
@@ -114,6 +129,8 @@ Please provide a clear, concise answer based only on the project context above. 
             'filters_applied': {
                 'chunk_type': chunk_type,
                 'language': language,
+                'file_path': file_path,
+                'search_mode': search_mode,
                 'max_results': max_results
             }
         })

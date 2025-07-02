@@ -187,29 +187,72 @@ STATEMENT: >>>
             stats = self.chromadb_connector.get_chunk_statistics()
             logger.info(f"ChromaDB statistics: {stats}")
             
-            # Query for all chunks to get the metadata
-            # We'll use a broad query to get all documents
-            results = self.chromadb_connector.query_enhanced_similar(
-                query="requirements analysis documentation",
-                n_results=1000,  # Get a large number of results
-                filters=None  # No filters to get all chunks
-            )
+            # Use multiple generic queries to get all documents
+            # This approach ensures we get files from different categories
+            all_results = []
+            queries = [
+                "java code",  # Java files
+                "xml configuration",  # Configuration files
+                "sql database",  # Database files
+                "html web",  # Web files
+                "javascript",  # JS files
+                "properties",  # Properties files
+                "test",  # Test files
+                "service",  # Service files
+                "controller",  # Controller files
+                "model",  # Model files
+                "util",  # Utility files
+                "main",  # Main files
+                "index",  # Index files
+            ]
             
-            if not results or not results.get('documents') or not results['documents'][0]:
+            for query in queries:
+                try:
+                    results = self.chromadb_connector.query_enhanced_similar(
+                        query=query,
+                        n_results=500,  # Get more results per query
+                        filters=None
+                    )
+                    if results and results.get('documents') and results['documents'][0]:
+                        all_results.append(results)
+                        logger.debug(f"Query '{query}' returned {len(results['documents'][0])} results")
+                except Exception as e:
+                    logger.warning(f"Query '{query}' failed: {e}")
+                    continue
+            
+            if not all_results:
                 logger.warning("No documents found in ChromaDB")
                 return []
             
+            # Combine all results and remove duplicates
+            all_documents = []
+            all_metadatas = []
+            all_ids = []
+            seen_ids = set()
+            
+            for results in all_results:
+                if results and results.get('documents') and results['documents'][0]:
+                    documents = results['documents'][0]
+                    metadatas = results['metadatas'][0]
+                    ids = results['ids'][0]
+                    
+                    for i, doc_id in enumerate(ids):
+                        if doc_id not in seen_ids:
+                            seen_ids.add(doc_id)
+                            all_documents.append(documents[i] if i < len(documents) else '')
+                            all_metadatas.append(metadatas[i] if i < len(metadatas) else {})
+                            all_ids.append(doc_id)
+            
+            logger.info(f"Combined {len(all_documents)} unique documents from ChromaDB")
+            
             # Convert ChromaDB results to metadata format
             metadata = []
-            documents = results['documents'][0]
-            metadatas = results['metadatas'][0]
-            ids = results['ids'][0]
             
             # Group by file_path to create file-level metadata
             file_groups = {}
-            for i, doc_id in enumerate(ids):
-                if i < len(metadatas):
-                    metadata_item = metadatas[i]
+            for i, doc_id in enumerate(all_ids):
+                if i < len(all_metadatas):
+                    metadata_item = all_metadatas[i]
                     file_path = metadata_item.get('file_path', 'unknown')
                     
                     if file_path not in file_groups:
@@ -225,7 +268,7 @@ STATEMENT: >>>
                     # Add chunk information
                     chunk_info = {
                         'chunk_id': doc_id,
-                        'content': documents[i] if i < len(documents) else '',
+                        'content': all_documents[i] if i < len(all_documents) else '',
                         'language': metadata_item.get('language', 'unknown'),
                         'chunk_type': metadata_item.get('chunk_type', 'unknown'),
                         'start_line': metadata_item.get('start_line', '1'),

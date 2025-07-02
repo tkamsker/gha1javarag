@@ -211,9 +211,18 @@
                 <textarea 
                     id="question" 
                     name="question" 
-                    placeholder="e.g., What does this project do? Show me the main function. What classes are available? How is the code structured?"
+                    placeholder="e.g., What does this project do? Show me the main function. What classes are available? How is the code structured? Find customer service methods. Show me database queries. What are the main controllers?"
                     required
                 ></textarea>
+                <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                    <strong>Search Tips:</strong><br>
+                    • Use "customer" to find customer-related code<br>
+                    • Use "service" to find service classes<br>
+                    • Use "controller" to find web controllers<br>
+                    • Use "test" to find test files<br>
+                    • Use "sql" to find database queries<br>
+                    • Use "xml" to find configuration files
+                </div>
             </div>
             
             <div class="filters">
@@ -226,6 +235,9 @@
                         <option value="method">Methods</option>
                         <option value="import">Imports</option>
                         <option value="section">Sections</option>
+                        <option value="interface">Interfaces</option>
+                        <option value="enum">Enums</option>
+                        <option value="annotation">Annotations</option>
                         <option value="other">Other</option>
                     </select>
                 </div>
@@ -233,23 +245,40 @@
                     <label for="languageFilter">Language:</label>
                     <select id="languageFilter">
                         <option value="">All Languages</option>
-                        <option value="python">Python</option>
                         <option value="java">Java</option>
+                        <option value="jsp">JSP</option>
+                        <option value="xml">XML</option>
+                        <option value="html">HTML</option>
                         <option value="javascript">JavaScript</option>
+                        <option value="sql">SQL</option>
+                        <option value="properties">Properties</option>
                         <option value="yaml">YAML</option>
                         <option value="markdown">Markdown</option>
-                        <option value="xml">XML</option>
                     </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filePathFilter">File Path:</label>
+                    <input type="text" id="filePathFilter" placeholder="e.g., cuco-core, admin, test" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
                 </div>
                 <div class="filter-group">
                     <label for="maxResults">Max Results:</label>
                     <select id="maxResults">
-                        <option value="3">3</option>
-                        <option value="5" selected>5</option>
-                        <option value="10">10</option>
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
                         <option value="15">15</option>
+                        <option value="20">20</option>
+                        <option value="30">30</option>
                     </select>
                 </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="searchMode">Search Mode:</label>
+                <select id="searchMode" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                    <option value="semantic">Semantic Search (Recommended)</option>
+                    <option value="keyword">Keyword Search</option>
+                    <option value="exact">Exact Match</option>
+                </select>
             </div>
             
             <button type="submit" id="submitBtn">Ask AI Assistant</button>
@@ -314,7 +343,9 @@
             const question = document.getElementById('question').value.trim();
             const chunkType = document.getElementById('chunkTypeFilter').value;
             const language = document.getElementById('languageFilter').value;
+            const filePath = document.getElementById('filePathFilter').value.trim();
             const maxResults = parseInt(document.getElementById('maxResults').value);
+            const searchMode = document.getElementById('searchMode').value;
             const submitBtn = document.getElementById('submitBtn');
             const responseDiv = document.getElementById('response');
             
@@ -329,12 +360,14 @@
             try {
                 const requestBody = {
                     question: question,
-                    max_results: maxResults
+                    max_results: maxResults,
+                    search_mode: searchMode
                 };
                 
                 // Add filters if specified
                 if (chunkType) requestBody.chunk_type = chunkType;
                 if (language) requestBody.language = language;
+                if (filePath) requestBody.file_path = filePath;
                 
                 const response = await fetch(`${API_BASE}/chat`, {
                     method: 'POST',
@@ -351,7 +384,15 @@
                         <div class="success">
                             <strong>✅ AI Response:</strong><br><br>
                             <div class="response">${data.answer}</div>
-                            <br><small><strong>Provider:</strong> ${data.provider} | <strong>Model:</strong> ${data.model}</small>
+                            <br><small>
+                                <strong>Provider:</strong> ${data.provider} | 
+                                <strong>Model:</strong> ${data.model} | 
+                                <strong>Search Mode:</strong> ${data.filters_applied?.search_mode || 'semantic'} |
+                                <strong>Results:</strong> ${data.filters_applied?.max_results || 10}
+                                ${data.filters_applied?.chunk_type ? ` | <strong>Type:</strong> ${data.filters_applied.chunk_type}` : ''}
+                                ${data.filters_applied?.language ? ` | <strong>Language:</strong> ${data.filters_applied.language}` : ''}
+                                ${data.filters_applied?.file_path ? ` | <strong>Path:</strong> ${data.filters_applied.file_path}` : ''}
+                            </small>
                         </div>
                     `;
                 } else {
