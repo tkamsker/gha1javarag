@@ -266,3 +266,22 @@ curl -X POST http://localhost:8000/chat \
 export   TOKENIZERS_PARALLELISM=false
 
 python test_chromadb.py > frznbrnf.txt
+
+
+curl -X GET "http://localhost:8000/debug/query/customer"
+
+curl -X GET "http://localhost:8000/debug/query/CustomerService"
+
+curl -X GET "http://localhost:8000/debug/query/CustomerInteractionService"
+
+curl -X POST http://localhost:8000/chat -H "Content-Type: application/json" -d '{"question": "What is CustomerInteractionService and what does it do?", "max_results": 5}'
+
+curl -X POST http://localhost:8000/chat -H "Content-Type: application/json" -d '{"question": "What are the main service classes in this project?", "max_results": 15, "search_mode": "keyword"}'
+
+curl -X POST http://localhost:8000/chat -H "Content-Type: application/json" -d '{"question": "PartyService", "max_results": 5, "search_mode": "keyword"}'
+
+
+# now 
+python test_chromadb_functionality.py to benchmark ChromaDB and save results.
+Run python demo_effective_usage.py for a guided, practical usage demo.
+Use the web interface at http://localhost:8000 with the recommended strategies.
