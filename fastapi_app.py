@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from src import chromadb_connector
+import src.chromadb_connector as chromadb_connector
 from src.ai_providers import create_ai_provider
 
 # Load environment variables from .env

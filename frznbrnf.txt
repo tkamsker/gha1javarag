@@ -1,0 +1,97 @@
+🚀 Starting ChromaDB and AI Provider Tests
+============================================================
+🔍 ChromaDB Content Analysis
+==================================================
+📡 Connecting to ChromaDB...
+✅ ChromaDB connection established
+
+📊 ChromaDB Statistics:
+------------------------------
+Total chunks: 48487
+Unique files: 2024
+Average complexity: 0.9928248808971317
+Languages found: {'xml': 7125, 'java': 11786, 'sql': 29372, 'html': 13, 'javascript': 191}
+Chunk types: {'other': 7398, 'class': 686, 'import': 5073, 'method': 5767, 'grant': 272, 'create': 658, 'insert': 23338, 'select': 512, 'update': 192, 'alter': 519, 'drop': 140, 'delete': 3741, 'function': 191}
+
+🔍 Testing Sample Queries:
+------------------------------
+
+Query: 'java class'
+  Found 3 results
+  - cuco-core/src/test/java/at/a1ta/cuco/core/service/report/DepartmentActionStatisticsTest.java (import)
+  - cuco-core/src/main/java/at/a1ta/cuco/core/service/customerequipment/CustomerEquipmentTranslator.java (import)
+
+Query: 'customer service'
+  Found 3 results
+  - cuco-core/src/main/java/at/a1ta/cuco/core/dao/db/ContactPersonDao.java (other)
+  - cuco-core/src/main/java/at/a1ta/cuco/core/service/ContactPersonService.java (other)
+
+Query: 'database sql'
+  Found 3 results
+  - cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/ROLLOUT/060_create_load_dwh_data.sql (select)
+  - cuco.dbmaintain/sql/repeat/@custc_load_dwh_data.sql (select)
+
+Query: 'controller'
+  Found 3 results
+  - cuco-cct-core/src/main/resources/at/a1ta/cuco/cct/productoffering/a1bi/v2/server/A1BIV2DefaultConfiguration.xml (other)
+  - cuco-cct-core/src/main/resources/at/a1ta/cuco/cct/productoffering/a1bi/v4/server/A1BIV4DefaultConfiguration.xml (other)
+
+Query: 'test'
+  Found 3 results
+  - cuco-cct-core/src/main/java/at/a1ta/cuco/cct/shared/dto/POVConfiguration.java (method)
+  - cuco/src/main/resources/at/a1ta/cuco/service/sql/testdata/inserts/2_test_inserts_ansprechpartner.sql (insert)
+
+Query: 'xml configuration'
+  Found 3 results
+  - cuco-cct-core/src/main/java/at/a1ta/cuco/cct/shared/dto/POVConfiguration.java (method)
+  - cuco-cct-core/src/main/java/at/a1ta/cuco/cct/service/QuoteService.java (other)
+
+Query: 'main function'
+  Found 3 results
+  - cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/MobilePhoneBase.java (method)
+  - cuco-core/src/main/java/at/a1ta/cuco/core/service/util/JasperUtil.java (method)
+
+📋 Sample of All Documents:
+------------------------------
+Retrieved 20 sample documents:
+  📄 cuco.dbmaintain/sql/11/25_CuCo_V18.01.01/01_@custc_pshcv4_initialization.sql
+     Chunks: 6
+     Types: delete
+     Languages: sql
+
+  📄 cuco.dbmaintain/sql/11/47_CuCo_V19.10/01_@custc_pshcv4_update.sql
+     Chunks: 14
+     Types: delete
+     Languages: sql
+
+
+🔍 Testing File Path Queries:
+------------------------------
+
+Files containing 'cuco-core':
+  No files found with this path pattern
+
+Files containing 'cuco':
+  - cuco.dbmaintain/sql/11/18_CuCo_V17.05/08_@custc_bite_text_for_PSHC_SNG.sql
+  - cuco.dbmaintain/sql/11/25_CuCo_V18.01.01/01_@custc_pshcv4_initialization.sql
+  - cuco.dbmaintain/sql/11/32_CuCo_V18.05.2/05_@custc_bite_text_A1BNV8_Sprachkanale.sql
+  - cuco.dbmaintain/sql/11/32_CuCo_V18.05.2/07_@custc_bite_text_A1BNV8_Sprachkanale_Update.sql
+  - cuco.dbmaintain/sql/11/47_CuCo_V19.10/01_@custc_pshcv4_update.sql
+
+Files containing 'admin':
+  No files found with this path pattern
+
+Files containing 'test':
+  No files found with this path pattern
+
+✅ ChromaDB test completed successfully!
+
+🤖 AI Provider Test
+==============================
+✅ AI Provider: Anthropic
+✅ Model: claude-3-5-sonnet-20241022
+
+🧪 Testing AI Provider with simple query...
+✅ AI Response: Hello from AI provider test
+
+🎉 All tests completed!

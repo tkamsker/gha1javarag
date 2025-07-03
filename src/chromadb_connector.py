@@ -7,7 +7,10 @@ from dotenv import load_dotenv
 import logging
 from typing import List, Dict, Any, Optional
 import json
-from code_chunker import IntelligentCodeChunker, CodeChunk
+try:
+    from code_chunker import IntelligentCodeChunker, CodeChunk
+except ImportError:
+    from .code_chunker import IntelligentCodeChunker, CodeChunk
 
 logger = logging.getLogger('java_analysis.chromadb')
 
@@ -250,7 +253,12 @@ class EnhancedChromaDBConnector:
                 
                 # Collect complexity scores
                 if 'complexity_score' in metadata:
-                    stats['complexity_scores'].append(metadata['complexity_score'])
+                    try:
+                        complexity = float(metadata['complexity_score'])
+                        stats['complexity_scores'].append(complexity)
+                    except (ValueError, TypeError):
+                        # Skip invalid complexity scores
+                        pass
             
             # Convert set to list for JSON serialization
             stats['files'] = list(stats['files'])
@@ -344,7 +352,12 @@ def _format_enhanced_results(results: Dict[str, Any]) -> str:
         distance = results['distances'][0][i] if results['distances'] and results['distances'][0] else 0
         
         # Enhanced context formatting
-        context_parts.append(f"=== Chunk {i+1} (similarity: {1-distance:.3f}) ===")
+        try:
+            distance_float = float(distance)
+            similarity = 1 - distance_float
+            context_parts.append(f"=== Chunk {i+1} (similarity: {similarity:.3f}) ===")
+        except (ValueError, TypeError):
+            context_parts.append(f"=== Chunk {i+1} (similarity: unknown) ===")
         context_parts.append(f"File: {metadata.get('file_path', 'Unknown')}")
         context_parts.append(f"Type: {metadata.get('chunk_type', 'Unknown')}")
         context_parts.append(f"Language: {metadata.get('language', 'Unknown')}")
@@ -360,7 +373,11 @@ def _format_enhanced_results(results: Dict[str, Any]) -> str:
         
         # Add complexity score if available
         if metadata.get('complexity_score'):
-            context_parts.append(f"Complexity: {metadata['complexity_score']:.2f}")
+            try:
+                complexity = float(metadata['complexity_score'])
+                context_parts.append(f"Complexity: {complexity:.2f}")
+            except (ValueError, TypeError):
+                context_parts.append(f"Complexity: {metadata['complexity_score']}")
         
         context_parts.append("Content:")
         context_parts.append(doc[:800] + "..." if len(doc) > 800 else doc)

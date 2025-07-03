@@ -3,7 +3,10 @@ from typing import Dict, Any, List
 from dotenv import load_dotenv
 import logging
 from rate_limiter import RateLimiter, RateLimitConfig
-from ai_providers import create_ai_provider, AIProvider
+try:
+    from ai_providers import create_ai_provider, AIProvider
+except ImportError:
+    from .ai_providers import create_ai_provider, AIProvider
 
 logger = logging.getLogger('java_analysis.ai_analyzer')
 

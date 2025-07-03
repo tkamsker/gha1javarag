@@ -8,7 +8,10 @@ from openai import AsyncOpenAI
 from dotenv import load_dotenv
 import logging
 import time
-from config_loader import get_ollama_config
+try:
+    from config_loader import get_ollama_config
+except ImportError:
+    from .config_loader import get_ollama_config
 import anthropic
 
 logger = logging.getLogger('java_analysis.ai_providers')

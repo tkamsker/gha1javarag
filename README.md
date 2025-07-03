@@ -260,3 +260,9 @@ curl -X POST http://localhost:8000/chat \
   Web.sh 
 
   
+
+  ## 3.Juli
+
+export   TOKENIZERS_PARALLELISM=false
+
+python test_chromadb.py > frznbrnf.txt

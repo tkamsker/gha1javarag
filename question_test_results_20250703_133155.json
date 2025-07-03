@@ -1,0 +1,426 @@
+{
+  "timestamp": "2025-07-03T13:31:55.870625",
+  "flask_app_url": "http://localhost:8000",
+  "results": [
+    {
+      "question": "What is CustomerEquipmentService and what methods does it provide?",
+      "timestamp": "2025-07-03T13:30:53.677642",
+      "chroma_results": [],
+      "chroma_analysis": {
+        "score": 0,
+        "issues": [
+          "No results returned"
+        ],
+        "context_count": 0,
+        "avg_similarity": 0,
+        "file_diversity": 0,
+        "type_distribution": {},
+        "complexity_range": {
+          "min": 0,
+          "max": 0,
+          "avg": 0
+        }
+      },
+      "ai_response": "",
+      "ai_analysis": {
+        "score": 0,
+        "issues": [
+          "No AI response"
+        ],
+        "response_length": 0,
+        "has_code_examples": false,
+        "has_specific_details": false,
+        "confidence_level": "none"
+      },
+      "overall_score": {
+        "score": 0.0,
+        "usability": "unusable",
+        "chroma_weight": 0.0,
+        "ai_weight": 0.0
+      },
+      "timing": {
+        "chroma_query_time": 0.01875782012939453,
+        "ai_response_time": 6.198548793792725,
+        "total_time": 6.217382907867432
+      }
+    },
+    {
+      "question": "How does ProductBrowserServiceImpl work and what are its main functions?",
+      "timestamp": "2025-07-03T13:31:07.091395",
+      "chroma_results": [],
+      "chroma_analysis": {
+        "score": 0,
+        "issues": [
+          "No results returned"
+        ],
+        "context_count": 0,
+        "avg_similarity": 0,
+        "file_diversity": 0,
+        "type_distribution": {},
+        "complexity_range": {
+          "min": 0,
+          "max": 0,
+          "avg": 0
+        }
+      },
+      "ai_response": "",
+      "ai_analysis": {
+        "score": 0,
+        "issues": [
+          "No AI response"
+        ],
+        "response_length": 0,
+        "has_code_examples": false,
+        "has_specific_details": false,
+        "confidence_level": "none"
+      },
+      "overall_score": {
+        "score": 0.0,
+        "usability": "unusable",
+        "chroma_weight": 0.0,
+        "ai_weight": 0.0
+      },
+      "timing": {
+        "chroma_query_time": 0.040393829345703125,
+        "ai_response_time": 13.37293004989624,
+        "total_time": 13.413400888442993
+      }
+    },
+    {
+      "question": "Show me test classes for customer-related functionality",
+      "timestamp": "2025-07-03T13:31:13.154731",
+      "chroma_results": [],
+      "chroma_analysis": {
+        "score": 0,
+        "issues": [
+          "No results returned"
+        ],
+        "context_count": 0,
+        "avg_similarity": 0,
+        "file_diversity": 0,
+        "type_distribution": {},
+        "complexity_range": {
+          "min": 0,
+          "max": 0,
+          "avg": 0
+        }
+      },
+      "ai_response": "",
+      "ai_analysis": {
+        "score": 0,
+        "issues": [
+          "No AI response"
+        ],
+        "response_length": 0,
+        "has_code_examples": false,
+        "has_specific_details": false,
+        "confidence_level": "none"
+      },
+      "overall_score": {
+        "score": 0.0,
+        "usability": "unusable",
+        "chroma_weight": 0.0,
+        "ai_weight": 0.0
+      },
+      "timing": {
+        "chroma_query_time": 0.02165985107421875,
+        "ai_response_time": 6.041423082351685,
+        "total_time": 6.063153982162476
+      }
+    },
+    {
+      "question": "What DTOs are used for customer data and what fields do they contain?",
+      "timestamp": "2025-07-03T13:31:20.289095",
+      "chroma_results": [],
+      "chroma_analysis": {
+        "score": 0,
+        "issues": [
+          "No results returned"
+        ],
+        "context_count": 0,
+        "avg_similarity": 0,
+        "file_diversity": 0,
+        "type_distribution": {},
+        "complexity_range": {
+          "min": 0,
+          "max": 0,
+          "avg": 0
+        }
+      },
+      "ai_response": "",
+      "ai_analysis": {
+        "score": 0,
+        "issues": [
+          "No AI response"
+        ],
+        "response_length": 0,
+        "has_code_examples": false,
+        "has_specific_details": false,
+        "confidence_level": "none"
+      },
+      "overall_score": {
+        "score": 0.0,
+        "usability": "unusable",
+        "chroma_weight": 0.0,
+        "ai_weight": 0.0
+      },
+      "timing": {
+        "chroma_query_time": 0.024344921112060547,
+        "ai_response_time": 7.109761953353882,
+        "total_time": 7.134261846542358
+      }
+    },
+    {
+      "question": "How are services implemented in the cuco-core module?",
+      "timestamp": "2025-07-03T13:31:26.994923",
+      "chroma_results": [],
+      "chroma_analysis": {
+        "score": 0,
+        "issues": [
+          "No results returned"
+        ],
+        "context_count": 0,
+        "avg_similarity": 0,
+        "file_diversity": 0,
+        "type_distribution": {},
+        "complexity_range": {
+          "min": 0,
+          "max": 0,
+          "avg": 0
+        }
+      },
+      "ai_response": "",
+      "ai_analysis": {
+        "score": 0,
+        "issues": [
+          "No AI response"
+        ],
+        "response_length": 0,
+        "has_code_examples": false,
+        "has_specific_details": false,
+        "confidence_level": "none"
+      },
+      "overall_score": {
+        "score": 0.0,
+        "usability": "unusable",
+        "chroma_weight": 0.0,
+        "ai_weight": 0.0
+      },
+      "timing": {
+        "chroma_query_time": 0.03299975395202637,
+        "ai_response_time": 6.672282934188843,
+        "total_time": 6.705396890640259
+      }
+    },
+    {
+      "question": "What DAO implementations exist for database operations?",
+      "timestamp": "2025-07-03T13:31:32.859388",
+      "chroma_results": [],
+      "chroma_analysis": {
+        "score": 0,
+        "issues": [
+          "No results returned"
+        ],
+        "context_count": 0,
+        "avg_similarity": 0,
+        "file_diversity": 0,
+        "type_distribution": {},
+        "complexity_range": {
+          "min": 0,
+          "max": 0,
+          "avg": 0
+        }
+      },
+      "ai_response": "",
+      "ai_analysis": {
+        "score": 0,
+        "issues": [
+          "No AI response"
+        ],
+        "response_length": 0,
+        "has_code_examples": false,
+        "has_specific_details": false,
+        "confidence_level": "none"
+      },
+      "overall_score": {
+        "score": 0.0,
+        "usability": "unusable",
+        "chroma_weight": 0.0,
+        "ai_weight": 0.0
+      },
+      "timing": {
+        "chroma_query_time": 0.026720046997070312,
+        "ai_response_time": 5.837469100952148,
+        "total_time": 5.8642730712890625
+      }
+    },
+    {
+      "question": "Show me XML configuration files and their structure",
+      "timestamp": "2025-07-03T13:31:38.258287",
+      "chroma_results": [],
+      "chroma_analysis": {
+        "score": 0,
+        "issues": [
+          "No results returned"
+        ],
+        "context_count": 0,
+        "avg_similarity": 0,
+        "file_diversity": 0,
+        "type_distribution": {},
+        "complexity_range": {
+          "min": 0,
+          "max": 0,
+          "avg": 0
+        }
+      },
+      "ai_response": "",
+      "ai_analysis": {
+        "score": 0,
+        "issues": [
+          "No AI response"
+        ],
+        "response_length": 0,
+        "has_code_examples": false,
+        "has_specific_details": false,
+        "confidence_level": "none"
+      },
+      "overall_score": {
+        "score": 0.0,
+        "usability": "unusable",
+        "chroma_weight": 0.0,
+        "ai_weight": 0.0
+      },
+      "timing": {
+        "chroma_query_time": 0.04226398468017578,
+        "ai_response_time": 5.356425046920776,
+        "total_time": 5.398797988891602
+      }
+    },
+    {
+      "question": "What interfaces are defined in the core module?",
+      "timestamp": "2025-07-03T13:31:44.389455",
+      "chroma_results": [],
+      "chroma_analysis": {
+        "score": 0,
+        "issues": [
+          "No results returned"
+        ],
+        "context_count": 0,
+        "avg_similarity": 0,
+        "file_diversity": 0,
+        "type_distribution": {},
+        "complexity_range": {
+          "min": 0,
+          "max": 0,
+          "avg": 0
+        }
+      },
+      "ai_response": "",
+      "ai_analysis": {
+        "score": 0,
+        "issues": [
+          "No AI response"
+        ],
+        "response_length": 0,
+        "has_code_examples": false,
+        "has_specific_details": false,
+        "confidence_level": "none"
+      },
+      "overall_score": {
+        "score": 0.0,
+        "usability": "unusable",
+        "chroma_weight": 0.0,
+        "ai_weight": 0.0
+      },
+      "timing": {
+        "chroma_query_time": 0.04218792915344238,
+        "ai_response_time": 6.0886430740356445,
+        "total_time": 6.130965948104858
+      }
+    },
+    {
+      "question": "How is authentication and authorization handled?",
+      "timestamp": "2025-07-03T13:31:49.780168",
+      "chroma_results": [],
+      "chroma_analysis": {
+        "score": 0,
+        "issues": [
+          "No results returned"
+        ],
+        "context_count": 0,
+        "avg_similarity": 0,
+        "file_diversity": 0,
+        "type_distribution": {},
+        "complexity_range": {
+          "min": 0,
+          "max": 0,
+          "avg": 0
+        }
+      },
+      "ai_response": "",
+      "ai_analysis": {
+        "score": 0,
+        "issues": [
+          "No AI response"
+        ],
+        "response_length": 0,
+        "has_code_examples": false,
+        "has_specific_details": false,
+        "confidence_level": "none"
+      },
+      "overall_score": {
+        "score": 0.0,
+        "usability": "unusable",
+        "chroma_weight": 0.0,
+        "ai_weight": 0.0
+      },
+      "timing": {
+        "chroma_query_time": 0.03927898406982422,
+        "ai_response_time": 5.351140737533569,
+        "total_time": 5.390511989593506
+      }
+    },
+    {
+      "question": "What are the main business entities and their relationships?",
+      "timestamp": "2025-07-03T13:31:55.869590",
+      "chroma_results": [],
+      "chroma_analysis": {
+        "score": 0,
+        "issues": [
+          "No results returned"
+        ],
+        "context_count": 0,
+        "avg_similarity": 0,
+        "file_diversity": 0,
+        "type_distribution": {},
+        "complexity_range": {
+          "min": 0,
+          "max": 0,
+          "avg": 0
+        }
+      },
+      "ai_response": "",
+      "ai_analysis": {
+        "score": 0,
+        "issues": [
+          "No AI response"
+        ],
+        "response_length": 0,
+        "has_code_examples": false,
+        "has_specific_details": false,
+        "confidence_level": "none"
+      },
+      "overall_score": {
+        "score": 0.0,
+        "usability": "unusable",
+        "chroma_weight": 0.0,
+        "ai_weight": 0.0
+      },
+      "timing": {
+        "chroma_query_time": 0.041945695877075195,
+        "ai_response_time": 6.04709792137146,
+        "total_time": 6.089116811752319
+      }
+    }
+  ]
+}
