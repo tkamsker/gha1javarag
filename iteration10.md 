@@ -1,0 +1,117 @@
+# Product Requirements Document (PRD)
+## Reverse Engineering Java JSP Application
+
+**Version:** 1.0  
+**Date:** 2025-07-04  
+**Owner:** [Thomas Neusser/Team]  
+**Status:** Draft
+
+---
+
+## 1. Overview
+
+This PRD defines the requirements and process for reverse engineering a legacy Java JSP application. The objective is to extract detailed requirements, data structures, and business rules using a Python-based workflow, Gemini CLI, and Chroma DB. The end goal is to generate comprehensive, structured documentation to support modernization or migration efforts.
+
+---
+
+## 2. Objectives
+
+- **Automate codebase analysis** to extract metadata from all relevant source files.
+- **Structure and store metadata** in Chroma DB for semantic retrieval and analysis.
+- **Generate layered requirements documentation** grouped by logical architecture: Database, Backend, Presentation.
+- **Iteratively refine documentation** using AI to ensure consistency and completeness.
+
+---
+
+## 3. Stakeholders
+
+- Engineering Team
+- Product Owner
+- QA/Testing
+- Documentation Specialists
+
+---
+
+## 4. Use Cases
+
+- Reverse engineer undocumented or legacy Java JSP applications.
+- Extract and document data models, business logic, and UI flows.
+- Enable migration to new platforms or refactoring with full understanding of current state.
+
+---
+
+## 5. Assumptions & Constraints
+
+- All source code and configuration files are accessible in `JAVA_SOURCE_DIR`.
+- AI provider and model are properly configured in `.env`.
+- Chroma DB is available and accessible at `CHROMADB_DIR`.
+- Output directory is writable.
+- StrictDoc output is optional, controlled by `STRICTDOC=TRUE`.
+
+---
+
+## 6. Scope
+
+### In Scope
+- Automated scanning and analysis of `.java`, `.jsp`, `.tsp`, `.xml`, `.html`, `.js`, `.sql` files.
+- AI-driven metadata extraction and enrichment.
+- Storage of embeddings and metadata in Chroma DB.
+- Generation of requirements documentation in Markdown (and StrictDoc if enabled).
+
+### Out of Scope
+- Manual code review or analysis.
+- Refactoring or rewriting application code.
+
+---
+
+## 7. Requirements
+
+### 7.1 Automated Metadata Extraction
+- Recursively scan `JAVA_SOURCE_DIR` for target file types.
+- For each file, extract:
+  - File type, purpose, classes, methods, database schema, endpoints, config, comments.
+- Use AI to enrich and structure metadata.
+- Store metadata and embeddings in Chroma DB with unique IDs and tags.
+- Export consolidated JSON metadata.
+
+### 7.2 Requirements Documentation Generation
+- Load JSON metadata.
+- Group components by logical layer (Database, Backend, Presentation).
+- For each group, generate documentation with:
+  - Overview, Components, Functionality, Dependencies, Notes.
+- Use AI to cross-link and validate requirements.
+
+### 7.3 Documentation Output
+- Output Markdown files to `OUTPUT_DIR`.
+- If `STRICTDOC=TRUE`, generate StrictDoc documents alongside Markdown.
+
+---
+
+## 8. Performance Metrics
+
+- **Coverage:** Percentage of files successfully analyzed and documented.
+- **Accuracy:** Consistency of extracted metadata with actual codebase.
+- **Completeness:** All logical layers and dependencies are represented in documentation.
+
+---
+
+## 9. Timeline
+
+- **Iteration 10:** Complete end-to-end workflow, validate outputs, and refine based on feedback.
+
+---
+
+## 10. Open Questions
+
+- Are there custom file types or legacy formats not covered by the current file list?
+- Should additional AI providers or embedding models be supported?
+- What level of detail is required for each logical layer in documentation?
+
+---
+
+## 11. Appendix
+
+- Example requirements template
+- .env configuration sample
+- Workflow scripts (`step1.sh`, `step2.sh`, etc.)
+
