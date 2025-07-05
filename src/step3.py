@@ -2,12 +2,13 @@ import os
 import json
 import re
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Any
 import markdown
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from ai_providers import create_ai_provider
 from datetime import datetime
+import time
 
 # Load environment variables
 load_dotenv()
@@ -21,12 +22,57 @@ class RequirementsProcessor:
         self.requirements_dir = os.path.join(self.output_dir, "requirements")
         self.requirements_file = os.path.join(self.output_dir, "modern_requirements.md")
         
+        # Define metadata categories for grouping
+        self.metadata_categories = {
+            'backend': {
+                'keywords': ['service', 'controller', 'dao', 'repository', 'manager', 'handler'],
+                'files': [],
+                'requirements': []
+            },
+            'frontend': {
+                'keywords': ['jsp', 'html', 'css', 'js', 'view', 'page', 'form', 'component'],
+                'files': [],
+                'requirements': []
+            },
+            'data_structures': {
+                'keywords': ['entity', 'model', 'dto', 'vo', 'bean', 'class', 'interface'],
+                'files': [],
+                'requirements': []
+            },
+            'testing': {
+                'keywords': ['test', 'spec', 'mock', 'stub', 'fixture'],
+                'files': [],
+                'requirements': []
+            },
+            'batch_processing': {
+                'keywords': ['batch', 'job', 'scheduler', 'cron', 'task'],
+                'files': [],
+                'requirements': []
+            },
+            'operational': {
+                'keywords': ['log', 'monitor', 'admin', 'ops', 'config', 'properties'],
+                'files': [],
+                'requirements': []
+            }
+        }
+        
         # Initialize AI provider using the same pattern as main.py
         self.ai_provider = create_ai_provider()
         print(f"Using {self.ai_provider.get_provider_name()} provider with model: {self.ai_provider.get_model_name()}")
         
+    def categorize_file(self, file_path: str) -> str:
+        """Categorize a file based on its path and content"""
+        file_path_lower = file_path.lower()
+        
+        for category, config in self.metadata_categories.items():
+            for keyword in config['keywords']:
+                if keyword in file_path_lower:
+                    return category
+        
+        return 'other'
+    
     def load_index(self, index_file: str) -> None:
-        """Load and parse the step2_index.md file"""
+        """Load and parse the step2_index.md file with categorization"""
         with open(index_file, 'r', encoding='utf-8') as f:
             content = f.read()
             
@@ -40,10 +86,11 @@ class RequirementsProcessor:
                 # Skip XML-derived files
                 if 'xml' in href.lower():
                     continue
-                    
-                # Prioritize web/ directory files
-                if 'web/' in href:
-                    self.web_files.append(href)
+                
+                # Categorize the file
+                category = self.categorize_file(href)
+                if category in self.metadata_categories:
+                    self.metadata_categories[category]['files'].append(href)
                 else:
                     self.other_files.append(href)
     
@@ -75,33 +122,109 @@ class RequirementsProcessor:
             
         return sections
     
-    async def modernize_requirements(self, content: dict) -> dict:
-        """Use AI to modernize requirements for cloud architecture"""
-        prompt = f"""
-        Convert these Java/JSP requirements into modern cloud architecture requirements using React and Node.js.
-        Focus on:
-        1. Microservices architecture
-        2. React frontend components
-        3. Node.js backend services
-        4. Cloud-native features
-        5. Modern security practices
+    def deduplicate_requirements(self, requirements_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Remove duplicate requirements based on content similarity"""
+        unique_requirements = []
+        seen_content = set()
         
-        Original requirements:
-        {json.dumps(content, indent=2)}
+        for req in requirements_list:
+            # Create a normalized version of the requirement for comparison
+            content_key = req.get('content', '').lower().strip()
+            content_key = re.sub(r'\s+', ' ', content_key)  # Normalize whitespace
+            
+            if content_key and content_key not in seen_content:
+                seen_content.add(content_key)
+                unique_requirements.append(req)
+        
+        return unique_requirements
+    
+    async def modernize_requirements_by_category(self, category: str, requirements: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Use AI to modernize requirements for a specific category"""
+        if not requirements:
+            return {}
+        
+        # Deduplicate requirements first
+        unique_requirements = self.deduplicate_requirements(requirements)
+        
+        # Create category-specific prompt
+        category_prompts = {
+            'backend': """
+                Convert these backend Java requirements into modern Node.js/Express backend requirements.
+                Focus on:
+                1. RESTful API design
+                2. Service layer architecture
+                3. Database integration (MongoDB/PostgreSQL)
+                4. Authentication and authorization
+                5. Error handling and validation
+                6. Microservices patterns
+            """,
+            'frontend': """
+                Convert these JSP/frontend requirements into modern React frontend requirements.
+                Focus on:
+                1. React component architecture
+                2. State management (Redux/Context)
+                3. Routing and navigation
+                4. Form handling and validation
+                5. API integration
+                6. Responsive design
+            """,
+            'data_structures': """
+                Convert these Java data structures into modern data models.
+                Focus on:
+                1. MongoDB schemas or PostgreSQL tables
+                2. TypeScript interfaces
+                3. Data validation schemas
+                4. API request/response models
+                5. Database relationships
+            """,
+            'testing': """
+                Convert these testing requirements into modern testing approaches.
+                Focus on:
+                1. Unit testing (Jest/Mocha)
+                2. Integration testing
+                3. E2E testing (Cypress/Playwright)
+                4. Test data management
+                5. CI/CD testing pipelines
+            """,
+            'batch_processing': """
+                Convert these batch processing requirements into modern cloud-native approaches.
+                Focus on:
+                1. Cloud functions (AWS Lambda/Azure Functions)
+                2. Message queues (RabbitMQ/AWS SQS)
+                3. Scheduled jobs (Cron jobs/Cloud Scheduler)
+                4. Event-driven architecture
+                5. Data processing pipelines
+            """,
+            'operational': """
+                Convert these operational requirements into modern DevOps practices.
+                Focus on:
+                1. Containerization (Docker)
+                2. Orchestration (Kubernetes)
+                3. Monitoring and logging (Prometheus/ELK)
+                4. CI/CD pipelines
+                5. Infrastructure as Code
+                6. Security best practices
+            """
+        }
+        
+        prompt = f"""
+        {category_prompts.get(category, 'Convert these requirements into modern cloud architecture requirements.')}
+        
+        Original requirements for {category}:
+        {json.dumps(unique_requirements, indent=2)}
         
         Provide a structured response with:
         1. Modern Architecture Overview
-        2. Frontend Components (React)
-        3. Backend Services (Node.js)
-        4. API Endpoints
-        5. Data Models
-        6. Security Considerations
+        2. Key Components
+        3. Implementation Guidelines
+        4. Best Practices
+        5. Technology Stack Recommendations
         """
         
         try:
             analysis = await self.ai_provider.create_chat_completion(
                 messages=[
-                    {"role": "system", "content": "You are an expert in modern cloud architecture and application modernization."},
+                    {"role": "system", "content": f"You are an expert in modern {category} architecture and application modernization."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.7,
@@ -113,73 +236,118 @@ class RequirementsProcessor:
                 return json.loads(analysis)
             except json.JSONDecodeError:
                 # If JSON parsing fails, create a structured response from the text
-                print(f"Warning: AI response is not valid JSON, creating structured response from text")
+                print(f"Warning: AI response for {category} is not valid JSON, creating structured response from text")
                 return {
-                    "Modern Architecture Overview": "Generated from AI analysis",
-                    "Frontend Components (React)": "Generated from AI analysis", 
-                    "Backend Services (Node.js)": "Generated from AI analysis",
-                    "API Endpoints": "Generated from AI analysis",
-                    "Data Models": "Generated from AI analysis",
-                    "Security Considerations": "Generated from AI analysis",
+                    "Modern Architecture Overview": f"Generated from AI analysis for {category}",
+                    "Key Components": f"Generated from AI analysis for {category}",
+                    "Implementation Guidelines": f"Generated from AI analysis for {category}",
+                    "Best Practices": f"Generated from AI analysis for {category}",
+                    "Technology Stack Recommendations": f"Generated from AI analysis for {category}",
                     "Raw AI Response": analysis
                 }
                 
         except Exception as e:
-            print(f"Error modernizing requirements: {str(e)}")
-            # Return original content as fallback
+            print(f"Error modernizing {category} requirements: {str(e)}")
             return {
-                "Modern Architecture Overview": "Error occurred during modernization",
-                "Frontend Components (React)": "Error occurred during modernization",
-                "Backend Services (Node.js)": "Error occurred during modernization", 
-                "API Endpoints": "Error occurred during modernization",
-                "Data Models": "Error occurred during modernization",
-                "Security Considerations": "Error occurred during modernization",
-                "Original Content": content
+                "Modern Architecture Overview": f"Error occurred during {category} modernization",
+                "Key Components": f"Error occurred during {category} modernization",
+                "Implementation Guidelines": f"Error occurred during {category} modernization",
+                "Best Practices": f"Error occurred during {category} modernization",
+                "Technology Stack Recommendations": f"Error occurred during {category} modernization",
+                "Original Content": unique_requirements
             }
     
     async def generate_requirements_document(self) -> None:
-        """Generate the final requirements document"""
+        """Generate the final requirements document organized by categories"""
         with open(self.requirements_file, 'w', encoding='utf-8') as f:
             f.write("# Modern Cloud Architecture Requirements\n\n")
             f.write(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+            f.write("## Executive Summary\n\n")
+            f.write("This document provides modern cloud architecture requirements derived from legacy Java/JSP application analysis.\n\n")
             
-            # Process web files first
-            f.write("## Web Application Components\n\n")
-            for file in self.web_files:
-                if file in self.processed_content:
-                    content = self.processed_content[file]
-                    modernized = await self.modernize_requirements(content)
-                    
-                    f.write(f"### {os.path.basename(file)}\n\n")
-                    for section, content in modernized.items():
-                        f.write(f"#### {section}\n\n")
-                        f.write(f"{content}\n\n")
+            # Generate summary statistics
+            total_files = sum(len(config['files']) for config in self.metadata_categories.values())
+            f.write(f"**Total Files Analyzed:** {total_files}\n\n")
             
-            # Process other files
-            f.write("## Additional Components\n\n")
-            for file in self.other_files:
-                if file in self.processed_content:
-                    content = self.processed_content[file]
-                    modernized = await self.modernize_requirements(content)
-                    
-                    f.write(f"### {os.path.basename(file)}\n\n")
-                    for section, content in modernized.items():
-                        f.write(f"#### {section}\n\n")
+            for category, config in self.metadata_categories.items():
+                if config['files']:
+                    f.write(f"- **{category.title()}:** {len(config['files'])} files\n")
+            
+            f.write("\n---\n\n")
+            
+            # Process each category
+            for category, config in self.metadata_categories.items():
+                if not config['files']:
+                    continue
+                
+                f.write(f"## {category.title()} Architecture\n\n")
+                f.write(f"**Files in this category:** {len(config['files'])}\n\n")
+                
+                # Modernize requirements for this category
+                modernized = await self.modernize_requirements_by_category(category, config['requirements'])
+                
+                for section, content in modernized.items():
+                    if section != "Raw AI Response":  # Skip raw response in main document
+                        f.write(f"### {section}\n\n")
                         f.write(f"{content}\n\n")
+                
+                f.write("---\n\n")
+            
+            # Add technology stack summary
+            f.write("## Technology Stack Summary\n\n")
+            f.write("### Recommended Modern Stack\n\n")
+            f.write("- **Frontend:** React.js with TypeScript\n")
+            f.write("- **Backend:** Node.js with Express.js\n")
+            f.write("- **Database:** MongoDB or PostgreSQL\n")
+            f.write("- **Authentication:** JWT with OAuth2\n")
+            f.write("- **Containerization:** Docker\n")
+            f.write("- **Orchestration:** Kubernetes\n")
+            f.write("- **CI/CD:** GitHub Actions or GitLab CI\n")
+            f.write("- **Monitoring:** Prometheus + Grafana\n")
+            f.write("- **Logging:** ELK Stack\n")
+            f.write("- **Testing:** Jest, Cypress\n")
+            f.write("- **API Documentation:** Swagger/OpenAPI\n\n")
+            
+            f.write("### Migration Strategy\n\n")
+            f.write("1. **Phase 1:** Set up modern development environment\n")
+            f.write("2. **Phase 2:** Migrate data models and APIs\n")
+            f.write("3. **Phase 3:** Develop new frontend components\n")
+            f.write("4. **Phase 4:** Implement testing and CI/CD\n")
+            f.write("5. **Phase 5:** Deploy to cloud infrastructure\n")
     
     async def process_all_files(self) -> None:
-        """Process all markdown files and generate requirements"""
-        # Process web files first
-        for file in self.web_files:
-            full_path = os.path.join(self.requirements_dir, file)
-            if os.path.exists(full_path):
-                self.processed_content[file] = self.process_markdown_file(full_path)
+        """Process all markdown files and categorize requirements"""
+        # Process files by category
+        for category, config in self.metadata_categories.items():
+            print(f"Processing {category} category...")
+            
+            for file in config['files']:
+                full_path = os.path.join(self.requirements_dir, file)
+                if os.path.exists(full_path):
+                    content = self.process_markdown_file(full_path)
+                    config['requirements'].append({
+                        'file': file,
+                        'content': content,
+                        'category': category
+                    })
         
         # Process other files
         for file in self.other_files:
             full_path = os.path.join(self.requirements_dir, file)
             if os.path.exists(full_path):
-                self.processed_content[file] = self.process_markdown_file(full_path)
+                content = self.process_markdown_file(full_path)
+                # Add to appropriate category or create 'other' category
+                if 'other' not in self.metadata_categories:
+                    self.metadata_categories['other'] = {
+                        'keywords': [],
+                        'files': [],
+                        'requirements': []
+                    }
+                self.metadata_categories['other']['requirements'].append({
+                    'file': file,
+                    'content': content,
+                    'category': 'other'
+                })
         
         # Generate final requirements document
         await self.generate_requirements_document()
@@ -196,7 +364,8 @@ async def main():
     processor.load_index(index_file)
     await processor.process_all_files()
     
-    print(f"Requirements document generated at: {processor.requirements_file}")
+    print(f"Modern requirements document generated at: {processor.requirements_file}")
+    print("Document is organized by metadata categories to avoid duplication.")
 
 if __name__ == "__main__":
     import asyncio

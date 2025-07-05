@@ -18,6 +18,7 @@ class RequirementsAnalyzer:
         
         self.output_dir = output_dir
         self.chroma_connector = ChromaDBConnector()
+        self.java_source_dir = Path(os.getenv('JAVA_SOURCE_DIR', './infra/cuco')) # Default to a sensible path
         
     def analyze_layer(self, layer_name: str, components: List[Dict]) -> Dict[str, Any]:
         """Analyze a specific layer and generate structured information"""
@@ -82,6 +83,23 @@ class RequirementsAnalyzer:
             logger.error(f"Error analyzing {layer_name} layer: {str(e)}")
             raise
     
+    def _get_unique_filepath(self, base_path: Path) -> Path:
+        """Generates a unique filepath by appending a number if the file already exists."""
+        if not base_path.exists():
+            return base_path
+        
+        stem = base_path.stem
+        suffix = base_path.suffix
+        parent = base_path.parent
+        
+        counter = 1
+        while True:
+            new_name = f"{stem}-{counter}{suffix}"
+            new_path = parent / new_name
+            if not new_path.exists():
+                return new_path
+            counter += 1
+
     def generate_layer_documentation(self, analysis: Dict[str, Any]) -> str:
         """Generate markdown documentation for a layer based on analysis"""
         doc = f"# Requirements Document: {analysis['name'].title()} Layer\n\n"
@@ -179,53 +197,102 @@ class RequirementsAnalyzer:
         logger.info("Starting requirements analysis and documentation generation")
         
         try:
-            # Create output directory
-            doc_dir = Path(self.output_dir) / "documentation"
-            doc_dir.mkdir(parents=True, exist_ok=True)
-            
-            # Group by layer
-            layers = {
-                'database': [],
-                'backend': [],
-                'presentation': [],
-                'configuration': []
-            }
-            
-            for item in metadata_list:
-                file_type = item.get('file_type', '').lower()
-                if 'sql' in file_type or 'database' in file_type:
-                    layers['database'].append(item)
-                elif 'java' in file_type or 'class' in file_type:
-                    layers['backend'].append(item)
-                elif any(x in file_type for x in ['jsp', 'html', 'js', 'css']):
-                    layers['presentation'].append(item)
-                elif any(x in file_type for x in ['xml', 'properties', 'config']):
-                    layers['configuration'].append(item)
+            # Create base output directory for documentation
+            base_doc_dir = Path(self.output_dir) / "documentation"
+            base_doc_dir.mkdir(parents=True, exist_ok=True)
             
             # Generate timestamp for this documentation set
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             
-            # Analyze each layer and generate documentation
-            analyses = []
-            for layer_name, components in layers.items():
-                if components:
-                    # Analyze layer
-                    analysis = self.analyze_layer(layer_name, components)
-                    analyses.append(analysis)
+            all_analyses = [] # To collect all individual file analyses for the index
+            
+            for item in metadata_list:
+                file_path_str = item.get('file_path')
+                if not file_path_str:
+                    logger.warning(f"Skipping item with no file_path: {item}")
+                    continue
+                
+                try:
+                    original_file_path = Path(file_path_str)
                     
-                    # Generate and save layer documentation
-                    doc_content = self.generate_layer_documentation(analysis)
-                    output_file = doc_dir / f"{layer_name}_requirements_{timestamp}.md"
-                    with open(output_file, 'w') as f:
+                    # Determine relative path from JAVA_SOURCE_DIR
+                    relative_path = original_file_path.relative_to(self.java_source_dir)
+                    
+                    # Construct output directory path mirroring source structure
+                    output_sub_dir = base_doc_dir / relative_path.parent
+                    output_sub_dir.mkdir(parents=True, exist_ok=True)
+                    
+                    # Base filename for the requirement document
+                    # Use the original file stem and add .md extension
+                    base_filename = f"{original_file_path.stem}.md"
+                    
+                    # Construct the full base path for the new document
+                    base_output_file_path = output_sub_dir / base_filename
+                    
+                    # Get a unique file path to prevent overwriting
+                    unique_output_file_path = self._get_unique_filepath(base_output_file_path)
+                    
+                    # Generate documentation for this single file
+                    # For now, we'll use a simplified analysis for individual files
+                    # This part needs to be refined based on how detailed individual file docs should be
+                    
+                    # Create a dummy analysis for the single file for now
+                    # In a real scenario, you'd call a method to analyze this single file's metadata
+                    # and format it into a document.
+                    
+                    # For demonstration, let's just put the AI analysis directly if available
+                    file_analysis_content = ""
+                    if 'ai_analysis' in item and isinstance(item['ai_analysis'], dict):
+                        file_analysis_content = json.dumps(item['ai_analysis'], indent=2)
+                    elif 'ai_analysis' in item:
+                        file_analysis_content = str(item['ai_analysis'])
+                    else:
+                        file_analysis_content = "No AI analysis available for this file."
+                    
+                    doc_content = f"# Requirements for {original_file_path.name}\n\n"
+                    doc_content += f"## Original Path: {file_path_str}\n\n"
+                    doc_content += f"## File Type: {item.get('file_type', 'Unknown')}\n\n"
+                    doc_content += f"## AI Analysis\n\n```json\n{file_analysis_content}\n```\n"
+                    
+                    with open(unique_output_file_path, 'w') as f:
                         f.write(doc_content)
-                    logger.info(f"Generated documentation for {layer_name} layer: {output_file}")
+                    logger.info(f"Generated documentation for {file_path_str}: {unique_output_file_path}")
+                    
+                    # Add this file's info to all_analyses for the index document
+                    all_analyses.append({
+                        'name': original_file_path.name,
+                        'path': str(unique_output_file_path.relative_to(base_doc_dir)),
+                        'original_path': file_path_str,
+                        'file_type': item.get('file_type', 'Unknown'),
+                        'purpose': item.get('ai_analysis', {}).get('purpose', 'N/A')
+                    })
+                    
+                except Exception as e:
+                    logger.error(f"Error processing file {file_path_str}: {str(e)}")
+                    # Continue to next file even if one fails
             
             # Generate and save index document
-            index_content = self.generate_index_document(analyses, timestamp)
-            with open(doc_dir / f"index_{timestamp}.md", 'w') as f:
+            # The index document generation needs to be adapted to the new structure
+            # For now, a simplified index will be generated
+            index_content = self.generate_new_index_document(all_analyses, timestamp)
+            with open(base_doc_dir / f"index_{timestamp}.md", 'w') as f:
                 f.write(index_content)
             logger.info("Generated main index document")
             
         except Exception as e:
             logger.error(f"Error during requirements analysis: {str(e)}")
-            raise 
+            raise
+            
+    def generate_new_index_document(self, analyses: List[Dict[str, Any]], timestamp: str) -> str:
+        """Generate a new index document for file-based requirements"""
+        doc = "# Application Requirements Documentation Index\n\n"
+        doc += f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+        
+        doc += "## Documented Files\n\n"
+        for analysis_item in analyses:
+            doc += f"- [{analysis_item['name']}]({analysis_item['path']})\n"
+            doc += f"  - Original Path: {analysis_item['original_path']}\n"
+            doc += f"  - File Type: {analysis_item['file_type']}\n"
+            doc += f"  - Purpose: {analysis_item['purpose']}\n"
+        
+        return doc 

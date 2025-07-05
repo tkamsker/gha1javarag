@@ -22,6 +22,22 @@ class RequirementsProcessor:
         self.md_dir = Path(self.output_dir) / "requirements"
         self.md_dir.mkdir(parents=True, exist_ok=True)
         
+        # Create subfolder structure for organizing requirements
+        self.subfolders = {
+            'backend': self.md_dir / 'backend',
+            'frontend': self.md_dir / 'frontend', 
+            'data': self.md_dir / 'data',
+            'config': self.md_dir / 'config',
+            'testing': self.md_dir / 'testing',
+            'batch': self.md_dir / 'batch',
+            'operational': self.md_dir / 'operational',
+            'other': self.md_dir / 'other'
+        }
+        
+        # Create all subfolders
+        for folder in self.subfolders.values():
+            folder.mkdir(parents=True, exist_ok=True)
+        
         # Enhanced rate limiting settings
         rate_config = RateLimitConfig(
             requests_per_minute=15,  # Reduced from 20
@@ -100,6 +116,48 @@ class RequirementsProcessor:
             if re.search(pattern, file_path, re.IGNORECASE):
                 return True
         return False
+
+    def determine_subfolder(self, file_path: str) -> str:
+        """Determine which subfolder a file should go into based on its path and content"""
+        file_path_lower = file_path.lower()
+        
+        # Check for specific patterns in the path
+        if any(pattern in file_path_lower for pattern in ['web/', 'jsp', 'html', 'css', 'js']):
+            return 'frontend'
+        elif any(pattern in file_path_lower for pattern in ['dao/', 'service/', 'controller/', 'repository/']):
+            return 'backend'
+        elif any(pattern in file_path_lower for pattern in ['sql', 'database', 'entity/', 'model/']):
+            return 'data'
+        elif any(pattern in file_path_lower for pattern in ['config/', 'properties', 'xml', 'yaml']):
+            return 'config'
+        elif any(pattern in file_path_lower for pattern in ['test/', 'spec/', 'mock/']):
+            return 'testing'
+        elif any(pattern in file_path_lower for pattern in ['batch/', 'job/', 'scheduler/']):
+            return 'batch'
+        elif any(pattern in file_path_lower for pattern in ['log', 'monitor', 'admin/', 'ops/']):
+            return 'operational'
+        else:
+            return 'other'
+
+    def organize_files_by_category(self, files_batch: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
+        """Organize files into categories based on their paths and content"""
+        categorized_files = {
+            'backend': [],
+            'frontend': [],
+            'data': [],
+            'config': [],
+            'testing': [],
+            'batch': [],
+            'operational': [],
+            'other': []
+        }
+        
+        for file_meta in files_batch:
+            file_path = file_meta.get('file_path', '')
+            category = self.determine_subfolder(file_path)
+            categorized_files[category].append(file_meta)
+        
+        return categorized_files
 
     async def analyze_files_batch(self, files_batch: List[Dict[str, Any]]) -> None:
         """Analyze multiple files in a single API call with enhanced rate limiting"""
@@ -189,26 +247,54 @@ Format your response as:
                         self.processed_files.add(file_meta.get('file_path', ''))
 
     async def parse_batch_response(self, analysis: str, files_batch: List[Dict[str, Any]]) -> None:
-        """Parse the batch response and create individual markdown files"""
+        """Parse the batch response and create individual markdown files organized in subfolders"""
         # Split by file sections
         sections = re.split(r'## File:\s*', analysis)
         
-        for i, file_meta in enumerate(files_batch):
-            file_path = file_meta.get('file_path', '')
-            md_filename = f"{Path(file_path).stem}.md"
-            md_path = self.md_dir / md_filename
+        # Organize files by category
+        categorized_files = self.organize_files_by_category(files_batch)
+        
+        for category, category_files in categorized_files.items():
+            if not category_files:
+                continue
+                
+            logger.info(f"Processing {len(category_files)} files for category: {category}")
             
-            # Get the corresponding section content
-            if i + 1 < len(sections):
-                section_content = sections[i + 1].strip()
-            else:
-                section_content = "Analysis not available for this file."
-            
-            with open(md_path, 'w') as f:
-                f.write(f"# Requirements Analysis: {file_path}\n\n")
-                f.write(section_content)
-            
-            logger.debug(f"Generated requirements document: {md_path}")
+            for i, file_meta in enumerate(category_files):
+                file_path = file_meta.get('file_path', '')
+                md_filename = f"{Path(file_path).stem}.md"
+                
+                # Use the appropriate subfolder
+                target_folder = self.subfolders[category]
+                md_path = target_folder / md_filename
+                
+                # Find corresponding analysis section
+                analysis_content = ""
+                for section in sections[1:]:  # Skip first empty section
+                    if file_path in section or Path(file_path).stem in section:
+                        analysis_content = section.strip()
+                        break
+                
+                if analysis_content:
+                    # Create markdown content with category header
+                    md_content = f"""# {Path(file_path).name}
+
+**Category:** {category.title()}
+**Original Path:** {file_path}
+**File Type:** {file_meta.get('file_type', 'Unknown')}
+
+{analysis_content}
+
+---
+*Generated by AI Analysis - {time.strftime('%Y-%m-%d %H:%M:%S')}*
+"""
+                    
+                    with open(md_path, 'w', encoding='utf-8') as f:
+                        f.write(md_content)
+                    
+                    logger.info(f"Created: {md_path}")
+                else:
+                    logger.warning(f"No analysis content found for: {file_path}")
 
     async def process_files_with_batching(self) -> None:
         """Process files in batches to reduce API calls"""
@@ -233,20 +319,38 @@ Format your response as:
             logger.info(f"Progress: {processed_count}/{total_count} files processed")
 
     def generate_index(self) -> None:
-        """Generate index file with links to all requirements documents"""
-        index_path = self.md_dir / "step2_index.md"
+        """Generate an index file for all subfolders"""
+        index_content = "# Requirements Documentation Index\n\n"
+        index_content += f"Generated on: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
         
-        with open(index_path, 'w') as f:
-            f.write("# Requirements Documentation Index\n\n")
-            f.write(f"Total files processed: {len(self.processed_files)}\n\n")
-            f.write("## Requirements Documents\n\n")
+        # Generate index for each subfolder
+        for category, folder in self.subfolders.items():
+            index_content += f"## {category.title()} Components\n\n"
             
-            # Sort files for consistent ordering
-            for file_path in sorted(self.processed_files):
-                md_filename = f"{Path(file_path).stem}.md"
-                f.write(f"- [{file_path}](./{md_filename})\n")
+            # Get all markdown files in this folder
+            md_files = list(folder.glob("*.md"))
+            if md_files:
+                for md_file in sorted(md_files):
+                    index_content += f"- [{md_file.stem}]({category}/{md_file.name})\n"
+            else:
+                index_content += f"- No files in {category} category\n"
+            
+            index_content += "\n"
         
-        logger.info(f"Generated index file: {index_path}")
+        # Add summary statistics
+        total_files = sum(len(list(folder.glob("*.md"))) for folder in self.subfolders.values())
+        index_content += f"## Summary\n\n"
+        index_content += f"- **Total Files:** {total_files}\n"
+        for category, folder in self.subfolders.items():
+            file_count = len(list(folder.glob("*.md")))
+            index_content += f"- **{category.title()}:** {file_count} files\n"
+        
+        # Save index file
+        index_file = self.md_dir / "step2_index.md"
+        with open(index_file, 'w', encoding='utf-8') as f:
+            f.write(index_content)
+        
+        logger.info(f"Generated organized index: {index_file}")
 
 async def generate_requirements():
     """Main function to generate requirements documentation"""
