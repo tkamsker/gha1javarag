@@ -56,9 +56,20 @@ class RequirementsProcessor:
             }
         }
         
-        # Initialize AI provider using the same pattern as main.py
-        self.ai_provider = create_ai_provider()
-        print(f"Using {self.ai_provider.get_provider_name()} provider with model: {self.ai_provider.get_model_name()}")
+        # Initialize AI provider lazily (only when needed)
+        self.ai_provider = None
+        
+    def _get_ai_provider(self):
+        """Get AI provider, initializing it if needed"""
+        if self.ai_provider is None:
+            try:
+                self.ai_provider = create_ai_provider()
+                print(f"Using {self.ai_provider.get_provider_name()} provider with model: {self.ai_provider.get_model_name()}")
+            except Exception as e:
+                print(f"Warning: Could not initialize AI provider: {str(e)}")
+                print("Will generate requirements without AI modernization")
+                return None
+        return self.ai_provider
         
     def categorize_file(self, file_path: str) -> str:
         """Categorize a file based on its path and content"""
@@ -73,6 +84,10 @@ class RequirementsProcessor:
     
     def load_index(self, index_file: str) -> None:
         """Load and parse the step2_index.md file with categorization"""
+        if not os.path.exists(index_file):
+            print(f"Warning: Index file not found at {index_file}")
+            return
+            
         with open(index_file, 'r', encoding='utf-8') as f:
             content = f.read()
             
@@ -96,31 +111,35 @@ class RequirementsProcessor:
     
     def process_markdown_file(self, file_path: str) -> dict:
         """Process a single markdown file and extract requirements"""
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-            
-        # Convert markdown to HTML for better parsing
-        html = markdown.markdown(content)
-        soup = BeautifulSoup(html, 'html.parser')
-        
-        # Extract sections
-        sections = {}
-        current_section = None
-        current_content = []
-        
-        for element in soup.find_all(['h1', 'h2', 'h3', 'p', 'ul', 'ol']):
-            if element.name in ['h1', 'h2', 'h3']:
-                if current_section:
-                    sections[current_section] = '\n'.join(current_content)
-                current_section = element.get_text().strip()
-                current_content = []
-            else:
-                current_content.append(element.get_text().strip())
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
                 
-        if current_section:
-            sections[current_section] = '\n'.join(current_content)
+            # Convert markdown to HTML for better parsing
+            html = markdown.markdown(content)
+            soup = BeautifulSoup(html, 'html.parser')
             
-        return sections
+            # Extract sections
+            sections = {}
+            current_section = None
+            current_content = []
+            
+            for element in soup.find_all(['h1', 'h2', 'h3', 'p', 'ul', 'ol']):
+                if element.name in ['h1', 'h2', 'h3']:
+                    if current_section:
+                        sections[current_section] = '\n'.join(current_content)
+                    current_section = element.get_text().strip()
+                    current_content = []
+                else:
+                    current_content.append(element.get_text().strip())
+                    
+            if current_section:
+                sections[current_section] = '\n'.join(current_content)
+                
+            return sections
+        except Exception as e:
+            print(f"Error processing file {file_path}: {str(e)}")
+            return {"Error": f"Could not process file: {str(e)}"}
     
     def deduplicate_requirements(self, requirements_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Remove duplicate requirements based on content similarity"""
@@ -145,6 +164,18 @@ class RequirementsProcessor:
         
         # Deduplicate requirements first
         unique_requirements = self.deduplicate_requirements(requirements)
+        
+        # Check if AI provider is available
+        ai_provider = self._get_ai_provider()
+        if ai_provider is None:
+            # Fallback: create basic structure without AI
+            return {
+                "Modern Architecture Overview": f"Basic modernization for {category} (AI not available)",
+                "Key Components": f"Components from {len(unique_requirements)} files in {category}",
+                "Implementation Guidelines": "Review original requirements for implementation details",
+                "Best Practices": "Follow modern development practices for the technology stack",
+                "Technology Stack Recommendations": "Consider React/Node.js for modernization"
+            }
         
         # Create category-specific prompt
         category_prompts = {
@@ -222,7 +253,7 @@ class RequirementsProcessor:
         """
         
         try:
-            analysis = await self.ai_provider.create_chat_completion(
+            analysis = await ai_provider.create_chat_completion(
                 messages=[
                     {"role": "system", "content": f"You are an expert in modern {category} architecture and application modernization."},
                     {"role": "user", "content": prompt}
@@ -359,6 +390,7 @@ async def main():
     index_file = os.path.join(processor.requirements_dir, "step2_index.md")
     if not os.path.exists(index_file):
         print(f"Error: Index file not found at {index_file}")
+        print("Please run step2.py first to generate the requirements index.")
         return
         
     processor.load_index(index_file)
