@@ -57,8 +57,8 @@ class EnhancedChromaDBConnector:
         self.collection = self.client.get_or_create_collection(name=collection_name)
         logger.info(f"Using collection: {collection_name}")
 
-    def store_enhanced_metadata(self, file_path: str, content: str, ai_analysis: Dict[str, Any] = None) -> None:
-        """Store enhanced metadata with intelligent code chunking"""
+    def store_enhanced_metadata(self, file_path: str, content: str, ai_analysis: Dict[str, Any] = None, enhanced_analysis: Dict[str, Any] = None) -> None:
+        """Store enhanced metadata with intelligent code chunking and classification"""
         try:
             # Get the source directory from environment variable
             java_source_dir = os.getenv('JAVA_SOURCE_DIR', '.')
@@ -155,6 +155,23 @@ class EnhancedChromaDBConnector:
                     'ai_analysis': json.dumps(ai_analysis) if ai_analysis else ''
                 }
                 
+                # Add enhanced classification metadata if available
+                if enhanced_analysis:
+                    file_classification = enhanced_analysis.get('file_classification', {})
+                    metadata.update({
+                        'architectural_layer': file_classification.get('architectural_layer', 'unknown'),
+                        'component_type': file_classification.get('component_type', 'unknown'),
+                        'confidence_score': str(file_classification.get('confidence_score', 0.0)),
+                        'technology_stack': json.dumps(file_classification.get('technology_stack', [])),
+                        'design_patterns': json.dumps(file_classification.get('design_patterns', [])),
+                        'primary_purpose': file_classification.get('primary_purpose', ''),
+                        'business_domain': file_classification.get('business_domain', ''),
+                        'exposes_api': str(file_classification.get('exposes_api', False)),
+                        'consumes_api': str(file_classification.get('consumes_api', False)),
+                        'database_interactions': str(file_classification.get('database_interactions', False)),
+                        'enhanced_ai_analysis': json.dumps(enhanced_analysis)
+                    })
+                
                 documents.append(chunk_content)
                 metadatas.append(metadata)
                 ids.append(chunk.chunk_id or f"{file_path}:chunk:{len(ids)+1}")
@@ -221,6 +238,118 @@ class EnhancedChromaDBConnector:
         """Query documents by class name"""
         return self.query_enhanced_similar(f"class {class_name}", n_results, 
                                          filters={'class_name': class_name})
+
+    def query_by_architectural_layer(self, layer: str, n_results: int = 10) -> Dict[str, Any]:
+        """Query documents by architectural layer"""
+        return self.query_enhanced_similar("", n_results, filters={'architectural_layer': layer})
+
+    def query_by_component_type(self, component_type: str, n_results: int = 10) -> Dict[str, Any]:
+        """Query documents by component type"""
+        return self.query_enhanced_similar("", n_results, filters={'component_type': component_type})
+
+    def query_by_technology_stack(self, technology: str, n_results: int = 10) -> Dict[str, Any]:
+        """Query documents by technology stack (searches within JSON array)"""
+        # This is a workaround since ChromaDB doesn't support nested JSON searches well
+        # We'll get all results and filter in Python
+        all_results = self.collection.get(include=['metadatas'])
+        matching_ids = []
+        
+        for i, metadata in enumerate(all_results['metadatas']):
+            tech_stack_json = metadata.get('technology_stack', '[]')
+            try:
+                tech_stack = json.loads(tech_stack_json)
+                if technology.lower() in [tech.lower() for tech in tech_stack]:
+                    matching_ids.append(all_results['ids'][i])
+            except (json.JSONDecodeError, AttributeError):
+                continue
+        
+        if not matching_ids:
+            return {'documents': [[]], 'metadatas': [[]], 'distances': [[]]}
+        
+        # Get the matching documents
+        return self.collection.get(ids=matching_ids[:n_results], include=['documents', 'metadatas'])
+
+    def query_by_business_domain(self, domain: str, n_results: int = 10) -> Dict[str, Any]:
+        """Query documents by business domain"""
+        return self.query_enhanced_similar("", n_results, filters={'business_domain': domain})
+
+    def query_files_with_api_exposure(self, n_results: int = 10) -> Dict[str, Any]:
+        """Query files that expose APIs"""
+        return self.query_enhanced_similar("", n_results, filters={'exposes_api': 'True'})
+
+    def query_files_with_database_interactions(self, n_results: int = 10) -> Dict[str, Any]:
+        """Query files that interact with database"""
+        return self.query_enhanced_similar("", n_results, filters={'database_interactions': 'True'})
+
+    def search_documents(self, query: str, n_results: int = 5) -> List[Dict[str, Any]]:
+        """Search documents and return as list of dictionaries (for backwards compatibility)"""
+        try:
+            # Use the existing query_enhanced_similar method
+            results = self.query_enhanced_similar(query, n_results)
+            
+            # Convert to list format expected by step2_debug.py
+            document_list = []
+            if results and results.get('documents') and results['documents'][0]:
+                for i, doc in enumerate(results['documents'][0]):
+                    metadata = results['metadatas'][0][i] if results['metadatas'] and results['metadatas'][0] else {}
+                    
+                    # Create a document dictionary with both content and metadata
+                    doc_dict = {
+                        'content': doc,
+                        'file_path': metadata.get('file_path', ''),
+                        'language': metadata.get('language', 'unknown'),
+                        'chunk_type': metadata.get('chunk_type', 'unknown'),
+                        'function_name': metadata.get('function_name', ''),
+                        'class_name': metadata.get('class_name', ''),
+                        'start_line': metadata.get('start_line', '1'),
+                        'end_line': metadata.get('end_line', '1'),
+                        'complexity_score': metadata.get('complexity_score', '1.0'),
+                        'architectural_layer': metadata.get('architectural_layer', 'unknown'),
+                        'component_type': metadata.get('component_type', 'unknown'),
+                        'file_type': self._get_file_type_from_path(metadata.get('file_path', ''))
+                    }
+                    
+                    # Add AI analysis if available
+                    if metadata.get('ai_analysis'):
+                        try:
+                            ai_analysis = json.loads(metadata['ai_analysis'])
+                            doc_dict['ai_analysis'] = ai_analysis
+                        except (json.JSONDecodeError, TypeError):
+                            pass
+                    
+                    # Add enhanced analysis if available
+                    if metadata.get('enhanced_ai_analysis'):
+                        try:
+                            enhanced_analysis = json.loads(metadata['enhanced_ai_analysis'])
+                            doc_dict['enhanced_analysis'] = enhanced_analysis
+                        except (json.JSONDecodeError, TypeError):
+                            pass
+                    
+                    document_list.append(doc_dict)
+            
+            logger.debug(f"Search for '{query}' returned {len(document_list)} documents")
+            return document_list
+            
+        except Exception as e:
+            logger.error(f"Error in search_documents: {str(e)}")
+            return []
+
+    def _get_file_type_from_path(self, file_path: str) -> str:
+        """Get file type based on file extension"""
+        ext = Path(file_path).suffix.lower()
+        type_mapping = {
+            '.java': 'Java source file',
+            '.jsp': 'Java Server Page',
+            '.xml': 'XML configuration',
+            '.html': 'HTML file',
+            '.js': 'JavaScript file',
+            '.css': 'CSS file',
+            '.sql': 'SQL script',
+            '.properties': 'Properties file',
+            '.txt': 'Text file',
+            '.md': 'Markdown file'
+        }
+        return type_mapping.get(ext, 'Unknown file type')
 
     def get_chunk_statistics(self) -> Dict[str, Any]:
         """Get statistics about stored chunks"""

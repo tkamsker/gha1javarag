@@ -101,6 +101,7 @@ class TechnologyStack(str, Enum):
     HIBERNATE = "hibernate"
     JPA = "jpa"
     MYBATIS = "mybatis"
+    IBATIS = "ibatis"
     JSF = "jsf"
     STRUTS = "struts"
     SERVLET_API = "servlet_api"

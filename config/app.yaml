@@ -1,6 +1,6 @@
 chromadb:
   persist_directory: "./data/chromadb"
-  collection_name: "java_analysis"
+  collection_name: "enhanced_java_analysis"
   
 openai:
   temperature: 0.2
