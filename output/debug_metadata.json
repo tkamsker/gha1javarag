@@ -1,0 +1,489 @@
+[
+  {
+    "file_path": "cuco/pom.xml",
+    "absolute_path": "/Users/thomaskamsker/Documents/Atom/vron.one/playground/java/cuco/pom.xml",
+    "file_type": "XML configuration",
+    "extension": ".xml",
+    "size_bytes": 28588,
+    "content": "<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\">\n  <modelVersion>4.0.0</modelVersion>\n  <parent>\n    <artifactId>cuco.pom</artifactId>\n    <groupId>at.a1ta.cuco</groupId>\n    <version>2025.03.01</version>\n  </parent>\n\n  <artifactId>cuco</artifactId>\n  <packaging>war</packaging>\n\n  <dependencies>\n    <dependency>\n      <groupId>at.a1ta.cuco</groupId>\n      <artifactId>cuco-ui-app</artifactId>\n    </dependency>\n    <dependency>\n      <groupId>at.a1ta.cuco</groupId>\n      <artifactId>cuco-ui-mycuco</artifactId>\n    </dependency>\n    <dependency>\n      <groupId>at.a1ta.cuco</groupId>\n      <artifactId>cuco-ui-admin</artifactId>\n    </dependency>\n    <dependency>\n      <groupId>at.a1ta.cuco</groupId>\n      <artifactId>cuco-ui-pkb</artifactId>\n    </dependency>\n    <dependency>\n      <groupId>commons-collections</groupId>\n      <artifactId>commons-collections</artifactId>\n      <version>3.2.1</version>\n    </dependency>\n    <dependency>\n      <groupId>org.codehaus.janino</groupId>\n      <artifactId>janino</artifactId>\n      <version>2.7.5</version>\n    </dependency>\n\n    <dependency>\n      <groupId>com.google.gwt</groupId>\n      <artifactId>gwt-servlet</artifactId>\n      <scope>runtime</scope>\n    </dependency>\n    <dependency>\n      <groupId>com.google.gwt</groupId>\n      <artifactId>gwt-user</artifactId>\n      <scope>provided</scope>\n    </dependency>\n  </dependencies>\n\n  <properties>\n    <webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>\n    <application.version>${project.version}</application.version>\n    <buildNumber>DEV</buildNumber>\n  </properties>\n\n  <build>\n    <plugins>\n      <plugin>\n        <groupId>org.codehaus.mojo</groupId>\n        <artifactId>gwt-maven-plugin</artifactId>\n        <executions>\n          <execution>\n            <configuration>\n              <extraJvmArgs>-Xmx4096m -Xms1024M -Dgwt.usearchives=false -Djava.io.tmpdir=${project.build.directory}</extraJvmArgs>\n            </configuration>\n            <goals>\n              <goal>resources</goal>\n              <goal>compile</goal>\n            </goals>\n          </execution>\n        </executions>\n      </plugin>\n      <plugin>\n        <groupId>org.codehaus.mojo</groupId>\n        <artifactId>buildnumber-maven-plugin</artifactId>\n        <version>1.1</version>\n        <executions>\n          <execution>\n            <phase>validate</phase>\n            <goals>\n              <goal>create</goal>\n            </goals>\n          </execution>\n        </executions>\n        <configuration>\n          <revisionOnScmFailure>local-scm</revisionOnScmFailure>\n          <doCheck>false</doCheck>\n          <doUpdate>false</doUpdate>\n          <providerImplementations>\n            <svn>javasvn</svn>\n          </providerImplementations>\n        </configuration>\n      </plugin>\n      <plugin>\n        <groupId>org.apache.maven.plugins</groupId>\n        <artifactId>maven-release-plugin</artifactId>\n        <version>2.2.1</version>\n        <configuration>\n          <workingDirectory>./${project.artifactId}</workingDirectory>\n        </configuration>\n      </plugin>\n\n    </plugins>\n\n    <finalName>cuco</finalName>\n    <!-- Generate compiled stuff in the folder used for developing mode -->\n    <outputDirectory>${webappDirectory}/WEB-INF/classes</outputDirectory>\n    <pluginManagement>\n      <plugins>\n        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->\n        <plugin>\n          <groupId>org.eclipse.m2e</groupId>\n          <artifactId>lifecycle-mapping</artifactId>\n          <version>1.0.0</version>\n          <configuration>\n            <lifecycleMappingMetadata>\n              <pluginExecutions>\n                <pluginExecution>\n                  <pluginExecutionFilter>\n                    <groupId>org.codehaus.mojo</groupId>\n                    <artifactId>gwt-maven-plugin</artifactId>\n                    <versionRange>[2.5.1,)</versionRange>\n                    <goals>\n                      <goal>resources</goal>\n                    </goals>\n                  </pluginExecutionFilter>\n                  <action>\n                    <ignore></ignore>\n                  </action>\n                </pluginExecution>\n              </pluginExecutions>\n            </lifecycleMappingMetadata>\n          </configuration>\n        </plugin>\n      </plugins>\n    </pluginManagement>\n  </build>\n\n  <profiles>\n    <profile>\n      <id>untrusted</id>\n      <activation>\n        <property>\n          <name>spring.profile</name>\n          <value>UNTRUSTED</value>\n        </property>\n      </activation>\n      <build>\n        <plugins>\n          <plugin>\n            <artifactId>maven-war-plugin</artifactId>\n            <configuration>\n              <packagingExcludes>\n                admin.html,\n                pkb.html\n              </packagingExcludes>\n            </configuration>\n          </plugin>\n        </plugins>\n      </build>\n    </profile>\n    <profile>\n      <id>jenkins</id>\n      <activation>\n        <property>\n          <name>BUILD_NUMBER</name>\n        </property>\n      </activation>\n      <build>\n        <plugins>\n          <plugin>\n            <groupId>org.apache.maven.plugins</groupId>\n            <artifactId>maven-antrun-plugin</artifactId>\n            <version>1.7</version>\n            <executions>\n              <execution>\n                <phase>generate-resources</phase>\n                <configuration>\n                  <target>\n                    <copy file=\"src/main/filters/gwt/AdminStarter.gwt.xml\" tofile=\"src/main/resources/at/a1ta/cuco/admin/starter/AdminStarter.gwt.xml\" />\n                    <copy file=\"src/main/filters/gwt/AppStarter.gwt.xml\" tofile=\"src/main/resources/at/a1ta/cuco/app/starter/AppStarter.gwt.xml\" />\n                    <copy file=\"src/main/filters/gwt/MyCuCoStarter.gwt.xml\" tofile=\"src/main/resources/at/a1ta/cuco/mycuco/starter/MyCuCoStarter.gwt.xml\" />\n                    <copy file=\"src/main/filters/gwt/PkbStarter.gwt.xml\" tofile=\"src/main/resources/at/a1ta/pkb/starter/PkbStarter.gwt.xml\" />\n                  </target>\n                </configuration>\n                <goals>\n                  <goal>run</goal>\n                </goals>\n              </execution>\n            </executions>\n          </plugin>\n        </plugins>\n      </build>\n    </profile>\n    \n    <profile>\n      <id>deployDev</id>\n      <activation>\n        <property>\n          <name>env</name>\n          <value>dev</value>\n        </property>\n      </activation>\n      <build>\n        <filters>\n          <filter>src/main/filters/configuration.dev11.properties</filter>\n        </filters>\n        <plugins>\n          <!-- plugin>\n            <groupId>org.codehaus.mojo</groupId>\n            <artifactId>wagon-maven-plugin</artifactId>\n            <version>2.0.0</version>\n            <executions>\n              <execution>\n                <phase>install</phase>\n                <goals>\n                  <goal>sshexec</goal>\n                </goals>\n                <configuration>\n                  <runIf>{{ true }}</runIf>\n                  <location>scp://tomcat:bqNkUS3$@vlcucod001.at.inside:/srv/tomcat7_jvm1/bin</location>\n                  <echoCommands>true</echoCommands>\n                  <commands>\n                    <command>./shutdown-jvm1.sh</command>\n                    <command>sleep 60</command>\n                    <command>cd ../webapps</command>\n                    <command>rm -rf ROOT</command>\n                    <command>rm ../webapps-old/ROOT.war.old</command>\n                    <command>mv ROOT.war ../webapps-old/ROOT.war.old</command>\n                    <command>cd ../bin</command>\n                    <command>./startup-jvm1.sh</command>\n                    <command>sleep 90</command>\n                  </commands>\n                  <failOnError>false</failOnError>\n                </configuration>\n              </execution>\n            </executions> \n          </plugin-->\n          <plugin>\n            <groupId>org.apache.tomcat.maven</groupId>\n            <artifactId>tomcat7-maven-plugin</artifactId>\n            <version>2.2</version>\n            <configuration>\n              <url>http://vlcucod001.at.inside:7180/manager/text</url>\n              <server>tomcat-dev</server>\n              <path>/</path>\n              <username>admin2</username>\n              <password>ultrix</password>\n            </configuration>\n            <executions>\n              <execution>\n                <phase>install</phase>\n                <goals>\n                  <goal>deploy</goal>\n                </goals>\n              </execution>\n            </executions>\n          </plugin>\n          <plugin>\n            <groupId>org.apache.maven.plugins</groupId>\n            <artifactId>maven-release-plugin</artifactId>\n            <version>2.2.1</version>\n            <configuration>\n              <workingDirectory>./${project.artifactId}</workingDirectory>\n            </configuration>\n          </plugin>\n          <plugin>\n            <groupId>org.apache.maven.plugins</groupId>\n            <artifactId>maven-war-plugin</artifactId>\n            <version>2.1.1</version>\n            <configuration>\n              <webXml>src/main/filters/web-internal.xml</webXml>\n              <filteringDeploymentDescriptors>true</filteringDeploymentDescriptors>\n              <webResources>\n                <resource>\n                  <directory>src/main/filters</directory>\n                  <targetPath>WEB-INF/classes</targetPath>\n                  <filtering>true</filtering>\n                  <includes>\n                    <include>configuration.properties</include>\n                    <include>logback.xml</include>\n                    <include>versions.properties</include>\n                    <include>ehcache.xml</include>\n                  </includes>\n                </resource>\n              </webResources>\n            </configuration>\n          </plugin>\n        </plugins>\n      </build>\n    </profile>\n\n\t<profile>\n\t<id>deployT360</id>\n      <activation>\n        <property>\n          <name>env</name>\n          <value>t360</value>\n        </property>\n      </activation>\n      <build>\n        <filters>\n          <filter>src/main/filters/configuration.t360.properties</filter>\n        </filters>\n        <plugins>\n          <plugin>\n            <groupId>com.github.goldin</groupId>\n            <artifactId>sshexec-maven-plugin</artifactId>\n            <version>0.2.5</version>\n            <executions>\n              <execution>\n                <phase>install</phase>\n                <goals>\n                  <goal>sshexec</goal>\n                </goals>\n                <configuration>\n                  <runIf>{{ true }}</runIf>\n                  <location>scp://username:password@10.8.22.66:/srv/cuco/var/tomcat7_jvm1/bin</location>\n                  <echoCommands>true</echoCommands>\n                  <commands>\n                    <command>./shutdown-jvm1.sh</command>\n                    <command>sleep 60</command>\n                    <command>rm -r /srv/tomcat7/var/tomcat7_jvm1/CustomerInventoryReqResZip/*</command>\n                    <command>cd ../webapps</command>\n                    <command>rm -rf cuco</command>\n                    <command>rm ../webapps-old/cuco.war.old</command>\n                    <command>mv cuco.war ../webapps-old/cuco.war.old</command>\n                    <command>cd ../bin</command>\n                    <command>./startup-jvm1.sh</command>\n                    <command>sleep 90</command>\n                  </commands>\n                  <failOnError>false</failOnError>\n                </configuration>\n              </execution>\n            </executions>\n          </plugin>\n          <plugin>\n            <groupId>org.apache.tomcat.maven</groupId>\n            <artifactId>tomcat7-maven-plugin</artifactId>\n            <version>2.2</version>\n            <configuration>\n              <url>http://10.8.22.66:8102/manager/html</url>\n              <server>tomcat-t360</server>\n              <path>/${project.build.finalName}</path>\n            </configuration>\n            <executions>\n              <execution>\n                <phase>install</phase>\n                <goals>\n                  <goal>deploy</goal>\n                </goals>\n              </execution>\n            </executions>\n          </plugin>\n          <plugin>\n            <groupId>org.apache.maven.plugins</groupId>\n            <artifactId>maven-release-plugin</artifactId>\n            <version>2.2.1</version>\n            <configuration>\n              <workingDirectory>./${project.artifactId}</workingDirectory>\n            </configuration>\n          </plugin>\n          <plugin>\n            <groupId>org.apache.maven.plugins</groupId>\n            <artifactId>maven-war-plugin</artifactId>\n            <version>2.1.1</version>\n            <configuration>\n              <webXml>src/main/filters/web-ntlm.xml</webXml>\n              <filteringDeploymentDescriptors>true</filteringDeploymentDescriptors>\n              <webResources>\n                <resource>\n                  <directory>src/main/filters</directory>\n                  <targetPath>WEB-INF/classes</targetPath>\n                  <filtering>true</filtering>\n                  <includes>\n                    <include>configuration.properties</include>\n                    <include>logback.xml</include>\n                    <include>versions.properties</include>\n                    <include>ehcache.xml</include>\n                  </includes>\n                </resource>\n              </webResources>\n            </configuration>\n          </plugin>\n        </plugins>\n      </build>\n    </profile>\n\n    <profile>\n      <id>deployInt</id>\n      <activation>\n        <property>\n          <name>env</name>\n          <value>int</value>\n        </property>\n      </activation>\n      <build>\n        <filters>\n          <filter>src/main/filters/configuration.int11.properties</filter>\n        </filters>\n        <plugins>\n          <plugin>\n            <groupId>com.github.goldin</groupId>\n            <artifactId>sshexec-maven-plugin</artifactId>\n            <version>0.2.5</version>\n            <executions>\n              <execution>\n                <phase>install</phase>\n                <goals>\n                  <goal>sshexec</goal>\n                </goals>\n                <configuration>\n                  <runIf>{{ true }}</runIf>\n                  <location>scp://tomcat:B,HK3AQQl$Z3@vlcucoi001.at.inside:/srv/tomcat7_jvm1/bin</location>\n                  <echoCommands>true</echoCommands>\n                  <commands>\n                    <command>./shutdown-jvm1.sh</command>\n                    <command>sleep 60</command>\n                    <command>rm -r /srv/tomcat7_jvm1/CustomerInventoryReqResZip/*</command>\n                    <command>cd ../webapps</command>\n                    <command>rm -rf ROOT</command>\n                    <command>rm ../webapps-old/ROOT.war.old</command>\n                    <command>mv ROOT.war ../webapps-old/ROOT.war.old</command>\n                    <command>cd ../bin</command>\n                    <command>./startup-jvm1.sh</command>\n                    <command>sleep 90</command>\n                  </commands>\n                  <failOnError>false</failOnError>\n                </configuration>\n              </execution>\n            </executions>\n          </plugin>\n          <plugin>\n            <groupId>org.apache.tomcat.maven</groupId>\n            <artifactId>tomcat7-maven-plugin</artifactId>\n            <version>2.2</version>\n            <configuration>\n              <url>http://vlcucoi001.at.inside:7180/manager/html</url>\n              <server>tomcat-int</server>\n              <path>/</path>\n              <username>admin2</username>\n              <password>ultrix</password>\n            </configuration>\n            <executions>\n              <execution>\n                <phase>install</phase>\n                <goals>\n                  <goal>redeploy</goal>\n                </goals>\n              </execution>\n            </executions>\n          </plugin>\n          <plugin>\n            <groupId>org.apache.maven.plugins</groupId>\n            <artifactId>maven-release-plugin</artifactId>\n            <version>2.2.1</version>\n            <configuration>\n              <workingDirectory>./${project.artifactId}</workingDirectory>\n            </configuration>\n          </plugin>\n          <plugin>\n            <groupId>org.apache.maven.plugins</groupId>\n            <artifactId>maven-war-plugin</artifactId>\n            <version>2.1.1</version>\n            <configuration>\n              <webXml>src/main/filters/web-internal.xml</webXml>\n              <filteringDeploymentDescriptors>true</filteringDeploymentDescriptors>\n              <webResources>\n                <resource>\n                  <directory>src/main/filters</directory>\n                  <targetPath>WEB-INF/classes</targetPath>\n                  <filtering>true</filtering>\n                  <includes>\n                    <include>configuration.properties</include>\n                    <include>logback.xml</include>\n                    <include>versions.properties</include>\n                    <include>ehcache.xml</include>\n                  </includes>\n                </resource>\n              </webResources>\n            </configuration>\n          </plugin>\n        </plugins>\n      </build>\n    </profile>\n\n    <profile>\n      <id>deployInt-ext</id>\n      <activation>\n        <property>\n          <name>env</name>\n          <value>int-ext</value>\n        </property>\n      </activation>\n      <build>\n        <filters>\n          <filter>src/main/filters/configuration.int11-ext.properties</filter>\n        </filters>\n        <plugins>\n          <plugin>\n            <groupId>com.github.goldin</groupId>\n            <artifactId>sshexec-maven-plugin</artifactId>\n            <version>0.2.5</version>\n            <executions>\n              <execution>\n                <phase>install</phase>\n                <goals>\n                  <goal>sshexec</goal>\n                </goals>\n                <configuration>\n                  <runIf>{{ true }}</runIf>\n                  <location>scp://tomcat:B,HK3AQQl$Z3@vlcucoi003.at.inside:/srv/tomcat7_jvm1/bin</location>\n                  <echoCommands>true</echoCommands>\n                  <commands>\n                    <command>./shutdown-jvm1.sh</command>\n                    <command>sleep 90</command>\n                    <command>rm -r /srv/tomcat7_jvm1/CustomerInventoryReqResZip/*</command>\n                    <command>cd ../webapps</command>\n                    <command>rm -rf ROOT</command>\n                    <command>rm ROOT.war</command>\n                    <command>cd ../bin</command>\n                    <command>./startup-jvm1.sh</command>\n                    <command>sleep 120</command>\n                  </commands>\n                </configuration>\n              </execution>\n            </executions>\n          </plugin>\n          <plugin>\n            <groupId>org.apache.tomcat.maven</groupId>\n            <artifactId>tomcat7-maven-plugin</artifactId>\n            <version>2.2</version>\n            <configuration>\n              <url>http://vlcucoi003.at.inside:7280/manager/html</url>\n              <server>tomcat-int-ext</server>\n              <path>/</path>\n              <username>admin2</username>\n              <password>ultrix</password>\n            </configuration>\n            <executions>\n              <execution>\n                <phase>install</phase>\n                <goals>\n                  <goal>redeploy</goal>\n                </goals>\n              </execution>\n            </executions>\n          </plugin>\n          <plugin>\n            <groupId>org.apache.maven.plugins</groupId>\n            <artifactId>maven-release-plugin</artifactId>\n            <version>2.2.1</version>\n            <configuration>\n              <workingDirectory>./${project.artifactId}</workingDirectory>\n            </configuration>\n          </plugin>\n          <plugin>\n            <groupId>org.apache.maven.plugins</groupId>\n            <artifactId>maven-war-plugin</artifactId>\n            <version>2.1.1</version>\n            <configuration>\n              <webXml>src/main/filters/web-external.xml</webXml>\n              <filteringDeploymentDescriptors>true</filteringDeploymentDescriptors>\n              <webResources>\n                <resource>\n                  <directory>src/main/filters</directory>\n                  <targetPath>WEB-INF/classes</targetPath>\n                  <filtering>true</filtering>\n                  <includes>\n                    <include>configuration.properties</include>\n                    <include>logback.xml</include>\n                    <include>versions.properties</include>\n                    <include>ehcache.xml</include>\n                  </includes>\n                </resource>\n              </webResources>\n            </configuration>\n          </plugin>\n        </plugins>\n      </build>\n    </profile>\n\n    <profile>\n      <id>deployE2E</id>\n      <activation>\n        <property>\n          <name>env</name>\n          <value>e2e</value>\n        </property>\n      </activation>\n      <build>\n        <filters>\n          <filter>src/main/filters/configuration.e2e11.properties</filter>\n        </filters>\n        <plugins>\n          <plugin>\n            <groupId>com.github.goldin</groupId>\n            <artifactId>sshexec-maven-plugin</artifactId>\n            <version>0.2.5</version>\n            <executions>\n              <execution>\n                <phase>install</phase>\n                <goals>\n                  <goal>sshexec</goal>\n                </goals>\n                <configuration>\n                  <runIf>{{ true }}</runIf>\n                  <location>scp://tomcat:PhnmAt2i_EpKy#@vlcucok001.at.inside:/srv/tomcat7_jvm1/bin</location>\n                  <echoCommands>true</echoCommands>\n                  <commands>\n                    <command>./shutdown-jvm1.sh</command>\n                    <command>sleep 60</command>\n                    <command>rm -r /srv/tomcat7_jvm1/CustomerInventoryReqResZip/*</command>\n                    <command>cd ../webapps</command>\n                    <command>rm -rf ROOT</command>\n                    <command>rm ../webapps-old/ROOT.war.old</command>\n                    <command>mv ROOT.war ../webapps-old/ROOT.war.old</command>\n                    <command>cd ../bin</command>\n                    <command>./startup-jvm1.sh</command>\n                    <command>sleep 90</command>\n                  </commands>\n                  <failOnError>false</failOnError>\n                </configuration>\n              </execution>\n            </executions>\n          </plugin>\n          <plugin>\n            <groupId>org.apache.tomcat.maven</groupId>\n            <artifactId>tomcat7-maven-plugin</artifactId>\n            <version>2.2</version>\n            <configuration>\n              <url>http://vlcucok001.at.inside:7180/manager/text</url>\n              <server>tomcat-e2e</server>\n              <username>admin2</username>\n              <password>ultrix</password>\n              <path>/</path>\n            </configuration>\n            <executions>\n              <execution>\n                <phase>install</phase>\n                <goals>\n                  <goal>deploy</goal>\n                </goals>\n              </execution>\n            </executions>\n          </plugin>\n          <plugin>\n            <groupId>org.apache.maven.plugins</groupId>\n            <artifactId>maven-release-plugin</artifactId>\n            <version>2.2.1</version>\n            <configuration>\n              <workingDirectory>./${project.artifactId}</workingDirectory>\n            </configuration>\n          </plugin>\n          <plugin>\n            <groupId>org.apache.maven.plugins</groupId>\n            <artifactId>maven-war-plugin</artifactId>\n            <version>2.1.1</version>\n            <configuration>\n              <webXml>src/main/filters/web-internal.xml</webXml>\n              <filteringDeploymentDescriptors>true</filteringDeploymentDescriptors>\n              <webResources>\n                <resource>\n                  <directory>src/main/filters</directory>\n                  <targetPath>WEB-INF/classes</targetPath>\n                  <filtering>true</filtering>\n                  <includes>\n                    <include>configuration.properties</include>\n                    <include>logback.xml</include>\n                    <include>versions.properties</include>\n                    <include>ehcache.xml</include>\n                  </includes>\n                </resource>\n              </webResources>\n            </configuration>\n          </plugin>\n        </plugins>\n      </build>\n    </profile>\n    \n    <profile>\n      <id>buildProd</id>\n      <activation>\n        <property>\n          <name>env</name>\n          <value>prod-intern</value>\n        </property>\n      </activation>\n      <build>\n        <filters>\n          <filter>src/main/filters/configuration.prod11.properties</filter>\n        </filters>\n        <plugins>\n          <plugin>\n            <groupId>org.apache.maven.plugins</groupId>\n            <artifactId>maven-release-plugin</artifactId>\n            <version>2.2.1</version>\n            <configuration>\n              <workingDirectory>./${project.artifactId}</workingDirectory>\n              <goals>package</goals>\n            </configuration>\n          </plugin>\n          <plugin>\n            <groupId>org.apache.maven.plugins</groupId>\n            <artifactId>maven-war-plugin</artifactId>\n            <version>2.1.1</version>\n            <configuration>\n              <warName>${project.build.finalName}-${env}-${project.version}</warName>\n              <webXml>src/main/filters/web-internal.xml</webXml>\n              <filteringDeploymentDescriptors>true</filteringDeploymentDescriptors>\n              <webResources>\n                <resource>\n                  <directory>src/main/filters</directory>\n                  <targetPath>WEB-INF/classes</targetPath>\n                  <filtering>true</filtering>\n                  <includes>\n                    <include>configuration.properties</include>\n                    <include>logback.xml</include>\n                    <include>versions.properties</include>\n                    <include>ehcache.xml</include>\n                  </includes>\n                </resource>\n              </webResources>\n            </configuration>\n          </plugin>\n        </plugins>\n      </build>\n    </profile>\n    <profile>\n      <id>buildProd-ext</id>\n      <activation>\n        <property>\n          <name>env</name>\n          <value>prod-extern</value>\n        </property>\n      </activation>\n      <build>\n        <filters>\n          <filter>src/main/filters/configuration.prod11.properties</filter>\n          <filter>src/main/filters/configuration.prod11-ext.properties</filter>\n        </filters>\n        <plugins>\n          <plugin>\n            <groupId>org.apache.maven.plugins</groupId>\n            <artifactId>maven-release-plugin</artifactId>\n            <version>2.2.1</version>\n            <configuration>\n              <workingDirectory>./${project.artifactId}</workingDirectory>\n              <goals>package</goals>\n            </configuration>\n          </plugin>\n          <plugin>\n            <groupId>org.apache.maven.plugins</groupId>\n            <artifactId>maven-war-plugin</artifactId>\n            <version>2.1.1</version>\n            <configuration>\n              <warName>${project.build.finalName}-${env}-${project.version}</warName>\n              <webXml>src/main/filters/web-external.xml</webXml>\n              <filteringDeploymentDescriptors>true</filteringDeploymentDescriptors>\n              <webResources>\n                <resource>\n                  <directory>src/main/filters</directory>\n                  <targetPath>WEB-INF/classes</targetPath>\n                  <filtering>true</filtering>\n                  <includes>\n                    <include>configuration.properties</include>\n                    <include>logback.xml</include>\n                    <include>versions.properties</include>\n                    <include>ehcache.xml</include>\n                  </includes>\n                </resource>\n              </webResources>\n            </configuration>\n          </plugin>\n        </plugins>\n      </build>\n    </profile>    \n  </profiles>\n</project>",
+    "last_modified": 1745490616.0,
+    "debug_mode": true,
+    "debug_file_source": "/Users/thomaskamsker/Documents/Atom/vron.one/playground/java/debug_test.txt",
+    "file_stats": {
+      "size_bytes": 28588,
+      "created_time": 1750943383.8298228,
+      "modified_time": 1745490616.0,
+      "access_time": 1747644580.1328125
+    },
+    "pom_analysis": {
+      "pom_path": "/Users/thomaskamsker/Documents/Atom/vron.one/playground/java/cuco/pom.xml",
+      "error": "asyncio.run() cannot be called from a running event loop"
+    },
+    "ai_analysis": {
+      "purpose": "Maven project configuration file defining build and dependency management for the CUCO web application",
+      "components": [
+        {
+          "name": "cuco",
+          "type": "war package",
+          "description": "Main web application module inheriting from cuco.pom parent",
+          "complexity": "medium"
+        }
+      ],
+      "data_structures": [
+        {
+          "name": "Maven POM hierarchy",
+          "fields": [
+            "modelVersion",
+            "parent",
+            "artifactId",
+            "packaging"
+          ],
+          "relationships": [
+            "Parent: cuco.pom (2025.03.01)",
+            "Dependency: cuco-ui-app"
+          ],
+          "usage_patterns": [
+            "War packaging for web deployment",
+            "Inherited dependency management"
+          ]
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Version management through parent POM",
+          "location": "parent element",
+          "priority": "high"
+        }
+      ],
+      "dependencies": [
+        "at.a1ta.cuco:cuco-ui-app",
+        "Parent: at.a1ta.cuco:cuco.pom:2025.03.01"
+      ],
+      "integration_points": [
+        "Web application deployment container",
+        "UI application integration"
+      ],
+      "security_considerations": [
+        "Dependency version management for security patches",
+        "War packaging security implications"
+      ],
+      "performance_notes": [
+        "War packaging optimization needed for production deployment"
+      ],
+      "debug_insights": {
+        "code_quality": "Good - follows Maven conventions",
+        "potential_issues": [
+          "Future version compatibility (2025.03.01)",
+          "Incomplete dependency list in preview"
+        ],
+        "improvement_suggestions": [
+          "Consider adding dependency version properties",
+          "Document specific UI app version requirements"
+        ]
+      }
+    },
+    "analysis_status": "completed",
+    "debug_analysis_timestamp": 903984.647387583
+  },
+  {
+    "file_path": "cuco-core/src/main/java/at/a1ta/cuco/core/dao/db/impl/MKInteractionDaoImpl.java",
+    "absolute_path": "/Users/thomaskamsker/Documents/Atom/vron.one/playground/java/cuco-core/src/main/java/at/a1ta/cuco/core/dao/db/impl/MKInteractionDaoImpl.java",
+    "file_type": "Java source file",
+    "extension": ".java",
+    "size_bytes": 649,
+    "content": "package at.a1ta.cuco.core.dao.db.impl;\n\nimport java.util.List;\n\nimport at.a1ta.bite.core.server.dao.AbstractDao;\nimport at.a1ta.bite.data.clarify.shared.dto.CustomerInteraction;\nimport at.a1ta.cuco.core.dao.db.MKInteractionDao;\n\npublic class MKInteractionDaoImpl extends AbstractDao implements MKInteractionDao {\n\n  @Override\n  public List<CustomerInteraction> listMKInteractions(long customerId) {\n    List<CustomerInteraction> interactions = performListQuery(\"MKInteraction.GetInteractionsByCustomerId\", customerId);\n    for (CustomerInteraction interaction : interactions) {\n      interaction.setType(\"MK\");\n    }\n    return interactions;\n  }\n\n}\n",
+    "last_modified": 1745490616.0,
+    "debug_mode": true,
+    "debug_file_source": "/Users/thomaskamsker/Documents/Atom/vron.one/playground/java/debug_test.txt",
+    "file_stats": {
+      "size_bytes": 649,
+      "created_time": 1751374037.8189652,
+      "modified_time": 1745490616.0,
+      "access_time": 1751374038.713306
+    },
+    "pom_analysis": {
+      "pom_path": "/Users/thomaskamsker/Documents/Atom/vron.one/playground/java/cuco-core/pom.xml",
+      "error": "asyncio.run() cannot be called from a running event loop"
+    },
+    "ai_analysis": {
+      "purpose": "Data Access Object implementation for managing customer interactions in the MK system",
+      "components": [
+        {
+          "name": "MKInteractionDaoImpl",
+          "type": "DAO Implementation Class",
+          "description": "Handles database operations for customer interactions",
+          "complexity": "medium"
+        }
+      ],
+      "data_structures": [
+        {
+          "name": "CustomerInteraction",
+          "fields": [
+            "customerId",
+            "interaction details (partial view)"
+          ],
+          "relationships": [
+            "Many-to-one with Customer"
+          ],
+          "usage_patterns": [
+            "List retrieval by customerId",
+            "Post-processing of interaction data"
+          ]
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Customer interaction retrieval by customer ID",
+          "location": "listMKInteractions method",
+          "priority": "high"
+        }
+      ],
+      "dependencies": [
+        "at.a1ta.bite.core.server.dao.AbstractDao",
+        "at.a1ta.bite.data.clarify.shared.dto.CustomerInteraction",
+        "java.util.List"
+      ],
+      "integration_points": [
+        "Database query 'MKInteraction.GetInteractionsByCustomerId'",
+        "AbstractDao query execution framework"
+      ],
+      "security_considerations": [
+        "Data access control for customer information",
+        "SQL injection prevention through AbstractDao",
+        "Customer data privacy handling"
+      ],
+      "performance_notes": [
+        "List processing overhead for interaction post-processing",
+        "Potential N+1 query issue in interaction processing"
+      ],
+      "debug_insights": {
+        "code_quality": "Moderate - follows DAO pattern but shows incomplete implementation",
+        "potential_issues": [
+          "Incomplete interaction processing visible in preview",
+          "Potential memory issues with large customer interaction lists",
+          "No visible error handling"
+        ],
+        "improvement_suggestions": [
+          "Add pagination support",
+          "Implement proper error handling",
+          "Consider caching frequently accessed interactions",
+          "Add logging for debugging purposes"
+        ]
+      }
+    },
+    "analysis_status": "completed",
+    "debug_analysis_timestamp": 903984.647471208
+  },
+  {
+    "file_path": "cuco/src/main/filters/logback.xml",
+    "absolute_path": "/Users/thomaskamsker/Documents/Atom/vron.one/playground/java/cuco/src/main/filters/logback.xml",
+    "file_type": "XML configuration",
+    "extension": ".xml",
+    "size_bytes": 10504,
+    "content": "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<!DOCTYPE configuration>\n<configuration debug=\"true\" scan=\"true\">\n  <jmxConfigurator />\n\n       <turboFilter \n           class=\"ch.qos.logback.classic.turbo.DuplicateMessageFilter\">\n         <AllowedRepetitions>5</AllowedRepetitions>\n      </turboFilter>\n  <appender name=\"FILE\" class=\"ch.qos.logback.core.rolling.RollingFileAppender\">\n    <file>${logback.file.path}</file>\n    <rollingPolicy class=\"ch.qos.logback.core.rolling.TimeBasedRollingPolicy\">\n      <fileNamePattern>${logback.file.path}%d{yyyy-MM-dd}</fileNamePattern>\n      <maxHistory>30</maxHistory>\n    </rollingPolicy>\n    <filter class=\"ch.qos.logback.core.filter.EvaluatorFilter\">\n      <evaluator>        \n        <expression>return throwable instanceof net.sf.ehcache.distribution.jms.InvalidJMSMessageException;</expression>\n      </evaluator>\n      <OnMismatch>NEUTRAL</OnMismatch>\n      <OnMatch>DENY</OnMatch>\n    </filter>\n    <filter class=\"ch.qos.logback.core.filter.EvaluatorFilter\">\n      <evaluator>\n        <expression>return message.contains(\"ORA-00936: missing expression\");</expression>\n      </evaluator>\n      <OnMismatch>NEUTRAL</OnMismatch>\n      <OnMatch>DENY</OnMatch>\n    </filter>\n    <encoder>\n      <pattern>%-30(%date{ISO8601} [%thread]) %-5level %X{user} %logger{35} - %msg%n</pattern>\n    </encoder>\n  </appender>\n\n  <appender name=\"GWT-LOGFILE\" class=\"ch.qos.logback.core.rolling.RollingFileAppender\">\n    <file>${logback.gwtlog.path}</file>\n    <rollingPolicy class=\"ch.qos.logback.core.rolling.TimeBasedRollingPolicy\">\n      <fileNamePattern>${logback.gwtlog.path}%d{yyyy-MM-dd}</fileNamePattern>\n      <maxHistory>30</maxHistory>\n    </rollingPolicy>\n    <encoder>\n      <pattern>%-30(%date{ISO8601} [%thread]) %-5level %X{user} %logger{35} - %msg%n</pattern>\n    </encoder>\n  </appender>\n\n  <appender name=\"SQL\" class=\"ch.qos.logback.core.rolling.RollingFileAppender\">\n    <File>${logback.sql.path}</File>\n    <rollingPolicy class=\"ch.qos.logback.core.rolling.TimeBasedRollingPolicy\">\n      <fileNamePattern>${logback.sql.path}%d{yyyy-MM-dd}</fileNamePattern>\n      <maxHistory>30</maxHistory>\n    </rollingPolicy>\n    <encoder>\n      <pattern>%-30(%date{ISO8601} [%thread]) %-5level %X{user} %logger{35} - %msg%n</pattern>\n    </encoder>\n  </appender>\n\n  <appender name=\"MAILINGS\" class=\"ch.qos.logback.core.rolling.RollingFileAppender\">\n    <File>${logback.mailings.path}</File>\n    <rollingPolicy class=\"ch.qos.logback.core.rolling.TimeBasedRollingPolicy\">\n      <fileNamePattern>${logback.mailings.path}%d{yyyy-MM-dd}</fileNamePattern>\n      <maxHistory>30</maxHistory>\n    </rollingPolicy>\n    <encoder>\n      <pattern>%-30(%date{ISO8601} [%thread]) %-5level %X{user} %logger{35} - %msg%n</pattern>\n    </encoder>\n  </appender>\n  \n  <appender name=\"GAMIFICATION\" class=\"ch.qos.logback.core.rolling.RollingFileAppender\">\n    <File>${logback.gamification.path}</File>\n    <rollingPolicy class=\"ch.qos.logback.core.rolling.TimeBasedRollingPolicy\">\n      <fileNamePattern>${logback.gamification.path}%d{yyyy-MM-dd}</fileNamePattern>\n      <maxHistory>30</maxHistory>\n    </rollingPolicy>\n    <encoder>\n      <pattern>%-30(%date{ISO8601} [%thread]) %-5level %X{user} %logger{35} - %msg%n</pattern>\n    </encoder>\n  </appender>\n  \n  <appender name=\"INVOICEDOWNLOADS\" class=\"ch.qos.logback.core.rolling.RollingFileAppender\">\n    <File>${logback.invoiceaudit.path}</File>\n    <rollingPolicy class=\"ch.qos.logback.core.rolling.TimeBasedRollingPolicy\">\n      <fileNamePattern>${logback.invoiceaudit.path}%d{yyyy-MM-dd}</fileNamePattern>\n    </rollingPolicy>\n    <encoder>\n      <pattern>%-30(%date{ISO8601} [%thread]) %-5level %X{user} %logger{35} - %msg%n</pattern>\n    </encoder>\n  </appender>\n\n  <appender name=\"INVOICEPERFORMANCE\" class=\"ch.qos.logback.core.rolling.RollingFileAppender\">\n    <File>${logback.invoiceperformance.path}</File>\n    <rollingPolicy class=\"ch.qos.logback.core.rolling.TimeBasedRollingPolicy\">\n      <fileNamePattern>${logback.invoiceperformance.path}%d{yyyy-MM-dd}</fileNamePattern>\n    </rollingPolicy>\n    <encoder>\n      <pattern>%-30(%date{ISO8601} [%thread]) %-5level %X{user} %logger{35} - %msg%n</pattern>\n    </encoder>\n  </appender>\n\n  <appender name=\"TRACKING\" class=\"ch.qos.logback.core.rolling.RollingFileAppender\">\n    <File>${logback.tracking.path}</File>\n    <rollingPolicy class=\"ch.qos.logback.core.rolling.TimeBasedRollingPolicy\">\n      <fileNamePattern>${logback.tracking.path}%d{yyyy-MM-dd}</fileNamePattern>\n    </rollingPolicy>\n    <encoder class=\"ch.qos.logback.core.encoder.LayoutWrappingEncoder\">\n      <layout class=\"at.a1ta.bite.commons.logging.BiteLogEventLayout\" />\n    </encoder>\n  </appender>\n\n  <appender name=\"APPLICATION\" class=\"ch.qos.logback.core.FileAppender\">\n    <File>${logback.application.path}</File>\n    <encoder class=\"ch.qos.logback.core.encoder.LayoutWrappingEncoder\">\n      <layout class=\"at.a1ta.bite.commons.logging.BiteLogEventLayout\" />\n    </encoder>\n  </appender>\n\n  <appender name=\"REPORTING\" class=\"ch.qos.logback.core.rolling.RollingFileAppender\">\n    <rollingPolicy class=\"ch.qos.logback.core.rolling.TimeBasedRollingPolicy\">\n      <fileNamePattern>${logback.reporting.path}.%d{yyyy-MM-dd}.log</fileNamePattern>\n    </rollingPolicy>\n    <encoder class=\"ch.qos.logback.core.encoder.LayoutWrappingEncoder\">\n      <layout class=\"at.a1ta.bite.commons.logging.BiteLogEventLayout\" />\n    </encoder>\n  </appender>\n\n  <appender name=\"AUDITLOG\" class=\"at.a1ta.bite.audit.core.RollingFileAuditAppender\">\n    <!-- encoder is optional if not specified default layout will be used -->\n    <encoder class=\"ch.qos.logback.core.encoder.LayoutWrappingEncoder\">\n      <layout class=\"at.a1ta.bite.audit.core.AuditEventLayout\" />\n    </encoder>\n\n    <rollingPolicy class=\"ch.qos.logback.core.rolling.TimeBasedRollingPolicy\">\n      <!-- daily rollover for local testing -->\n      <fileNamePattern>${logback.audit.path}.%d{yyyy-MM-dd}.log</fileNamePattern>\n      <maxHistory>30</maxHistory>\n    </rollingPolicy>\n  </appender>\n\n  <appender name=\"esb\" class=\"ch.qos.logback.core.rolling.RollingFileAppender\">\n    <File>${logback.esb.path}/esb.log</File>\n    <rollingPolicy class=\"ch.qos.logback.core.rolling.TimeBasedRollingPolicy\">\n      <fileNamePattern>${logback.esb.path}/esb.%d{yyyy-MM-dd}.log</fileNamePattern>\n    </rollingPolicy>\n    <encoder>\n      <pattern>%-30(%date{ISO8601} [%thread]) %-5level %X{user} %logger{35} - %msg%n</pattern>\n    </encoder>\n  </appender>\n\n  <appender name=\"CUSCO-DUPOS\" class=\"ch.qos.logback.core.FileAppender\">\n    <File>${logback.cusco-dupos.path}</File>\n    <encoder class=\"ch.qos.logback.core.encoder.LayoutWrappingEncoder\">\n      <layout class=\"ch.qos.logback.classic.PatternLayout\">\n        <Pattern>\n          %date{ISO8601} [%thread] %-5level %X{user} - %msg%n\n        </Pattern>\n      </layout>\n    </encoder>\n  </appender>\n\n  <appender name=\"KUMS-SKZ\" class=\"ch.qos.logback.core.FileAppender\">\n    <File>${logback.kumsSkz.path}</File>\n    <encoder class=\"ch.qos.logback.core.encoder.LayoutWrappingEncoder\">\n      <layout class=\"ch.qos.logback.classic.PatternLayout\">\n        <Pattern>\n          %date{ISO8601} [%thread] %-5level %X{user} - %msg%n\n        </Pattern>\n      </layout>\n    </encoder>\n  </appender>\n\n  <appender name=\"LDAPSYNC\" class=\"ch.qos.logback.core.rolling.RollingFileAppender\">\n    <file>${logback.ldapsync.path}</file>\n    <rollingPolicy class=\"ch.qos.logback.core.rolling.TimeBasedRollingPolicy\">\n      <fileNamePattern>${logback.ldapsync.path}%d{yyyy-MM-dd}</fileNamePattern>\n      <maxHistory>30</maxHistory>\n    </rollingPolicy>\n    <encoder>\n      <pattern>%-30(%date{ISO8601} [%thread]) %-5level %X{user} %logger{35} - %msg%n</pattern>\n    </encoder>\n  </appender>\n\n  <appender name=\"PWUAUTH\" class=\"ch.qos.logback.core.rolling.RollingFileAppender\">\n    <file>${logback.pwuauth.path}</file>\n    <rollingPolicy class=\"ch.qos.logback.core.rolling.TimeBasedRollingPolicy\">\n      <fileNamePattern>${logback.pwuauth.path}%d{yyyy-MM-dd}</fileNamePattern>\n      <maxHistory>30</maxHistory>\n    </rollingPolicy>\n    <encoder>\n      <pattern>%-30(%date{ISO8601} [%thread]) %-5level %X{ip} - %msg%n</pattern>\n    </encoder>\n  </appender>\n\n  <logger name=\"at.a1ta.bite.core.server.service.DefaultCorporateDirectorySynchronizationService\" level=\"DEBUG\" additivity=\"false\">\n    <appender-ref ref=\"LDAPSYNC\" />\n  </logger>\n\n  <logger name=\"at.a1ta.cuco.core.service.impl.CustomerUnlockServiceImpl\" level=\"DEBUG\" additivity=\"false\">\n    <appender-ref ref=\"CUSCO-DUPOS\" />\n  </logger>\n\n  <logger name=\"esb\" level=\"DEBUG\" additivity=\"false\">\n    <appender-ref ref=\"esb\" />\n  </logger>\n\n  <logger name=\"bite-tracking\" level=\"DEBUG\" additivity=\"false\">\n    <appender-ref ref=\"TRACKING\" />\n  </logger>\n  <logger name=\"bite-application\" level=\"DEBUG\" additivity=\"false\">\n    <appender-ref ref=\"APPLICATION\" />\n  </logger>\n  <logger name=\"bite-reporting\" level=\"DEBUG\" additivity=\"false\">\n    <appender-ref ref=\"REPORTING\" />\n  </logger>\n\n  <logger name=\"mailings\" level=\"DEBUG\" additivity=\"false\">\n    <appender-ref ref=\"MAILINGS\" />\n  </logger>\n\n  <logger name=\"GAMIFICATION\" level=\"INFO\" additivity=\"false\">\n    <appender-ref ref=\"GAMIFICATION\" />\n  </logger>\n  <logger name=\"invoicedownloads\" level=\"DEBUG\" additivity=\"false\">\n    <appender-ref ref=\"INVOICEDOWNLOADS\" />\n  </logger>\n\n  <logger name=\"invoiceperformance\" level=\"DEBUG\" additivity=\"false\">\n    <appender-ref ref=\"INVOICEPERFORMANCE\" />\n  </logger>\n\n  <logger name=\"jdbc.sqltiming\" level=\"WARN\" additivity=\"false\">\n    <appender-ref ref=\"SQL\" />\n  </logger>\n  <logger name=\"jdbc\" level=\"ERROR\" additivity=\"false\" >\n    <appender-ref ref=\"SQL\" />\n  </logger>\n  <logger name=\"gwt-log\" level=\"ERROR\" additivity=\"false\">\n    <appender-ref ref=\"GWT-LOGFILE\" />\n  </logger>\n\n  <logger name=\"pwuauth\" level=\"debug\" additivity=\"false\">\n    <appender-ref ref=\"PWUAUTH\" />\n  </logger>\n\n  <logger name=\"at.a1ta.pkb.service.customerinteraction.CustomerInteractionSender\" level=\"ERROR\" />\n\n  <logger name=\"AUDIT\" level=\"INFO\" additivity=\"false\">\n    <appender-ref ref=\"AUDITLOG\" />\n  </logger>\n\n  <logger name=\"at.a1ta.bite.core.server.service.DefaultKumsCommonService\" level=\"TRACE\" additivity=\"false\">\n    <appender-ref ref=\"KUMS-SKZ\" />\n  </logger>\n\n  <logger name=\"at.a1ta.bite.core.server.dao.DefaultKumsSkzShopDao\" level=\"TRACE\" additivity=\"false\">\n    <appender-ref ref=\"KUMS-SKZ\" />\n  </logger>\n\n  <root>\n    <level value=\"INFO\" />\n    <appender-ref ref=\"FILE\" />\n  </root>\n</configuration>\n",
+    "last_modified": 1745490616.0,
+    "debug_mode": true,
+    "debug_file_source": "/Users/thomaskamsker/Documents/Atom/vron.one/playground/java/debug_test.txt",
+    "file_stats": {
+      "size_bytes": 10504,
+      "created_time": 1750943383.834807,
+      "modified_time": 1745490616.0,
+      "access_time": 1747644580.3519742
+    },
+    "pom_analysis": {
+      "pom_path": "/Users/thomaskamsker/Documents/Atom/vron.one/playground/java/cuco/pom.xml",
+      "error": "asyncio.run() cannot be called from a running event loop"
+    },
+    "ai_analysis": {
+      "purpose": "Logging configuration for the application using Logback framework with debug and JMX monitoring enabled",
+      "components": [
+        {
+          "name": "JMX Configurator",
+          "type": "Monitoring",
+          "description": "Enables JMX-based logging configuration management",
+          "complexity": "low"
+        },
+        {
+          "name": "DuplicateMessageFilter",
+          "type": "Turbo Filter",
+          "description": "Prevents log spam by limiting repeated messages",
+          "complexity": "medium"
+        },
+        {
+          "name": "RollingFileAppender",
+          "type": "File Appender",
+          "description": "Manages log file rotation and retention",
+          "complexity": "medium"
+        }
+      ],
+      "data_structures": [
+        {
+          "name": "LoggingConfiguration",
+          "fields": [
+            "debug",
+            "scan",
+            "allowedRepetitions",
+            "filePath",
+            "filePattern"
+          ],
+          "relationships": [
+            "Appender inherits from RollingFileAppender"
+          ],
+          "usage_patterns": [
+            "Daily log rotation",
+            "30-day retention"
+          ]
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Duplicate log messages limited to 5 repetitions",
+          "location": "turboFilter configuration",
+          "priority": "medium"
+        },
+        {
+          "description": "Log files retained for 30 days",
+          "location": "rollingPolicy maxHistory",
+          "priority": "medium"
+        }
+      ],
+      "dependencies": [
+        "ch.qos.logback.classic",
+        "ch.qos.logback.core"
+      ],
+      "integration_points": [
+        "JMX management interface",
+        "File system for log storage"
+      ],
+      "security_considerations": [
+        "Log file permissions must be properly configured",
+        "JMX access should be secured in production"
+      ],
+      "performance_notes": [
+        "DuplicateMessageFilter helps prevent log flooding",
+        "Time-based rolling strategy prevents excessive file sizes"
+      ],
+      "debug_insights": {
+        "code_quality": "Good - follows Logback best practices",
+        "potential_issues": [
+          "Variable resolution might fail if logback.file.path not set",
+          "Debug mode enabled might impact performance"
+        ],
+        "improvement_suggestions": [
+          "Consider adding async appender for better performance",
+          "Add error handling for file write failures"
+        ]
+      }
+    },
+    "analysis_status": "completed",
+    "debug_analysis_timestamp": 904004.119078916
+  },
+  {
+    "file_path": "cuco/src/main/filters/web-ntlm.xml",
+    "absolute_path": "/Users/thomaskamsker/Documents/Atom/vron.one/playground/java/cuco/src/main/filters/web-ntlm.xml",
+    "file_type": "XML configuration",
+    "extension": ".xml",
+    "size_bytes": 3247,
+    "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<web-app version=\"3.0\" xmlns=\"http://java.sun.com/xml/ns/javaee\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd\">\n\n  <context-param>\n    <param-name>contextConfigLocation</param-name>\n    <param-value>classpath:applicationContext-app.xml classpath:applicationContext-admin.xml classpath:applicationContext-mycuco.xml</param-value>\n  </context-param>\n  <context-param>\n    <param-name>spring.profiles.active</param-name>\n    <param-value>TRUSTED,DEV,JMSBROKER</param-value>\n  </context-param>\n\n  <filter>\n    <filter-name>NTLM HTTP Authentication Filter</filter-name>\n    <filter-class>jcifs.http.NtlmHttpFilter</filter-class>\n    <init-param>\n      <param-name>jcifs.smb.client.domain</param-name>\n      <param-value>AUSTRIA</param-value>\n    </init-param>\n    <init-param>\n      <param-name>jcifs.http.domainController</param-name>\n      <param-value>jtsdw007.austria.local</param-value>\n      <!-- param-value>jtsdw007</param-value-->\n    </init-param>\n    <init-param>\n      <param-name>jcifs.netbios.wins</param-name>\n      <param-value>10.1.20.1</param-value>\n    </init-param>\n  </filter>\n  <filter>\n    <filter-name>BITEAuthenticationFilter</filter-name>\n    <filter-class>at.a1ta.bite.ui.server.filter.BiteAuthenticationFilter</filter-class>\n  </filter>\n  <filter>\n    <filter-name>TraceFilter</filter-name>\n    <filter-class>at.a1ta.bite.ui.server.filter.TraceFilter</filter-class>\n  </filter>\n  <filter>\n    <filter-name>UserToMdcFilter</filter-name>\n    <filter-class>at.a1ta.bite.ui.server.filter.UserToMdcFilter</filter-class>\n  </filter>\n\n  <filter-mapping>\n    <filter-name>NTLM HTTP Authentication Filter</filter-name>\n    <url-pattern>*.rpc</url-pattern>\n  </filter-mapping>\n  <filter-mapping>\n    <filter-name>NTLM HTTP Authentication Filter</filter-name>\n    <url-pattern>*.view</url-pattern>\n  </filter-mapping>\n  <filter-mapping>\n    <filter-name>NTLM HTTP Authentication Filter</filter-name>\n    <url-pattern>*.png</url-pattern>\n  </filter-mapping>\n  <filter-mapping>\n    <filter-name>BITEAuthenticationFilter</filter-name>\n    <url-pattern>*.view</url-pattern>\n  </filter-mapping>\n  <filter-mapping>\n    <filter-name>BITEAuthenticationFilter</filter-name>\n    <url-pattern>*.rpc</url-pattern>\n  </filter-mapping>\n  <filter-mapping>\n    <filter-name>TraceFilter</filter-name>\n    <url-pattern>*.png</url-pattern>\n  </filter-mapping>\n  <filter-mapping>\n    <filter-name>UserToMdcFilter</filter-name>\n    <url-pattern>*.view</url-pattern>\n  </filter-mapping>\n  <filter-mapping>\n    <filter-name>UserToMdcFilter</filter-name>\n    <url-pattern>*.rpc</url-pattern>\n  </filter-mapping>\n\n  <listener>\n    <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>\n  </listener>\n  <listener>\n    <listener-class>at.a1ta.bite.ui.server.listener.ApplicationServletContextListener</listener-class>\n  </listener>\n  <listener>\n    <listener-class>net.sf.ehcache.constructs.web.ShutdownListener</listener-class>\n  </listener>\n\n  <!-- Default page to serve -->\n  <welcome-file-list>\n    <welcome-file>index.html</welcome-file>\n  </welcome-file-list>\n\n</web-app>\n",
+    "last_modified": 1745490616.0,
+    "debug_mode": true,
+    "debug_file_source": "/Users/thomaskamsker/Documents/Atom/vron.one/playground/java/debug_test.txt",
+    "file_stats": {
+      "size_bytes": 3247,
+      "created_time": 1750943383.8362448,
+      "modified_time": 1745490616.0,
+      "access_time": 1747644580.3519833
+    },
+    "pom_analysis": {
+      "pom_path": "/Users/thomaskamsker/Documents/Atom/vron.one/playground/java/cuco/pom.xml",
+      "error": "asyncio.run() cannot be called from a running event loop"
+    },
+    "ai_analysis": {
+      "purpose": "Web application configuration with NTLM authentication and Spring context setup",
+      "components": [
+        {
+          "name": "Spring Context Configuration",
+          "type": "Context Parameter",
+          "description": "Defines Spring application context configuration locations",
+          "complexity": "high"
+        },
+        {
+          "name": "Spring Profiles",
+          "type": "Context Parameter",
+          "description": "Activates specific Spring profiles for environment configuration",
+          "complexity": "medium"
+        }
+      ],
+      "data_structures": [
+        {
+          "name": "WebApplicationContext",
+          "fields": [
+            "contextConfigLocation",
+            "spring.profiles.active"
+          ],
+          "relationships": [
+            "Multiple Spring context files",
+            "Profile-based configuration"
+          ],
+          "usage_patterns": [
+            "Hierarchical context loading",
+            "Profile-based bean activation"
+          ]
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Application requires TRUSTED, DEV profiles",
+          "location": "spring.profiles.active parameter",
+          "priority": "high"
+        },
+        {
+          "description": "Multiple context files must be loaded in specific order",
+          "location": "contextConfigLocation parameter",
+          "priority": "high"
+        }
+      ],
+      "dependencies": [
+        "Spring Framework",
+        "Java EE 3.0",
+        "applicationContext-app.xml",
+        "applicationContext-admin.xml",
+        "applicationContext-mycuco.xml"
+      ],
+      "integration_points": [
+        "NTLM authentication system",
+        "Spring container",
+        "Java EE container"
+      ],
+      "security_considerations": [
+        "NTLM authentication configuration must be properly secured",
+        "Profile-based security settings must be reviewed",
+        "Context file access permissions must be controlled"
+      ],
+      "performance_notes": [
+        "Multiple context files may impact startup time",
+        "Profile activation affects bean instantiation"
+      ],
+      "debug_insights": {
+        "code_quality": "Medium - standard Java EE configuration",
+        "potential_issues": [
+          "Context loading order dependencies",
+          "Profile conflicts possible",
+          "NTLM configuration complexity"
+        ],
+        "improvement_suggestions": [
+          "Consider consolidating context files",
+          "Document profile dependencies",
+          "Add explicit version numbers for all contexts"
+        ]
+      }
+    },
+    "analysis_status": "completed",
+    "debug_analysis_timestamp": 904004.119262666
+  },
+  {
+    "file_path": "cuco/src/main/filters/ehcache.xml",
+    "absolute_path": "/Users/thomaskamsker/Documents/Atom/vron.one/playground/java/cuco/src/main/filters/ehcache.xml",
+    "file_type": "XML configuration",
+    "extension": ".xml",
+    "size_bytes": 4821,
+    "content": "<ehcache xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"https://www.ehcache.org/ehcache.xsd\">\n\n  <cacheManagerPeerProviderFactory\n       class=\"net.sf.ehcache.distribution.jms.JMSCacheManagerPeerProviderFactory\"\n       properties=\"initialContextFactoryName=at.a1ta.bite.core.server.util.EhCacheReplicationActiveMQInitialContextFactory,\n           providerURL=tcp://${jmsBrokerAddress}:${jmsBrokerPort},\n           replicationTopicConnectionFactoryBindingName=topicConnectionFactory,\n           getQueueConnectionFactoryBindingName=queueConnectionFactory,\n           getQueueBindingName=ehcacheGetQueue,\n           replicationTopicBindingName=ehcache\"\n       propertySeparator=\",\"\n       />\n  \n    <defaultCache\n    maxElementsInMemory=\"10000\"\n    eternal=\"false\"\n    overflowToDisk=\"false\"\n    memoryStoreEvictionPolicy=\"LRU\"\n    statistics=\"true\">\n    <cacheEventListenerFactory\n     class=\"net.sf.ehcache.distribution.jms.JMSCacheReplicatorFactory\"\n     properties=\"replicateAsynchronously=true,\n                 replicatePuts=true,\n                 replicateUpdates=true,\n                 replicateUpdatesViaCopy=true,\n                 replicateRemovals=true,\n                 asynchronousReplicationIntervalMillis=1000\"\n      propertySeparator=\",\"/>\n  </defaultCache>\n    \n  <cache name=\"ldapCache\" maxElementsInMemory=\"10000\" overflowToDisk=\"false\" timeToLiveSeconds=\"86400\" eternal=\"false\">\n    <cacheEventListenerFactory\n     class=\"net.sf.ehcache.distribution.jms.JMSCacheReplicatorFactory\"\n     properties=\"replicateAsynchronously=true,\n                 replicatePuts=true,\n                 replicateUpdates=true,\n                 replicateUpdatesViaCopy=true,\n                 replicateRemovals=true,\n                 asynchronousReplicationIntervalMillis=1000\"\n      propertySeparator=\",\"/>\n  </cache>\n  <cache name=\"orgUnitCache\" maxElementsInMemory=\"10000\" overflowToDisk=\"false\" timeToLiveSeconds=\"86400\" eternal=\"false\">\n    <cacheEventListenerFactory\n     class=\"net.sf.ehcache.distribution.jms.JMSCacheReplicatorFactory\"\n     properties=\"replicateAsynchronously=true,\n                 replicatePuts=true,\n                 replicateUpdates=true,\n                 replicateUpdatesViaCopy=true,\n                 replicateRemovals=true,\n                 asynchronousReplicationIntervalMillis=1000\"\n      propertySeparator=\",\"/>\n  </cache>\n  <cache name=\"at.a1ta.cusi.bom.addresstypes.Country\" maxElementsInMemory=\"10000\" overflowToDisk=\"false\" timeToLiveSeconds=\"0\" eternal=\"true\"/>\n  <cache name=\"customerEquipmentCache\" maxElementsInMemory=\"1000\" overflowToDisk=\"false\" timeToLiveSeconds=\"3600\" eternal=\"false\">\n    <cacheEventListenerFactory\n     class=\"net.sf.ehcache.distribution.jms.JMSCacheReplicatorFactory\"\n     properties=\"replicateAsynchronously=true,\n                 replicatePuts=true,\n                 replicateUpdates=true,\n                 replicateUpdatesViaCopy=true,\n                 replicateRemovals=true,\n                 asynchronousReplicationIntervalMillis=1000\"\n      propertySeparator=\",\"/>\n  </cache>\n  <cache name=\"phoneNumberCache\" maxElementsInMemory=\"200\" overflowToDisk=\"false\" timeToLiveSeconds=\"36000\" eternal=\"false\">\n    <cacheEventListenerFactory\n     class=\"net.sf.ehcache.distribution.jms.JMSCacheReplicatorFactory\"\n     properties=\"replicateAsynchronously=true,\n                 replicatePuts=true,\n                 replicateUpdates=true,\n                 replicateUpdatesViaCopy=true,\n                 replicateRemovals=true,\n                 asynchronousReplicationIntervalMillis=1000\"\n      propertySeparator=\",\"/>\n  </cache>\n  <cache name=\"VIPCache\" maxElementsInMemory=\"2000\" overflowToDisk=\"false\" timeToLiveSeconds=\"86400\" eternal=\"false\"/>\n  <cache name=\"mobilPoints\" maxElementsInMemory=\"2000\" overflowToDisk=\"false\" timeToLiveSeconds=\"86400\" eternal=\"false\">\n    <cacheEventListenerFactory\n     class=\"net.sf.ehcache.distribution.jms.JMSCacheReplicatorFactory\"\n     properties=\"replicateAsynchronously=true,\n                 replicatePuts=true,\n                 replicateUpdates=true,\n                 replicateUpdatesViaCopy=true,\n                 replicateRemovals=true,\n                 asynchronousReplicationIntervalMillis=1000\"\n      propertySeparator=\",\"/>\n  </cache>\n  <cache name=\"UDPCache\" maxElementsInMemory=\"100\" overflowToDisk=\"false\" timeToLiveSeconds=\"86400\" eternal=\"false\">\n    <cacheEventListenerFactory\n     class=\"net.sf.ehcache.distribution.jms.JMSCacheReplicatorFactory\"\n     properties=\"replicateAsynchronously=true,\n                 replicatePuts=true,\n                 replicateUpdates=true,\n                 replicateUpdatesViaCopy=true,\n                 replicateRemovals=true,\n                 asynchronousReplicationIntervalMillis=1000\"\n      propertySeparator=\",\"/>\n  </cache>\n</ehcache>",
+    "last_modified": 1745490616.0,
+    "debug_mode": true,
+    "debug_file_source": "/Users/thomaskamsker/Documents/Atom/vron.one/playground/java/debug_test.txt",
+    "file_stats": {
+      "size_bytes": 4821,
+      "created_time": 1750943383.8370206,
+      "modified_time": 1745490616.0,
+      "access_time": 1747644580.3519874
+    },
+    "pom_analysis": {
+      "pom_path": "/Users/thomaskamsker/Documents/Atom/vron.one/playground/java/cuco/pom.xml",
+      "error": "asyncio.run() cannot be called from a running event loop"
+    },
+    "ai_analysis": {
+      "purpose": "EhCache distributed caching configuration for enterprise application using JMS-based replication",
+      "components": [
+        {
+          "name": "cacheManagerPeerProviderFactory",
+          "type": "Factory Configuration",
+          "description": "JMS-based cache replication configuration using ActiveMQ as broker",
+          "complexity": "high"
+        },
+        {
+          "name": "EhCacheReplicationActiveMQInitialContextFactory",
+          "type": "Context Factory",
+          "description": "Custom ActiveMQ JNDI initial context factory for cache replication",
+          "complexity": "medium"
+        }
+      ],
+      "data_structures": [
+        {
+          "name": "CacheConfiguration",
+          "fields": [
+            "initialContextFactoryName",
+            "providerURL",
+            "replicationTopicConnectionFactoryBindingName",
+            "getQueueConnectionFactoryBindingName"
+          ],
+          "relationships": [
+            "ActiveMQ Broker Connection",
+            "JMS Topics/Queues"
+          ],
+          "usage_patterns": [
+            "Distributed Cache Access",
+            "Cache Replication Events"
+          ]
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Cache replication must use JMS for reliable distributed communication",
+          "location": "cacheManagerPeerProviderFactory configuration",
+          "priority": "high"
+        },
+        {
+          "description": "ActiveMQ broker connection parameters must be externalized",
+          "location": "providerURL property",
+          "priority": "medium"
+        }
+      ],
+      "dependencies": [
+        "net.sf.ehcache",
+        "Apache ActiveMQ",
+        "JMS API",
+        "Custom ActiveMQ Context Factory"
+      ],
+      "integration_points": [
+        "ActiveMQ Message Broker (${jmsBrokerAddress}:${jmsBrokerPort})",
+        "JMS Topic Connection Factory",
+        "JMS Queue Connection Factory"
+      ],
+      "security_considerations": [
+        "JMS broker connection security",
+        "Cache data encryption in transit",
+        "Topic/Queue access control"
+      ],
+      "performance_notes": [
+        "JMS replication may impact cache operation latency",
+        "Connection pool settings should be tuned based on load",
+        "Cache size and eviction policies should be configured appropriately"
+      ],
+      "debug_insights": {
+        "code_quality": "Good - follows EhCache best practices for distributed caching",
+        "potential_issues": [
+          "Network connectivity to ActiveMQ broker",
+          "JMS message delivery reliability",
+          "Cache coherency in distributed environment"
+        ],
+        "improvement_suggestions": [
+          "Add error handling for broker connection failures",
+          "Implement monitoring for replication events",
+          "Consider adding cache statistics collection"
+        ]
+      }
+    },
+    "analysis_status": "completed",
+    "debug_analysis_timestamp": 904016.742343208
+  }
+]
