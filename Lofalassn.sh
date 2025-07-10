@@ -218,8 +218,9 @@ fi
 STEP2_TIME=$(($(date +%s) - START_TIME))
 echo "✅ step2 completed in $((STEP2_TIME - STEP1_TIME)) seconds (total: ${STEP2_TIME}s)"
 
-echo "Running Python step 3: step3.py"
-python src/step3.py
+# Run Step 3 using the standalone script
+echo "Running Step 3..."
+./Step3.sh $MODE
 STEP3_TIME=$(($(date +%s) - START_TIME))
 echo "✅ step3 completed in $((STEP3_TIME - STEP2_TIME)) seconds (total: ${STEP3_TIME}s)"
 

@@ -1,0 +1,97 @@
+[DOCUMENT]
+TITLE: 4_test_inserts_konto
+UID: 4_TEST_INSERTS_KONTO
+VERSION: 1.0
+
+[GRAMMAR]
+ELEMENTS:
+- TAG: REQUIREMENT
+  FIELDS:
+  - TITLE: UID
+    TYPE: String
+    REQUIRED: True
+  - TITLE: TITLE
+    TYPE: String
+    REQUIRED: True
+  - TITLE: STATEMENT
+    TYPE: String
+    REQUIRED: True
+  - TITLE: MID
+    TYPE: String
+    REQUIRED: False
+  RELATIONS:
+  - TYPE: Parent
+  - TYPE: File
+
+[REQUIREMENT]
+MID: 9133f3a394324092
+UID: REQ-001
+TITLE: **Purpose and Overview**
+STATEMENT: >>>
+- Initializes test account data in KONTO1 and KONTO2 tables  - Supports account management testing scenarios  - Links customers to their respective ac...
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: ef3568f1005f4d59
+UID: REQ-002
+TITLE: **Key Components**
+STATEMENT: >>>
+- KONTO1 and KONTO2 tables for account information  - Account-customer relationship mapping  - Account status and type tracking
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: 7624d8a9faba44ba
+UID: REQ-003
+TITLE: **Data Structures**
+STATEMENT: >>>
+Primary fields:  - KUNDE_ID: Customer reference  - KONTO_ID: Unique account identifier  - Address information  - MEDIUM_BES: Communication medium  - A...
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: ed0a92ff9826467a
+UID: REQ-004
+TITLE: **Business Rules**
+STATEMENT: >>>
+- Each account must be linked to a valid customer  - Account status tracking through AKTIV_CD  - Address information must follow standardized format  ...
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: c5162179e0f34ffd
+UID: REQ-005
+TITLE: **Integration Points**
+STATEMENT: >>>
+- Links to customer management system (KUNDE tables)  - Integration with billing systems (EBPP)  - Potential integration with document management syst...
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: cdfe57fac30c4071
+UID: REQ-006
+TITLE: **Security Considerations**
+STATEMENT: >>>
+- Account access control requirements  - Audit trail for account modifications  - Data privacy for account information
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: aef2d8ce720d424d
+UID: REQ-007
+TITLE: **Performance Notes**
+STATEMENT: >>>
+- Index recommendations for KUNDE_ID and KONTO_ID  - Consider partitioning by ANLAGE_TS for historical data  - Optimize for frequent account lookups
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: 442f2aa97b0a4e30
+UID: REQ-008
+TITLE: **Debug Insights**
+STATEMENT: >>>
+- Implement referential integrity checks  - Add data quality validation rules  - Consider implementing soft delete mechanism  - Add account history tr...
+<<<
+[/REQUIREMENT]
+

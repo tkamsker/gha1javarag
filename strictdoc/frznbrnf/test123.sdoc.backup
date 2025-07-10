@@ -1,0 +1,65 @@
+[DOCUMENT]
+TITLE: TEST123
+
+[[SECTION]]
+UID: 1.1
+TITLE: SEc1 T1
+
+[TEXT]
+STATEMENT: >>>
+Statement
+child234
+<<<
+
+[TEXT]
+UID: REQ-1
+STATEMENT: >>>
+Statement
+child2
+<<<
+
+[REQUIREMENT]
+UID: REQ-11
+STATUS: STATUS
+TAGS: TAGS
+TITLE: Titel
+STATEMENT: >>>
+Statement
+<<<
+RATIONALE: >>>
+Rationale
+<<<
+
+[REQUIREMENT]
+UID: REQ-12
+STATUS: STATUS2
+TAGS: TAGS2
+TITLE: Title 22
+STATEMENT: >>>
+Stement22
+<<<
+RATIONALE: >>>
+Rationale22
+<<<
+
+[TEXT]
+STATEMENT: >>>
+TEXT22
+<<<
+
+[/SECTION]
+
+[[SECTION]]
+TITLE: 2sectittle
+
+[TEXT]
+UID: 3457
+STATEMENT: >>>
+STATEMENT xxxx  y
+<<<
+RELATIONS:
+- TYPE: File
+  FORMAT: Sourcecode
+  VALUE: REQ-11
+
+[/SECTION]

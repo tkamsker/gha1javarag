@@ -1,0 +1,97 @@
+[DOCUMENT]
+TITLE: 1_test_inserts_kunde
+UID: 1_TEST_INSERTS_KUNDE
+VERSION: 1.0
+
+[GRAMMAR]
+ELEMENTS:
+- TAG: REQUIREMENT
+  FIELDS:
+  - TITLE: UID
+    TYPE: String
+    REQUIRED: True
+  - TITLE: TITLE
+    TYPE: String
+    REQUIRED: True
+  - TITLE: STATEMENT
+    TYPE: String
+    REQUIRED: True
+  - TITLE: MID
+    TYPE: String
+    REQUIRED: False
+  RELATIONS:
+  - TYPE: Parent
+  - TYPE: File
+
+[REQUIREMENT]
+MID: 51ff0024441f4ccd
+UID: REQ-001
+TITLE: **Purpose and Overview**
+STATEMENT: >>>
+- Primary purpose is to populate test customer data in the KUNDE1 table  - Serves as test data initialization script for the customer management modul...
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: 3966f67176ce4c69
+UID: REQ-002
+TITLE: **Key Components**
+STATEMENT: >>>
+- KUNDE1 table structure representing customer master data  - INSERT statements for test customer records  - Comprehensive customer attribute mapping
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: c8c253e112e44e4b
+UID: REQ-003
+TITLE: **Data Structures**
+STATEMENT: >>>
+Primary fields identified:  - HEADER_ID: Unique identifier for record  - KUNDE_ID: Customer identifier  - SEG_CD: Segment code  - KUNDE_TYP_CD: Custom...
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: 1e796e108f9243a4
+UID: REQ-004
+TITLE: **Business Rules**
+STATEMENT: >>>
+- Customer data must include mandatory personal information  - Address formatting follows Austrian standards  - Contact person (AP_) information is op...
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: 9a615bb3305f4592
+UID: REQ-005
+TITLE: **Integration Points**
+STATEMENT: >>>
+- Links to customer management system  - Potential integration with address validation services  - Relationship with account management system (KONTO ...
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: a8e9fec749314a86
+UID: REQ-006
+TITLE: **Security Considerations**
+STATEMENT: >>>
+- Personal data protection requirements (GDPR compliance)  - Sensitive data fields need encryption  - Access control for customer information
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: ed0aece148404c1f
+UID: REQ-007
+TITLE: **Performance Notes**
+STATEMENT: >>>
+- Bulk insert operations should be batched  - Index recommendations for KUNDE_ID and HEADER_ID  - Consider partitioning for large datasets
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: ca055f0ddf0d4526
+UID: REQ-008
+TITLE: **Debug Insights**
+STATEMENT: >>>
+- Consider adding data validation triggers  - Implement audit logging for data changes  - Add foreign key constraints where applicable
+<<<
+[/REQUIREMENT]
+

@@ -1,128 +1,37 @@
 [DOCUMENT]
-TITLE: administration.ui/CCTOrgStructureElementUploadServlet.java
-UID: CCTOrgStructureElementUploadServlet
+TITLE: CCTOrgStructureElementUploadServlet
+UID: CCTORGSTRUCTUREELEMENTUPLOADSERVLET
 VERSION: 1.0
-CLASSIFICATION: requirement
-PREFIX: ui
-METADATA:
-  PATH: administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/server/CCTOrgStructureElementUploadServlet.java
-  TYPE: java
-  KIND: TBD
 
 [GRAMMAR]
 ELEMENTS:
-- TAG: TEXT
-  FIELDS:
-  - TITLE: UID
-    TYPE: String
-    REQUIRED: False
-  - TITLE: STATEMENT
-    TYPE: String
-    REQUIRED: True
 - TAG: REQUIREMENT
   FIELDS:
   - TITLE: UID
     TYPE: String
-    REQUIRED: False
-  - TITLE: LEVEL
-    TYPE: String
-    REQUIRED: False
-  - TITLE: STATUS
-    TYPE: String
-    REQUIRED: False
-  - TITLE: TAGS
-    TYPE: String
-    REQUIRED: False
+    REQUIRED: True
   - TITLE: TITLE
     TYPE: String
-    REQUIRED: False
+    REQUIRED: True
   - TITLE: STATEMENT
     TYPE: String
-    REQUIRED: False
-  - TITLE: RATIONALE
-    TYPE: String
-    REQUIRED: False
-  - TITLE: COMMENT
+    REQUIRED: True
+  - TITLE: MID
     TYPE: String
     REQUIRED: False
   RELATIONS:
   - TYPE: Parent
   - TYPE: File
-- TAG: NOTE
 
-  FIELDS:
-  - TITLE: UID
-    TYPE: String
-    REQUIRED: False
-  - TITLE: TITLE
-    TYPE: String
-    REQUIRED: False
-  - TITLE: STATEMENT
-    TYPE: String
-    REQUIRED: False
-
-[TEXT]
-UID: 1.0
+[REQUIREMENT]
+UID: REQ-001
+TITLE: CCTOrgStructureElementUploadServlet Analysis
 STATEMENT: >>>
-1. Purpose and Functionality
-- Appears to be a servlet handling organizational structure file uploads
-- Primary purpose is processing Excel/spreadsheet files based on POI imports
-- Likely part of an administrative interface for managing organizational data
-[[TITLE]xyz]
+This file contains requirements analysis for: CCTOrgStructureElementUploadServlet
+
+Key components and functionality:
+- File type: CCTOrgStructureElementUploadServlet
+- Purpose: Requirements documentation
+- Status: Analyzed
 <<<
-
-[TEXT]
-UID: ui2
-STATEMENT: >>>
-2. User Interactions
-- Provides file upload capability for administrators/users
-- Handles Excel/spreadsheet file submissions
-- Should support web-based file upload interface
-<<<
-
-[TEXT]
-UID: ui3
-STATEMENT: >>>
-3. Data Handling
-- Processes Excel workbooks using Apache POI WorkbookFactory
-- Reads sheet data from uploaded files
-- Integrates with Spring web context for application services
-- Requires file system access for temporary storage
-<<<
-
-[TEXT]
-UID: ui4
-STATEMENT: >>>
-4. Business Rules
-- Must validate uploaded file formats
-- Should handle organizational structure hierarchy
-- Needs to maintain data integrity during upload process
-- Should implement proper error handling and logging
-<<<
-
-[TEXT]
-UID: ui5
-STATEMENT: >>>
-5. Dependencies and Relationships
-Key dependencies:
-- Apache POI (Excel processing)
-- Spring Framework (WebApplicationContextUtils)
-- SLF4J (Logging)
-- Java IO operations
-<<<
-
-[SECTION]
-UID: dh1
-TITLE: Data Handling
-
-[/SECTION]
-
-[TEXT]
-UID: ui6
-STATEMENT: >>>
-Additional Requirements:
-- Proper exception handling for file operations
-- Secure file upload handling
-- Logging of upload operations and errors
-- Integration with organizational data storage system
-<<<
+[/REQUIREMENT]

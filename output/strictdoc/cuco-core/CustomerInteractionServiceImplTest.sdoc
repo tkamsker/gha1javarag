@@ -1,50 +1,37 @@
 [DOCUMENT]
-TITLE: Requirements Analysis: cuco-core/src/test/java/at/a1ta/cuco/core/service/impl/CustomerInteractionServiceImplTest.java
-UID: REQ-ANALYSIS-CUSTOMERINTERACTIONSERVICEIMPLTEST
+TITLE: CustomerInteractionServiceImplTest
+UID: CUSTOMERINTERACTIONSERVICEIMPLTEST
+VERSION: 1.0
+
+[GRAMMAR]
+ELEMENTS:
+- TAG: REQUIREMENT
+  FIELDS:
+  - TITLE: UID
+    TYPE: String
+    REQUIRED: True
+  - TITLE: TITLE
+    TYPE: String
+    REQUIRED: True
+  - TITLE: STATEMENT
+    TYPE: String
+    REQUIRED: True
+  - TITLE: MID
+    TYPE: String
+    REQUIRED: False
+  RELATIONS:
+  - TYPE: Parent
+  - TYPE: File
 
 [REQUIREMENT]
-MID: 9ca90b46ea59436f
 UID: REQ-001
-TITLE: Purpose and Functionality
+TITLE: CustomerInteractionServiceImplTest Analysis
 STATEMENT: >>>
-- Test class for a customer interaction service implementation - Focuses on verifying customer interaction and workflow functionality - Part of a core...
+This file contains requirements analysis for: CustomerInteractionServiceImplTest
+
+Key components and functionality:
+- File type: CustomerInteractionServiceImplTest
+- Purpose: Requirements documentation
+- Status: Analyzed
 <<<
 [/REQUIREMENT]
-
-[REQUIREMENT]
-MID: 1c64f3a138a7474a
-UID: REQ-002
-TITLE: User Interactions
-STATEMENT: >>>
-- No direct user interactions (test class) - Tests service methods that likely handle customer interaction events - Validates customer interaction pro...
-<<<
-[/REQUIREMENT]
-
-[REQUIREMENT]
-MID: 08c97edd5f2b4add
-UID: REQ-003
-TITLE: Data Handling
-STATEMENT: >>>
-- Works with ClarifyCustomerInteractionResponse DTOs - Interacts with ClarifyInteractionAndWorkflowDao for data access - Handles customer interaction ...
-<<<
-[/REQUIREMENT]
-
-[REQUIREMENT]
-MID: 4843c0ba664b4f33
-UID: REQ-004
-TITLE: Business Rules
-STATEMENT: >>>
-- Must validate customer interaction workflows - Ensures proper handling of customer interaction responses - Likely includes validation of interaction...
-<<<
-[/REQUIREMENT]
-
-[REQUIREMENT]
-MID: f3614722795c4f71
-UID: REQ-005
-TITLE: Dependencies and Relationships
-STATEMENT: >>>
-- Depends on:  * ClarifyInteractionAndWorkflowDao for data operations  * ClarifyCustomerInteractionResponse for data transfer - Part of the cuco-core ...
-<<<
-[/REQUIREMENT]
-
-[/DOCUMENT]

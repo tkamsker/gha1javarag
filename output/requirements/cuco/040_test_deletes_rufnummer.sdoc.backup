@@ -1,0 +1,97 @@
+[DOCUMENT]
+TITLE: 040_test_deletes_rufnummer
+UID: 040_TEST_DELETES_RUFNUMMER
+VERSION: 1.0
+
+[GRAMMAR]
+ELEMENTS:
+- TAG: REQUIREMENT
+  FIELDS:
+  - TITLE: UID
+    TYPE: String
+    REQUIRED: True
+  - TITLE: TITLE
+    TYPE: String
+    REQUIRED: True
+  - TITLE: STATEMENT
+    TYPE: String
+    REQUIRED: True
+  - TITLE: MID
+    TYPE: String
+    REQUIRED: False
+  RELATIONS:
+  - TYPE: Parent
+  - TYPE: File
+
+[REQUIREMENT]
+MID: 7531beb1c93b4012
+UID: REQ-001
+TITLE: **Purpose and Overview**
+STATEMENT: >>>
+- Manages deletion of test phone number records  - Part of test data cleanup framework  - Coordinates with account deletion process
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: 9be07d68a3cb45b2
+UID: REQ-002
+TITLE: **Key Components**
+STATEMENT: >>>
+- DELETE operations on RUFNUMMER1 and RUFNUMMER2 tables  - Structured for multiple test customer records  - Parallel structure to account deletion scr...
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: 432630a5f5484713
+UID: REQ-003
+TITLE: **Data Structures**
+STATEMENT: >>>
+- Two phone number tables: RUFNUMMER1 and RUFNUMMER2  - Referenced by kunde_id (customer ID)  - Maintains consistent test ID pattern
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: 2b82b8804c524f11
+UID: REQ-004
+TITLE: **Business Rules**
+STATEMENT: >>>
+- Phone numbers must be deleted for specific test customer IDs  - Deletion sequence must maintain data integrity  - Both RUFNUMMER1 and RUFNUMMER2 rec...
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: 0727a21cf6db40c9
+UID: REQ-005
+TITLE: **Integration Points**
+STATEMENT: >>>
+- Must be executed after or with account deletions  - Part of larger test data management framework  - May have dependencies on other cleanup operatio...
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: 50e3bd7c91dd4b71
+UID: REQ-006
+TITLE: **Security Considerations**
+STATEMENT: >>>
+- Restricted to test environment execution  - Requires appropriate database access rights  - Must prevent production environment execution
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: 16c3f24dc7714a1e
+UID: REQ-007
+TITLE: **Performance Notes**
+STATEMENT: >>>
+- Consider combining DELETE statements  - Evaluate batch deletion approach  - Ensure proper indexing on kunde_id
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: 5d66809a32a94902
+UID: REQ-008
+TITLE: **Debug Insights**
+STATEMENT: >>>
+- Add transaction control  - Implement error handling  - Consider adding execution logging  - Validate deletion success General Recommendations: - Imp...
+<<<
+[/REQUIREMENT]
+

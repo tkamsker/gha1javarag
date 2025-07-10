@@ -1,0 +1,97 @@
+[DOCUMENT]
+TITLE: 5_test_inserts_bestand
+UID: 5_TEST_INSERTS_BESTAND
+VERSION: 1.0
+
+[GRAMMAR]
+ELEMENTS:
+- TAG: REQUIREMENT
+  FIELDS:
+  - TITLE: UID
+    TYPE: String
+    REQUIRED: True
+  - TITLE: TITLE
+    TYPE: String
+    REQUIRED: True
+  - TITLE: STATEMENT
+    TYPE: String
+    REQUIRED: True
+  - TITLE: MID
+    TYPE: String
+    REQUIRED: False
+  RELATIONS:
+  - TYPE: Parent
+  - TYPE: File
+
+[REQUIREMENT]
+MID: f2a1cf30e5e644cb
+UID: REQ-001
+TITLE: **Purpose and Overview**
+STATEMENT: >>>
+- Primary purpose is to populate test data for inventory/stock management tables (BESTAND1 and BESTAND2)  - Serves as test data initialization script ...
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: 11f625d8ced54152
+UID: REQ-002
+TITLE: **Key Components**
+STATEMENT: >>>
+- BESTAND1 table: Primary inventory management table  - BESTAND2 table: Secondary/backup inventory table  - Both tables maintain parallel structure fo...
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: 06cce14412ca40a9
+UID: REQ-003
+TITLE: **Data Structures**
+STATEMENT: >>>
+- Key fields:   * BESTAND_ID (Primary Key, 20-digit identifier)   * KUNDE_ID (Customer ID, 9-digit)   * VERTRAG_ID (Contract ID, 20-digit)   * RUFNUMM...
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: 88eeb4aa98364bf1
+UID: REQ-004
+TITLE: **Business Rules**
+STATEMENT: >>>
+- Phone numbers must follow Austrian format (43 prefix)  - IDs must maintain specific length requirements  - Referential integrity between customer, c...
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: f9eff88a147b44bf
+UID: REQ-005
+TITLE: **Integration Points**
+STATEMENT: >>>
+- Links to customer management system  - Integrates with contract management system  - Connected to account management system  - Telecommunications se...
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: 3ded148d3d69426d
+UID: REQ-006
+TITLE: **Security Considerations**
+STATEMENT: >>>
+- Restricted access to inventory data  - Audit trail requirements for data modifications  - Personal data protection (GDPR compliance)
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: 31f07c07043b415e
+UID: REQ-007
+TITLE: **Performance Notes**
+STATEMENT: >>>
+- Batch insert operations  - Index requirements for KUNDE_ID and VERTRAG_ID  - Consider partitioning for large datasets
+<<<
+[/REQUIREMENT]
+
+[REQUIREMENT]
+MID: 24c96df7c9bf41d6
+UID: REQ-008
+TITLE: **Debug Insights**
+STATEMENT: >>>
+- Implement proper error handling for insert failures  - Add data validation before insertion  - Consider using stored procedures for better maintaina...
+<<<
+[/REQUIREMENT]
+

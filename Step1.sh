@@ -91,21 +91,45 @@ fi
 # Start time
 START_TIME=$(date +%s)
 
-echo "Running Python step 1: main.py (with improved rate limiting and $AI_PROVIDER)"
-if [ "$MODE" = "test" ]; then
-    echo "Using test mode with conservative rate limiting..."
-    python src/main_test.py
-elif [ "$MODE" = "production" ]; then
-    echo "Using production mode with standard rate limiting..."
-    export RATE_LIMIT_ENV=production
-    python src/main.py
-elif [ "$MODE" = "emergency" ]; then
-    echo "Using emergency mode with very restrictive rate limiting..."
-    export RATE_LIMIT_ENV=emergency
-    python src/main.py
+# Check for debug mode
+DEBUGFILE=${DEBUGFILE:-""}
+if [ -n "$DEBUGFILE" ] && [ -f "$DEBUGFILE" ]; then
+    echo "🔍 DEBUG MODE ENABLED"
+    echo "Debug file: $DEBUGFILE"
+    echo "Processing specific files listed in debug file..."
+    
+    if [ "$MODE" = "test" ]; then
+        echo "Using debug mode with test settings..."
+        python src/main_debug.py
+    elif [ "$MODE" = "production" ]; then
+        echo "Using debug mode with production settings..."
+        export RATE_LIMIT_ENV=production
+        python src/main_debug.py
+    elif [ "$MODE" = "emergency" ]; then
+        echo "Using debug mode with emergency settings..."
+        export RATE_LIMIT_ENV=emergency
+        python src/main_debug.py
+    else
+        echo "Using debug mode with test settings..."
+        python src/main_debug.py
+    fi
 else
-    echo "Using test mode with conservative rate limiting..."
-    python src/main_test.py
+    echo "Running Python step 1: main.py (with improved rate limiting and $AI_PROVIDER)"
+    if [ "$MODE" = "test" ]; then
+        echo "Using test mode with conservative rate limiting..."
+        python src/main_test.py
+    elif [ "$MODE" = "production" ]; then
+        echo "Using production mode with standard rate limiting..."
+        export RATE_LIMIT_ENV=production
+        python src/main.py
+    elif [ "$MODE" = "emergency" ]; then
+        echo "Using emergency mode with very restrictive rate limiting..."
+        export RATE_LIMIT_ENV=emergency
+        python src/main.py
+    else
+        echo "Using test mode with conservative rate limiting..."
+        python src/main_test.py
+    fi
 fi
 
 # Check for quota exceeded error (for OpenAI and Anthropic)

@@ -1,0 +1,32 @@
+# Debug Files Example
+# This file contains a list of specific files to process in debug mode
+# One file path per line, full absolute paths
+# Lines starting with # are comments and will be ignored
+# Empty lines are also ignored
+
+# Example Java source files
+# /path/to/your/project/src/main/java/com/example/Controller.java
+# /path/to/your/project/src/main/java/com/example/Service.java
+# /path/to/your/project/src/main/java/com/example/Repository.java
+
+# Example JSP files
+# /path/to/your/project/src/main/webapp/index.jsp
+# /path/to/your/project/src/main/webapp/login.jsp
+
+# Example XML configuration files
+# /path/to/your/project/src/main/resources/applicationContext.xml
+# /path/to/your/project/src/main/resources/spring-config.xml
+
+# Example SQL files
+# /path/to/your/project/src/main/resources/schema.sql
+# /path/to/your/project/src/main/resources/data.sql
+
+# To use this file:
+# 1. Copy this file and rename it (e.g., debug_files.txt)
+# 2. Replace the example paths with actual file paths you want to process
+# 3. Set DEBUGFILE=/path/to/your/debug_files.txt in your .env file
+# 4. Run Step1.sh, Step2.sh, or Step3.sh - they will automatically detect debug mode
+
+# Example with actual paths (uncomment and modify as needed):
+# /Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag/src/main/java/com/example/TestController.java
+# /Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag/src/main/resources/application.properties 
