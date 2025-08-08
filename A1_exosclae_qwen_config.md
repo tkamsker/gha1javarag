@@ -8,6 +8,11 @@ OPENAI_MODEL=gpt-oss:120b
 export OPENAI_API_KEY="ollama"
 export OPENAI_BASE_URL="http://localhost:11434/v1"
 export OPENAI_MODEL="gpt-oss:120b"
+export OLLAMA_DEBUG=1
 
 # we need 
 OLLAMA_TIMEOUT=900 ollama run gpt-oss:120b
+
+
+#  watch -n 1 nvidia-smi
+
