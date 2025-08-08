@@ -91,18 +91,18 @@ START_TIME=$(date +%s)
 echo "Running Python step 1: main.py (with improved rate limiting and $AI_PROVIDER)"
 if [ "$MODE" = "test" ]; then
     echo "Using test mode with conservative rate limiting..."
-    python src/main_test.py
+    python3 src/main_test.py
 elif [ "$MODE" = "production" ]; then
     echo "Using production mode with standard rate limiting..."
     export RATE_LIMIT_ENV=production
-    python src/main.py
+    python3 src/main.py
 elif [ "$MODE" = "emergency" ]; then
     echo "Using emergency mode with very restrictive rate limiting..."
     export RATE_LIMIT_ENV=emergency
-    python src/main.py
+    python3 src/main.py
 else
     echo "Using test mode with conservative rate limiting..."
-    python src/main_test.py
+    python3 src/main_test.py
 fi
 
 # Check for quota exceeded error (for OpenAI and Anthropic)
@@ -156,19 +156,19 @@ echo "Running Python step 2: step2.py (with improved rate limiting and $AI_PROVI
 if [ "$MODE" = "test" ]; then
     echo "Using test mode for step2..."
     export RATE_LIMIT_ENV=test
-    python src/step2_test.py
+    python3 src/step2_test.py
 elif [ "$MODE" = "production" ]; then
     echo "Using production mode for step2..."
     export RATE_LIMIT_ENV=production
-    python src/step2.py
+    python3 src/step2.py
 elif [ "$MODE" = "emergency" ]; then
     echo "Using emergency mode for step2..."
     export RATE_LIMIT_ENV=emergency
-    python src/step2.py
+    python3 src/step2.py
 else
     echo "Using test mode for step2..."
     export RATE_LIMIT_ENV=test
-    python src/step2_test.py
+    python3 src/step2_test.py
 fi
 
 # Check for quota exceeded error (for OpenAI and Anthropic)

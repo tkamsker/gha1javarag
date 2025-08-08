@@ -8,7 +8,7 @@ fi
 
 # Create new virtual environment
 echo "Creating new virtual environment..."
-python -m venv venv
+python3 -m venv venv
 
 # Activate virtual environment
 echo "Activating virtual environment..."
@@ -26,4 +26,4 @@ pip install -r requirements.txt
 echo "Creating necessary directories..."
 mkdir -p data/chromadb output config
 
-echo "Setup complete! You can now run: python src/main.py" 
+echo "Setup complete! You can now run: python3 src/main.py" 

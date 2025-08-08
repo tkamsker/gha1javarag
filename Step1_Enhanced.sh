@@ -63,7 +63,7 @@ mkdir -p "$CHROMADB_DIR"
 
 echo ""
 echo "🧪 Running system validation tests..."
-python test_enhanced_classification.py
+python3 test_enhanced_classification.py
 if [ $? -ne 0 ]; then
     echo "❌ System validation failed. Please check the error messages above."
     exit 1
@@ -74,7 +74,7 @@ echo "📊 Starting enhanced analysis pipeline..."
 
 # Run enhanced analysis
 echo "Phase 1: Enhanced file analysis with architectural classification..."
-python src/enhanced_main.py
+python3 src/enhanced_main.py
 
 if [ $? -eq 0 ]; then
     echo ""
@@ -89,7 +89,7 @@ if [ $? -eq 0 ]; then
     
     # Generate enhanced requirements
     echo "Phase 2: Generating enhanced requirements documentation..."
-    python -c "
+    python3 -c "
 import json
 import sys
 sys.path.insert(0, 'src')

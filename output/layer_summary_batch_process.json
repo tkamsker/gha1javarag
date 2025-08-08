@@ -1,0 +1,27 @@
+{
+  "layer": "batch_process",
+  "total_files": 6,
+  "component_breakdown": {
+    "database_script": [
+      "cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/ROLLOUT/075_create_del_old_data_job.sql",
+      "cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/ROLLOUT/080_create_main_alert_job.sql",
+      "cuco.dbmaintain/sql/repeat/cronjobs/@custc_cronjobs_#prod.sql",
+      "cuco.dbmaintain/sql/repeat/cronjobs/@custc_cronjobs_#dev.sql",
+      "cuco.dbmaintain/sql/repeat/cronjobs/@custc_cronjobs_#int.sql",
+      "cuco.dbmaintain/sql/09/07_CuCo_V4.1.0/01_@custc_cct_sequenceResetJob.sql"
+    ]
+  },
+  "component_counts": {
+    "database_script": 6
+  },
+  "technology_usage": {},
+  "design_patterns": {},
+  "files": [
+    "cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/ROLLOUT/075_create_del_old_data_job.sql",
+    "cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/ROLLOUT/080_create_main_alert_job.sql",
+    "cuco.dbmaintain/sql/repeat/cronjobs/@custc_cronjobs_#prod.sql",
+    "cuco.dbmaintain/sql/repeat/cronjobs/@custc_cronjobs_#dev.sql",
+    "cuco.dbmaintain/sql/repeat/cronjobs/@custc_cronjobs_#int.sql",
+    "cuco.dbmaintain/sql/09/07_CuCo_V4.1.0/01_@custc_cct_sequenceResetJob.sql"
+  ]
+}

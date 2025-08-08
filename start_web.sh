@@ -19,7 +19,7 @@ case $choice in
         echo "Starting Flask server..."
         export FLASK_APP=flask_app.py
         export FLASK_ENV=development
-        python -m flask run --host=0.0.0.0 --port=8000
+        python3 -m flask run --host=0.0.0.0 --port=8000
         ;;
     2)
         echo "Starting FastAPI server..."
@@ -29,6 +29,6 @@ case $choice in
         echo "Invalid choice. Starting Flask by default..."
         export FLASK_APP=flask_app.py
         export FLASK_ENV=development
-        python -m flask run --host=0.0.0.0 --port=8000
+        python3 -m flask run --host=0.0.0.0 --port=8000
         ;;
 esac 

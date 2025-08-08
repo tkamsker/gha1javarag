@@ -100,38 +100,38 @@ if [ -n "$DEBUGFILE" ] && [ -f "$DEBUGFILE" ]; then
     if [ "$MODE" = "test" ]; then
         echo "Using debug mode with test settings..."
         export RATE_LIMIT_ENV=test
-        python src/step3_debug_test.py
+        python3 src/step3_debug_test.py
     elif [ "$MODE" = "production" ]; then
         echo "Using debug mode with production settings..."
         export RATE_LIMIT_ENV=production
-        python src/step3_debug.py
+        python3 src/step3_debug.py
     elif [ "$MODE" = "emergency" ]; then
         echo "Using debug mode with emergency settings..."
         export RATE_LIMIT_ENV=emergency
-        python src/step3_debug.py
+        python3 src/step3_debug.py
     else
         echo "Using debug mode with test settings..."
         export RATE_LIMIT_ENV=test
-        python src/step3_debug_test.py
+        python3 src/step3_debug_test.py
     fi
 else
     echo "Running Python step 3: step3.py (with improved rate limiting and $AI_PROVIDER)"
     if [ "$MODE" = "test" ]; then
         echo "Using test mode for step3..."
         export RATE_LIMIT_ENV=test
-        python src/step3_test.py
+        python3 src/step3_test.py
     elif [ "$MODE" = "production" ]; then
         echo "Using production mode for step3..."
         export RATE_LIMIT_ENV=production
-        python src/step3.py
+        python3 src/step3.py
     elif [ "$MODE" = "emergency" ]; then
         echo "Using emergency mode for step3..."
         export RATE_LIMIT_ENV=emergency
-        python src/step3.py
+        python3 src/step3.py
     else
         echo "Using test mode for step3..."
         export RATE_LIMIT_ENV=test
-        python src/step3_test.py
+        python3 src/step3_test.py
     fi
 fi
 

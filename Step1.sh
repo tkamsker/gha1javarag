@@ -100,35 +100,35 @@ if [ -n "$DEBUGFILE" ] && [ -f "$DEBUGFILE" ]; then
     
     if [ "$MODE" = "test" ]; then
         echo "Using debug mode with test settings..."
-        python src/main_debug.py
+        python3 src/main_debug.py
     elif [ "$MODE" = "production" ]; then
         echo "Using debug mode with production settings..."
         export RATE_LIMIT_ENV=production
-        python src/main_debug.py
+        python3 src/main_debug.py
     elif [ "$MODE" = "emergency" ]; then
         echo "Using debug mode with emergency settings..."
         export RATE_LIMIT_ENV=emergency
-        python src/main_debug.py
+        python3 src/main_debug.py
     else
         echo "Using debug mode with test settings..."
-        python src/main_debug.py
+        python3 src/main_debug.py
     fi
 else
     echo "Running Python step 1: main.py (with improved rate limiting and $AI_PROVIDER)"
     if [ "$MODE" = "test" ]; then
         echo "Using test mode with conservative rate limiting..."
-        python src/main_test.py
+        python3 src/main_test.py
     elif [ "$MODE" = "production" ]; then
         echo "Using production mode with standard rate limiting..."
         export RATE_LIMIT_ENV=production
-        python src/main.py
+        python3 src/main.py
     elif [ "$MODE" = "emergency" ]; then
         echo "Using emergency mode with very restrictive rate limiting..."
         export RATE_LIMIT_ENV=emergency
-        python src/main.py
+        python3 src/main.py
     else
         echo "Using test mode with conservative rate limiting..."
-        python src/main_test.py
+        python3 src/main_test.py
     fi
 fi
 
