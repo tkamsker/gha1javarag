@@ -22,3 +22,8 @@ OLLAMA_TIMEOUT=900 ollama run gpt-oss:120b
 
 #  watch -n 1 nvidia-smi
 
+qwen needs to set timeout 
+npm config set timeout 600000
+and then 
+qwen
+
