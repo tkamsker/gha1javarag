@@ -41,7 +41,20 @@ def load_rate_limit_config(environment: str = None) -> RateLimitConfig:
         return RateLimitConfig()
 
 def get_ollama_config(environment: str = None) -> Dict[str, Any]:
-    """Get Ollama-specific configuration from YAML file"""
+    """Get Ollama-specific configuration from YAML file with environment variable override"""
+    
+    # Check for OLLAMA_TIMEOUT environment variable first (highest priority)
+    env_timeout = os.getenv('OLLAMA_TIMEOUT')
+    if env_timeout is not None:
+        try:
+            timeout_value = int(env_timeout)
+            return {
+                'timeout': timeout_value,
+                'environment': 'env_override',
+                'source': f'OLLAMA_TIMEOUT={env_timeout}'
+            }
+        except ValueError:
+            print(f"Warning: Invalid OLLAMA_TIMEOUT value '{env_timeout}'. Must be an integer. Using config file settings.")
     
     # Default to production if no environment specified
     if environment is None:
@@ -59,16 +72,17 @@ def get_ollama_config(environment: str = None) -> Dict[str, Any]:
         env_config = config_data[environment]
         
         return {
-            'timeout': env_config.get('ollama_timeout', 120),
-            'environment': environment
+            'timeout': env_config.get('ollama_timeout', 180),
+            'environment': environment,
+            'source': f'config file ({environment})'
         }
         
     except FileNotFoundError:
         print(f"Warning: Config file {config_file} not found. Using default Ollama settings.")
-        return {'timeout': 120, 'environment': 'default'}
+        return {'timeout': 180, 'environment': 'default', 'source': 'fallback default'}
     except Exception as e:
         print(f"Warning: Error loading Ollama config: {e}. Using default settings.")
-        return {'timeout': 120, 'environment': 'default'}
+        return {'timeout': 180, 'environment': 'default', 'source': 'fallback default'}
 
 def get_environment_config() -> Dict[str, Any]:
     """Get current environment configuration"""
@@ -80,28 +94,28 @@ def get_environment_config() -> Dict[str, Any]:
             'requests_per_minute': 15,
             'requests_per_hour': 800,
             'delay_between_requests': 4.0,
-            'ollama_timeout': 120
+            'ollama_timeout': 240
         },
         'test': {
             'description': 'Very conservative settings for testing',
             'requests_per_minute': 10,
             'requests_per_hour': 500,
             'delay_between_requests': 8.0,
-            'ollama_timeout': 60
+            'ollama_timeout': 180
         },
         'development': {
             'description': 'More aggressive settings for development',
             'requests_per_minute': 20,
             'requests_per_hour': 1000,
             'delay_between_requests': 2.0,
-            'ollama_timeout': 90
+            'ollama_timeout': 180
         },
         'emergency': {
             'description': 'Very restrictive settings for emergency situations',
             'requests_per_minute': 5,
             'requests_per_hour': 200,
             'delay_between_requests': 10.0,
-            'ollama_timeout': 30
+            'ollama_timeout': 120
         }
     }
     

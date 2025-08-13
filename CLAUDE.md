@@ -123,6 +123,7 @@ ANTHROPIC_API_KEY=your-key
 # Ollama Configuration
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL_NAME=deepseek-r1:32b
+OLLAMA_TIMEOUT=240  # Timeout in seconds (overrides config file)
 
 # Rate Limiting
 RATE_LIMIT_ENV=test|production|emergency
@@ -133,9 +134,16 @@ CHROMADB_DIR=./data/chromadb
 ```
 
 ### Rate Limiting Modes
-- **test**: 10 req/min, 500 req/hour, 8s delays
-- **production**: 15 req/min, 800 req/hour, 4s delays  
-- **emergency**: 5 req/min, 200 req/hour, 10s delays
+- **test**: 10 req/min, 500 req/hour, 8s delays, 180s timeout
+- **production**: 15 req/min, 800 req/hour, 4s delays, 240s timeout
+- **emergency**: 5 req/min, 200 req/hour, 10s delays, 120s timeout
+
+### Ollama Timeout Configuration
+The `OLLAMA_TIMEOUT` environment variable overrides config file timeouts:
+- **240-300s**: Recommended for large models (deepseek-r1:70b, etc.)
+- **180-240s**: Recommended for medium models 
+- **120-180s**: Recommended for small models
+- Set in `.env` file: `OLLAMA_TIMEOUT=300`
 
 ## Key Features
 

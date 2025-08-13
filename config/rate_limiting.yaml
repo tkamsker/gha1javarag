@@ -9,7 +9,7 @@ production:
   exponential_backoff_base: 2.0
   max_retries: 5
   quota_exceeded_wait_time: 3600  # 1 hour wait when quota exceeded
-  ollama_timeout: 60  # 2 minutes for Ollama requests
+  ollama_timeout: 240  # 4 minutes for Ollama requests (increased for deepseek-r1:70b)
 
 # Test settings (very conservative)
 test:
@@ -19,7 +19,7 @@ test:
   exponential_backoff_base: 2.0
   max_retries: 5
   quota_exceeded_wait_time: 3600  # 1 hour wait when quota exceeded
-  ollama_timeout: 60  # 1 minute for Ollama requests (faster debugging)
+  ollama_timeout: 180  # 3 minutes for Ollama requests (increased for deepseek-r1:70b)
 
 # Development settings (more aggressive)
 development:
@@ -29,7 +29,7 @@ development:
   exponential_backoff_base: 2.0
   max_retries: 3
   quota_exceeded_wait_time: 3600  # 1 hour wait when quota exceeded
-  ollama_timeout: 90  # 1.5 minutes for Ollama requests
+  ollama_timeout: 180  # 3 minutes for Ollama requests (increased for deepseek-r1:70b)
 
 # Emergency settings (very restrictive)
 emergency:
@@ -39,7 +39,7 @@ emergency:
   exponential_backoff_base: 2.0
   max_retries: 5
   quota_exceeded_wait_time: 7200  # 2 hours wait when quota exceeded (more conservative)
-  ollama_timeout: 30  # 30 seconds for Ollama requests (very fast debugging) 
+  ollama_timeout: 120  # 2 minutes for Ollama requests (increased for deepseek-r1:70b) 
 
 # Hardcore 
 # Development settings (more aggressive)
@@ -50,4 +50,4 @@ hardcore:
   exponential_backoff_base: 2.0
   max_retries: 3
   quota_exceeded_wait_time: 3600  # 1 hour wait when quota exceeded
-  ollama_timeout: 90  # 1.5 minutes for Ollama requests
+  ollama_timeout: 180  # 3 minutes for Ollama requests (increased for deepseek-r1:70b)

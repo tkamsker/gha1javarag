@@ -172,7 +172,7 @@ class OllamaProvider(AIProvider):
         
         logger.info(f"Initialized Ollama provider with model: {self.model_name}")
         logger.info(f"Ollama base URL: {self.base_url}")
-        logger.info(f"Ollama timeout: {self.timeout} seconds (from {ollama_config['environment']} config)")
+        logger.info(f"Ollama timeout: {self.timeout} seconds (from {ollama_config.get('source', ollama_config['environment'])})")
     
     async def health_check(self) -> dict:
         """Check Ollama service health and model availability"""
