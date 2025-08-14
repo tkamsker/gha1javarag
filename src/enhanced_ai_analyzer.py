@@ -8,11 +8,11 @@ import logging
 try:
     from ai_analyzer import AIAnalyzer
     from classification_prompts import ClassificationPromptBuilder
-    from metadata_schemas import EnhancedAIAnalysis, EnhancedFileClassification
+    from metadata_schemas import EnhancedAIAnalysis, EnhancedFileClassification, validate_and_fix_ai_response
 except ImportError:
     from .ai_analyzer import AIAnalyzer
     from .classification_prompts import ClassificationPromptBuilder
-    from .metadata_schemas import EnhancedAIAnalysis, EnhancedFileClassification
+    from .metadata_schemas import EnhancedAIAnalysis, EnhancedFileClassification, validate_and_fix_ai_response
 
 logger = logging.getLogger('java_analysis.enhanced_ai_analyzer')
 
@@ -127,12 +127,15 @@ class EnhancedAIAnalyzer(AIAnalyzer):
         return file_metadata
     
     def parse_enhanced_analysis(self, analysis_text: str, file_path: str) -> Dict[str, Any]:
-        """Parse enhanced analysis response"""
+        """Parse enhanced analysis response with validation and fixing"""
         try:
             # Extract JSON from response
             json_match = re.search(r'\{.*\}', analysis_text, re.DOTALL)
             if json_match:
                 analysis_dict = json.loads(json_match.group())
+                
+                # Validate and fix AI response before Pydantic validation
+                analysis_dict = validate_and_fix_ai_response(analysis_dict)
                 
                 # Validate using Pydantic model
                 enhanced_analysis = EnhancedAIAnalysis.model_validate(analysis_dict)
@@ -143,6 +146,7 @@ class EnhancedAIAnalyzer(AIAnalyzer):
                 
         except Exception as e:
             logger.error(f"Failed to parse enhanced analysis for {file_path}: {e}")
+            logger.debug(f"Raw analysis text: {analysis_text[:500]}...")
             return self.create_fallback_analysis(analysis_text, file_path)
     
     def create_fallback_analysis(self, analysis_text: str, file_path: str) -> Dict[str, Any]:

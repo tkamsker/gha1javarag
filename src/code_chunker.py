@@ -218,14 +218,16 @@ class IntelligentCodeChunker:
             # Extract classes
             for path, node in tree:
                 if isinstance(node, javalang.tree.ClassDeclaration):
+                    # Make class IDs unique by including line number
+                    class_line = node.position.line if node.position else 0
                     chunk = CodeChunk(
                         content=self._extract_java_node_content(content, node),
-                        chunk_id=f"{file_path}:class:{node.name}",
+                        chunk_id=f"{file_path}:class:{node.name}:{class_line}",
                         file_path=file_path,
                         language='java',
                         chunk_type='class',
-                        start_line=node.position.line if node.position else 0,
-                        end_line=node.position.line if node.position else 0,
+                        start_line=class_line,
+                        end_line=class_line,
                         class_name=node.name,
                         complexity_score=self._calculate_java_complexity(node),
                         metadata=self._extract_java_metadata(node)
@@ -233,14 +235,16 @@ class IntelligentCodeChunker:
                     chunks.append(chunk)
                 
                 elif isinstance(node, javalang.tree.MethodDeclaration):
+                    # Make method IDs unique by including line number
+                    method_line = node.position.line if node.position else 0
                     chunk = CodeChunk(
                         content=self._extract_java_node_content(content, node),
-                        chunk_id=f"{file_path}:method:{node.name}",
+                        chunk_id=f"{file_path}:method:{node.name}:{method_line}",
                         file_path=file_path,
                         language='java',
                         chunk_type='method',
-                        start_line=node.position.line if node.position else 0,
-                        end_line=node.position.line if node.position else 0,
+                        start_line=method_line,
+                        end_line=method_line,
                         function_name=node.name,
                         parent_context=getattr(node, 'parent_class', None),
                         complexity_score=self._calculate_java_complexity(node),

@@ -73,6 +73,11 @@ class TechnologyStack(str, Enum):
     ANGULAR = "angular"
     REACT = "react"
     BOOTSTRAP = "bootstrap"
+    # Generic/Core technologies
+    JAVA = "java"
+    JAVASCRIPT = "javascript"
+    SQL = "sql"
+    XML = "xml"
     UNKNOWN = "unknown"
 
 class DesignPattern(str, Enum):
@@ -135,3 +140,75 @@ class EnhancedAIAnalysis(BaseModel):
     integration_points: List[str] = Field(default_factory=list)
     security_considerations: List[str] = Field(default_factory=list)
     performance_considerations: List[str] = Field(default_factory=list)
+
+def validate_and_fix_ai_response(data: dict) -> dict:
+    """Validate and fix common AI response issues"""
+    if not isinstance(data, dict):
+        return data
+    
+    # Fix technology_stack values
+    if 'file_classification' in data and isinstance(data['file_classification'], dict):
+        file_class = data['file_classification']
+        
+        # Technology stack mapping
+        tech_mapping = {
+            'core_java': 'java',
+            'plain_java': 'java',
+            'standard_java': 'java',
+            'jdbc': 'java',  # Map JDBC to Java
+            'servlets': 'servlet_api',
+            'spring': 'spring_framework',
+            'springboot': 'spring_boot',
+            'spring-boot': 'spring_boot',
+            'js': 'javascript',
+            'html': 'xml',  # Map HTML to XML as generic markup
+            'css': 'unknown',  # No specific CSS enum yet
+        }
+        
+        if 'technology_stack' in file_class:
+            tech_stack = file_class['technology_stack']
+            if isinstance(tech_stack, list):
+                # Fix each technology stack item
+                fixed_tech_stack = []
+                for tech in tech_stack:
+                    if isinstance(tech, str):
+                        # Apply mapping if available
+                        tech_lower = tech.lower().replace('_', '').replace('-', '')
+                        mapped_tech = tech_mapping.get(tech_lower, tech.lower())
+                        
+                        # Validate against enum values
+                        valid_values = [e.value for e in TechnologyStack]
+                        if mapped_tech in valid_values:
+                            fixed_tech_stack.append(mapped_tech)
+                        else:
+                            # Default to 'unknown' for unrecognized technologies
+                            fixed_tech_stack.append('unknown')
+                    else:
+                        fixed_tech_stack.append('unknown')
+                
+                file_class['technology_stack'] = fixed_tech_stack
+            elif isinstance(tech_stack, str):
+                # Handle single string value
+                tech_lower = tech_stack.lower().replace('_', '').replace('-', '')
+                mapped_tech = tech_mapping.get(tech_lower, tech_stack.lower())
+                
+                valid_values = [e.value for e in TechnologyStack]
+                if mapped_tech in valid_values:
+                    file_class['technology_stack'] = [mapped_tech]
+                else:
+                    file_class['technology_stack'] = ['unknown']
+        
+        # Fix design_patterns values
+        if 'design_patterns' in file_class:
+            patterns = file_class['design_patterns']
+            if isinstance(patterns, list):
+                fixed_patterns = []
+                valid_patterns = [e.value for e in DesignPattern]
+                for pattern in patterns:
+                    if isinstance(pattern, str) and pattern.lower() in valid_patterns:
+                        fixed_patterns.append(pattern.lower())
+                    else:
+                        fixed_patterns.append('unknown')
+                file_class['design_patterns'] = fixed_patterns
+    
+    return data
