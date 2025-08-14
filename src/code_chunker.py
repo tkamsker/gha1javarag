@@ -129,6 +129,7 @@ class IntelligentCodeChunker:
     def chunk_python_code(self, content: str, file_path: str) -> List[CodeChunk]:
         """Chunk Python code based on AST analysis"""
         chunks = []
+        import_counter = 0
         try:
             tree = ast.parse(content)
             
@@ -138,7 +139,7 @@ class IntelligentCodeChunker:
                 if isinstance(node, ast.FunctionDef):
                     chunk = CodeChunk(
                         content=ast.unparse(node),
-                        chunk_id=f"{file_path}:function:{node.name}",
+                        chunk_id=f"{file_path}:function:{node.name}:{node.lineno}",
                         file_path=file_path,
                         language='python',
                         chunk_type='function',
@@ -153,7 +154,7 @@ class IntelligentCodeChunker:
                 elif isinstance(node, ast.ClassDef):
                     chunk = CodeChunk(
                         content=ast.unparse(node),
-                        chunk_id=f"{file_path}:class:{node.name}",
+                        chunk_id=f"{file_path}:class:{node.name}:{node.lineno}",
                         file_path=file_path,
                         language='python',
                         chunk_type='class',
@@ -165,9 +166,10 @@ class IntelligentCodeChunker:
                     )
                 
                 elif isinstance(node, ast.Import) or isinstance(node, ast.ImportFrom):
+                    import_counter += 1
                     chunk = CodeChunk(
                         content=ast.unparse(node),
-                        chunk_id=f"{file_path}:import:{len(chunks)}",
+                        chunk_id=f"{file_path}:import:{import_counter}",
                         file_path=file_path,
                         language='python',
                         chunk_type='import',
@@ -229,10 +231,12 @@ class IntelligentCodeChunker:
                     chunks.append(chunk)
             
             # Add imports
+            import_counter = 0
             for import_decl in tree.imports:
+                import_counter += 1
                 chunk = CodeChunk(
                     content=f"import {import_decl.path};",
-                    chunk_id=f"{file_path}:import:{len(chunks)}",
+                    chunk_id=f"{file_path}:import:{import_counter}",
                     file_path=file_path,
                     language='java',
                     chunk_type='import',
@@ -255,6 +259,7 @@ class IntelligentCodeChunker:
         """Chunk JavaScript code based on function and class patterns"""
         chunks = []
         lines = content.split('\n')
+        chunk_counter = 0
         
         # Patterns for JavaScript
         function_pattern = r'^(?:export\s+)?(?:async\s+)?function\s+(\w+)'
@@ -274,9 +279,10 @@ class IntelligentCodeChunker:
             if import_match:
                 # Save previous chunk if exists
                 if current_chunk and current_type:
+                    chunk_counter += 1
                     chunks.append(CodeChunk(
                         content='\n'.join(current_chunk),
-                        chunk_id=f"{file_path}:{current_type}:{current_name or 'import'}",
+                        chunk_id=f"{file_path}:{current_type}:{chunk_counter}",
                         file_path=file_path,
                         language='javascript',
                         chunk_type=current_type,
@@ -303,9 +309,10 @@ class IntelligentCodeChunker:
             if func_match or class_match or const_func_match or let_func_match:
                 # Save previous chunk
                 if current_chunk and current_type:
+                    chunk_counter += 1
                     chunks.append(CodeChunk(
                         content='\n'.join(current_chunk),
-                        chunk_id=f"{file_path}:{current_type}:{current_name or 'unknown'}",
+                        chunk_id=f"{file_path}:{current_type}:{chunk_counter}",
                         file_path=file_path,
                         language='javascript',
                         chunk_type=current_type,
@@ -338,9 +345,10 @@ class IntelligentCodeChunker:
                 
                 # End of chunk
                 if brace_count == 0 and line.strip():
+                    chunk_counter += 1
                     chunks.append(CodeChunk(
                         content='\n'.join(current_chunk),
-                        chunk_id=f"{file_path}:{current_type}:{current_name or 'unknown'}",
+                        chunk_id=f"{file_path}:{current_type}:{chunk_counter}",
                         file_path=file_path,
                         language='javascript',
                         chunk_type=current_type,
@@ -404,6 +412,7 @@ class IntelligentCodeChunker:
         current_chunk = []
         current_type = None
         in_statement = False
+        chunk_counter = 0
         
         for line_num, line in enumerate(lines, 1):
             # Check for statement start
@@ -412,9 +421,10 @@ class IntelligentCodeChunker:
                 if re.match(pattern, line.strip(), re.IGNORECASE):
                     # Save previous chunk
                     if current_chunk and current_type:
+                        chunk_counter += 1
                         chunks.append(CodeChunk(
                             content='\n'.join(current_chunk),
-                            chunk_id=f"{file_path}:{current_type}:{line_num}",
+                            chunk_id=f"{file_path}:{current_type}:{chunk_counter}",
                             file_path=file_path,
                             language='sql',
                             chunk_type=current_type,
@@ -435,9 +445,10 @@ class IntelligentCodeChunker:
                 
                 # End of statement (semicolon)
                 if line.strip().endswith(';'):
+                    chunk_counter += 1
                     chunks.append(CodeChunk(
                         content='\n'.join(current_chunk),
-                        chunk_id=f"{file_path}:{current_type}:{line_num}",
+                        chunk_id=f"{file_path}:{current_type}:{chunk_counter}",
                         file_path=file_path,
                         language='sql',
                         chunk_type=current_type,
@@ -451,9 +462,10 @@ class IntelligentCodeChunker:
         
         # Add any remaining content
         if current_chunk:
+            chunk_counter += 1
             chunks.append(CodeChunk(
                 content='\n'.join(current_chunk),
-                chunk_id=f"{file_path}:{current_type or 'other'}:{len(lines)}",
+                chunk_id=f"{file_path}:{current_type or 'other'}:{chunk_counter}",
                 file_path=file_path,
                 language='sql',
                 chunk_type=current_type or 'other',
