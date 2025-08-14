@@ -138,43 +138,101 @@ class EnhancedChromaDBConnector:
             ids = []
             
             for chunk in chunks:
-                # Ensure chunk content is not None
-                chunk_content = chunk.content if chunk.content is not None else ""
+                # Helper function to safely convert any value to string
+                def safe_str(value, default=''):
+                    if value is None:
+                        return default
+                    if isinstance(value, str):
+                        return value
+                    try:
+                        return str(value)
+                    except Exception:
+                        return default
                 
-                # Convert metadata to strings for ChromaDB compatibility
+                # Helper function to safely convert numbers to string
+                def safe_num_str(value, default='0'):
+                    if value is None:
+                        return default
+                    try:
+                        return str(value)
+                    except Exception:
+                        return default
+                
+                # Ensure chunk content is not None
+                chunk_content = safe_str(chunk.content, "")
+                if not chunk_content.strip():
+                    chunk_content = f"# Empty chunk from {file_path}"
+                
+                # Convert metadata to strings for ChromaDB compatibility with comprehensive None protection
                 metadata = {
-                    'file_path': file_path,
-                    'language': chunk.language or 'unknown',
-                    'chunk_type': chunk.chunk_type or 'unknown',
-                    'start_line': str(chunk.start_line or 1),
-                    'end_line': str(chunk.end_line or 1),
-                    'complexity_score': str(chunk.complexity_score or 1.0),
-                    'function_name': chunk.function_name or '',
-                    'class_name': chunk.class_name or '',
-                    'parent_context': chunk.parent_context or '',
-                    'ai_analysis': json.dumps(ai_analysis) if ai_analysis else ''
+                    'file_path': safe_str(file_path, 'unknown'),
+                    'language': safe_str(chunk.language, 'unknown'),
+                    'chunk_type': safe_str(chunk.chunk_type, 'unknown'),
+                    'start_line': safe_num_str(chunk.start_line, '1'),
+                    'end_line': safe_num_str(chunk.end_line, '1'),
+                    'complexity_score': safe_num_str(chunk.complexity_score, '1.0'),
+                    'function_name': safe_str(chunk.function_name, ''),
+                    'class_name': safe_str(chunk.class_name, ''),
+                    'parent_context': safe_str(chunk.parent_context, ''),
+                    'ai_analysis': json.dumps(ai_analysis) if ai_analysis else '{}'
                 }
                 
                 # Add enhanced classification metadata if available
                 if enhanced_analysis:
-                    file_classification = enhanced_analysis.get('file_classification', {})
+                    file_classification = enhanced_analysis.get('file_classification', {}) or {}
+                    
+                    # Helper function to convert boolean values safely
+                    def safe_bool_str(value, default=False):
+                        if value is None:
+                            return str(default)
+                        if isinstance(value, bool):
+                            return str(value)
+                        # Try to convert string to boolean
+                        if isinstance(value, str):
+                            return str(value.lower() in ('true', '1', 'yes', 'on'))
+                        return str(bool(value))
+                    
+                    # Helper function to safely handle JSON serialization
+                    def safe_json_str(value, default='[]'):
+                        if value is None:
+                            return default
+                        try:
+                            return json.dumps(value)
+                        except Exception:
+                            return default
+                    
                     metadata.update({
-                        'architectural_layer': file_classification.get('architectural_layer', 'unknown'),
-                        'component_type': file_classification.get('component_type', 'unknown'),
-                        'confidence_score': str(file_classification.get('confidence_score', 0.0)),
-                        'technology_stack': json.dumps(file_classification.get('technology_stack', [])),
-                        'design_patterns': json.dumps(file_classification.get('design_patterns', [])),
-                        'primary_purpose': file_classification.get('primary_purpose', ''),
-                        'business_domain': file_classification.get('business_domain', ''),
-                        'exposes_api': str(file_classification.get('exposes_api', False)),
-                        'consumes_api': str(file_classification.get('consumes_api', False)),
-                        'database_interactions': str(file_classification.get('database_interactions', False)),
-                        'enhanced_ai_analysis': json.dumps(enhanced_analysis)
+                        'architectural_layer': safe_str(file_classification.get('architectural_layer'), 'unknown'),
+                        'component_type': safe_str(file_classification.get('component_type'), 'unknown'),
+                        'confidence_score': safe_num_str(file_classification.get('confidence_score'), '0.0'),
+                        'technology_stack': safe_json_str(file_classification.get('technology_stack'), '[]'),
+                        'design_patterns': safe_json_str(file_classification.get('design_patterns'), '[]'),
+                        'primary_purpose': safe_str(file_classification.get('primary_purpose'), ''),
+                        'business_domain': safe_str(file_classification.get('business_domain'), ''),
+                        'exposes_api': safe_bool_str(file_classification.get('exposes_api'), False),
+                        'consumes_api': safe_bool_str(file_classification.get('consumes_api'), False),
+                        'database_interactions': safe_bool_str(file_classification.get('database_interactions'), False),
+                        'enhanced_ai_analysis': safe_json_str(enhanced_analysis, '{}')
                     })
                 
+                # Ensure chunk ID is safe
+                chunk_id = safe_str(chunk.chunk_id, f"{safe_str(file_path, 'unknown')}:chunk:{len(ids)+1}")
+                
+                # Final validation: ensure all metadata values are strings and not None
+                validated_metadata = {}
+                for key, value in metadata.items():
+                    if value is None:
+                        logger.warning(f"Metadata field '{key}' is None for chunk {chunk_id}, using empty string")
+                        validated_metadata[key] = ''
+                    elif not isinstance(value, str):
+                        logger.warning(f"Metadata field '{key}' is not string ({type(value)}) for chunk {chunk_id}, converting")
+                        validated_metadata[key] = safe_str(value, '')
+                    else:
+                        validated_metadata[key] = value
+                
                 documents.append(chunk_content)
-                metadatas.append(metadata)
-                ids.append(chunk.chunk_id or f"{file_path}:chunk:{len(ids)+1}")
+                metadatas.append(validated_metadata)
+                ids.append(chunk_id)
             
             # Store in ChromaDB
             self.collection.add(
