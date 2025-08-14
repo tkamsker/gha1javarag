@@ -552,29 +552,35 @@ class IntelligentCodeChunker:
             )]
     
     def _calculate_complexity(self, node) -> float:
-        """Calculate complexity score for a code node"""
+        """Calculate complexity score for a code node with safe None handling"""
         # Simple complexity calculation based on node depth and size
         complexity = 1.0
         
-        if hasattr(node, 'body'):
-            complexity += len(node.body) * 0.5
-        
-        if hasattr(node, 'args'):
-            # args is an arguments object, not a list
-            if hasattr(node.args, 'args'):
-                complexity += len(node.args.args) * 0.2
+        try:
+            if hasattr(node, 'body') and node.body is not None:
+                complexity += len(node.body) * 0.5
+            
+            if hasattr(node, 'args') and node.args is not None:
+                # args is an arguments object, not a list
+                if hasattr(node.args, 'args') and node.args.args is not None:
+                    complexity += len(node.args.args) * 0.2
+        except Exception as e:
+            logger.warning(f"Error calculating Python complexity: {e}")
         
         return complexity
     
     def _calculate_java_complexity(self, node) -> float:
-        """Calculate complexity for Java nodes"""
+        """Calculate complexity for Java nodes with safe None handling"""
         complexity = 1.0
         
-        if hasattr(node, 'body'):
-            complexity += len(node.body) * 0.5
-        
-        if hasattr(node, 'parameters'):
-            complexity += len(node.parameters) * 0.2
+        try:
+            if hasattr(node, 'body') and node.body is not None:
+                complexity += len(node.body) * 0.5
+            
+            if hasattr(node, 'parameters') and node.parameters is not None:
+                complexity += len(node.parameters) * 0.2
+        except Exception as e:
+            logger.warning(f"Error calculating Java complexity: {e}")
         
         return complexity
     
@@ -594,17 +600,30 @@ class IntelligentCodeChunker:
         return metadata
     
     def _extract_java_metadata(self, node) -> Dict[str, Any]:
-        """Extract metadata from Java node"""
+        """Extract metadata from Java node with safe None handling"""
         metadata = {}
         
-        if hasattr(node, 'name'):
-            metadata['name'] = node.name
+        try:
+            if hasattr(node, 'name') and node.name is not None:
+                metadata['name'] = str(node.name)
+            
+            if hasattr(node, 'parameters') and node.parameters is not None:
+                try:
+                    metadata['parameters'] = [str(param.type) if param and hasattr(param, 'type') and param.type else 'unknown' 
+                                            for param in node.parameters]
+                except Exception as e:
+                    logger.debug(f"Error extracting parameters: {e}")
+                    metadata['parameters'] = []
+            
+            if hasattr(node, 'modifiers') and node.modifiers is not None:
+                try:
+                    metadata['modifiers'] = [str(mod) if mod else 'unknown' for mod in node.modifiers]
+                except Exception as e:
+                    logger.debug(f"Error extracting modifiers: {e}")
+                    metadata['modifiers'] = []
         
-        if hasattr(node, 'parameters'):
-            metadata['parameters'] = [str(param.type) for param in node.parameters]
-        
-        if hasattr(node, 'modifiers'):
-            metadata['modifiers'] = [str(mod) for mod in node.modifiers]
+        except Exception as e:
+            logger.warning(f"Error extracting Java metadata: {e}")
         
         return metadata
     
