@@ -195,7 +195,25 @@ class IntelligentCodeChunker:
         """Chunk Java code based on javalang parsing"""
         chunks = []
         try:
+            # Handle None or invalid content
+            if content is None:
+                logger.warning(f"Content is None for Java file {file_path}, using fallback")
+                return self._fallback_chunking("", file_path, 'java')
+            
+            if not isinstance(content, str):
+                logger.warning(f"Content is not string for Java file {file_path}, converting")
+                content = str(content)
+            
+            if not content.strip():
+                logger.warning(f"Content is empty for Java file {file_path}, using fallback")
+                return self._fallback_chunking(content, file_path, 'java')
+            
             tree = javalang.parse.parse(content)
+            
+            # Check if tree is valid
+            if tree is None:
+                logger.warning(f"Java parse tree is None for {file_path}, using fallback")
+                return self._fallback_chunking(content, file_path, 'java')
             
             # Extract classes
             for path, node in tree:
@@ -230,21 +248,23 @@ class IntelligentCodeChunker:
                     )
                     chunks.append(chunk)
             
-            # Add imports
+            # Add imports safely
             import_counter = 0
-            for import_decl in tree.imports:
-                import_counter += 1
-                chunk = CodeChunk(
-                    content=f"import {import_decl.path};",
-                    chunk_id=f"{file_path}:import:{import_counter}",
-                    file_path=file_path,
-                    language='java',
-                    chunk_type='import',
-                    start_line=import_decl.position.line if import_decl.position else 0,
-                    end_line=import_decl.position.line if import_decl.position else 0,
-                    metadata={'imports': [str(import_decl.path)]}
-                )
-                chunks.append(chunk)
+            if hasattr(tree, 'imports') and tree.imports:
+                for import_decl in tree.imports:
+                    if import_decl and hasattr(import_decl, 'path'):
+                        import_counter += 1
+                        chunk = CodeChunk(
+                            content=f"import {import_decl.path};",
+                            chunk_id=f"{file_path}:import:{import_counter}",
+                            file_path=file_path,
+                            language='java',
+                            chunk_type='import',
+                            start_line=import_decl.position.line if (import_decl.position and hasattr(import_decl.position, 'line')) else 0,
+                            end_line=import_decl.position.line if (import_decl.position and hasattr(import_decl.position, 'line')) else 0,
+                            metadata={'imports': [str(import_decl.path)]}
+                        )
+                        chunks.append(chunk)
             
             # Add any remaining content
             self._add_remaining_chunks(content, chunks, file_path, 'java')
@@ -597,24 +617,66 @@ class IntelligentCodeChunker:
         return []
     
     def _extract_java_node_content(self, content: str, node) -> str:
-        """Extract the actual content for a Java node"""
-        # This is a simplified version - in practice you'd need more sophisticated parsing
-        lines = content.split('\n')
-        if hasattr(node, 'position') and node.position:
-            start_line = node.position.line - 1
-            # Find the end by looking for closing brace
-            end_line = start_line
-            brace_count = 0
-            for i in range(start_line, len(lines)):
-                line = lines[i]
-                brace_count += line.count('{') - line.count('}')
-                if brace_count == 0 and i > start_line:
-                    end_line = i
-                    break
+        """Extract the actual content for a Java node with robust error handling"""
+        try:
+            # Handle None content
+            if content is None:
+                logger.warning(f"Content is None for Java node: {getattr(node, 'name', 'unknown')}")
+                return f"// Content not available for {getattr(node, 'name', 'unknown')}"
             
-            return '\n'.join(lines[start_line:end_line + 1])
-        
-        return str(node)
+            # Ensure content is string
+            if not isinstance(content, str):
+                logger.warning(f"Content is not string for Java node: {getattr(node, 'name', 'unknown')}")
+                content = str(content)
+            
+            # Split into lines safely
+            lines = content.split('\n')
+            if not lines:
+                return f"// Empty content for {getattr(node, 'name', 'unknown')}"
+            
+            # Check if node has position information
+            if hasattr(node, 'position') and node.position and hasattr(node.position, 'line'):
+                start_line = max(0, node.position.line - 1)  # Ensure non-negative
+                
+                # Bounds check
+                if start_line >= len(lines):
+                    logger.warning(f"Start line {start_line} exceeds content length {len(lines)} for node {getattr(node, 'name', 'unknown')}")
+                    return f"// Node position out of bounds: {getattr(node, 'name', 'unknown')}"
+                
+                # Find the end by looking for closing brace
+                end_line = start_line
+                brace_count = 0
+                
+                for i in range(start_line, len(lines)):
+                    line = lines[i]
+                    if line is not None:  # Safety check
+                        brace_count += line.count('{') - line.count('}')
+                        if brace_count == 0 and i > start_line:
+                            end_line = i
+                            break
+                
+                # Extract content safely
+                if start_line <= end_line < len(lines):
+                    extracted_lines = lines[start_line:end_line + 1]
+                    return '\n'.join(extracted_lines)
+                else:
+                    # Fallback to just the start line if range is invalid
+                    if start_line < len(lines):
+                        return lines[start_line]
+                    else:
+                        logger.warning(f"Invalid line range for Java node: {getattr(node, 'name', 'unknown')}")
+                        return f"// Invalid line range for {getattr(node, 'name', 'unknown')}"
+            
+            # Fallback to string representation of node
+            try:
+                return str(node)
+            except Exception as e:
+                logger.warning(f"Could not convert Java node to string: {e}")
+                return f"// Node conversion failed: {getattr(node, 'name', 'unknown')}"
+                
+        except Exception as e:
+            logger.error(f"Error extracting Java node content: {e}")
+            return f"// Error extracting content: {str(e)}"
     
     def _chunk_markdown(self, content: str, file_path: str) -> List[CodeChunk]:
         """Chunk markdown files by headers"""

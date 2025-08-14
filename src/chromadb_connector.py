@@ -57,6 +57,52 @@ class EnhancedChromaDBConnector:
         self.collection = self.client.get_or_create_collection(name=collection_name)
         logger.info(f"Using collection: {collection_name}")
 
+    def _read_file_with_encoding_detection(self, absolute_file_path: str, file_path: str) -> str:
+        """Read file content with multiple encoding attempts (same as file_processor)"""
+        # List of encodings to try in order
+        encodings = [
+            'utf-8',           # Standard UTF-8
+            'utf-8-sig',       # UTF-8 with BOM
+            'iso-8859-1',      # Latin-1 (very permissive)
+            'cp1252',          # Windows Western European
+            'cp1250',          # Windows Central European  
+            'iso-8859-15',     # Latin-9 (includes Euro symbol)
+            'ascii'            # Plain ASCII
+        ]
+        
+        last_exception = None
+        
+        for encoding in encodings:
+            try:
+                with open(absolute_file_path, 'r', encoding=encoding) as f:
+                    content = f.read()
+                logger.info(f"Read content from file ({encoding}): {absolute_file_path}")
+                return content
+            except UnicodeDecodeError as e:
+                logger.debug(f"Failed to read {absolute_file_path} with {encoding}: {e}")
+                last_exception = e
+                continue
+            except Exception as e:
+                logger.debug(f"Unexpected error reading {absolute_file_path} with {encoding}: {e}")
+                last_exception = e
+                continue
+        
+        # If all encodings fail, try binary read and replace invalid chars
+        try:
+            logger.warning(f"All text encodings failed for {absolute_file_path}, trying binary mode with error replacement")
+            with open(absolute_file_path, 'rb') as f:
+                binary_content = f.read()
+            
+            # Try to decode as UTF-8 with error replacement
+            content = binary_content.decode('utf-8', errors='replace')
+            logger.warning(f"Used UTF-8 with character replacement for {absolute_file_path}")
+            return content
+            
+        except Exception as e:
+            logger.error(f"Complete failure reading {absolute_file_path}: {e}")
+            # Return a placeholder content with error info
+            return f"# File: {file_path}\n# Content not available: encoding error\n# Error: {str(e)}\n# Original exception: {str(last_exception)}"
+
     def store_enhanced_metadata(self, file_path: str, content: str, ai_analysis: Dict[str, Any] = None, enhanced_analysis: Dict[str, Any] = None) -> None:
         """Store enhanced metadata with intelligent code chunking and classification"""
         try:
@@ -72,29 +118,7 @@ class EnhancedChromaDBConnector:
             # If content is not provided, try to read from file
             if not content:
                 if os.path.exists(absolute_file_path):
-                    try:
-                        # Try UTF-8 first
-                        with open(absolute_file_path, 'r', encoding='utf-8') as f:
-                            content = f.read()
-                        logger.info(f"Read content from file: {absolute_file_path}")
-                    except UnicodeDecodeError:
-                        try:
-                            # Fallback to Windows codepage (cp1252)
-                            with open(absolute_file_path, 'r', encoding='cp1252') as f:
-                                content = f.read()
-                            logger.info(f"Read content from file (cp1252): {absolute_file_path}")
-                        except UnicodeDecodeError:
-                            try:
-                                # Fallback to latin-1 (very permissive)
-                                with open(absolute_file_path, 'r', encoding='latin-1') as f:
-                                    content = f.read()
-                                logger.info(f"Read content from file (latin-1): {absolute_file_path}")
-                            except Exception as e:
-                                logger.warning(f"Could not read file {absolute_file_path} with any encoding: {e}")
-                                content = f"# File: {file_path}\n# Content not available: encoding error"
-                    except Exception as e:
-                        logger.warning(f"Could not read file {absolute_file_path}: {e}")
-                        content = f"# File: {file_path}\n# Content not available: {str(e)}"
+                    content = self._read_file_with_encoding_detection(absolute_file_path, file_path)
                 else:
                     logger.warning(f"File not found: {absolute_file_path}")
                     content = f"# File: {file_path}\n# File not found at: {absolute_file_path}"

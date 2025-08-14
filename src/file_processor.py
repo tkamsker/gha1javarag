@@ -63,10 +63,9 @@ class FileProcessor:
         return metadata_list
 
     def _extract_file_metadata(self, file_path: str, extension: str) -> Dict[str, Any]:
-        """Extract metadata from a single file"""
+        """Extract metadata from a single file with robust encoding handling"""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                content = f.read()
+            content = self._read_file_with_encoding_detection(file_path)
                 
             relative_path = os.path.relpath(file_path, self.source_dir)
             
@@ -85,6 +84,52 @@ class FileProcessor:
         except Exception as e:
             logger.error(f"Error extracting metadata from {file_path}: {str(e)}")
             raise
+
+    def _read_file_with_encoding_detection(self, file_path: str) -> str:
+        """Read file content with multiple encoding attempts"""
+        # List of encodings to try in order
+        encodings = [
+            'utf-8',           # Standard UTF-8
+            'utf-8-sig',       # UTF-8 with BOM
+            'iso-8859-1',      # Latin-1 (very permissive)
+            'cp1252',          # Windows Western European
+            'cp1250',          # Windows Central European  
+            'iso-8859-15',     # Latin-9 (includes Euro symbol)
+            'ascii'            # Plain ASCII
+        ]
+        
+        last_exception = None
+        
+        for encoding in encodings:
+            try:
+                with open(file_path, 'r', encoding=encoding) as f:
+                    content = f.read()
+                logger.debug(f"Successfully read {file_path} with encoding: {encoding}")
+                return content
+            except UnicodeDecodeError as e:
+                logger.debug(f"Failed to read {file_path} with {encoding}: {e}")
+                last_exception = e
+                continue
+            except Exception as e:
+                logger.debug(f"Unexpected error reading {file_path} with {encoding}: {e}")
+                last_exception = e
+                continue
+        
+        # If all encodings fail, try binary read and replace invalid chars
+        try:
+            logger.warning(f"All text encodings failed for {file_path}, trying binary mode with error replacement")
+            with open(file_path, 'rb') as f:
+                binary_content = f.read()
+            
+            # Try to decode as UTF-8 with error replacement
+            content = binary_content.decode('utf-8', errors='replace')
+            logger.warning(f"Used UTF-8 with character replacement for {file_path}")
+            return content
+            
+        except Exception as e:
+            logger.error(f"Complete failure reading {file_path}: {e}")
+            # Return a placeholder content with error info
+            return f"# File reading failed: {file_path}\n# Error: {str(e)}\n# Original exception: {str(last_exception)}"
 
     def save_metadata(self, metadata: List[Dict[str, Any]], output_file: str) -> None:
         """Save metadata to a JSON file"""
