@@ -34,11 +34,72 @@ async def index():
 
 class ChatRequest(BaseModel):
     question: str
+    max_results: int = 10
+    chunk_type: str = ''
+    language: str = ''
+    file_path: str = ''
+    search_mode: str = 'semantic'
 
 @app.post('/chat')
 async def chat(request: ChatRequest):
-    # Get relevant context from ChromaDB
-    context = chromadb_connector.query_chromadb(request.question)
+    # Log the request details
+    print(f"🔍 Chat request received:")
+    print(f"   Question: {request.question}")
+    print(f"   Max results: {request.max_results}")
+    print(f"   Filters: chunk_type={request.chunk_type}, language={request.language}, file_path={request.file_path}")
+    print(f"   Search mode: {request.search_mode}")
+    
+    # Build filters for enhanced querying
+    filters = {}
+    if request.chunk_type:
+        filters['chunk_type'] = request.chunk_type
+    if request.language:
+        filters['language'] = request.language
+    if request.file_path:
+        filters['file_path'] = request.file_path
+    
+    # Create enhanced ChromaDB connector if not available
+    if not hasattr(chat, 'chromadb_connector_instance'):
+        try:
+            chat.chromadb_connector_instance = chromadb_connector.EnhancedChromaDBConnector()
+            print("Initialized enhanced ChromaDB connector")
+        except Exception as e:
+            print(f"Warning: Could not initialize ChromaDB connector: {e}")
+            chat.chromadb_connector_instance = None
+    
+    # Get relevant context from ChromaDB with enhanced filtering
+    if chat.chromadb_connector_instance:
+        try:
+            # Adjust query based on search mode
+            if request.search_mode == 'keyword':
+                # For keyword search, use the question as-is
+                query = request.question
+            elif request.search_mode == 'exact':
+                # For exact match, wrap in quotes
+                query = f'"{request.question}"'
+            else:
+                # For semantic search, use the question as-is
+                query = request.question
+            
+            print(f"🔍 Querying ChromaDB with: '{query}'")
+            print(f"   Filters: {filters}")
+            print(f"   Max results: {request.max_results}")
+            
+            results = chat.chromadb_connector_instance.query_enhanced_similar(query, request.max_results, filters)
+            
+            if results and results.get('documents') and results['documents'][0]:
+                print(f"✅ Found {len(results['documents'][0])} results from ChromaDB")
+                context = chromadb_connector._format_enhanced_results(results)
+            else:
+                print("⚠️ No results found in ChromaDB")
+                context = "No relevant context found in the database. Try a different search term or check if the database has been populated."
+                
+        except Exception as e:
+            print(f"❌ ChromaDB query error: {str(e)}")
+            context = f"Error querying ChromaDB: {str(e)}"
+    else:
+        # Fallback to legacy method
+        context = chromadb_connector.query_chromadb(request.question)
     
     # Check if AI provider is available
     if ai_provider is None:
@@ -70,7 +131,14 @@ Please provide a clear, concise answer based only on the project context above."
         return {
             'answer': answer,
             'provider': ai_provider.get_provider_name(),
-            'model': ai_provider.get_model_name()
+            'model': ai_provider.get_model_name(),
+            'filters_applied': {
+                'chunk_type': request.chunk_type,
+                'language': request.language,
+                'file_path': request.file_path,
+                'search_mode': request.search_mode,
+                'max_results': request.max_results
+            }
         }
         
     except Exception as e:
