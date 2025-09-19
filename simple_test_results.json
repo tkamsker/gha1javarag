@@ -1,0 +1,7 @@
+{
+  "Import Test": true,
+  "Environment Test": true,
+  "Weaviate Connectivity": true,
+  "Ollama Health": true,
+  "Simple Analysis": true
+}

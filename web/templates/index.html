@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Analysis Tool - M3 Max Minimal Dev</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container { 
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 { 
+            color: #333; 
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 2rem;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        .status { 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 10px;
+            border-left: 4px solid;
+        }
+        .status.healthy { 
+            background: rgba(40, 167, 69, 0.1); 
+            border-color: #28a745;
+            color: #155724; 
+        }
+        .status.degraded { 
+            background: rgba(255, 193, 7, 0.1); 
+            border-color: #ffc107;
+            color: #856404; 
+        }
+        .status.unhealthy { 
+            background: rgba(220, 53, 69, 0.1); 
+            border-color: #dc3545;
+            color: #721c24; 
+        }
+        .service { 
+            margin: 8px 0; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .service-status {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .service-status.up {
+            background: #28a745;
+            color: white;
+        }
+        .service-status.down {
+            background: #dc3545;
+            color: white;
+        }
+        .links { 
+            background: rgba(248, 249, 250, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .links h3 { 
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        .links ul { 
+            list-style: none; 
+        }
+        .links li { 
+            margin: 8px 0; 
+        }
+        .links a { 
+            color: #007bff; 
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .links a:hover { 
+            text-decoration: underline; 
+        }
+        .info {
+            background: rgba(0, 123, 255, 0.1);
+            border: 1px solid rgba(0, 123, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .info h3 {
+            color: #0056b3;
+            margin-bottom: 10px;
+        }
+        .info ul {
+            color: #495057;
+            padding-left: 20px;
+        }
+        .chip {
+            display: inline-block;
+            background: rgba(108, 117, 125, 0.1);
+            color: #495057;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin: 2px;
+        }
+        .loading {
+            text-align: center;
+            color: #6c757d;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Java Analysis Tool</h1>
+        <p class="subtitle">M3 Max Development Environment - Minimal Setup</p>
+        
+        <div id="status" class="loading">
+            <div>🔄 Checking system status...</div>
+        </div>
+        
+        <div class="links">
+            <h3>🔗 Available Services</h3>
+            <ul>
+                <li><strong>Weaviate Database:</strong> <a href="http://localhost:8080" target="_blank">http://localhost:8080</a></li>
+                <li><strong>Local Ollama:</strong> <a href="http://localhost:11434" target="_blank">http://localhost:11434</a></li>
+                <li><strong>Redis Cache:</strong> localhost:6379</li>
+            </ul>
+        </div>
+        
+        <div class="info">
+            <h3>💡 Development Notes</h3>
+            <ul>
+                <li><strong>Ollama runs on your host machine</strong> - no Docker overhead</li>
+                <li>Minimal Docker services: <span class="chip">Weaviate</span> <span class="chip">Redis</span> <span class="chip">Web UI</span></li>
+                <li>Total Docker memory usage: ~5GB (vs 20GB+ in full setup)</li>
+                <li>Models must be installed via: <code>ollama pull danielsheep/qwen3-coder-30b-a3b-instruct-1m-unsloth</code></li>
+            </ul>
+        </div>
+
+        <div class="info">
+            <h3>🛠️ Quick Commands</h3>
+            <ul>
+                <li><strong>Start:</strong> <code>docker-compose -f docker-compose.m3-dev-minimal.yml up -d</code></li>
+                <li><strong>Stop:</strong> <code>docker-compose -f docker-compose.m3-dev-minimal.yml down</code></li>
+                <li><strong>Logs:</strong> <code>docker-compose -f docker-compose.m3-dev-minimal.yml logs -f</code></li>
+                <li><strong>Check Ollama:</strong> <code>ollama list</code></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        async function checkHealth() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                const statusDiv = document.getElementById('status');
+                
+                let statusClass = 'unhealthy';
+                let statusText = 'System Status: UNHEALTHY';
+                let statusIcon = '❌';
+                
+                if (data.status === 'healthy') {
+                    statusClass = 'healthy';
+                    statusText = 'System Status: HEALTHY';
+                    statusIcon = '✅';
+                } else if (data.status === 'degraded') {
+                    statusClass = 'degraded';
+                    statusText = 'System Status: DEGRADED';
+                    statusIcon = '⚠️';
+                }
+                
+                const servicesHtml = Object.entries(data.services)
+                    .map(([service, status]) => 
+                        `<div class="service">
+                            <span><strong>${service.charAt(0).toUpperCase() + service.slice(1)}:</strong></span>
+                            <span class="service-status ${status}">${status.toUpperCase()}</span>
+                        </div>`
+                    ).join('');
+                
+                statusDiv.className = `status ${statusClass}`;
+                statusDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <strong>${statusIcon} ${statusText}</strong>
+                        <small>Last: ${new Date(data.timestamp).toLocaleTimeString()}</small>
+                    </div>
+                    ${servicesHtml}
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.1);">
+                        <small>Environment: ${data.environment || 'development'}</small>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('status').innerHTML = `
+                    <div class="status unhealthy">
+                        <strong>❌ Cannot connect to backend services</strong><br>
+                        <small>Make sure Docker services are running</small>
+                    </div>
+                `;
+            }
+        }
+        
+        // Check health immediately and every 15 seconds
+        checkHealth();
+        setInterval(checkHealth, 15000);
+    </script>
+</body>
+</html>

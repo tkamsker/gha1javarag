@@ -1,0 +1,83 @@
+# Minimal M3 Max Development Environment
+# Uses local Ollama running on host machine - minimal Docker overhead
+
+services:
+  # Weaviate with local host Ollama integration (minimal overhead)
+  weaviate:
+    image: cr.weaviate.io/semitechnologies/weaviate:1.32.9
+    platform: linux/arm64
+    ports:
+      - "8080:8080"
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      CLUSTER_HOSTNAME: 'weaviate-dev'
+      ENABLE_MODULES: 'text2vec-ollama,generative-ollama'
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-ollama'
+      # Connect to host Ollama (running outside Docker)
+      OLLAMA_ORIGIN: 'http://host.docker.internal:11434'
+      TEXT2VEC_OLLAMA_DEFAULT_MODEL: 'nomic-embed-text'
+      GENERATIVE_OLLAMA_DEFAULT_MODEL: 'danielsheep/qwen3-coder-30b-a3b-instruct-1m-unsloth'
+      # Minimal memory footprint
+      GOMEMLIMIT: '3GiB'
+      GOGC: '50'
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '3.0'
+        reservations:
+          memory: 1G
+          cpus: '1.0'
+
+  # Minimal Redis cache
+  redis:
+    image: redis:7-alpine
+    platform: linux/arm64
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --save ""
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+          cpus: '0.5'
+
+  # Lightweight web interface
+  web-interface:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.minimal
+    ports:
+      - "8000:8000"
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - WEAVIATE_URL=http://weaviate:8080
+      - OLLAMA_URL=http://host.docker.internal:11434
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./web:/app/src:ro  # Read-only source files for minimal overhead
+      - ./output:/app/output
+    depends_on:
+      - weaviate
+      - redis
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: '1.0'
+
+volumes:
+  weaviate_data:
+    driver: local
+
+networks:
+  default:
+    driver: bridge

@@ -1,0 +1,147 @@
+version: '3.8'
+
+services:
+
+  # Weaviate with local host Ollama integration (minimal overhead)
+  weaviate:
+    image: cr.weaviate.io/semitechnologies/weaviate:1.32.9
+    platform: linux/arm64
+    ports:
+      - "8080:8080"
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25  # Minimal for development
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      CLUSTER_HOSTNAME: 'weaviate-dev'
+      ENABLE_MODULES: 'text2vec-ollama,generative-ollama'
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-ollama'
+      # Connect to host Ollama (running outside Docker)
+      OLLAMA_ORIGIN: 'http://host.docker.internal:11434'
+      TEXT2VEC_OLLAMA_DEFAULT_MODEL: 'nomic-embed-text'
+      GENERATIVE_OLLAMA_DEFAULT_MODEL: 'danielsheep/qwen3-coder-30b-a3b-instruct-1m-unsloth'
+      # Minimal memory footprint for development
+      GOMEMLIMIT: '4GiB'
+      GOGC: '50'  # More aggressive GC for development
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 6G
+          cpus: '4.0'
+        reservations:
+          memory: 2G
+          cpus: '1.0'
+
+  # Minimal Redis cache for development
+  redis:
+    image: redis:7-alpine
+    platform: linux/arm64
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis-dev.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+
+  # Minimal development web interface
+  web-interface:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+      platform: linux/arm64
+    ports:
+      - "8000:8000"
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - WEAVIATE_URL=http://weaviate:8080
+      - OLLAMA_URL=http://host.docker.internal:11434  # Use host Ollama
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./web:/app
+      - ./output:/app/output
+    depends_on:
+      - weaviate
+      - redis
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2.0'
+
+  # Development web interface
+  web-interface:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+      platform: linux/arm64
+    ports:
+      - "8000:8000"
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - WEAVIATE_URL=http://weaviate:8080
+      - OLLAMA_URL=http://ollama:11434
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://dev_user:dev_password@postgres:5432/java_analysis_dev
+    volumes:
+      - ./web:/app
+      - ./output:/app/output
+    depends_on:
+      weaviate:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./web
+          target: /app
+        - action: rebuild
+          path: ./web/requirements.txt
+
+volumes:
+  ollama_data:
+    driver: local
+  weaviate_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# M3 Max Development Configuration
+x-m3-max-optimized: &m3-max-defaults
+  # Apple Silicon optimizations
+  platform: linux/arm64
+  # Resource limits optimized for M3 Max (128GB unified memory)
+  deploy:
+    resources:
+      limits:
+        memory: 16G  # Conservative limits for development
+        cpus: '8.0'
+      reservations:
+        memory: 4G
+        cpus: '2.0'
