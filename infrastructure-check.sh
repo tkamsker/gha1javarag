@@ -132,9 +132,10 @@ else
 fi
 
 echo ""
-echo "🔧 Next Steps:"
-echo "   1. Fix Weaviate client: pip uninstall weaviate-client && pip install \"weaviate-client>=4.5.0,<4.9.0\""
-echo "   2. Re-run this check: ./infrastructure-check.sh"
-echo "   3. Then run: ./Step1_Enhanced_Weaviate.sh test"
-echo "   4. Check output in: ./output/"
-echo "   5. Use web interface: ./start_web.sh"
+echo "🎉 All Systems Ready! Next Steps:"
+echo "   1. Test Enhanced Weaviate: ./Step1_Enhanced_Weaviate.sh test"
+echo "   2. Run full pipeline: ./Step1_Enhanced_Weaviate.sh production"
+echo "   3. Generate requirements: ./Step2_Enhanced_Weaviate.sh production"
+echo "   4. Generate modern docs: ./Step3_Enhanced_Weaviate.sh production"
+echo "   5. Check output in: ./output/"
+echo "   6. Use web interface: ./start_web.sh"

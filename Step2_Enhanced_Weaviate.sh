@@ -50,9 +50,9 @@ elif [ "$AI_PROVIDER" = "ollama" ]; then
     fi
     echo "✅ Ollama is running and accessible"
     
-    # Check if the model is available
+    # Check if the model is available (case-insensitive)
     MODEL_NAME=${OLLAMA_MODEL_NAME:-"danielsheep/qwen3-coder-30b-a3b-instruct-1m-unsloth"}
-    if ! curl -s http://localhost:11434/api/tags | grep -q "qwen3-coder" || ! curl -s http://localhost:11434/api/tags | grep -q "30b"; then
+    if ! curl -s http://localhost:11434/api/tags | grep -qi "qwen.*coder.*30b"; then
         echo "⚠️  WARNING: Required Qwen3-Coder-30B model not found in Ollama"
         echo "Available models:"
         curl -s http://localhost:11434/api/tags | jq -r '.models[].name' 2>/dev/null || echo "Could not retrieve model list"
