@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Java JSP Application Reverse Engineering Tool that uses AI-powered analysis to extract requirements, data structures, and business rules from Java/JSP codebases. The tool leverages ChromaDB for vector storage and supports multiple AI providers (OpenAI, Anthropic, Ollama).
+This is a Java JSP Application Reverse Engineering Tool that uses AI-powered analysis to extract requirements, data structures, and business rules from Java/JSP codebases. The tool leverages **Enhanced Weaviate** for vector storage with advanced data structure discovery and supports multiple AI providers (OpenAI, Anthropic, Ollama).
 
 ## Common Development Commands
 
@@ -20,27 +20,25 @@ cp env.example .env
 
 ### Core Processing Steps
 ```bash
-# Step 1: Process and analyze files (with rate limiting)
-./Step1.sh [test|production|emergency]
+# Enhanced Weaviate Processing Pipeline
+# Step 1: Process and analyze files with enhanced Weaviate storage
+./Step1_Enhanced_Weaviate.sh [test|production|emergency]
 
-# Step 2: Generate requirements documentation
-./Step2.sh [test|production|emergency]
+# Step 2: Generate requirements documentation with Weaviate
+./Step2_Enhanced_Weaviate.sh [test|production|emergency]
 
-# Step 3: Generate additional documentation
-./Step3.sh [test|production|emergency]
+# Step 3: Generate additional documentation with Weaviate
+./Step3_Enhanced_Weaviate.sh [test|production|emergency]
 
-# Combined processing (legacy)
-./Lofalassn.sh [test|production|emergency]
+# Note: Legacy ChromaDB-based scripts moved to archive/ directory
 ```
 
 ### Web Interface
 ```bash
-# Start web interface (auto-detects FastAPI/Flask)
+# Start web interface with Weaviate integration
 ./start_web.sh
 
-# Or start specific web server
-./run_fastapi.sh
-./run_flask.sh
+# Note: Legacy FastAPI/Flask web servers moved to archive/ directory
 ```
 
 ### Testing
@@ -76,16 +74,18 @@ cd strictdoc
 - Factory pattern for provider selection via `AI_PROVIDER` environment variable
 - Built-in rate limiting and error handling
 
-**ChromaDB Integration (`src/chromadb_connector.py`)**
-- Enhanced chunking for intelligent code segmentation
-- Vector storage with metadata for file paths, functions, classes
-- Semantic search capabilities for code and documentation
+**Enhanced Weaviate Integration (`src/weaviate_connector.py`, `src/weaviate_schemas.py`)**
+- Advanced data structure discovery and entity relationship mapping
+- Vector storage with metadata for file paths, functions, classes, and data structures
+- Semantic search capabilities with enhanced architectural classification
+- Intelligent schema management for different code artifacts
 
-**Processing Pipeline**
+**Enhanced Processing Pipeline**
 1. **File Processing** (`src/file_processor.py`) - Scans and extracts metadata
 2. **AI Analysis** (`src/ai_analyzer.py`) - Batch processing with rate limiting
-3. **Requirements Generation** (`src/requirements_analyzer.py`) - Structured documentation
-4. **ChromaDB Storage** - Vector embeddings with intelligent chunking
+3. **Enhanced Weaviate Processing** (`src/enhanced_weaviate_processor.py`) - Data structure discovery
+4. **Requirements Generation** (`src/weaviate_requirements_generator.py`) - Structured documentation
+5. **Weaviate Storage** - Vector embeddings with architectural classification and data structure insights
 
 **Rate Limiting System (`src/rate_limiter.py`)**
 - Configurable rate limits per AI provider
@@ -104,10 +104,17 @@ cd strictdoc
 - Provider-specific rate limiting and error handling
 - Graceful fallback between providers
 
-**Enhanced Chunking**
-- Function-level code chunking for better semantic search
-- Metadata extraction (class names, function signatures)
-- Complexity scoring for prioritization
+**Enhanced Data Structure Discovery**
+- Automatic entity and DTO identification from Java code
+- Relationship mapping between data structures
+- Data flow analysis across architectural layers
+- Business rule extraction from validation logic
+
+**Enhanced Weaviate Features**
+- Schema-aware vector storage for different code artifacts
+- Intelligent metadata classification (controllers, services, entities, etc.)
+- Cross-reference analysis for architectural dependencies
+- Advanced querying capabilities for semantic code search
 
 ## Environment Configuration
 
@@ -130,7 +137,11 @@ RATE_LIMIT_ENV=test|production|emergency
 
 # Paths
 OUTPUT_DIR=./output
-CHROMADB_DIR=./data/chromadb
+WEAVIATE_DIR=./data/weaviate
+
+# Weaviate Configuration
+WEAVIATE_URL=http://localhost:8080
+WEAVIATE_COLLECTION_PREFIX=java_codebase
 ```
 
 ### Rate Limiting Modes
@@ -151,10 +162,10 @@ The `OLLAMA_TIMEOUT` environment variable overrides config file timeouts:
 - Set `DEBUGFILE` environment variable to process specific files
 - Useful for testing changes on subset of codebase
 
-**Web Interface**
+**Enhanced Web Interface**
 - Chat-based interface for querying processed documentation
-- Supports both FastAPI and Flask backends
-- Real-time ChromaDB querying with AI-powered responses
+- Real-time Weaviate querying with AI-powered responses
+- Advanced semantic search across data structures and architectural components
 
 **StrictDoc Integration**
 - Generates formal requirements documentation
@@ -163,8 +174,18 @@ The `OLLAMA_TIMEOUT` environment variable overrides config file timeouts:
 
 ## Important Notes
 
-- Always use the shell scripts (Step1.sh, Step2.sh, etc.) rather than calling Python directly
+- Always use the Enhanced Weaviate shell scripts (Step1_Enhanced_Weaviate.sh, etc.) rather than calling Python directly
 - The system automatically handles API quota limits and provides helpful error messages
-- ChromaDB collections are persistent - processing builds upon previous runs
+- Weaviate collections are persistent - processing builds upon previous runs with enhanced data structure analysis
 - Debug mode processes only files listed in the debug file, useful for incremental development
-- The web interface provides real-time access to processed documentation via semantic search
+- The web interface provides real-time access to processed documentation via semantic search with Weaviate
+
+## Archive Information
+
+**Legacy Components**: Non-enhanced scripts and ChromaDB-based components have been moved to the `archive/` directory including:
+- Original Step1.sh, Step2.sh, Step3.sh (ChromaDB-based)
+- ChromaDB connectors and processors
+- Legacy web interface components (FastAPI/Flask implementations)
+- Old test files and documentation
+
+**Focus**: The codebase now focuses exclusively on Enhanced Weaviate implementation with advanced data structure discovery and architectural analysis.
