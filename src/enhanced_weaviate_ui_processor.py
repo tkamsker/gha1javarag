@@ -38,39 +38,31 @@ class EnhancedWeaviateUIProcessor(EnhancedWeaviateProcessor):
         self.ui_analysis_results = {}
         
     def initialize_ui_collections(self):
-        """Initialize UI collections in Weaviate"""
+        """Initialize UI collections in Weaviate with fallback handling"""
         if not WEAVIATE_AVAILABLE:
-            logger.warning("Weaviate not available - using mock UI collections")
-            return True
+            logger.warning("Weaviate not available - will use traditional processing")
+            return False
             
         try:
             # Initialize UI schema manager
             self.ui_schema_manager = WeaviateUISchemaManager(self.weaviate_client)
             
-            # Check if UI collections exist, delete if necessary for clean slate
-            try:
-                existing_collections = self.weaviate_client.schema.get()
-                ui_collections = ['UIComponents', 'NavigationFlows']
-                
-                for collection in ui_collections:
-                    if any(cls['class'] == collection for cls in existing_collections.get('classes', [])):
-                        logger.info(f"Deleting existing {collection} collection for clean initialization")
-                        self.weaviate_client.schema.delete_class(collection)
-            except Exception as e:
-                logger.warning(f"Could not check/delete existing UI collections: {e}")
+            # Skip collection deletion for now due to API compatibility issues
+            logger.info("⏭️ Skipping UI collection cleanup due to Weaviate v4 API changes")
             
-            # Create new UI collections
+            # Try to create new UI collections
             success = self.ui_schema_manager.create_ui_collections()
             
             if success:
                 logger.info("✅ UI collections initialized successfully")
                 return True
             else:
-                logger.error("❌ Failed to initialize UI collections")
+                logger.warning("⚠️ UI collections creation failed - falling back to traditional processing")
                 return False
                 
         except Exception as e:
-            logger.error(f"Error initializing UI collections: {e}")
+            logger.warning(f"⚠️ UI collections initialization failed: {e}")
+            logger.info("🔄 Will fall back to traditional enhanced Weaviate processing")
             return False
     
     async def process_with_ui_analysis(self, mode: str = "production") -> Dict[str, Any]:
@@ -80,9 +72,11 @@ class EnhancedWeaviateUIProcessor(EnhancedWeaviateProcessor):
         start_time = time.time()
         
         try:
-            # Initialize UI collections
-            if not self.initialize_ui_collections():
-                raise Exception("Failed to initialize UI collections")
+            # Try to initialize UI collections - if it fails, fall back to traditional processing
+            ui_collections_available = self.initialize_ui_collections()
+            if not ui_collections_available:
+                logger.warning("⚠️  UI collections initialization failed - falling back to traditional analysis")
+                return await self._fallback_to_traditional_analysis(mode, start_time)
             
             # Process files with UI analysis
             logger.info("📁 Processing files with UI analysis...")
@@ -127,7 +121,54 @@ class EnhancedWeaviateUIProcessor(EnhancedWeaviateProcessor):
             
         except Exception as e:
             logger.error(f"❌ Error in enhanced UI processing: {e}")
-            raise
+            logger.warning("🔄 Falling back to traditional analysis...")
+            return await self._fallback_to_traditional_analysis(mode, time.time())
+    
+    async def _fallback_to_traditional_analysis(self, mode: str, start_time: float) -> Dict[str, Any]:
+        """Fallback to traditional enhanced Weaviate processing when UI processing fails"""
+        
+        logger.info("🔄 Executing traditional enhanced Weaviate analysis as fallback")
+        
+        try:
+            # Run traditional comprehensive analysis
+            traditional_results = await super().run_comprehensive_analysis()
+            
+            # Create compatible results structure
+            fallback_results = {
+                'ui_analysis': {
+                    'ui_components': {},
+                    'navigation_flows': [],
+                    'ui_statistics': {'total_files': 0, 'ui_files': 0, 'java_components': 0},
+                    'ui_architecture': {'total_components': 0, 'total_navigation_flows': 0, 'component_types': {}, 'business_domains': []},
+                    'modernization_analysis': {'high_priority_count': 0, 'medium_priority_count': 0, 'low_priority_count': 0, 'average_complexity_score': 0}
+                },
+                'data_structure_analysis': traditional_results,
+                'processing_metadata': {
+                    'mode': mode,
+                    'processing_time': time.time() - start_time,
+                    'timestamp': datetime.now().isoformat(),
+                    'fallback_used': True,
+                    'ui_components_found': 0,
+                    'navigation_flows_mapped': 0,
+                    'data_structures_found': len(traditional_results.get('data_structures', {})) if traditional_results else 0
+                }
+            }
+            
+            # Generate summary for fallback results
+            summary = self._generate_comprehensive_summary(fallback_results)
+            fallback_results['summary'] = summary
+            
+            # Save results
+            await self._save_combined_results(fallback_results, mode)
+            
+            processing_time = time.time() - start_time
+            logger.info(f"✅ Fallback traditional processing complete in {processing_time:.2f} seconds")
+            
+            return fallback_results
+            
+        except Exception as e:
+            logger.error(f"❌ Fallback traditional analysis also failed: {e}")
+            raise Exception(f"Both UI and traditional analysis failed: {e}")
     
     def _generate_comprehensive_summary(self, results: Dict[str, Any]) -> Dict[str, Any]:
         """Generate comprehensive summary combining UI and data analysis"""
