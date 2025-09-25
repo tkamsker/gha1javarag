@@ -1,124 +1,249 @@
 # Containerization Requirements
 
-**Generated**: 2025-09-24T15:51:35.621559
+**Generated**: 2025-09-24T17:07:07.876927
 **Category**: Containers
-**Mode**: test
+**Mode**: production
 
 # Containerization Requirements for A1 CuCo System
 
 ## 1. Docker Container Requirements
 
 ### Base Image Selection and Security
-- **Primary Base Images**: Use official OpenJDK 17 base images from Docker Hub
-- **Security Considerations**: 
-  - Scan base images for vulnerabilities using Trivy or Clair
-  - Implement minimal base image approach (alpine-based where possible)
-  - Regularly update base images with security patches
-  - Use non-root user in container images
-  - Implement image signing and verification
+```dockerfile
+# Use minimal base image with security patches
+FROM openjdk:17-jre-slim AS base
+
+# Set non-root user for security
+RUN addgroup --system appgroup && \
+    adduser --system --ingroup appgroup appuser && \
+    mkdir -p /app && \
+    chown -R appuser:appgroup /app
+
+# Copy application artifacts
+COPY target/*.jar /app/app.jar
+
+# Set working directory and user
+WORKDIR /app
+USER appuser:appgroup
+
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/actuator/health || exit 1
+```
 
 ### Multi-stage Build Optimization
 ```dockerfile
-# Stage 1: Build
-FROM maven:3.8.6-openjdk-17 AS builder
+# Stage 1: Build stage
+FROM maven:3.8.4-openjdk-17 AS build
+
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 RUN mvn clean package -DskipTests
 
-# Stage 2: Runtime
+# Stage 2: Runtime stage
 FROM openjdk:17-jre-slim AS runtime
+
+# Copy dependencies and application from build stage
+COPY --from=build /app/target/*.jar /app/app.jar
+
+# Create non-root user
+RUN addgroup --system appgroup && \
+    adduser --system --ingroup appgroup appuser && \
+    mkdir -p /app && \
+    chown -R appuser:appgroup /app
+
 WORKDIR /app
-COPY --from=builder /app/target/*.jar app.jar
+USER appuser:appgroup
+
 EXPOSE 8080
-USER 1000
 ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
 
 ### Container Image Layering Strategies
-- **Layer Optimization**: Group frequently changing dependencies together
-- **Cache Strategy**: Leverage Docker layer caching for faster builds
-- **Image Size Reduction**: 
-  - Remove unnecessary packages and files
-  - Use .dockerignore to exclude build artifacts
-  - Implement clean-up steps after package installations
+```dockerfile
+# Optimized layering for caching and security
+FROM openjdk:17-jre-slim
+
+# Install security updates first (layer 1)
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy dependencies first (layer 2) - will be cached if unchanged
+COPY pom.xml mvn-dependencies/ 
+RUN mvn dependency:copy-dependencies -DoutputDirectory=mvn-dependencies
+
+# Copy source code (layer 3)
+COPY src/ src/
+
+# Build application (layer 4)
+RUN mvn clean package
+
+# Copy built artifacts (layer 5)
+COPY target/*.jar app.jar
+
+# Set security context
+USER 1000:1000
+EXPOSE 8080
+CMD ["java", "-jar", "app.jar"]
+```
 
 ### Security Scanning and Vulnerability Management
 ```yaml
-# docker-compose.yml for security scanning
-version: '3.8'
-services:
-  security-scan:
-    image: aquasec/trivy:latest
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: scan --severity HIGH,CRITICAL <image-name>
+# Dockerfile with security considerations
+FROM openjdk:17-jre-slim
+
+# Use specific version tags for security
+ARG BUILD_DATE
+ARG VERSION
+LABEL org.opencontainers.image.created=$BUILD_DATE \
+      org.opencontainers.image.version=$VERSION \
+      org.opencontainers.image.authors="DevOps Team"
+
+# Copy application with proper permissions
+COPY --chown=1000:1000 app.jar /app.jar
+
+# Security hardening
+RUN chmod 644 /app.jar && \
+    # Remove unnecessary packages
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Run as non-root user
+USER 1000:1000
+ENTRYPOINT ["java", "-jar", "/app.jar"]
 ```
 
 ## 2. Kubernetes Cluster Requirements
 
 ### Cluster Architecture and Node Configuration
-- **Control Plane**: 3 master nodes with high availability
-- **Worker Nodes**: Minimum 3 worker nodes with autoscaling enabled
-- **Node Resources**: 
-  - CPU: 4 cores minimum per node
-  - Memory: 8GB minimum per node
-  - Storage: 100GB SSD minimum per node
-- **Node Labels**: 
-  - `environment=production`
-  - `node-type=worker`
-  - `workload-type=app`
-
-### Namespace Design and隔离
 ```yaml
-# namespace.yaml
+# Kubernetes cluster configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-config
+data:
+  node-labels: |
+    node-role.kubernetes.io/control-plane=true
+    node-role.kubernetes.io/worker=true
+  node-taints: |
+    node-role.kubernetes.io/control-plane=:NoSchedule
+
+---
+# Node configuration for enterprise deployment
+apiVersion: v1
+kind: Node
+metadata:
+  name: worker-node-01
+  labels:
+    node-type: production
+    environment: prod
+    region: us-east-1
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    volumes.kubernetes.io/controller-managed-attach-detach: "true"
+spec:
+  taints:
+  - key: "node-role.kubernetes.io/control-plane"
+    effect: "NoSchedule"
+```
+
+### Namespace Design and Isolation
+```yaml
+# Production namespace with security policies
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: a1-cuco-prod
+  name: production
   labels:
     environment: production
     team: cuco
+    security: strict
+
 ---
+# Development namespace for testing
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: a1-cuco-staging
+  name: development
+  labels:
+    environment: development
+    team: cuco
+    security: relaxed
+
+---
+# Staging namespace for pre-production
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: staging
   labels:
     environment: staging
     team: cuco
+    security: moderate
 ```
 
 ### Resource Quotas and Limits
 ```yaml
-# resource-quota.yaml
+# Resource quota for production namespace
 apiVersion: v1
 kind: ResourceQuota
 metadata:
-  name: app-resource-quota
-  namespace: a1-cuco-prod
+  name: prod-quota
+  namespace: production
 spec:
   hard:
-    requests.cpu: "2"
-    requests.memory: 4Gi
-    limits.cpu: "4"
-    limits.memory: 8Gi
+    requests.cpu: "20"
+    requests.memory: 40Gi
+    limits.cpu: "40"
+    limits.memory: 80Gi
     persistentvolumeclaims: "10"
     services.loadbalancers: "5"
+
+---
+# Resource limit for application pods
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: app-limits
+  namespace: production
+spec:
+  limits:
+  - default:
+      cpu: 500m
+      memory: 1Gi
+    defaultRequest:
+      cpu: 250m
+      memory: 512Mi
+    max:
+      cpu: 2
+      memory: 4Gi
+    min:
+      cpu: 100m
+      memory: 256Mi
+    type: Container
 ```
 
 ### Pod Security Policies
 ```yaml
-# pod-security-policy.yaml
+# Pod Security Policy for enterprise security
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  name: restricted-psp
+  name: cuco-app-psp
 spec:
   privileged: false
   allowPrivilegeEscalation: false
   requiredDropCapabilities:
     - ALL
+  allowedCapabilities:
+    - NET_BIND_SERVICE
   volumes:
     - 'configMap'
     - 'emptyDir'
@@ -143,272 +268,125 @@ spec:
     ranges:
       - min: 1
         max: 65535
+  readOnlyRootFilesystem: true
 ```
 
-## 3. Application Deployment Requirements
+## 2. Containerization Requirements for A1 CuCo System
+
+### 3. Application Deployment Requirements
 
 ### Kubernetes Deployment Manifests
 ```yaml
-# deployment.yaml
+# Production deployment with high availability
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: a1-cuco-app
-  namespace: a1-cuco-prod
+  name: cuco-app-deployment
+  namespace: production
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: a1-cuco
+      app: cuco-app
   template:
     metadata:
       labels:
-        app: a1-cuco
+        app: cuco-app
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
       containers:
-      - name: a1-cuco-app
-        image: a1-cuco-app:latest
+      - name: cuco-app
+        image: registry.example.com/cuco/app:latest
         ports:
         - containerPort: 8080
+          name: http
         envFrom:
         - configMapRef:
-            name: a1-cuco-config
+            name: cuco-app-config
         - secretRef:
-            name: a1-cuco-secrets
+            name: cuco-app-secrets
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "250m"
-          limits:
             memory: "1Gi"
             cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1"
         livenessProbe:
           httpGet:
-            path: /health
+            path: /actuator/health
             port: 8080
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /ready
+            path: /actuator/ready
             port: 8080
           initialDelaySeconds: 5
           periodSeconds: 5
+        volumeMounts:
+        - name: logs-volume
+          mountPath: /app/logs
+        - name: config-volume
+          mountPath: /app/config
+      volumes:
+      - name: logs-volume
+        emptyDir: {}
+      - name: config-volume
+        configMap:
+          name: cuco-app-config
 ```
 
 ### ConfigMap and Secret Management
 ```yaml
-# configmap.yaml
+# ConfigMap for application configuration
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: a1-cuco-config
-  namespace: a1-cuco-prod
+  name: cuco-app-config
+  namespace: production
 data:
   application.properties: |
     server.port=8080
-    spring.datasource.url=jdbc:mysql://db-service:3306/cuco_db
-    logging.level.com.a1.cuco=INFO
+    spring.profiles.active=prod
+    logging.level.root=INFO
+    management.endpoints.web.exposure.include=health,info,metrics
+
 ---
-# secret.yaml
+# Secret for sensitive configuration
 apiVersion: v1
 kind: Secret
 metadata:
-  name: a1-cuco-secrets
-  namespace: a1-cuco-prod
+  name: cuco-app-secrets
+  namespace: production
 type: Opaque
 data:
-  database-password: <base64-encoded-password>
-  api-key: <base64-encoded-api-key>
+  database.password: <base64-encoded-password>
+  api.key: <base64-encoded-key>
+  ssl.keystore.password: <base64-encoded-password>
 ```
 
 ### Persistent Volume Requirements
 ```yaml
-# persistent-volume.yaml
+# PersistentVolumeClaim for application data
 apiVersion: v1
-kind: PersistentVolume
+kind: PersistentVolumeClaim
 metadata:
-  name: a1-cuco-pv
+  name: cuco-app-pvc
+  namespace: production
 spec:
-  capacity:
-    storage: 100Gi
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
+  resources:
+    requests:
+      storage: 100Gi
   storageClassName: fast-ssd
-  hostPath:
-    path: /data/a1-cuco
+
 ---
-# persistent-volume-claim.yaml
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: a1-cuco-pvc
-  namespace: a1-cuco-prod
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 50Gi
-  storageClassName: fast-ssd
-```
-
-### Service and Ingress Configuration
-```yaml
-# service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: a1-cuco-service
-  namespace: a1-cuco-prod
-spec:
-  selector:
-    app: a1-cuco
-  ports:
-  - port: 80
-    targetPort: 8080
-  type: ClusterIP
-
-# ingress.yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: a1-cuco-ingress
-  namespace: a1-cuco-prod
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-spec:
-  rules:
-  - host: api.a1cuco.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: a1-cuco-service
-            port:
-              number: 80
-```
-
-## 4. Container Orchestration Patterns
-
-### Replica Set and Scaling Strategies
-```yaml
-# horizontal-pod-autoscaler.yaml
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: a1-cuco-hpa
-  namespace: a1-cuco-prod
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: a1-cuco-app
-  minReplicas: 2
-  maxReplicas: 10
-  metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 70
-```
-
-### Rolling Update Deployments
-```yaml
-# deployment-with-rolling-update.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: a1-cuco-app
-spec:
-  replicas: 3
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
-  template:
-    spec:
-      containers:
-      - name: a1-cuco-app
-        image: a1-cuco-app:v2.0
-```
-
-### Health Checks and Readiness Probes
-```yaml
-# enhanced-health-checks.yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: a1-cuco-pod
-spec:
-  containers:
-  - name: a1-cuco-app
-    image: a1-cuco-app:latest
-    livenessProbe:
-      exec:
-        command:
-        - cat
-        - /tmp/healthy
-      initialDelaySeconds: 30
-      periodSeconds: 10
-    readinessProbe:
-      httpGet:
-        path: /ready
-        port: 8080
-      initialDelaySeconds: 5
-      periodSeconds: 5
-      timeoutSeconds: 3
-```
-
-### Resource Management and Optimization
-```yaml
-# resource-optimization.yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: a1-cuco-optimized
-spec:
-  containers:
-  - name: a1-cuco-app
-    image: a1-cuco-app:latest
-    resources:
-      requests:
-        memory: "256Mi"
-        cpu: "100m"
-      limits:
-        memory: "512Mi"
-        cpu: "200m"
-```
-
-## 5. Storage and Persistence
-
-### Persistent Volume Claims
-```yaml
-# pvc.yaml
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: a1-cuco-data-pvc
-  namespace: a1-cuco-prod
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 200Gi
-  storageClassName: gp2
-```
-
-### Storage Class Configuration
-```yaml
-# storage-class.yaml
+# StorageClass for enterprise storage
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -419,118 +397,141 @@ parameters:
   fsType: ext4
 reclaimPolicy: Retain
 allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
 ```
 
-### Backup and Restore Strategies
+### Service and Ingress Configuration
 ```yaml
-# backup-job.yaml
-apiVersion: batch/v1
-kind: Job
+# Service for internal communication
+apiVersion: v1
+kind: Service
 metadata:
-  name: a1-cuco-backup-job
+  name: cuco-app-service
+  namespace: production
 spec:
-  template:
-    spec:
-      containers:
-      - name: backup-container
-        image: busybox
-        command:
-        - /bin/sh
-        - -c
-        - |
-          # Backup script
-          tar -czf /backup/backup-$(date +%Y%m%d-%H%M%S).tar.gz /app/data
-          # Upload to S3
-          aws s3 cp /backup/ s3://a1-cuco-backups/ --recursive
-      restartPolicy: Never
+  selector:
+    app: cuco-app
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+  type: ClusterIP
+
+---
+# Ingress for external access
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cuco-app-ingress
+  namespace: production
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+spec:
+  rules:
+  - host: api.cuco.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: cuco-app-service
+            port:
+              number: 8080
 ```
 
-### StatefulSet Requirements for Databases
+### 4. Container Orchestration Patterns
+
+### Replica Set and Scaling Strategies
 ```yaml
-# statefulset.yaml
+# Horizontal Pod Autoscaler for automatic scaling
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: cuco-app-hpa
+  namespace: production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: cuco-app-deployment
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+```
+
+### Rolling Update Deployments
+```yaml
+# Deployment with rolling update strategy
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
-  name: a1-cuco-db
+  name: cuco-app-deployment
+  namespace: production
 spec:
-  serviceName: "a1-cuco-db"
   replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
   selector:
     matchLabels:
-      app: a1-cuco-db
+      app: cuco-app
   template:
     metadata:
       labels:
-        app: a1-cuco-db
+        app: cuco-app
     spec:
       containers:
-      - name: mysql
-        image: mysql:8.0
-        env:
-        - name: MYSQL_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: a1-cuco-db-secret
-              key: root-password
-        volumeMounts:
-        - name: mysql-data
-          mountPath: /var/lib/mysql
-        - name: mysql-config
-          mountPath: /etc/mysql/conf.d
-  volumeClaimTemplates:
-  - metadata:
-      name: mysql-data
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 100Gi
+      - name: cuco-app
+        image: registry.example.com/cuco/app:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1"
 ```
 
-## 6. Networking Requirements
-
-### Service Mesh Integration (Istio)
+### Health Checks and Readiness Probes
 ```yaml
-# istio-destination-rule.yaml
-apiVersion: networking.istio.io/v1beta1
-kind: DestinationRule
+# Enhanced health check configuration
+apiVersion: v1
+kind: Pod
 metadata:
-  name: a1-cuco-app
+  name: cuco-app-pod
 spec:
-  host: a1-cuco-service
-  trafficPolicy:
-    connectionPool:
-      http:
-        maxConnections: 100
-        http1MaxPendingRequests: 10
-    outlierDetection:
-      consecutiveErrors: 3
-      interval: 10s
-      baseEjectionTime: 30s
-```
-
-### Network Policies and Segmentation
-```yaml
-# network-policy.yaml
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: a1-cuco-allow-internal
-spec:
-  podSelector:
-    matchLabels:
-      app: a1-cuco
-  policyTypes:
-  - Ingress
-  ingress:
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          name: internal
-    ports:
-    - protocol: TCP
-      port: 8080
-```
-
-### Ingress Controller Configuration
-```yaml
+  containers:
+  - name: cuco-app
+    image: registry.example.com/cuco/app:latest
+    livenessProbe:
+      httpGet:
+        path: /actuator/health
+        port: 8080
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+      successThreshold: 1
+    readinessProbe:
+      httpGet:
+        path: /act

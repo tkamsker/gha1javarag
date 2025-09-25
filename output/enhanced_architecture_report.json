@@ -18,6 +18,12 @@
       "services": 0,
       "controllers": 0
     },
+    "cuco-ui-admin": {
+      "files": 68,
+      "entities": 1,
+      "services": 0,
+      "controllers": 0
+    },
     "cuco-cct-core": {
       "files": 11,
       "entities": 0,
@@ -26,7 +32,7 @@
     }
   },
   "data_layer": {
-    "entity_count": 5,
+    "entity_count": 6,
     "repository_count": 0,
     "relationship_count": 0,
     "main_entities": [
@@ -34,7 +40,8 @@
       "PartySummaryPrintModel",
       "PartyModel",
       "PartyModelFactory",
-      "DigitalSellingNotePrintModel"
+      "DigitalSellingNotePrintModel",
+      "ProductAdministrationPortletView"
     ]
   },
   "service_layer": {
@@ -45,5 +52,5 @@
     "controller_count": 0,
     "main_controllers": []
   },
-  "timestamp": "2025-09-24T14:49:12.358288"
+  "timestamp": "2025-09-24T16:41:06.109530"
 }

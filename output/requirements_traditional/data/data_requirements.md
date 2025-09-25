@@ -5,419 +5,403 @@
 ### Entity Definitions
 
 #### RTCodeModel
-- **Purpose**: Represents a code model used in the system
-- **Domain**: customer, product, order, support, admin
+- **Description**: Represents a code model used in the system
 - **Package**: at.a1ta.cuco.admin.ui.common.client.dto
-- **Complexity Score**: 16 (Low complexity)
-- **Fields**:
-  - serialVersionUID: Long (Java serialization identifier)
-  - b: Unknown type (requires clarification)
-  - null: Placeholder field (needs specification)
+- **Complexity Score**: 16
+- **Domain Coverage**: customer, product, order, support, admin
 
 #### PartySummaryPrintModel
-- **Purpose**: Summary data for party printing functionality
-- **Domain**: product
+- **Description**: Summary print model for party information
 - **Package**: at.a1ta.cuco.core.shared.dto
-- **Complexity Score**: 11 (Low complexity)
-- **Fields**:
-  - serialVersionUID: Long (Java serialization identifier)
-  - party: Party reference (requires type definition)
-  - products: Product collection (requires type definition)
-  - subscriptions: Subscription collection (requires type definition)
+- **Complexity Score**: 11
+- **Domain Coverage**: product
 
 #### PartyModel
-- **Purpose**: Core customer/organization data model
-- **Domain**: customer, product, support
+- **Description**: Core customer party model with comprehensive attributes
 - **Package**: at.a1ta.cuco.core.shared.model
-- **Complexity Score**: 79 (Medium complexity)
-- **Key Fields**:
-  - serialVersionUID: Long (Java serialization identifier)
-  - id: Unique identifier for party
-  - bans: Business area numbers
-  - commercialRegisterNumber: Legal registration number
-  - businessSegment: Industry classification
+- **Complexity Score**: 79
+- **Domain Coverage**: customer, product, support
 
 #### PartyModelFactory
-- **Purpose**: Factory pattern implementation for PartyModel creation
-- **Domain**: customer, product, billing, order, support
+- **Description**: Factory class for creating PartyModel instances
 - **Package**: at.a1ta.cuco.core.shared.model
-- **Complexity Score**: 88 (High complexity)
-- **Fields**:
-  - order: Order reference
-  - result: Factory output
-  - sb: StringBuilder or similar object
+- **Complexity Score**: 88
+- **Domain Coverage**: customer, product, billing, order, support
 
 #### DigitalSellingNotePrintModel
-- **Purpose**: Digital selling note data for printing reports
-- **Domain**: product, billing
+- **Description**: Print model for digital selling notes with pricing information
 - **Package**: at.a1ta.cuco.core.service.visitreport
-- **Complexity Score**: 17 (Low complexity)
-- **Fields**:
-  - title: String (document title)
-  - priceOld: Decimal (original price)
-  - noteOld: String (original note)
-  - priceNew: Decimal (new price)
-  - noteNew: String (new note)
+- **Complexity Score**: 17
+- **Domain Coverage**: product, billing
+
+#### ProductAdministrationPortletView
+- **Description**: UI view component for product administration portlets
+- **Package**: at.a1ta.cuco.ui.admin.client.ui.portlet
+- **Complexity Score**: 82
+- **Domain Coverage**: customer, product, order, admin
 
 ### Attribute Definitions
 
-| Entity | Field Name | Data Type | Description | Constraints |
-|--------|------------|-----------|-------------|-------------|
-| RTCodeModel | serialVersionUID | Long | Java serialization version | Required for serialization |
-| RTCodeModel | b | Unknown | Business code field | Needs specification |
-| PartySummaryPrintModel | party | Party | Party reference | Foreign key to Party table |
-| PartySummaryPrintModel | products | Product[] | Product collection | Required, non-null |
-| PartySummaryPrintModel | subscriptions | Subscription[] | Subscription collection | Required, non-null |
-| PartyModel | id | UUID | Unique party identifier | Primary key, required |
-| PartyModel | bans | String[] | Business area numbers | Required, unique |
-| PartyModel | commercialRegisterNumber | String | Legal registration number | Required, unique |
-| PartyModel | businessSegment | String | Industry classification | Required, valid enum |
-| PartyModelFactory | order | Order | Order reference | Foreign key to Order table |
-| DigitalSellingNotePrintModel | title | String | Document title | Required, max 255 chars |
-| DigitalSellingNotePrintModel | priceOld | Decimal(10,2) | Original price | Required, positive |
-| DigitalSellingNotePrintModel | noteOld | Text | Original note content | Optional |
-| DigitalSellingNotePrintModel | priceNew | Decimal(10,2) | New price | Required, positive |
-| DigitalSellingNotePrintModel | noteNew | Text | New note content | Optional |
+#### RTCodeModel Fields:
+| Field Name | Data Type | Description |
+|------------|-----------|-------------|
+| serialVersionUID | long | Java serialization identifier |
+| b | String | Business code identifier |
+| null | Object | Placeholder field |
+
+#### PartySummaryPrintModel Fields:
+| Field Name | Data Type | Description |
+|------------|-----------|-------------|
+| serialVersionUID | long | Java serialization identifier |
+| party | PartyModel | Reference to party entity |
+| products | List<Product> | Associated products |
+| subscriptions | List<Subscription> | Associated subscriptions |
+
+#### PartyModel Fields:
+| Field Name | Data Type | Description |
+|------------|-----------|-------------|
+| serialVersionUID | long | Java serialization identifier |
+| id | Long | Unique party identifier |
+| bans | String | Business area number |
+| commercialRegisterNumber | String | Commercial registration number |
+| businessSegment | String | Business segment classification |
+
+#### PartyModelFactory Fields:
+| Field Name | Data Type | Description |
+|------------|-----------|-------------|
+| order | OrderModel | Order reference |
+| result | PartyModel | Factory result |
+| sb | StringBuilder | String builder for processing |
+
+#### DigitalSellingNotePrintModel Fields:
+| Field Name | Data Type | Description |
+|------------|-----------|-------------|
+| title | String | Note title |
+| priceOld | BigDecimal | Previous price value |
+| noteOld | String | Old note content |
+| priceNew | BigDecimal | New price value |
+| noteNew | String | New note content |
+
+#### ProductAdministrationPortletView Fields:
+| Field Name | Data Type | Description |
+|------------|-----------|-------------|
+| uiBinder | UIBinder | UI binding reference |
+| productTree | TreeWidget | Product tree widget |
+| productGroupsDataProvider | DataProvider | Product groups data provider |
+| productTreeSelectionModel | SelectionModel | Tree selection model |
+| productGroupAssignmentDataProvider | DataProvider | Assignment data provider |
 
 ### Relationship Definitions
 
-**Missing Relationships**: The current analysis shows 0 relationships mapped. This requires immediate attention to define:
+**Referential Relationships:**
+- PartySummaryPrintModel → PartyModel (1:1)
+- PartySummaryPrintModel → Product (1:N)
+- PartySummaryPrintModel → Subscription (1:N)
+- PartyModelFactory → OrderModel (1:1)
+- DigitalSellingNotePrintModel → Product (1:1)
 
-- PartyModel ↔ PartySummaryPrintModel (One-to-One or One-to-Many)
-- PartyModel ↔ PartyModelFactory (Factory pattern relationship)
-- DigitalSellingNotePrintModel ↔ PartyModel (Foreign key relationship)
+**Foreign Key Constraints:**
+- All relationships must maintain referential integrity
+- Cascade delete operations for child entities when parent is deleted
 
 ### Domain Constraints
 
-- **Business Segment**: Must be from predefined list (e.g., "Telecommunications", "Retail", "Financial Services")
-- **Commercial Register Number**: Must follow Austrian legal format standards
-- **Price Fields**: Must be positive decimal values with maximum 2 decimal places
-- **Party Status**: Valid values include "Active", "Inactive", "Suspended"
+**Business Rule Constraints:**
+- CommercialRegisterNumber must be unique within the system
+- PartyModel.id must be positive integer values
+- ProductAdministrationPortletView fields must follow naming conventions
+- RTCodeModel.b field must conform to business code standards
+
+**Validation Rules:**
+- All string fields must not exceed 255 characters
+- Price fields must be non-negative decimal values
+- Required fields must not be null or empty
 
 ### Data Dictionary
 
-| Field | Type | Description | Nullable | Default Value |
-|-------|------|-------------|----------|---------------|
-| party.id | UUID | Party unique identifier | No | NULL |
-| party.bans | String[] | Business area numbers | No | [] |
-| party.commercialRegisterNumber | String | Legal registration number | No | NULL |
-| party.businessSegment | String | Industry classification | No | NULL |
-| digitalNote.title | String | Document title | No | NULL |
-| digitalNote.priceOld | Decimal(10,2) | Original price | No | 0.00 |
-| digitalNote.noteOld | Text | Original note content | Yes | NULL |
-| digitalNote.priceNew | Decimal(10,2) | New price | No | 0.00 |
-| digitalNote.noteNew | Text | New note content | Yes | NULL |
+| Entity | Field | Type | Nullable | Description |
+|--------|-------|------|----------|-------------|
+| RTCodeModel | serialVersionUID | long | No | Java serialization identifier |
+| RTCodeModel | b | String | Yes | Business code identifier |
+| PartySummaryPrintModel | party | PartyModel | No | Party reference |
+| PartySummaryPrintModel | products | List<Product> | Yes | Product associations |
+| PartyModel | id | Long | No | Unique party identifier |
+| PartyModel | bans | String | Yes | Business area number |
+| PartyModel | commercialRegisterNumber | String | Yes | Commercial registration |
+| DigitalSellingNotePrintModel | title | String | No | Note title |
+| DigitalSellingNotePrintModel | priceOld | BigDecimal | No | Previous price |
+| ProductAdministrationPortletView | uiBinder | UIBinder | No | UI binding reference |
 
 ## 2. DATA STORAGE REQUIREMENTS
 
 ### Database Design
 
-**Normalized Schema**: 
-- **Party Table**: Core customer data with normalized relationships
-- **Product Table**: Product catalog information
-- **Subscription Table**: Service subscription details
-- **Order Table**: Order processing records
-- **DigitalNote Table**: Selling note documents
+**Normalized Schema:**
+- First Normal Form (1NF): All attributes are atomic
+- Second Normal Form (2NF): Eliminate partial dependencies
+- Third Normal Form (3NF): Eliminate transitive dependencies
+
+**Schema Structure:**
+```
+Party Table
+├── party_id (PK)
+├── bans
+├── commercial_register_number
+└── business_segment
+
+Product Table
+├── product_id (PK)
+├── product_name
+├── description
+└── price
+
+Subscription Table
+├── subscription_id (PK)
+├── party_id (FK)
+├── product_id (FK)
+└── start_date
+```
 
 ### Table Structure
 
-#### Party Table
-```sql
-CREATE TABLE party (
-    id UUID PRIMARY KEY,
-    commercial_register_number VARCHAR(50) UNIQUE NOT NULL,
-    business_segment VARCHAR(100) NOT NULL,
-    bans TEXT[] NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
+#### PartyModel Table
+| Column Name | Data Type | Constraints | Description |
+|-------------|-----------|-------------|-------------|
+| id | BIGINT | PRIMARY KEY, NOT NULL | Unique party identifier |
+| bans | VARCHAR(50) | NULL | Business area number |
+| commercial_register_number | VARCHAR(100) | UNIQUE, NULL | Commercial registration |
+| business_segment | VARCHAR(100) | NULL | Business segment classification |
 
-#### Product Table
-```sql
-CREATE TABLE product (
-    id UUID PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    price DECIMAL(10,2) NOT NULL,
-    category VARCHAR(100),
-    status VARCHAR(20) DEFAULT 'ACTIVE'
-);
-```
+#### PartySummaryPrintModel Table
+| Column Name | Data Type | Constraints | Description |
+|-------------|-----------|-------------|-------------|
+| party_id | BIGINT | FOREIGN KEY, NOT NULL | Reference to Party |
+| product_id | BIGINT | FOREIGN KEY, NOT NULL | Product reference |
+| subscription_id | BIGINT | FOREIGN KEY, NOT NULL | Subscription reference |
 
-#### Subscription Table
-```sql
-CREATE TABLE subscription (
-    id UUID PRIMARY KEY,
-    party_id UUID REFERENCES party(id),
-    product_id UUID REFERENCES product(id),
-    start_date DATE NOT NULL,
-    end_date DATE,
-    status VARCHAR(20) NOT NULL
-);
-```
+#### DigitalSellingNotePrintModel Table
+| Column Name | Data Type | Constraints | Description |
+|-------------|-----------|-------------|-------------|
+| note_id | BIGINT | PRIMARY KEY, NOT NULL | Unique note identifier |
+| title | VARCHAR(255) | NOT NULL | Note title |
+| price_old | DECIMAL(10,2) | NOT NULL | Previous price |
+| note_old | TEXT | NULL | Old note content |
+| price_new | DECIMAL(10,2) | NOT NULL | New price |
+| note_new | TEXT | NULL | New note content |
 
 ### Data Types
 
-| Field | Required Data Type | Notes |
-|-------|-------------------|-------|
-| id fields | UUID | Standard for primary keys |
-| price fields | DECIMAL(10,2) | Fixed precision for monetary values |
-| text fields | TEXT | For variable-length content |
-| array fields | TEXT[] | PostgreSQL array type for multiple values |
-| date fields | DATE/TIMESTAMP | Proper time zone handling required |
+**Primary Data Types:**
+- **Integer Types**: BIGINT for identifiers, INT for counts
+- **String Types**: VARCHAR with appropriate lengths (50-255)
+- **Decimal Types**: DECIMAL(10,2) for monetary values
+- **Date/Time Types**: DATE, DATETIME for temporal data
+- **Text Types**: TEXT for large content fields
+
+**Specific Requirements:**
+- All identifiers must use BIGINT with auto-increment
+- Monetary fields require DECIMAL precision of 10,2
+- String fields should be VARCHAR(255) unless otherwise specified
+- Timestamps should use DATETIME with timezone support
 
 ### Storage Capacity
 
-**Initial Requirements**:
-- Party data: 10,000 records → 50MB
-- Product catalog: 5,000 records → 20MB  
-- Subscription data: 20,000 records → 100MB
-- Order data: 100,000 records → 500MB
-- Digital note documents: 50,000 records → 200MB
+**Initial Requirements:**
+- PartyModel: 100,000 records (10MB)
+- ProductAdministrationPortletView: 50,000 records (5MB)
+- DigitalSellingNotePrintModel: 200,000 records (20MB)
 
-**Projected Growth (3 years)**:
-- Total storage requirement: 1.5GB minimum
-- Annual growth rate: 25%
-- Backup storage: 2x capacity for redundancy
+**Projected Growth:**
+- Annual growth rate: 15%
+- 5-year projection: ~200MB total storage
 
 ### Partitioning Strategy
 
-**Horizontal Partitioning**:
-- Party table by business_segment
-- Subscription table by year of start_date
-- Order table by date range (monthly)
+**Horizontal Partitioning:**
+- PartyModel partitioned by business_segment
+- DigitalSellingNotePrintModel partitioned by date ranges
+- ProductAdministrationPortletView partitioned by product_category
 
-**Vertical Partitioning**:
-- Large text fields moved to separate tables
+**Vertical Partitioning:**
+- Large TEXT fields moved to separate tables
 - Historical data moved to archive partitions
 
 ## 3. DATA INTEGRITY REQUIREMENTS
 
 ### Referential Integrity
 
-**Foreign Key Constraints**:
-```sql
-ALTER TABLE subscription 
-ADD CONSTRAINT fk_party_id 
-FOREIGN KEY (party_id) REFERENCES party(id) 
-ON DELETE CASCADE;
+**Foreign Key Constraints:**
+- PartySummaryPrintModel.party_id → PartyModel.id (ON DELETE CASCADE)
+- PartySummaryPrintModel.product_id → Product.id (ON DELETE RESTRICT)
+- PartySummaryPrintModel.subscription_id → Subscription.id (ON DELETE RESTRICT)
 
-ALTER TABLE subscription 
-ADD CONSTRAINT fk_product_id 
-FOREIGN KEY (product_id) REFERENCES product(id) 
-ON DELETE RESTRICT;
-```
+**Cascade Rules:**
+- When a party is deleted, all related summary print models are deleted
+- When a product is deleted, subscription records must be handled manually
 
 ### Domain Integrity
 
-**Check Constraints**:
-```sql
-ALTER TABLE party 
-ADD CONSTRAINT chk_business_segment 
-CHECK (business_segment IN ('Telecommunications', 'Retail', 'Financial Services'));
+**Check Constraints:**
+- Price fields must be >= 0.00
+- CommercialRegisterNumber length between 10-20 characters
+- BusinessSegment values limited to predefined set
 
-ALTER TABLE digital_note 
-ADD CONSTRAINT chk_positive_price 
-CHECK (price_old >= 0 AND price_new >= 0);
-```
+**Validation Rules:**
+- All required fields must not be null
+- String fields must pass regex validation for format requirements
+- Date fields must follow valid date ranges
 
 ### Entity Integrity
 
-**Primary Key Constraints**:
-- All entities must have unique primary keys
-- Party.id, Product.id, Subscription.id, Order.id, DigitalNote.id
+**Primary Key Constraints:**
+- PartyModel.id (unique, not null)
+- DigitalSellingNotePrintModel.note_id (unique, not null)
 
-**Unique Constraints**:
-- Commercial register number must be unique per party
-- Party business area numbers must be unique within party
+**Unique Constraints:**
+- PartyModel.commercial_register_number (unique)
+- ProductAdministrationPortletView.uiBinder (unique)
 
 ### Business Rules
 
-**Complex Validation Rules**:
-1. Party must have at least one business area number
-2. Subscription end_date cannot be before start_date
-3. Order status transitions follow defined workflow
-4. Digital note price changes must be within 50% range of original
+**Complex Validation:**
+- PartyModel must have either bans or commercial_register_number populated
+- Subscription start_date cannot be in the future
+- Price changes in DigitalSellingNotePrintModel must follow business approval workflows
 
 ### Data Consistency
 
-**Cross-table Consistency**:
-- Party and subscription data consistency through foreign key relationships
-- Product pricing consistency across related tables
-- Audit trail for all party modifications
+**Cross-table Consistency:**
+- All party references must exist in PartyModel table
+- Product prices in DigitalSellingNotePrintModel must match current Product prices
+- Subscription status updates must maintain data consistency across related tables
 
 ## 4. DATA ACCESS REQUIREMENTS
 
 ### Query Performance
 
-**Indexing Strategy**:
-```sql
-CREATE INDEX idx_party_business_segment ON party(business_segment);
-CREATE INDEX idx_subscription_party_id ON subscription(party_id);
-CREATE INDEX idx_subscription_start_date ON subscription(start_date);
-CREATE INDEX idx_order_date_status ON order(created_at, status);
-```
+**Indexing Strategy:**
+- Primary indexes on all foreign key columns
+- Composite indexes for frequently queried combinations:
+  - (party_id, product_id) in PartySummaryPrintModel
+  - (business_segment, commercial_register_number) in PartyModel
+- Full-text indexes for search functionality on note content
 
 ### Concurrent Access
 
-**Access Patterns**:
-- Read-heavy operations for product catalog
-- Write-heavy operations for order processing
-- Batch processing for reporting data
-- Real-time access for customer service
+**Access Patterns:**
+- Read-heavy operations with frequent party lookups
+- Write-heavy operations during order processing
+- Batch processing for report generation
+
+**Concurrency Controls:**
+- Row-level locking for transactional updates
+- Optimistic locking for concurrent read-write scenarios
+- Connection pooling for high-volume access
 
 ### Transaction Management
 
-**ACID Compliance Requirements**:
-- All financial transactions must be ACID compliant
-- Multi-table updates must be atomic
-- Isolation levels: READ COMMITTED minimum, SERIALIZABLE for critical operations
+**ACID Compliance:**
+- All transactions must maintain Atomicity, Consistency, Isolation, Durability
+- Multi-table transactions require distributed transaction support
+- Read committed isolation level for most operations
 
 ### Locking Strategy
 
-**Lock Types**:
-- Pessimistic locking for order creation and modification
-- Optimistic locking for party data updates
-- Row-level locking for concurrent access scenarios
+**Lock Types:**
+- **Pessimistic Locking**: For critical business operations (orders, billing)
+- **Optimistic Locking**: For general data updates and reporting
+- **Shared Locks**: For read operations that don't modify data
+- **Exclusive Locks**: For write operations
 
 ### Connection Pooling
 
-**Configuration Requirements**:
+**Configuration Requirements:**
 - Minimum pool size: 10 connections
 - Maximum pool size: 50 connections
-- Idle timeout: 300 seconds
-- Connection validation query: SELECT 1
+- Connection timeout: 30 seconds
+- Idle timeout: 600 seconds
+- Validation query: SELECT 1
 
 ## 5. DATA MIGRATION REQUIREMENTS
 
 ### Legacy Data Mapping
 
-**Source-to-Target Mapping**:
-- Party data from legacy system → Party table
-- Product catalog from legacy system → Product table  
-- Subscription history from legacy system → Subscription table
-- Order records from legacy system → Order table
+**Source-to-Target Mapping:**
+- PartyModel.id → Legacy party_id (1:1)
+- PartyModel.bans → Legacy business_area_number (1:1)
+- DigitalSellingNotePrintModel.title → Legacy note_title (1:1)
+
+**Data Transformation Rules:**
+- String field truncation for legacy system limitations
+- Data type conversion from legacy formats to new schema
+- Null value handling for missing data in legacy systems
 
 ### Data Transformation
 
-**ETL Processes**:
-1. **Data Cleansing**: Remove duplicates, standardize formats
-2. **Data Validation**: Apply business rules and constraints
-3. **Data Enrichment**: Add missing fields with default values
-4. **Data Mapping**: Transform field names and data types
+**ETL Processes:**
+- **Extract**: From legacy databases using JDBC connectors
+- **Transform**: Apply business rules and data validation
+- **Load**: Into new normalized database tables with proper constraints
+
+**Transformation Logic:**
+- Format standardization for party identifiers
+- Currency conversion for price fields
+- Data enrichment for missing business segment information
 
 ### Migration Validation
 
-**Verification Procedures**:
-- Row count comparison between source and target
-- Data quality checks for critical fields
-- Business rule validation on migrated records
-- Referential integrity verification
+**Verification Procedures:**
+- Row count comparison between source and target systems
+- Data integrity checks using checksum algorithms
+- Business rule validation on migrated data sets
+- Functional testing of migrated data access patterns
 
 ### Incremental Migration
 
-**Phased Approach**:
-1. Phase 1: Party and Product data (2 weeks)
-2. Phase 2: Subscription data (3 weeks)  
-3. Phase 3: Order data (4 weeks)
-4. Phase 4: Digital note documents (2 weeks)
+**Phased Approach:**
+- Phase 1: Party and Product data (30% of total)
+- Phase 2: Subscription and Order data (40% of total)
+- Phase 3: Digital selling notes and reports (30% of total)
 
-### Rollback Procedures
+**Migration Timeline:**
+- Week 1-2: Data extraction and preparation
+- Week 3-4: Core entity migration with validation
+- Week 5-6: Supporting data migration
+- Week 7: Testing and validation
 
-**Recovery Strategy**:
-- Full backup before migration start
-- Point-in-time recovery capability
-- Automated rollback scripts for each phase
-- Data consistency verification after rollback
+### Rollback Strategy
+
+**Recovery Procedures:**
+- Point-in-time backups for each migration phase
+- Data versioning for rollback capability
+- Automated rollback scripts for failed phases
 
 ## 6. DATA SECURITY REQUIREMENTS
 
-### Access Control
+### Access Controls
 
-**Role-Based Permissions**:
-- **Admin**: Full access to all tables and fields
-- **Customer Service**: Read/write access to party, subscription, order data
-- **Billing**: Read/write access to billing-related fields only
-- **Report Viewer**: Read-only access to reporting tables
+**Role-based Security:**
+- **Administrator**: Full access to all tables and procedures
+- **Business User**: Read/write access to party, product, subscription data
+- **Report User**: Read-only access to summary tables
+- **Audit User**: Read-only access with logging capabilities
 
-### Data Classification
+### Data Encryption
 
-**Sensitive Data Handling**:
-- Commercial register numbers: Confidential
-- Party contact information: Personal data
-- Financial transaction data: Highly confidential
-- Business area numbers: Internal business data
-
-### Encryption Requirements
-
-**Encryption Standards**:
-- Database-level encryption for sensitive fields
-- Field-level encryption for commercial register numbers
-- Transport encryption (TLS 1.3) for all database connections
-- At-rest encryption for backup files
-
-### Data Masking
-
-**Non-Production Environments**:
-- Customer names and contact info masked with dummy data
-- Commercial register numbers replaced with test values
-- Financial data obfuscated in development environments
+**Encryption Requirements:**
+- At-rest encryption for sensitive party information
+- In-transit encryption using SSL/TLS for all database connections
+- Field-level encryption for CommercialRegisterNumber and bans fields
 
 ### Audit Logging
 
-**Logging Requirements**:
-```sql
-CREATE TABLE audit_log (
-    id UUID PRIMARY KEY,
-    table_name VARCHAR(100),
-    operation VARCHAR(20),
-    user_id VARCHAR(50),
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old_values JSONB,
-    new_values JSONB
-);
-```
+**Logging Requirements:**
+- All data modifications logged in audit tables
+- Timestamps with timezone information
+- User identification for all operations
+- Change tracking for sensitive fields (price, status)
 
-## 7. DATA BACKUP AND RECOVERY REQUIREMENTS
+## 6. PERFORMANCE AND SCALABILITY REQUIREMENTS
 
-### Backup Strategy
+### Performance Monitoring
 
-**Full and Incremental Backups**:
-- Full backups: Weekly (Sunday)
-- Incremental backups: Daily (Monday-Saturday)
-- Backup retention period: 30 days for daily, 1 year for weekly
-- Automated backup scheduling with monitoring alerts
-
-### Recovery Procedures
-
-**Point-in-Time Recovery**:
-- Transaction log backups every 15 minutes
-- Recovery to specific timestamp capability
-- Database restore verification process
-- DR site recovery procedures documented and tested quarterly
-
-### Backup Storage
-
-**Storage Requirements**:
-- Primary backup location: Local storage with RAID 10 configuration
-- Secondary backup location: Cloud storage (AWS S3 or similar)
-- Backup file encryption and compression
-- Backup file integrity verification
-
-### Backup Verification
-
-**Verification Tests**:
-- Monthly backup restore testing
-- Quarterly disaster recovery drills
-- Backup file integrity checks
-- Recovery time objective (RTO): 4 hours maximum
-
-## 8. DATA ARCHIVE REQUIREMENTS
-
-### Archive Strategy
-
-**Historical Data Archiving**:
-- Subscription data older than 2 years moved to archive tables
-- Order data older than 5 years archived
--
