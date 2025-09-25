@@ -1,11 +1,11 @@
 #!/bin/bash
-# Enhanced Step 2 Script - Traditional Requirements with Weaviate and Data Structure Analysis
+# Enhanced Step 2 Script - Traditional Requirements with Weaviate, Data Structure Analysis, and UI Requirements (Iteration 14)
 # Exit on error
 set -e
 
 # Configuration
 MODE=${1:-"production"}  # Default to production mode
-echo "🚀 Running Enhanced Step 2 (Traditional Requirements) in $MODE mode"
+echo "🚀 Running Enhanced Step 2 (Traditional Requirements + UI Requirements) in $MODE mode"
 
 # Load environment variables
 if [ -f .env ]; then
@@ -321,9 +321,70 @@ except Exception as e:
     print('   • Data structure summary not available')
 "
 fi
+
+echo ""
+echo "🖥️ Generating UI Requirements from Enhanced Weaviate Analysis..."
+
+# Check for enhanced UI analysis file
+UI_ANALYSIS_FILE="./output/enhanced_ui_analysis_${MODE}.json"
+if [ -f "$UI_ANALYSIS_FILE" ]; then
+    echo "✅ Enhanced UI analysis file found: $UI_ANALYSIS_FILE"
+    
+    python3 -c "
+import sys
+sys.path.append('src')
+from ui_requirements_processor import UIRequirementsProcessor
+import json
+
+try:
+    # Load UI analysis results
+    with open('$UI_ANALYSIS_FILE', 'r') as f:
+        ui_analysis_results = json.load(f)
+    
+    # Extract UI analysis data
+    ui_analysis = ui_analysis_results.get('ui_analysis', {})
+    
+    if ui_analysis:
+        # Generate UI requirements
+        processor = UIRequirementsProcessor('./output')
+        generated_files = processor.save_ui_requirements(ui_analysis, '$MODE')
+        
+        print('✅ UI requirements generation completed successfully!')
+        print(f'📋 Generated {len(generated_files)} UI requirement documents:')
+        for doc_type, file_path in generated_files.items():
+            print(f'   - {doc_type.title()}: {file_path}')
+        
+        # Display UI analysis summary
+        ui_stats = ui_analysis.get('ui_statistics', {})
+        ui_arch = ui_analysis.get('ui_architecture', {})
+        ui_modern = ui_analysis.get('modernization_analysis', {})
+        
+        print('')
+        print('🎯 UI Analysis Summary:')
+        print(f'   • UI Components: {ui_arch.get(\"total_components\", 0)}')
+        print(f'   • Navigation Flows: {ui_arch.get(\"total_navigation_flows\", 0)}')
+        print(f'   • Business Domains: {len(ui_arch.get(\"business_domains\", []))}')
+        print(f'   • High Priority Components: {ui_modern.get(\"high_priority_count\", 0)}')
+        print(f'   • Average Complexity Score: {ui_modern.get(\"average_complexity_score\", 0):.1f}')
+        
+    else:
+        print('⚠️  No UI analysis data found in results file')
+        
+except Exception as e:
+    print(f'❌ UI requirements generation failed: {e}')
+    import traceback
+    traceback.print_exc()
+"
+
+else
+    echo "⚠️  Enhanced UI analysis file not found: $UI_ANALYSIS_FILE"
+    echo "UI requirements generation skipped. Run Step1_Enhanced_Weaviate.sh first."
+fi
+
 echo ""
 echo "🚀 Next Steps:"
 echo "1. Review traditional requirements: ./output/requirements_traditional/"
-echo "2. Validate entity-specific requirements with business stakeholders"
-echo "3. Run Step3_Enhanced_Weaviate.sh for modern requirements"
-echo "4. Use web interface to query requirements: ./start_web_weaviate.sh"
+echo "2. Review UI requirements: ./output/requirements_ui/"
+echo "3. Validate entity-specific requirements with business stakeholders"
+echo "4. Run Step3_Enhanced_Weaviate.sh for modern requirements"
+echo "5. Use web interface to query requirements: ./start_web_weaviate.sh"

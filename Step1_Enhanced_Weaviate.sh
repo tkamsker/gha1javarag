@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Enhanced Step 1: Process and analyze files with Weaviate and Data Structure Discovery
-# This script runs the enhanced analysis pipeline with architectural classification and data structure analysis
+# Enhanced Step 1: Process and analyze files with Weaviate, Data Structure Discovery, and UI Analysis (Iteration 14)
+# This script runs the enhanced analysis pipeline with architectural classification, data structure analysis, and comprehensive GWT UI component analysis
 
 set -e  # Exit on any error
 
@@ -18,8 +18,8 @@ WEAVIATE_DIR=${WEAVIATE_DIR:-"./data/weaviate"}
 # Rate limiting mode based on argument
 RATE_LIMIT_ENV=${1:-"production"}
 
-echo "🚀 Starting Enhanced AI-Powered Java Analysis with Weaviate and Data Structure Discovery"
-echo "===================================================================================="
+echo "🚀 Starting Enhanced AI-Powered Java Analysis with Weaviate, Data Structure Discovery, and UI Analysis"
+echo "====================================================================================================="
 echo "AI Provider: $AI_PROVIDER"
 echo "Output Directory: $OUTPUT_DIR"
 echo "Weaviate Directory: $WEAVIATE_DIR"
@@ -84,15 +84,15 @@ if [ "$AI_PROVIDER" = "ollama" ]; then
 fi
 
 echo ""
-echo "📊 Starting enhanced analysis pipeline with data structure discovery..."
+echo "📊 Starting enhanced analysis pipeline with data structure discovery and UI analysis..."
 
-# Run enhanced analysis with Weaviate and data structure discovery
-echo "Phase 1: Enhanced file analysis with Weaviate storage and data structure extraction..."
+# Run enhanced analysis with Weaviate, data structure discovery, and comprehensive UI analysis
+echo "Phase 1: Enhanced file analysis with Weaviate storage, data structure extraction, and UI component analysis..."
 
 python3 -c "
 import sys
 sys.path.append('src')
-from enhanced_weaviate_processor import EnhancedWeaviateProcessor
+from enhanced_weaviate_ui_processor import EnhancedWeaviateUIProcessor
 import asyncio
 import logging
 
@@ -100,25 +100,30 @@ logging.basicConfig(level=logging.INFO)
 
 async def main():
     try:
-        # Initialize processor with data structure discovery
-        processor = EnhancedWeaviateProcessor(
-            java_root_path='/Users/thomaskamsker/Documents/Atom/vron.one/playground/java',
-            output_dir='$OUTPUT_DIR',
-            enable_data_structure_discovery=True
-        )
+        # Initialize processor with UI analysis capabilities
+        processor = EnhancedWeaviateUIProcessor()
         
-        # Run comprehensive analysis
-        results = await processor.run_comprehensive_analysis()
+        # Run comprehensive analysis with UI processing
+        results = await processor.process_with_ui_analysis('$RATE_LIMIT_ENV')
         
-        print('✅ Enhanced Weaviate analysis completed successfully!')
-        print(f'📊 Processed {results.get(\"files_processed\", 0)} files')
-        print(f'🏗️ Identified {results.get(\"data_structures_found\", 0)} data structures')
-        print(f'📋 Generated {results.get(\"requirements_generated\", 0)} requirements')
+        # Extract results for reporting
+        processing_metadata = results.get('processing_metadata', {})
+        ui_analysis = results.get('ui_analysis', {})
+        ui_stats = ui_analysis.get('ui_statistics', {})
+        ui_arch = ui_analysis.get('ui_architecture', {})
+        
+        print('✅ Enhanced Weaviate UI analysis completed successfully!')
+        print(f'📊 Files Processed: {ui_stats.get(\"total_files\", 0)} (including UI files)')
+        print(f'🖥️ UI Components Discovered: {ui_arch.get(\"total_components\", 0)} portlets, dialogs, widgets')
+        print(f'🔄 Navigation Flows Mapped: {ui_arch.get(\"total_navigation_flows\", 0)} user workflows')
+        print(f'⚙️ GWT Widgets Cataloged: {len(ui_arch.get(\"gwt_widgets_used\", []))} unique widgets')
+        print(f'🏗️ Data Structures Found: {processing_metadata.get(\"data_structures_found\", 0)}')
+        print(f'⏱️ Processing Time: {processing_metadata.get(\"processing_time\", 0):.2f} seconds')
         
         return True
         
     except Exception as e:
-        print(f'❌ Enhanced analysis failed: {e}')
+        print(f'❌ Enhanced UI analysis failed: {e}')
         import traceback
         traceback.print_exc()
         return False
@@ -130,9 +135,10 @@ if __name__ == '__main__':
 
 if [ $? -eq 0 ]; then
     echo ""
-    echo "✅ Enhanced Weaviate analysis completed successfully!"
+    echo "✅ Enhanced Weaviate UI analysis completed successfully!"
     echo ""
     echo "📁 Generated files:"
+    echo "- $OUTPUT_DIR/enhanced_ui_analysis_$RATE_LIMIT_ENV.json"
     echo "- $OUTPUT_DIR/weaviate_metadata.json"
     echo "- $OUTPUT_DIR/data_structures_analysis.json"
     echo "- $OUTPUT_DIR/enhanced_architecture_report.json"
@@ -173,14 +179,17 @@ except Exception as e:
     
     if [ $? -eq 0 ]; then
         echo ""
-        echo "🎉 Enhanced Weaviate Analysis Pipeline Completed Successfully!"
+        echo "🎉 Enhanced Weaviate UI Analysis Pipeline Completed Successfully!"
         echo ""
         echo "📋 Summary:"
         echo "- Enhanced metadata with Weaviate vector storage"
         echo "- Data structure discovery and analysis"
+        echo "- Comprehensive GWT UI component analysis"
+        echo "- Navigation flow mapping and user workflow documentation"
+        echo "- UI modernization assessment and recommendations"
         echo "- Architectural classification and layer analysis"
         echo "- Comprehensive requirements documentation"
-        echo "- Semantic search capabilities"
+        echo "- Semantic search capabilities for UI and data components"
         echo ""
         echo "📁 Check the following directories:"
         echo "- $OUTPUT_DIR/requirements_weaviate/by_layer/"

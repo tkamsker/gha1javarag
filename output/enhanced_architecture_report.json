@@ -1,48 +1,17 @@
 {
   "modules": {
-    "administration.ui": {
-      "files": 20,
-      "entities": 1,
-      "services": 0,
-      "controllers": 0
-    },
-    "framework.ui": {
-      "files": 32,
-      "entities": 0,
-      "services": 0,
-      "controllers": 0
-    },
-    "cuco-core": {
-      "files": 92,
-      "entities": 4,
-      "services": 0,
-      "controllers": 0
-    },
-    "cuco-ui-admin": {
-      "files": 68,
-      "entities": 1,
-      "services": 0,
-      "controllers": 0
-    },
-    "cuco-cct-core": {
-      "files": 11,
+    "unknown": {
+      "files": 2,
       "entities": 0,
       "services": 0,
       "controllers": 0
     }
   },
   "data_layer": {
-    "entity_count": 6,
+    "entity_count": 0,
     "repository_count": 0,
     "relationship_count": 0,
-    "main_entities": [
-      "RTCodeModel",
-      "PartySummaryPrintModel",
-      "PartyModel",
-      "PartyModelFactory",
-      "DigitalSellingNotePrintModel",
-      "ProductAdministrationPortletView"
-    ]
+    "main_entities": []
   },
   "service_layer": {
     "service_count": 0,
@@ -52,5 +21,5 @@
     "controller_count": 0,
     "main_controllers": []
   },
-  "timestamp": "2025-09-24T16:41:06.109530"
+  "timestamp": "2025-09-25T12:54:05.576730"
 }

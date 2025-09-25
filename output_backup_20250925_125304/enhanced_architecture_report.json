@@ -1,0 +1,18 @@
+{
+  "modules": {},
+  "data_layer": {
+    "entity_count": 0,
+    "repository_count": 0,
+    "relationship_count": 0,
+    "main_entities": []
+  },
+  "service_layer": {
+    "service_count": 0,
+    "main_services": []
+  },
+  "web_layer": {
+    "controller_count": 0,
+    "main_controllers": []
+  },
+  "timestamp": "2025-09-25T11:58:31.967749"
+}

@@ -1,0 +1,16 @@
+{
+  "entities": [],
+  "dtos": [],
+  "enums": [],
+  "interfaces": [],
+  "relationships": [],
+  "summary": {
+    "total_data_structures": 0,
+    "total_relationships": 0,
+    "business_domains": {
+      "domain_distribution": {},
+      "entities_by_domain": {}
+    },
+    "complexity_metrics": {}
+  }
+}
