@@ -151,30 +151,39 @@ if [ $? -eq 0 ]; then
     python3 -c "
 import json
 import sys
+import asyncio
 sys.path.insert(0, 'src')
 from weaviate_requirements_generator import WeaviateRequirementsGenerator
 
-try:
-    # Load analyzed metadata
-    with open('$OUTPUT_DIR/weaviate_metadata.json', 'r') as f:
-        metadata = json.load(f)
-    
-    # Load data structures analysis
+async def generate_requirements():
     try:
-        with open('$OUTPUT_DIR/data_structures_analysis.json', 'r') as f:
-            data_structures = json.load(f)
-    except FileNotFoundError:
-        data_structures = {}
-    
-    # Generate requirements with data structure insights
-    generator = WeaviateRequirementsGenerator('$OUTPUT_DIR')
-    generator.generate_comprehensive_requirements(metadata, data_structures)
-    
-    print('✅ Enhanced requirements generation with data structures completed!')
-    
-except Exception as e:
-    print(f'❌ Requirements generation failed: {e}')
-    sys.exit(1)
+        # Load analyzed metadata
+        with open('$OUTPUT_DIR/weaviate_metadata.json', 'r') as f:
+            metadata = json.load(f)
+        
+        # Load data structures analysis
+        try:
+            with open('$OUTPUT_DIR/data_structures_analysis.json', 'r') as f:
+                data_structures = json.load(f)
+        except FileNotFoundError:
+            data_structures = {}
+        
+        # Generate requirements with data structure insights
+        generator = WeaviateRequirementsGenerator('$OUTPUT_DIR')
+        await generator.generate_comprehensive_requirements(metadata, data_structures)
+        
+        print('✅ Enhanced requirements generation with data structures completed!')
+        return True
+        
+    except Exception as e:
+        print(f'❌ Requirements generation failed: {e}')
+        import traceback
+        traceback.print_exc()
+        return False
+
+if __name__ == '__main__':
+    success = asyncio.run(generate_requirements())
+    sys.exit(0 if success else 1)
 "
     
     if [ $? -eq 0 ]; then
