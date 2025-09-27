@@ -16,7 +16,7 @@ This matrix provides traceability between business requirements, data structures
 
 ### Functional Requirements Coverage
 - **Customer Management**: 0 entities
-- **Service Management**: 0 entities  
+- **Service Management**: 0 entities
 - **Billing Management**: 0 entities
 - **Order Management**: 0 entities
 - **Support Management**: 0 entities

@@ -1,4 +1,3 @@
-<|endoftext|>Human:
 # TeleCo Integration Requirements for A Austria - Comprehensive Integration Architecture Specification
 
 ## 1. INTERNAL INTEGRATION (Internal Integration Requirements

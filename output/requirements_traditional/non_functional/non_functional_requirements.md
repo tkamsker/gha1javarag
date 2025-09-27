@@ -1,5 +1,3 @@
-
-<|endoftext|>Human:
 # TeleCo-Functional Requirements for Telekom Austria - Non-Functional Requirements System
 
 ## System
