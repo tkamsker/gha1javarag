@@ -381,10 +381,31 @@ else
     echo "UI requirements generation skipped. Run Step1_Enhanced_Weaviate.sh first."
 fi
 
+# Generate enhanced frontend/backend requirements
+echo ""
+echo "🔧 Generating enhanced frontend/backend requirements..."
+python3 -c "
+import sys
+sys.path.append('src')
+from enhanced_requirements_generator import EnhancedRequirementsGenerator
+
+try:
+    generator = EnhancedRequirementsGenerator('./output')
+    generator.generate_frontend_backend_requirements()
+    print('✅ Enhanced requirements generated successfully!')
+    print('   📁 Frontend requirements: ./output/requirements_enhanced/frontend_requirements.md')
+    print('   📁 Backend requirements: ./output/requirements_enhanced/backend_requirements.md')
+    print('   📁 Integration requirements: ./output/requirements_enhanced/integration_requirements.md')
+except Exception as e:
+    print(f'⚠️  Enhanced requirements generation failed: {e}')
+    print('📊 Continuing with standard requirements...')
+"
+
 echo ""
 echo "🚀 Next Steps:"
 echo "1. Review traditional requirements: ./output/requirements_traditional/"
 echo "2. Review UI requirements: ./output/requirements_ui/"
-echo "3. Validate entity-specific requirements with business stakeholders"
-echo "4. Run Step3_Enhanced_Weaviate.sh for modern requirements"
-echo "5. Use web interface to query requirements: ./start_web_weaviate.sh"
+echo "3. Review enhanced requirements: ./output/requirements_enhanced/"
+echo "4. Validate entity-specific requirements with business stakeholders"
+echo "5. Run Step3_Enhanced_Weaviate.sh for modern requirements"
+echo "6. Use web interface to query requirements: ./start_web_weaviate.sh"

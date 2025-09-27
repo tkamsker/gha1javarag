@@ -21,8 +21,8 @@
     }
   },
   "data_structure_analysis": {
-    "timestamp": "2025-09-26T12:44:00.561226",
-    "processing_time": 0.16626691818237305,
+    "timestamp": "2025-09-27T09:33:46.808208",
+    "processing_time": 0.37229204177856445,
     "files_processed": 2,
     "data_structures_found": 2,
     "entity_relationships": 0,
@@ -34,8 +34,8 @@
   },
   "processing_metadata": {
     "mode": "production",
-    "processing_time": 0.1675100326538086,
-    "timestamp": "2025-09-26T12:44:00.562349",
+    "processing_time": 0.37362027168273926,
+    "timestamp": "2025-09-27T09:33:46.809402",
     "fallback_used": true,
     "ui_components_found": 0,
     "navigation_flows_mapped": 0,
@@ -43,9 +43,9 @@
   },
   "summary": {
     "overview": {
-      "total_processing_time": "0.17 seconds",
+      "total_processing_time": "0.37 seconds",
       "processing_mode": "production",
-      "timestamp": "2025-09-26T12:44:00.562349"
+      "timestamp": "2025-09-27T09:33:46.809402"
     },
     "file_processing": {
       "total_files_analyzed": 0,

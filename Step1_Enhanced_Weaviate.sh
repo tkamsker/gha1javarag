@@ -240,6 +240,23 @@ except Exception as e:
 "
         fi
         
+        # Run enhanced output processing
+        echo ""
+        echo "🔧 Running enhanced output processing..."
+        python3 -c "
+import sys
+sys.path.append('src')
+from enhanced_output_processor import EnhancedOutputProcessor
+
+try:
+    processor = EnhancedOutputProcessor('./output')
+    results = processor.process_all_outputs()
+    print(f'✅ Enhanced processing complete: {results[\"files_fixed\"]} files fixed, {results[\"ui_components_extracted\"]} UI components extracted')
+except Exception as e:
+    print(f'⚠️  Enhanced processing failed: {e}')
+    print('📊 Continuing with standard output...')
+"
+        
     else
         echo "❌ Requirements generation failed"
         exit 1
