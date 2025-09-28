@@ -1,0 +1,64 @@
+{
+  "modules": {
+    "cuco": {
+      "files": 5,
+      "entities": 0,
+      "services": 0,
+      "controllers": 0
+    },
+    "administration.ui": {
+      "files": 141,
+      "entities": 0,
+      "services": 3,
+      "controllers": 0
+    },
+    "framework.ui": {
+      "files": 69,
+      "entities": 0,
+      "services": 1,
+      "controllers": 0
+    },
+    "cuco-core": {
+      "files": 646,
+      "entities": 0,
+      "services": 4,
+      "controllers": 0
+    },
+    "cuco-ui-admin": {
+      "files": 144,
+      "entities": 0,
+      "services": 0,
+      "controllers": 0
+    },
+    "cuco-cct-core": {
+      "files": 133,
+      "entities": 0,
+      "services": 0,
+      "controllers": 0
+    }
+  },
+  "data_layer": {
+    "entity_count": 0,
+    "repository_count": 0,
+    "relationship_count": 0,
+    "main_entities": []
+  },
+  "service_layer": {
+    "service_count": 8,
+    "main_services": [
+      "ReportingException",
+      "SystemTrackingServlet",
+      "SystemTrackingServletAsync",
+      "PortletEventManager",
+      "GamificationHttpServiceImplTest",
+      "CustomerEquipmentHelperTest",
+      "IKumsSkzShopSynchronizationJobTest",
+      "JasperUtil"
+    ]
+  },
+  "web_layer": {
+    "controller_count": 0,
+    "main_controllers": []
+  },
+  "timestamp": "2025-09-28T12:17:11.298038"
+}
