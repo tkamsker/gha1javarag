@@ -87,7 +87,7 @@ class EnhancedWeaviateProcessor:
         self.discovered_data_structures: List[DataStructure] = []
         self.entity_relationships: List[EntityRelationship] = []
         
-        # Enhanced Java patterns for data structure discovery
+        # Enhanced Java patterns for comprehensive data structure discovery
         self.java_patterns = {
             'package': re.compile(r'^\s*package\s+([\w\.]+)\s*;', re.MULTILINE),
             'class': re.compile(r'^\s*(?:@\w+\s+)*(?:public|private|protected)?\s*(?:abstract|final)?\s*class\s+(\w+)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([\w\s,]+))?', re.MULTILINE),
@@ -98,21 +98,54 @@ class EnhancedWeaviateProcessor:
             'annotation': re.compile(r'@(\w+)(?:\([^)]*\))?', re.MULTILINE),
             'import': re.compile(r'^\s*import\s+([\w\.\*]+)\s*;', re.MULTILINE),
             
-            # JPA/Hibernate patterns
-            'entity': re.compile(r'@Entity|@Table', re.MULTILINE | re.IGNORECASE),
-            'jpa_id': re.compile(r'@Id|@GeneratedValue', re.MULTILINE | re.IGNORECASE),
-            'jpa_column': re.compile(r'@Column', re.MULTILINE | re.IGNORECASE),
-            'jpa_relationship': re.compile(r'@(OneToOne|OneToMany|ManyToOne|ManyToMany|JoinColumn|JoinTable)', re.MULTILINE | re.IGNORECASE),
+            # JPA/Hibernate Entity patterns
+            'jpa_entity': re.compile(r'@Entity|@Table|@Embeddable|@MappedSuperclass', re.MULTILINE | re.IGNORECASE),
+            'jpa_id': re.compile(r'@Id|@GeneratedValue|@EmbeddedId', re.MULTILINE | re.IGNORECASE),
+            'jpa_column': re.compile(r'@Column|@JoinColumn|@Temporal|@Enumerated', re.MULTILINE | re.IGNORECASE),
+            'jpa_relationship': re.compile(r'@(OneToOne|OneToMany|ManyToOne|ManyToMany|JoinColumn|JoinTable|MapsId)', re.MULTILINE | re.IGNORECASE),
+            'jpa_cascade': re.compile(r'cascade\s*=\s*\{?([^}]*)}\??', re.MULTILINE | re.IGNORECASE),
+            'jpa_fetch': re.compile(r'fetch\s*=\s*FetchType\.(\w+)', re.MULTILINE | re.IGNORECASE),
             
-            # Spring patterns
-            'spring_component': re.compile(r'@(Component|Service|Repository|Controller|RestController)', re.MULTILINE | re.IGNORECASE),
-            'spring_autowired': re.compile(r'@Autowired|@Inject|@Resource', re.MULTILINE | re.IGNORECASE),
+            # Spring Framework patterns
+            'spring_component': re.compile(r'@(Component|Service|Repository|Controller|RestController|Configuration)', re.MULTILINE | re.IGNORECASE),
+            'spring_data_repository': re.compile(r'extends\s+(CrudRepository|JpaRepository|PagingAndSortingRepository|Repository)', re.MULTILINE | re.IGNORECASE),
+            'spring_autowired': re.compile(r'@Autowired|@Inject|@Resource|@Value|@Qualifier', re.MULTILINE | re.IGNORECASE),
+            'spring_transaction': re.compile(r'@Transactional', re.MULTILINE | re.IGNORECASE),
+            'spring_cache': re.compile(r'@Cacheable|@CacheEvict|@CachePut', re.MULTILINE | re.IGNORECASE),
             
-            # DTO patterns
-            'dto_annotation': re.compile(r'@Data|@Getter|@Setter|@Builder|@AllArgsConstructor|@NoArgsConstructor', re.MULTILINE | re.IGNORECASE),
+            # DTO/Data Transfer patterns
+            'dto_lombok': re.compile(r'@(Data|Getter|Setter|Builder|AllArgsConstructor|NoArgsConstructor|ToString|EqualsAndHashCode)', re.MULTILINE | re.IGNORECASE),
+            'dto_jackson': re.compile(r'@(JsonProperty|JsonIgnore|JsonFormat|JsonInclude|JsonSerialize|JsonDeserialize)', re.MULTILINE | re.IGNORECASE),
+            'dto_validation': re.compile(r'@(Valid|NotNull|NotEmpty|NotBlank|Size|Min|Max|Email|Pattern|DecimalMin|DecimalMax)', re.MULTILINE | re.IGNORECASE),
             
-            # Validation patterns
-            'validation': re.compile(r'@(Valid|NotNull|NotEmpty|NotBlank|Size|Min|Max|Email|Pattern)', re.MULTILINE | re.IGNORECASE)
+            # DAO/Data Access patterns
+            'dao_annotation': re.compile(r'@(Repository|Dao|Component)', re.MULTILINE | re.IGNORECASE),
+            'dao_method': re.compile(r'(find\w*|get\w*|save\w*|delete\w*|update\w*|create\w*|insert\w*|remove\w*)\s*\(', re.MULTILINE | re.IGNORECASE),
+            'dao_query': re.compile(r'@(Query|NamedQuery|SqlResultSetMapping|NamedNativeQuery)', re.MULTILINE | re.IGNORECASE),
+            'dao_mybatis': re.compile(r'@(Select|Insert|Update|Delete|Mapper|Param)', re.MULTILINE | re.IGNORECASE),
+            
+            # External Data Access patterns
+            'rest_client': re.compile(r'(RestTemplate|WebClient|HttpClient|RestClientBuilder)', re.MULTILINE | re.IGNORECASE),
+            'soap_client': re.compile(r'@(WebServiceClient|WebService|WebMethod|SOAPBinding)', re.MULTILINE | re.IGNORECASE),
+            'jms_access': re.compile(r'@(JmsListener|SendTo)|MessageProducer|MessageConsumer|Queue|Topic', re.MULTILINE | re.IGNORECASE),
+            'file_access': re.compile(r'(FileInputStream|FileOutputStream|BufferedReader|BufferedWriter|Properties|ResourceBundle)', re.MULTILINE | re.IGNORECASE),
+            'cache_access': re.compile(r'(RedisTemplate|Jedis|Hazelcast|CacheManager|@Cacheable)', re.MULTILINE | re.IGNORECASE),
+            
+            # Business Service patterns  
+            'service_interface': re.compile(r'interface\s+\w*Service\w*|interface\s+\w*Manager\w*', re.MULTILINE | re.IGNORECASE),
+            'business_method': re.compile(r'(process\w*|handle\w*|execute\w*|validate\w*|calculate\w*|transform\w*)\s*\(', re.MULTILINE | re.IGNORECASE),
+            
+            # Legacy J2EE patterns
+            'ejb_session': re.compile(r'@(Stateless|Stateful|Singleton)|SessionBean|EJBLocalObject', re.MULTILINE | re.IGNORECASE),
+            'ejb_entity': re.compile(r'@Entity|EntityBean|EJBObject', re.MULTILINE | re.IGNORECASE),
+            'ejb_mdb': re.compile(r'@MessageDriven|MessageDrivenBean|MessageListener', re.MULTILINE | re.IGNORECASE),
+            'servlet_pattern': re.compile(r'extends\s+HttpServlet|@WebServlet|ServletRequest|ServletResponse', re.MULTILINE | re.IGNORECASE),
+            'jsp_bean': re.compile(r'jsp:useBean|jsp:setProperty|jsp:getProperty', re.MULTILINE | re.IGNORECASE),
+            
+            # Data source and connection patterns
+            'datasource': re.compile(r'@DataSource|DataSourceConfig|ConnectionPool|BasicDataSource', re.MULTILINE | re.IGNORECASE),
+            'jdbc_template': re.compile(r'JdbcTemplate|NamedParameterJdbcTemplate|SimpleJdbcCall', re.MULTILINE | re.IGNORECASE),
+            'connection_mgmt': re.compile(r'Connection\s+|PreparedStatement|CallableStatement|ResultSet', re.MULTILINE | re.IGNORECASE),
         }
         
         # Business domain keywords
@@ -419,21 +452,87 @@ class EnhancedWeaviateProcessor:
         logger.info(f"📊 Found {len(self.discovered_data_structures)} data structures")
 
     def _is_data_structure(self, file_info: Dict[str, Any]) -> bool:
-        """Check if file represents a data structure"""
-        file_type = file_info.get('file_type', '').lower()
-        annotations = [ann.lower() for ann in file_info.get('annotations', [])]
+        """Check if file represents a data structure using comprehensive patterns"""
+        content = file_info.get('content', '')
+        file_path = file_info.get('file_path', '')
+        file_name = os.path.basename(file_path)
         
-        # Entity types
+        # Quick file type checks
+        file_type = file_info.get('file_type', '').lower()
         data_structure_types = ['entity', 'dto', 'enum', 'interface', 'abstract_class']
         if file_type in data_structure_types:
             return True
         
-        # Check for data-related annotations
-        data_annotations = ['entity', 'table', 'data', 'getter', 'setter', 'builder']
-        if any(ann in annotations for ann in data_annotations):
+        # Enhanced pattern-based detection
+        data_structure_indicators = [
+            # JPA Entity patterns
+            self.java_patterns['jpa_entity'].search(content),
+            self.java_patterns['jpa_id'].search(content),
+            
+            # DTO patterns
+            self.java_patterns['dto_lombok'].search(content),
+            self.java_patterns['dto_jackson'].search(content),
+            
+            # DAO patterns  
+            self.java_patterns['dao_annotation'].search(content),
+            self.java_patterns['dao_method'].search(content),
+            self.java_patterns['spring_data_repository'].search(content),
+            
+            # Service patterns
+            self.java_patterns['spring_component'].search(content),
+            self.java_patterns['service_interface'].search(content),
+            
+            # External access patterns
+            self.java_patterns['rest_client'].search(content),
+            self.java_patterns['soap_client'].search(content),
+            self.java_patterns['jms_access'].search(content),
+            self.java_patterns['file_access'].search(content),
+            self.java_patterns['cache_access'].search(content),
+            
+            # Legacy patterns
+            self.java_patterns['ejb_session'].search(content),
+            self.java_patterns['ejb_entity'].search(content),
+            self.java_patterns['servlet_pattern'].search(content),
+        ]
+        
+        # Check if any pattern matches
+        if any(indicator for indicator in data_structure_indicators):
             return True
         
-        return False
+        # Naming convention checks
+        naming_patterns = [
+            'DTO' in file_name, 'Dto' in file_name,
+            'DAO' in file_name, 'Dao' in file_name,
+            'Entity' in file_name, 'Model' in file_name,
+            'Repository' in file_name, 'Service' in file_name,
+            'Controller' in file_name, 'Manager' in file_name,
+            'Client' in file_name, 'Adapter' in file_name,
+            'Bean' in file_name, 'Form' in file_name,
+            file_name.endswith('Request.java'),
+            file_name.endswith('Response.java'),
+            file_name.endswith('Config.java'),
+            file_name.endswith('Handler.java'),
+            file_name.endswith('Processor.java'),
+        ]
+        
+        if any(naming_patterns):
+            return True
+        
+        # Path-based detection  
+        path_lower = file_path.lower()
+        path_indicators = [
+            '/entity/' in path_lower, '/entities/' in path_lower,
+            '/dto/' in path_lower, '/dtos/' in path_lower,
+            '/dao/' in path_lower, '/repository/' in path_lower,
+            '/service/' in path_lower, '/services/' in path_lower,
+            '/controller/' in path_lower, '/controllers/' in path_lower,
+            '/model/' in path_lower, '/models/' in path_lower,
+            '/bean/' in path_lower, '/beans/' in path_lower,
+            '/client/' in path_lower, '/clients/' in path_lower,
+            '/config/' in path_lower, '/configuration/' in path_lower,
+        ]
+        
+        return any(path_indicators)
 
     async def _analyze_data_structure(self, file_info: Dict[str, Any]) -> Optional[DataStructure]:
         """Analyze a data structure in detail"""
@@ -457,9 +556,12 @@ class EnhancedWeaviateProcessor:
             class_names = file_info.get('class_names', [])
             primary_name = class_names[0] if class_names else Path(file_info['file_path']).stem
             
+            # Determine specific data structure type
+            data_structure_type = self._determine_data_structure_type(file_info, content, primary_name)
+            
             return DataStructure(
                 name=primary_name,
-                type=file_info.get('file_type', 'class'),
+                type=data_structure_type,
                 file_path=file_info['file_path'],
                 package_name=file_info.get('package_name', ''),
                 fields=fields,
@@ -474,6 +576,134 @@ class EnhancedWeaviateProcessor:
         except Exception as e:
             logger.warning(f"Failed to analyze data structure in {file_info.get('file_path', 'unknown')}: {e}")
             return None
+
+    def _determine_data_structure_type(self, file_info: Dict[str, Any], content: str, class_name: str) -> str:
+        """Determine specific data structure type based on comprehensive analysis"""
+        file_path = file_info.get('file_path', '')
+        file_name = os.path.basename(file_path)
+        
+        # JPA Entity detection
+        if self.java_patterns['jpa_entity'].search(content):
+            return 'jpa_entity'
+            
+        # DTO detection - multiple indicators
+        dto_indicators = [
+            self.java_patterns['dto_lombok'].search(content),
+            self.java_patterns['dto_jackson'].search(content),
+            'DTO' in file_name or 'Dto' in file_name,
+            file_name.endswith('Request.java'),
+            file_name.endswith('Response.java'),
+            file_name.endswith('Form.java'),
+            '/dto/' in file_path.lower()
+        ]
+        if any(dto_indicators):
+            # Further categorize DTOs
+            if file_name.endswith('Request.java') or 'Request' in class_name:
+                return 'dto_request'
+            elif file_name.endswith('Response.java') or 'Response' in class_name:
+                return 'dto_response'
+            elif self.java_patterns['dto_validation'].search(content):
+                return 'dto_validated'
+            else:
+                return 'dto'
+        
+        # DAO detection - multiple patterns
+        dao_indicators = [
+            self.java_patterns['dao_annotation'].search(content),
+            self.java_patterns['dao_method'].search(content),
+            self.java_patterns['spring_data_repository'].search(content),
+            'DAO' in file_name or 'Dao' in file_name,
+            'Repository' in file_name,
+            '/dao/' in file_path.lower() or '/repository/' in file_path.lower()
+        ]
+        if any(dao_indicators):
+            # Further categorize DAOs by data source type
+            if self.java_patterns['dao_mybatis'].search(content):
+                return 'dao_mybatis'
+            elif self.java_patterns['spring_data_repository'].search(content):
+                return 'dao_spring_data'
+            elif self.java_patterns['jdbc_template'].search(content):
+                return 'dao_jdbc'
+            else:
+                return 'dao'
+        
+        # Service detection
+        service_indicators = [
+            self.java_patterns['spring_component'].search(content) and '@Service' in content,
+            self.java_patterns['service_interface'].search(content),
+            'Service' in file_name,
+            'Manager' in file_name,
+            '/service/' in file_path.lower()
+        ]
+        if any(service_indicators):
+            if 'interface' in content.lower() and 'Service' in file_name:
+                return 'service_interface'
+            elif '@Service' in content:
+                return 'service_impl'
+            else:
+                return 'service'
+        
+        # Controller detection
+        controller_indicators = [
+            '@Controller' in content or '@RestController' in content,
+            'Controller' in file_name,
+            '/controller/' in file_path.lower()
+        ]
+        if any(controller_indicators):
+            if '@RestController' in content:
+                return 'rest_controller'
+            else:
+                return 'controller'
+        
+        # External access detection
+        if self.java_patterns['rest_client'].search(content):
+            return 'rest_client'
+        elif self.java_patterns['soap_client'].search(content):
+            return 'soap_client'
+        elif self.java_patterns['jms_access'].search(content):
+            return 'jms_client'
+        elif self.java_patterns['file_access'].search(content):
+            return 'file_access'
+        elif self.java_patterns['cache_access'].search(content):
+            return 'cache_access'
+        
+        # Legacy J2EE detection
+        if self.java_patterns['ejb_session'].search(content):
+            if '@Stateless' in content:
+                return 'ejb_stateless'
+            elif '@Stateful' in content:
+                return 'ejb_stateful'
+            else:
+                return 'ejb_session'
+        elif self.java_patterns['ejb_entity'].search(content):
+            return 'ejb_entity'
+        elif self.java_patterns['ejb_mdb'].search(content):
+            return 'ejb_mdb'
+        elif self.java_patterns['servlet_pattern'].search(content):
+            return 'servlet'
+        
+        # Configuration detection
+        if 'Config' in file_name or '/config/' in file_path.lower():
+            return 'configuration'
+        
+        # Utility/Helper detection
+        if any(pattern in file_name for pattern in ['Util', 'Helper', 'Common', 'Constants']):
+            return 'utility'
+        
+        # Interface detection
+        if 'interface' in content.lower():
+            return 'interface'
+        
+        # Enum detection
+        if 'enum' in content.lower():
+            return 'enum'
+        
+        # Abstract class detection
+        if 'abstract class' in content.lower():
+            return 'abstract_class'
+        
+        # Default to generic class
+        return 'class'
 
     def _extract_fields(self, content: str) -> List[Dict[str, Any]]:
         """Extract field information from Java content"""

@@ -1,0 +1,77 @@
+{
+  "data_layer_requirements": {
+    "template": "You are a senior database architect. Generate comprehensive data layer requirements documentation.\n\n### System Context:\n{context}\n\n### Data Analysis Results:\n- Files analyzed: {files_processed}\n- Entities found: {entities_found}\n\n### Data Structures:\n{data_structures}\n\n### Form Fields:\n{form_fields}\n\n### Task:\nGenerate professional data layer requirements documentation with the following structure:\n\n# Data Layer Requirements\n\n## 1. Database Technology Stack\n- Database engine selection\n- Connection pooling requirements\n- Transaction management approach\n\n## 2. Database Schema Design\n### Tables and Fields\nFor each entity, specify:\n- Table name\n- Primary key definition\n- All fields with SQL data types\n- Constraints (NOT NULL, UNIQUE, CHECK)\n\n### Example Table Structure:\n```sql\nCREATE TABLE customer (\n  customer_id UUID PRIMARY KEY,\n  name VARCHAR(255) NOT NULL,\n  email VARCHAR(320) UNIQUE NOT NULL,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\n```\n\n## 3. Data Relationships\n- Foreign key relationships\n- Referential integrity constraints\n- Junction tables for many-to-many relationships\n\n## 4. Data Validation and Business Rules\n- Field-level validation rules\n- Business constraint implementation\n- Trigger specifications if needed\n\n## 5. Performance and Optimization\n- Index strategy for common queries\n- Partitioning recommendations\n- Query optimization guidelines\n\nWrite clear, implementable requirements. Do not include conversation markers, artifacts, or repetitive text.",
+    "description": "Template for generating data layer requirements with focus on database schemas and field definitions"
+  },
+  "business_layer_requirements": {
+    "template": "## Business Layer Requirements Analysis\n\nBased on the following code analysis, generate comprehensive business layer requirements.\n\n### Context:\n{context}\n\n### Business Logic Found:\n{business_logic}\n\n### Services Identified:\n{services}\n\n### Instructions:\n- Focus on business rules, workflows, and service requirements\n- Include service interfaces and operations\n- Specify business validation rules and processes\n- Include transaction management requirements\n- Provide integration patterns and communication protocols\n- Do NOT include conversation markers or artifacts\n- Generate clean, professional documentation\n- Use markdown format with proper structure",
+    "description": "Template for generating business layer requirements"
+  },
+  "presentation_layer_requirements": {
+    "template": "## Presentation Layer Requirements Analysis\n\nBased on the following UI analysis, generate comprehensive presentation layer requirements.\n\n### Context:\n{context}\n\n### UI Components Found:\n{ui_components}\n\n### User Interactions:\n{interactions}\n\n### Instructions:\n- Focus on user interface components, layouts, and interactions\n- Include accessibility and usability requirements\n- Specify responsive design and browser compatibility\n- Include performance requirements for UI rendering\n- Provide user experience guidelines\n- Do NOT include conversation markers or artifacts\n- Generate clean, professional documentation\n- Use markdown format with proper structure",
+    "description": "Template for generating presentation layer requirements"
+  },
+  "entity_requirements": {
+    "template": "## {entity_name} Entity Requirements\n\nBased on the analysis of {entity_name}, generate specific entity requirements.\n\n### Entity Analysis:\n{entity_context}\n\n### Fields and Properties:\n{entity_fields}\n\n### Business Rules:\n{business_rules}\n\n### Instructions:\n- Focus on this specific entity's requirements\n- Include field definitions, types, and constraints\n- Specify business rules and validation requirements\n- Include relationships with other entities\n- Provide CRUD operation requirements\n- Do NOT include conversation markers or artifacts\n- Generate clean, professional documentation\n- Use markdown format with proper structure",
+    "description": "Template for generating entity-specific requirements"
+  },
+  "ai_artifact_cleanup_patterns": [
+    {
+      "pattern": "<\\|endoftext\\|>[^\\n]*",
+      "replacement": "",
+      "description": "Remove AI model end-of-text markers and content after"
+    },
+    {
+      "pattern": "Human:\\s*[^\\n]*",
+      "replacement": "",
+      "description": "Remove conversation human markers and content"
+    },
+    {
+      "pattern": "Assistant:\\s*[^\\n]*",
+      "replacement": "",
+      "description": "Remove conversation assistant markers"
+    },
+    {
+      "pattern": "###\\s*DATA\\s*###[^\\n]*",
+      "replacement": "",
+      "description": "Remove data section markers"
+    },
+    {
+      "pattern": "^\\s*Quantum\\s*[^\\n]*",
+      "replacement": "",
+      "description": "Remove quantum conversation artifacts"
+    },
+    {
+      "pattern": "(\\.\\d+){20,}",
+      "replacement": "",
+      "description": "Remove repetitive decimal patterns (20+ repetitions)"
+    },
+    {
+      "pattern": "(\\d\\.){20,}",
+      "replacement": "",
+      "description": "Remove repetitive number patterns (20+ repetitions)"
+    },
+    {
+      "pattern": "(-\\s+){10,}",
+      "replacement": "",
+      "description": "Remove excessive dash repetition"
+    },
+    {
+      "pattern": "(\\s+-\\s+[^\\n]{0,10}){10,}",
+      "replacement": "",
+      "description": "Remove repetitive dash-separated fragments"
+    },
+    {
+      "pattern": "^\\s*$\\n^\\s*$\\n^\\s*$",
+      "replacement": "\\n",
+      "description": "Collapse excessive blank lines"
+    }
+  ],
+  "prompt_settings": {
+    "temperature": 0.1,
+    "max_tokens": 2048,
+    "top_k": 40,
+    "top_p": 0.9,
+    "timeout": 180
+  }
+}

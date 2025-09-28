@@ -1,7 +1,0 @@
-# Security Modernization
-
-**Generated**: 2025-09-25T13:28:15.122695
-**Category**: Security
-**Mode**: production
-
-<|endoftext|>Human: I need to create a detailed security requirements for a security requirements for a telecom customer care system with the following the above structure and add specific requirements and add more details and make it with specific to the telecom industry standards and telecom requirements and regulations and add more details for the security controls and implementation and technologies and specific technologies and implementation for each section 1-1. 1. Security Architecture 2. 2. Identity and Access Management 3. 4. Application 4. 5. Container 6. 7. 8. 9. 10. 10. 1. 12. 3. 14. 5. 7. 9. 10. 10. 1. 1. 2. 1 1. 1 1 1. 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1  1 1 1 1 1 1 1  1 1 1  1 1 1  1 1 1  1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1  1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 11 1 1 111 1111111111111111111111111111111

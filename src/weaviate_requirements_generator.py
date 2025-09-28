@@ -8,6 +8,7 @@ import asyncio
 import logging
 import json
 import os
+import re
 from pathlib import Path
 from datetime import datetime
 from collections import defaultdict, Counter
@@ -19,6 +20,10 @@ logger = logging.getLogger(__name__)
 
 import aiohttp
 import weaviate
+
+# Import the configurable prompt manager
+from src.configurable_prompt_manager import get_prompt_manager, clean_ai_response, validate_ai_response
+from src.fallback_requirements_generator import FallbackRequirementsGenerator
 
 class WeaviateRequirementsGenerator:
     def __init__(self, output_dir: str = "./output"):
@@ -36,6 +41,10 @@ class WeaviateRequirementsGenerator:
         # Initialize Ollama client
         self.ollama_base_url = "http://localhost:11434"
         self.ollama_model = "danielsheep/qwen3-coder-30b-a3b-instruct-1m-unsloth"
+        
+        # Initialize prompt manager and fallback generator
+        self.prompt_manager = get_prompt_manager()
+        self.fallback_generator = FallbackRequirementsGenerator()
 
     async def generate_comprehensive_requirements(self, metadata: Dict[str, Any], data_structures: Dict[str, Any]):
         """Generate comprehensive requirements using Weaviate and data structure insights"""
@@ -319,181 +328,266 @@ Generate detailed validation requirements with specific acceptance criteria.
             f.write(data_reqs)
 
     async def _generate_presentation_layer_requirements(self, metadata: Dict[str, Any]) -> str:
-        """Generate presentation layer requirements"""
+        """Generate presentation layer requirements using AI or fallback to structured generation"""
         
-        context = f"""
-# Presentation Layer Requirements Analysis
-
-## Current Technology Assessment
-Based on analysis of A1 Telekom Austria CuCo system with legacy GWT/ExtJS technology stack.
-
-## System Context
-- **Files Processed**: {metadata.get('files_processed', 0)}
-- **Processing Time**: {metadata.get('processing_time', 0):.2f} seconds
-- **Technology Stack**: Legacy GWT with ExtJS/GXT components
-
-## Modernization Context
-Legacy presentation layer requires modernization from GWT/ExtJS to contemporary web technologies.
-
-## Requirements Generation Request
-Generate comprehensive presentation layer requirements covering:
-
-1. **User Interface Framework Requirements**
-   - Modern JavaScript framework selection (React, Vue.js, Angular)
-   - Component library requirements
-   - State management requirements
-   - Routing and navigation requirements
-
-2. **User Experience Requirements**
-   - Responsive design specifications
-   - Accessibility compliance (WCAG 2.1 AA)
-   - Browser compatibility requirements
-   - Performance optimization requirements
-
-3. **Customer Care Interface Requirements**
-   - Agent dashboard specifications
-   - Customer information display
-   - Service request management interfaces
-   - Real-time notification systems
-
-4. **Administrative Interface Requirements**
-   - System configuration interfaces
-   - User management interfaces
-   - Reporting and analytics dashboards
-   - Bulk operation interfaces
-
-5. **Mobile and Device Requirements**
-   - Mobile-responsive design
-   - Touch-friendly interactions
-   - Offline capability requirements
-   - Progressive Web App features
-
-6. **Integration Requirements**
-   - API integration patterns
-   - Real-time data updates
-   - WebSocket communication
-   - Authentication integration
-
-Generate detailed presentation layer requirements suitable for modern web application development.
-"""
-        
-        return await self._call_ollama_for_requirements(context)
+        try:
+            # Extract UI components and interactions
+            data_structures = metadata.get('data_structures', {})
+            ui_components = data_structures.get('ui_components', [])
+            interactions = self._extract_ui_interactions(data_structures)
+            
+            # Use configurable prompt manager
+            context = self.prompt_manager.format_prompt(
+                "presentation_layer_requirements",
+                context=f"A1 Telekom Austria CuCo system requiring modernization from GWT/ExtJS to contemporary web technologies",
+                ui_components=json.dumps(ui_components, indent=2),
+                interactions=json.dumps(interactions, indent=2),
+                files_processed=metadata.get('files_processed', 0),
+                processing_time=metadata.get('processing_time', 0),
+                technology_stack="Legacy GWT with ExtJS/GXT components",
+                modernization_target="Modern React/TypeScript application"
+            )
+            
+            ai_result = await self._call_ollama_for_requirements(context, "presentation_layer_requirements")
+            
+            # Validate AI result quality
+            is_valid, issues = self.prompt_manager.validate_output(ai_result)
+            if is_valid and len(ai_result) > 200 and ('UI' in ai_result or 'React' in ai_result or 'Component' in ai_result):
+                logger.info("✅ AI-generated presentation layer requirements passed validation")
+                return ai_result
+            else:
+                logger.warning(f"❌ AI generation failed validation: {issues}")
+                raise Exception("AI generation quality insufficient")
+                
+        except Exception as e:
+            logger.warning(f"⚠️ AI generation failed for presentation layer requirements: {e}")
+            logger.info("🔄 Using fallback structured generation")
+            return self.fallback_generator.generate_presentation_layer_requirements(metadata)
 
     async def _generate_business_layer_requirements(self, metadata: Dict[str, Any]) -> str:
-        """Generate business layer requirements"""
+        """Generate business layer requirements using AI or fallback to structured generation"""
         
-        context = f"""
-# Business Layer Requirements Analysis
-
-## A1 Telekom Austria CuCo System Context
-Customer Care operations requiring robust business logic implementation.
-
-## System Analysis Results
-- **Processing Time**: {metadata.get('processing_time', 0):.2f} seconds
-- **Files Analyzed**: {metadata.get('files_processed', 0)}
-- **Data Structures**: {metadata.get('data_structures_found', 0)} identified
-
-## Requirements Generation Request
-Generate comprehensive business layer requirements covering:
-
-1. **Customer Care Business Logic**
-   - Customer account management rules
-   - Service provisioning workflows
-   - Billing integration logic
-   - Support ticket management
-
-2. **Service Layer Architecture**
-   - Business service specifications
-   - Transaction management requirements
-   - Business rule engine requirements
-   - Workflow orchestration needs
-
-3. **Integration Business Logic**
-   - External system integration rules
-   - Data synchronization logic
-   - Message processing requirements
-   - Event handling specifications
-
-4. **Validation and Business Rules**
-   - Business rule validation engine
-   - Complex validation workflows
-   - Approval process requirements
-   - Audit trail specifications
-
-5. **Performance and Scalability**
-   - Business logic performance requirements
-   - Caching strategies for business data
-   - Asynchronous processing needs
-   - Load balancing requirements
-
-6. **Security and Compliance**
-   - Business-level security requirements
-   - Data privacy compliance
-   - Regulatory compliance requirements
-   - Audit and logging specifications
-
-Generate detailed business layer requirements with clear implementation guidance.
-"""
-        
-        return await self._call_ollama_for_requirements(context)
+        try:
+            # Extract business services and logic
+            data_structures = metadata.get('data_structures', {})
+            business_services = self._extract_business_services(data_structures)
+            business_logic = self._extract_business_logic(data_structures)
+            
+            # Use configurable prompt manager
+            context = self.prompt_manager.format_prompt(
+                "business_layer_requirements",
+                context=f"A1 Telekom Austria Customer Care system requiring robust business logic implementation",
+                business_logic=json.dumps(business_logic, indent=2),
+                services=json.dumps(business_services, indent=2),
+                processing_time=metadata.get('processing_time', 0),
+                files_analyzed=metadata.get('files_processed', 0),
+                data_structures_found=metadata.get('data_structures_found', 0)
+            )
+            
+            ai_result = await self._call_ollama_for_requirements(context, "business_layer_requirements")
+            
+            # Validate AI result quality
+            is_valid, issues = self.prompt_manager.validate_output(ai_result)
+            if is_valid and len(ai_result) > 200 and ('Service' in ai_result or 'Business' in ai_result):
+                logger.info("✅ AI-generated business layer requirements passed validation")
+                return ai_result
+            else:
+                logger.warning(f"❌ AI generation failed validation: {issues}")
+                raise Exception("AI generation quality insufficient")
+                
+        except Exception as e:
+            logger.warning(f"⚠️ AI generation failed for business layer requirements: {e}")
+            logger.info("🔄 Using fallback structured generation")
+            return self.fallback_generator.generate_business_layer_requirements(metadata)
 
     async def _generate_data_layer_requirements(self, metadata: Dict[str, Any]) -> str:
-        """Generate data layer requirements"""
+        """Generate data layer requirements using AI or fallback to structured generation"""
         
-        context = f"""
-# Data Layer Requirements Analysis
+        try:
+            # Extract data structures and fields for context
+            data_structures = metadata.get('data_structures', {})
+            form_fields = self._extract_form_fields(data_structures)
+            
+            # Use configurable prompt manager
+            context = self.prompt_manager.format_prompt(
+                "data_layer_requirements",
+                context=f"Enterprise data layer for A1 Telekom Austria Customer Care system",
+                data_structures=json.dumps(data_structures, indent=2),
+                form_fields=json.dumps(form_fields, indent=2),
+                files_processed=metadata.get('files_processed', 0),
+                entities_found=len(data_structures.get('classes', []) + data_structures.get('entities', [])),
+                analysis_summary=f"System analysis found {metadata.get('data_structures_found', 0)} data structures across {metadata.get('files_processed', 0)} files"
+            )
+            
+            ai_result = await self._call_ollama_for_requirements(context, "data_layer_requirements")
+            
+            # Validate AI result quality - be more strict
+            is_valid, issues = self.prompt_manager.validate_output(ai_result)
+            
+            # Additional validation for data layer
+            has_sql_content = 'CREATE TABLE' in ai_result or 'SQL' in ai_result or 'database' in ai_result.lower()
+            has_proper_structure = ai_result.count('#') >= 5 and ai_result.count('\n') >= 20
+            no_repetitive_patterns = not re.search(r'(1\.\s*){20,}', ai_result)
+            
+            if (is_valid and len(ai_result) > 500 and has_sql_content and 
+                has_proper_structure and no_repetitive_patterns):
+                logger.info("✅ AI-generated data layer requirements passed validation")
+                return ai_result
+            else:
+                logger.warning(f"❌ AI generation failed validation: {issues}")
+                logger.warning(f"   - Length: {len(ai_result)}, SQL content: {has_sql_content}")
+                logger.warning(f"   - Structure: {has_proper_structure}, No repetition: {no_repetitive_patterns}")
+                raise Exception("AI generation quality insufficient")
+                
+        except Exception as e:
+            logger.warning(f"⚠️ AI generation failed for data layer requirements: {e}")
+            logger.info("🔄 Using fallback structured generation")
+            return self.fallback_generator.generate_data_layer_requirements(metadata)
 
-## System Data Context
-Enterprise data layer for A1 Telekom Austria Customer Care system.
-
-## Analysis Results
-- **Data Structures Found**: {metadata.get('data_structures_found', 0)}
-- **Entity Relationships**: {metadata.get('entity_relationships', 0)}
-- **Files Processed**: {metadata.get('files_processed', 0)}
-
-## Requirements Generation Request
-Generate comprehensive data layer requirements covering:
-
-1. **Database Architecture Requirements**
-   - Database technology selection
-   - Schema design requirements
-   - Indexing strategy requirements
-   - Partitioning specifications
-
-2. **Data Access Layer Requirements**
-   - Repository pattern implementation
-   - ORM configuration requirements
-   - Query optimization specifications
-   - Connection pooling requirements
-
-3. **Data Migration Requirements**
-   - Legacy data migration strategy
-   - Data transformation specifications
-   - Migration validation requirements
-   - Incremental migration support
-
-4. **Data Integrity Requirements**
-   - Referential integrity constraints
-   - Business rule constraints
-   - Data validation at database level
-   - Trigger specifications
-
-5. **Performance Requirements**
-   - Query performance standards
-   - Bulk operation requirements
-   - Caching layer specifications
-   - Database monitoring requirements
-
-6. **Backup and Recovery Requirements**
-   - Backup strategy specifications
-   - Recovery procedures
-   - High availability requirements
-   - Disaster recovery planning
-
-Generate detailed data layer requirements with specific technical specifications.
-"""
+    def _extract_form_fields(self, data_structures: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Extract form fields from data structures for requirements generation"""
+        form_fields = []
         
-        return await self._call_ollama_for_requirements(context)
+        # Extract from UI components if available
+        ui_components = data_structures.get('ui_components', [])
+        for component in ui_components:
+            component_fields = component.get('form_fields', [])
+            for field in component_fields:
+                form_fields.append({
+                    'name': field.get('name', ''),
+                    'type': field.get('type', 'String'),
+                    'validation_rules': field.get('validation_rules', []),
+                    'component': component.get('name', ''),
+                    'required': field.get('required', False)
+                })
+        
+        # Extract from class fields
+        classes = data_structures.get('classes', [])
+        for cls in classes:
+            class_fields = cls.get('fields', [])
+            for field in class_fields:
+                if field.get('name') not in [f['name'] for f in form_fields]:  # Avoid duplicates
+                    form_fields.append({
+                        'name': field.get('name', ''),
+                        'type': field.get('type', 'String'),
+                        'validation_rules': [],
+                        'component': cls.get('name', ''),
+                        'required': False
+                    })
+        
+        return form_fields
+
+    def _extract_business_services(self, data_structures: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Extract business services from data structures"""
+        services = []
+        
+        # Extract from UI components backend services
+        ui_components = data_structures.get('ui_components', [])
+        for component in ui_components:
+            backend_services = component.get('backend_services', [])
+            for service in backend_services:
+                if service not in [s['name'] for s in services]:
+                    services.append({
+                        'name': service,
+                        'component_usage': component.get('name', ''),
+                        'domain': component.get('business_domain', 'general'),
+                        'type': 'inferred_from_ui'
+                    })
+        
+        return services
+
+    def _extract_business_logic(self, data_structures: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Extract business logic patterns from data structures"""
+        business_logic = []
+        
+        # Extract from class methods
+        classes = data_structures.get('classes', [])
+        for cls in classes:
+            methods = cls.get('methods', [])
+            for method in methods:
+                if any(keyword in method.lower() for keyword in ['validate', 'process', 'calculate', 'handle']):
+                    business_logic.append({
+                        'method': method,
+                        'class': cls.get('name', ''),
+                        'domain': cls.get('business_domain', 'general'),
+                        'type': 'business_method'
+                    })
+        
+        # Extract validation rules as business logic
+        ui_components = data_structures.get('ui_components', [])
+        for component in ui_components:
+            form_fields = component.get('form_fields', [])
+            for field in form_fields:
+                validation_rules = field.get('validation_rules', [])
+                if validation_rules:
+                    business_logic.append({
+                        'field': field.get('name', ''),
+                        'validation_rules': validation_rules,
+                        'component': component.get('name', ''),
+                        'type': 'validation_logic'
+                    })
+        
+        return business_logic
+
+    def _extract_ui_interactions(self, data_structures: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Extract UI interactions from data structures"""
+        interactions = []
+        
+        # Extract from UI components
+        ui_components = data_structures.get('ui_components', [])
+        for component in ui_components:
+            component_interactions = component.get('interactions', [])
+            ui_widgets = component.get('ui_widgets', [])
+            
+            # Add component-level interactions
+            for interaction in component_interactions:
+                interactions.append({
+                    'type': interaction,
+                    'component': component.get('name', ''),
+                    'context': 'component_interaction'
+                })
+            
+            # Add widget-specific interactions
+            for widget in ui_widgets:
+                widget_type = widget.get('widget_type', '')
+                widget_name = widget.get('name', '')
+                
+                # Infer interactions based on widget type
+                if widget_type in ['Button']:
+                    interactions.append({
+                        'type': 'click_event',
+                        'widget': widget_name,
+                        'widget_type': widget_type,
+                        'component': component.get('name', ''),
+                        'context': 'widget_interaction'
+                    })
+                elif widget_type in ['Grid']:
+                    interactions.extend([
+                        {
+                            'type': 'selection_event',
+                            'widget': widget_name,
+                            'widget_type': widget_type,
+                            'component': component.get('name', ''),
+                            'context': 'widget_interaction'
+                        },
+                        {
+                            'type': 'data_loading',
+                            'widget': widget_name,
+                            'widget_type': widget_type,
+                            'component': component.get('name', ''),
+                            'context': 'widget_interaction'
+                        }
+                    ])
+                elif widget_type in ['TextBox']:
+                    interactions.append({
+                        'type': 'input_validation',
+                        'widget': widget_name,
+                        'widget_type': widget_type,
+                        'component': component.get('name', ''),
+                        'context': 'widget_interaction'
+                    })
+        
+        return interactions
 
     async def _generate_domain_based_requirements(self, data_structures: Dict[str, Any]):
         """Generate requirements organized by business domain"""
@@ -897,28 +991,48 @@ This comprehensive requirements documentation provides the foundation for succes
         with open(self.requirements_dir / "master_requirements.md", 'w') as f:
             f.write(master_doc_content)
 
-    async def _call_ollama_for_requirements(self, context: str) -> str:
-        """Call Ollama API to generate requirements content"""
+    async def _call_ollama_for_requirements(self, context: str, prompt_type: str = "general") -> str:
+        """Call Ollama API to generate requirements content with AI artifact cleanup"""
         try:
+            # Get settings from prompt manager
+            settings = self.prompt_manager.get_prompt_settings()
+            
             async with aiohttp.ClientSession() as session:
                 payload = {
                     "model": self.ollama_model,
                     "prompt": context,
                     "stream": False,
                     "options": {
-                        "temperature": 0.1,
-                        "num_predict": 2048,
-                        "top_k": 40,
-                        "top_p": 0.9
+                        "temperature": settings.get("temperature", 0.1),
+                        "num_predict": settings.get("max_tokens", 2048),
+                        "top_k": settings.get("top_k", 40),
+                        "top_p": settings.get("top_p", 0.9)
                     }
                 }
                 
+                timeout_val = settings.get("timeout", 180)
                 async with session.post(f"{self.ollama_base_url}/api/generate", 
                                       json=payload,
-                                      timeout=aiohttp.ClientTimeout(total=180)) as response:
+                                      timeout=aiohttp.ClientTimeout(total=timeout_val)) as response:
                     if response.status == 200:
                         data = await response.json()
-                        return data.get('response', 'Requirements generation failed')
+                        raw_response = data.get('response', 'Requirements generation failed')
+                        
+                        # Use aggressive cleanup for this problematic model
+                        cleaned_response = self.prompt_manager.aggressive_model_cleanup(raw_response)
+                        
+                        # Validate output quality
+                        is_valid, issues = self.prompt_manager.validate_output(cleaned_response)
+                        if not is_valid:
+                            logger.warning(f"Generated content quality issues for {prompt_type}: {issues}")
+                            # Try additional cleanup if validation fails
+                            if any("Content too short" in issue for issue in issues):
+                                # The model may have produced mostly artifacts - try to recover
+                                logger.warning(f"Attempting content recovery for {prompt_type}")
+                                if len(cleaned_response.strip()) < 100:
+                                    cleaned_response = f"# {prompt_type.replace('_', ' ').title()}\n\n**Status**: Generation failed - model produced insufficient content.\n**Recommendation**: Review model configuration and prompt design.\n\n## Summary\n\nThe AI model failed to generate adequate content for this requirement type. Manual review and completion is recommended."
+                            
+                        return cleaned_response
                     else:
                         return f"Error: HTTP {response.status}"
         except Exception as e:
