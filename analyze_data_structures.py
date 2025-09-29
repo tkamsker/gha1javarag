@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 # Add src to path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
-from chromadb_connector import EnhancedChromaDBConnector
+from weaviate_connector import EnhancedWeaviateConnector
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -28,9 +28,9 @@ class DataStructuresAnalyzer:
     
     def __init__(self):
         load_dotenv()
-        self.connector = EnhancedChromaDBConnector()
+        self.connector = EnhancedWeaviateConnector()
         
-    def extract_entity_relationships(self) -> Dict[str, List[Dict[str, Any]]]:
+    async def extract_entity_relationships(self) -> Dict[str, List[Dict[str, Any]]]:
         """Extract entity relationships and associations"""
         relationship_patterns = {
             'one_to_many': ['@OneToMany', 'List<', 'Set<', 'Collection<', 'hasMany'],
@@ -47,21 +47,27 @@ class DataStructuresAnalyzer:
         for relationship_type, patterns in relationship_patterns.items():
             for pattern in patterns:
                 try:
-                    results = self.connector.query_enhanced_similar(pattern, 10)
+                    # Use Weaviate semantic search
+                    query_result = await self.connector.semantic_search(
+                        query=pattern,
+                        limit=10,
+                        where_filter=None
+                    )
                     
-                    if results and results.get('documents') and results['documents'][0]:
-                        for i, doc in enumerate(results['documents'][0]):
-                            metadata = results['metadatas'][0][i]
+                    if query_result and query_result.objects:
+                        for obj in query_result.objects:
+                            properties = obj.get('properties', {})
+                            content = properties.get('content', '')
                             
                             relationship = {
                                 'relationship_type': relationship_type,
                                 'pattern_matched': pattern,
-                                'source_entity': metadata.get('class_name', ''),
-                                'file_path': metadata.get('file_path', ''),
-                                'function_name': metadata.get('function_name', ''),
-                                'content_preview': doc[:200] + "..." if len(doc) > 200 else doc,
-                                'extracted_entities': self._extract_entity_names_from_content(doc),
-                                'annotations': self._extract_annotations_from_content(doc)
+                                'source_entity': properties.get('class_name', ''),
+                                'file_path': properties.get('file_path', ''),
+                                'function_name': properties.get('method_name', ''),
+                                'content_preview': content[:200] + "..." if len(content) > 200 else content,
+                                'extracted_entities': self._extract_entity_names_from_content(content),
+                                'annotations': self._extract_annotations_from_content(content)
                             }
                             
                             relationships[relationship_type].append(relationship)
@@ -99,7 +105,7 @@ class DataStructuresAnalyzer:
         annotations = re.findall(annotation_pattern, content)
         return list(set(annotations))
     
-    def analyze_data_validation_rules(self) -> List[Dict[str, Any]]:
+    async def analyze_data_validation_rules(self) -> List[Dict[str, Any]]:
         """Analyze data validation and business rules"""
         validation_queries = [
             'validation constraint NotNull NotEmpty Size',
@@ -116,22 +122,27 @@ class DataStructuresAnalyzer:
         
         for query in validation_queries:
             try:
-                results = self.connector.query_enhanced_similar(query, 8)
+                query_result = await self.connector.semantic_search(
+                    query=query,
+                    limit=8,
+                    where_filter=None
+                )
                 
-                if results and results.get('documents') and results['documents'][0]:
-                    for i, doc in enumerate(results['documents'][0]):
-                        metadata = results['metadatas'][0][i]
+                if query_result and query_result.objects:
+                    for obj in query_result.objects:
+                        properties = obj.get('properties', {})
+                        content = properties.get('content', '')
                         
                         rule = {
                             'validation_type': query,
-                            'file_path': metadata.get('file_path', ''),
-                            'class_name': metadata.get('class_name', ''),
-                            'function_name': metadata.get('function_name', ''),
-                            'complexity_score': float(metadata.get('complexity_score', '1.0')),
-                            'business_domain': metadata.get('business_domain', ''),
-                            'validation_annotations': self._extract_validation_annotations(doc),
-                            'validation_logic': self._extract_validation_logic(doc),
-                            'content_snippet': doc[:300] + "..." if len(doc) > 300 else doc
+                            'file_path': properties.get('file_path', ''),
+                            'class_name': properties.get('class_name', ''),
+                            'function_name': properties.get('method_name', ''),
+                            'complexity_score': float(properties.get('complexity_score', 1.0)),
+                            'business_domain': properties.get('business_domain', ''),
+                            'validation_annotations': self._extract_validation_annotations(content),
+                            'validation_logic': self._extract_validation_logic(content),
+                            'content_snippet': content[:300] + "..." if len(content) > 300 else content
                         }
                         
                         validation_rules.append(rule)
@@ -176,7 +187,7 @@ class DataStructuresAnalyzer:
         
         return logic_found[:5]  # Limit to avoid too much detail
     
-    def analyze_database_schema_patterns(self) -> Dict[str, List[Dict[str, Any]]]:
+    async def analyze_database_schema_patterns(self) -> Dict[str, List[Dict[str, Any]]]:
         """Analyze database schema and mapping patterns"""
         schema_patterns = {
             'table_definitions': ['@Table @Entity CREATE TABLE'],
@@ -196,20 +207,25 @@ class DataStructuresAnalyzer:
             
             for query in queries:
                 try:
-                    results = self.connector.query_enhanced_similar(query, 8)
+                    query_result = await self.connector.semantic_search(
+                        query=query,
+                        limit=8,
+                        where_filter=None
+                    )
                     
-                    if results and results.get('documents') and results['documents'][0]:
-                        for i, doc in enumerate(results['documents'][0]):
-                            metadata = results['metadatas'][0][i]
+                    if query_result and query_result.objects:
+                        for obj in query_result.objects:
+                            properties = obj.get('properties', {})
+                            content = properties.get('content', '')
                             
                             schema_element = {
                                 'query_matched': query,
-                                'file_path': metadata.get('file_path', ''),
-                                'class_name': metadata.get('class_name', ''),
-                                'table_name': self._extract_table_name(doc),
-                                'column_definitions': self._extract_column_definitions(doc),
-                                'constraints': self._extract_constraints(doc),
-                                'content_preview': doc[:250] + "..." if len(doc) > 250 else doc
+                                'file_path': properties.get('file_path', ''),
+                                'class_name': properties.get('class_name', ''),
+                                'table_name': self._extract_table_name(content),
+                                'column_definitions': self._extract_column_definitions(content),
+                                'constraints': self._extract_constraints(content),
+                                'content_preview': content[:250] + "..." if len(content) > 250 else content
                             }
                             
                             pattern_results.append(schema_element)
@@ -278,9 +294,9 @@ class DataStructuresAnalyzer:
         
         return constraints[:8]  # Limit to most relevant
     
-    def generate_entity_relationship_diagram_data(self) -> Dict[str, Any]:
+    async def generate_entity_relationship_diagram_data(self) -> Dict[str, Any]:
         """Generate data for creating entity relationship diagrams"""
-        relationships = self.extract_entity_relationships()
+        relationships = await self.extract_entity_relationships()
         
         # Extract unique entities
         entities = set()
@@ -309,16 +325,16 @@ class DataStructuresAnalyzer:
             'relationship_count': len(connections)
         }
     
-    def generate_comprehensive_analysis(self, output_file: str = None) -> Dict[str, Any]:
+    async def generate_comprehensive_analysis(self, output_file: str = None) -> Dict[str, Any]:
         """Generate comprehensive data structures and business rules analysis"""
         logger.info("Starting comprehensive data structures analysis...")
         
         analysis = {
             'timestamp': str(os.popen('date').read().strip()),
-            'entity_relationships': self.extract_entity_relationships(),
-            'data_validation_rules': self.analyze_data_validation_rules(),
-            'database_schema_patterns': self.analyze_database_schema_patterns(),
-            'entity_relationship_diagram': self.generate_entity_relationship_diagram_data()
+            'entity_relationships': await self.extract_entity_relationships(),
+            'data_validation_rules': await self.analyze_data_validation_rules(),
+            'database_schema_patterns': await self.analyze_database_schema_patterns(),
+            'entity_relationship_diagram': await self.generate_entity_relationship_diagram_data()
         }
         
         # Add summary statistics
@@ -403,7 +419,7 @@ class DataStructuresAnalyzer:
         
         return insights
 
-def main():
+async def main():
     """Main function to run data structures analysis"""
     analyzer = DataStructuresAnalyzer()
     
@@ -416,7 +432,7 @@ def main():
     
     try:
         # Generate comprehensive analysis
-        analysis = analyzer.generate_comprehensive_analysis(output_file)
+        analysis = await analyzer.generate_comprehensive_analysis(output_file)
         
         # Print summary to console
         print("\n=== Data Structures and Business Rules Analysis ===")
@@ -451,4 +467,5 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())

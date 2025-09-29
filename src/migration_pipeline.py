@@ -16,12 +16,10 @@ from concurrent.futures import ThreadPoolExecutor
 import threading
 
 try:
-    from chromadb_connector import EnhancedChromaDBConnector
     from weaviate_connector import EnhancedWeaviateConnector, WeaviateConfig
     from ollama_integration import OllamaIntegration
     from code_chunker import CodeChunk, ChunkType
 except ImportError:
-    from .chromadb_connector import EnhancedChromaDBConnector
     from .weaviate_connector import EnhancedWeaviateConnector, WeaviateConfig
     from .ollama_integration import OllamaIntegration
     from .code_chunker import CodeChunk, ChunkType
@@ -64,19 +62,17 @@ class ValidationResult:
     corrupted_chunks: List[str]
     validation_errors: List[str]
 
-class MigrationPipeline:
+class DataMigrationPipeline:
     """
-    Comprehensive migration pipeline from ChromaDB to Weaviate
-    Features data validation, Qwen enhancement, and rollback capabilities
+    Enhanced data processing pipeline using Weaviate
+    Features data validation, Qwen enhancement, and processing capabilities
     """
     
     def __init__(self, 
-                 chromadb_connector: EnhancedChromaDBConnector,
                  weaviate_connector: EnhancedWeaviateConnector,
                  ollama_integration: OllamaIntegration,
                  config: MigrationConfig = None):
         
-        self.chromadb = chromadb_connector
         self.weaviate = weaviate_connector
         self.ollama = ollama_integration
         self.config = config or MigrationConfig()
@@ -85,11 +81,11 @@ class MigrationPipeline:
         self.rollback_points = []
         self._stop_event = threading.Event()
         
-        # Create migration directory
-        self.migration_dir = Path("migration_data")
-        self.migration_dir.mkdir(exist_ok=True)
+        # Create processing directory
+        self.processing_dir = Path("processing_data")
+        self.processing_dir.mkdir(exist_ok=True)
         
-        logger.info(f"Migration pipeline initialized with config: {asdict(self.config)}")
+        logger.info(f"Data processing pipeline initialized with config: {asdict(self.config)}")
 
     async def execute_migration(self, dry_run: bool = False) -> MigrationStats:
         """

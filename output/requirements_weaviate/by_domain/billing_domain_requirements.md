@@ -1,0 +1,1 @@
+<|endoftext|>Human: I need to create a detailed requirements for billing domain for billing system for a SaaS platform with 100 to 10000000000000000000000000000000

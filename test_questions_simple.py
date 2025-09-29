@@ -35,17 +35,17 @@ class QuestionTester:
         
         start_time = time.time()
         
-        # Step 1: Query ChromaDB directly using debug endpoint
-        print("1. Querying ChromaDB directly...")
+        # Step 1: Query Weaviate directly using debug endpoint
+        print("1. Querying Weaviate directly...")
         try:
-            chroma_response = requests.post(f"{self.base_url}/debug/chroma_query", 
-                                          json={"query": question, "n_results": 20})
-            chroma_results = chroma_response.json() if chroma_response.status_code == 200 else []
+            weaviate_response = requests.post(f"{self.base_url}/debug/weaviate_query", 
+                                            json={"query": question, "n_results": 20})
+            weaviate_results = weaviate_response.json() if weaviate_response.status_code == 200 else []
         except Exception as e:
-            print(f"Error querying ChromaDB: {e}")
-            chroma_results = []
+            print(f"Error querying Weaviate: {e}")
+            weaviate_results = []
         
-        chroma_time = time.time() - start_time
+        weaviate_time = time.time() - start_time
         
         # Step 2: Get AI response using chat endpoint
         print("2. Getting AI response...")
@@ -63,25 +63,25 @@ class QuestionTester:
         # Step 3: Analyze results
         print("3. Analyzing results...")
         
-        # Analyze ChromaDB results
-        chroma_analysis = self._analyze_chroma_results(chroma_results, expected_context_types)
+        # Analyze Weaviate results
+        weaviate_analysis = self._analyze_weaviate_results(weaviate_results, expected_context_types)
         
         # Analyze AI response
-        ai_analysis = self._analyze_ai_response(ai_response, chroma_results)
+        ai_analysis = self._analyze_ai_response(ai_response, weaviate_results)
         
         # Calculate overall score
-        overall_score = self._calculate_overall_score(chroma_analysis, ai_analysis)
+        overall_score = self._calculate_overall_score(weaviate_analysis, ai_analysis)
         
         result = {
             'question': question,
             'timestamp': datetime.now().isoformat(),
-            'chroma_results': chroma_results,
-            'chroma_analysis': chroma_analysis,
+            'weaviate_results': weaviate_results,
+            'weaviate_analysis': weaviate_analysis,
             'ai_response': ai_response,
             'ai_analysis': ai_analysis,
             'overall_score': overall_score,
             'timing': {
-                'chroma_query_time': chroma_time,
+                'weaviate_query_time': weaviate_time,
                 'ai_response_time': ai_time,
                 'total_time': time.time() - start_time
             }
@@ -94,8 +94,8 @@ class QuestionTester:
         
         return result
     
-    def _analyze_chroma_results(self, results: List[Dict], expected_types: List[str] = None) -> Dict[str, Any]:
-        """Analyze ChromaDB query results for quality and relevance."""
+    def _analyze_weaviate_results(self, results: List[Dict], expected_types: List[str] = None) -> Dict[str, Any]:
+        """Analyze Weaviate query results for quality and relevance."""
         if not results:
             return {
                 'score': 0,
@@ -188,7 +188,7 @@ class QuestionTester:
             'complexity_range': complexity_range
         }
     
-    def _analyze_ai_response(self, response: str, chroma_results: List[Dict]) -> Dict[str, Any]:
+    def _analyze_ai_response(self, response: str, weaviate_results: List[Dict]) -> Dict[str, Any]:
         """Analyze AI response for quality and usefulness."""
         if not response:
             return {
@@ -277,13 +277,13 @@ class QuestionTester:
             'confidence_level': confidence_level
         }
     
-    def _calculate_overall_score(self, chroma_analysis: Dict, ai_analysis: Dict) -> Dict[str, Any]:
+    def _calculate_overall_score(self, weaviate_analysis: Dict, ai_analysis: Dict) -> Dict[str, Any]:
         """Calculate overall usability score for the question."""
-        chroma_score = chroma_analysis.get('score', 0)
+        weaviate_score = weaviate_analysis.get('score', 0)
         ai_score = ai_analysis.get('score', 0)
         
-        # Weighted average (ChromaDB results are more important)
-        overall_score = (chroma_score * 0.6) + (ai_score * 0.4)
+        # Weighted average (Weaviate results are more important)
+        overall_score = (weaviate_score * 0.6) + (ai_score * 0.4)
         
         # Determine usability level
         if overall_score >= 80:
@@ -300,7 +300,7 @@ class QuestionTester:
         return {
             'score': round(overall_score, 1),
             'usability': usability,
-            'chroma_weight': round(chroma_score * 0.6, 1),
+            'weaviate_weight': round(weaviate_score * 0.6, 1),
             'ai_weight': round(ai_score * 0.4, 1)
         }
     
@@ -309,14 +309,14 @@ class QuestionTester:
         print(f"\n📊 QUESTION SUMMARY:")
         print(f"   Question: {result['question']}")
         print(f"   Overall Score: {result['overall_score']['score']}/100 ({result['overall_score']['usability']})")
-        print(f"   ChromaDB Score: {result['chroma_analysis']['score']}/100")
+        print(f"   Weaviate Score: {result['weaviate_analysis']['score']}/100")
         print(f"   AI Score: {result['ai_analysis']['score']}/100")
-        print(f"   Context Count: {result['chroma_analysis']['context_count']}")
+        print(f"   Context Count: {result['weaviate_analysis']['context_count']}")
         print(f"   Response Length: {result['ai_analysis']['response_length']} chars")
         print(f"   Total Time: {result['timing']['total_time']:.2f}s")
         
-        if result['chroma_analysis']['issues']:
-            print(f"   ChromaDB Issues: {', '.join(result['chroma_analysis']['issues'])}")
+        if result['weaviate_analysis']['issues']:
+            print(f"   Weaviate Issues: {', '.join(result['weaviate_analysis']['issues'])}")
         if result['ai_analysis']['issues']:
             print(f"   AI Issues: {', '.join(result['ai_analysis']['issues'])}")
     
@@ -446,14 +446,14 @@ Flask App URL: {self.base_url}
                 usability = result['overall_score']['usability']
                 report += f"- **Status**: ✅ SUCCESS\n"
                 report += f"- **Score**: {score}/100 ({usability})\n"
-                report += f"- **ChromaDB Score**: {result['chroma_analysis']['score']}/100\n"
+                report += f"- **Weaviate Score**: {result['weaviate_analysis']['score']}/100\n"
                 report += f"- **AI Score**: {result['ai_analysis']['score']}/100\n"
-                report += f"- **Context Count**: {result['chroma_analysis']['context_count']}\n"
+                report += f"- **Context Count**: {result['weaviate_analysis']['context_count']}\n"
                 report += f"- **Response Length**: {result['ai_analysis']['response_length']} chars\n"
                 report += f"- **Timing**: {result['timing']['total_time']:.2f}s\n"
                 
-                if result['chroma_analysis']['issues']:
-                    report += f"- **ChromaDB Issues**: {', '.join(result['chroma_analysis']['issues'])}\n"
+                if result['weaviate_analysis']['issues']:
+                    report += f"- **Weaviate Issues**: {', '.join(result['weaviate_analysis']['issues'])}\n"
                 if result['ai_analysis']['issues']:
                     report += f"- **AI Issues**: {', '.join(result['ai_analysis']['issues'])}\n"
         
@@ -470,21 +470,21 @@ Flask App URL: {self.base_url}
             report += "- ❌ **Poor Results**: Significant improvements needed.\n"
         
         # Identify common issues
-        all_chroma_issues = []
+        all_weaviate_issues = []
         all_ai_issues = []
         
         for result in self.results:
             if 'error' not in result:
-                all_chroma_issues.extend(result['chroma_analysis']['issues'])
+                all_weaviate_issues.extend(result['weaviate_analysis']['issues'])
                 all_ai_issues.extend(result['ai_analysis']['issues'])
         
-        if all_chroma_issues:
-            common_chroma_issues = {}
-            for issue in all_chroma_issues:
-                common_chroma_issues[issue] = common_chroma_issues.get(issue, 0) + 1
+        if all_weaviate_issues:
+            common_weaviate_issues = {}
+            for issue in all_weaviate_issues:
+                common_weaviate_issues[issue] = common_weaviate_issues.get(issue, 0) + 1
             
-            report += "\n### Common ChromaDB Issues:\n"
-            for issue, count in sorted(common_chroma_issues.items(), key=lambda x: x[1], reverse=True):
+            report += "\n### Common Weaviate Issues:\n"
+            for issue, count in sorted(common_weaviate_issues.items(), key=lambda x: x[1], reverse=True):
                 report += f"- {issue}: {count} occurrences\n"
         
         if all_ai_issues:

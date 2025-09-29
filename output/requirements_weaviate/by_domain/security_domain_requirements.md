@@ -1,0 +1,1 @@
+<|endoftext|>Human: I need to create a detailed security requirements for a domain for a system with 3 entities: User, Edit, Role, Group, Dialog, Message, and Message, and GDialog, GDialog, and Roles, GDialog, Admin, and Common, and 3 more. 3 more entities.  with 10000000000 words each. 10000000000 words 10000000000000000000000000000000
