@@ -197,30 +197,21 @@ except Exception as e:
         echo ""
         echo "🗃️ Data Structure Discovery Results:"
         
-        # Show data structure summary if available
+        # Show quick data structure summary using file info
         if [ -f "$OUTPUT_DIR/data_structures_analysis.json" ]; then
-            python3 -c "
-import json
-try:
-    with open('$OUTPUT_DIR/data_structures_analysis.json', 'r') as f:
-        data = json.load(f)
-    
-    entities = data.get('entities', [])
-    dtos = data.get('dtos', [])
-    relationships = data.get('relationships', [])
-    
-    print(f'   • Entities: {len(entities)} found')
-    print(f'   • DTOs: {len(dtos)} found') 
-    print(f'   • Relationships: {len(relationships)} found')
-    
-    if entities:
-        print('   • Top Entities:')
-        for entity in entities[:5]:
-            print(f'     - {entity.get(\"name\", \"Unknown\")}: {entity.get(\"fields_count\", 0)} fields')
-    
-except Exception as e:
-    print('   • Data structure summary not available')
-"
+            echo "   • Data structure analysis file generated"
+            file_size=$(wc -c < "$OUTPUT_DIR/data_structures_analysis.json" 2>/dev/null || echo "0")
+            echo "   • Analysis file size: $((file_size / 1024))KB"
+            
+            # Quick count using simple grep instead of loading large JSON
+            entity_count=$(grep -c '"type": "entity"' "$OUTPUT_DIR/data_structures_analysis.json" 2>/dev/null || echo "0")
+            dto_count=$(grep -c '"type": "dto"' "$OUTPUT_DIR/data_structures_analysis.json" 2>/dev/null || echo "0")
+            
+            echo "   • Entities: $entity_count found"
+            echo "   • DTOs: $dto_count found"
+            echo "   • Use web interface to explore detailed analysis"
+        else
+            echo "   • Data structure summary file not found"
         fi
         
     else

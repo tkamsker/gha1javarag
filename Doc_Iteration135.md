@@ -181,3 +181,194 @@ Now let me check if the current script is still running and see how it progresse
 
   The system is now fully migrated from ChromaDB to Enhanced Weaviate and working successfully in test mode!
 
+###### ---- evening 
+(venv) (base) thomaskamsker@MacBook-Pro a1javarag % ./reset_and_run_production_macos.sh production
+
+🏭 ITERATION 14 - RESET AND RUN PRODUCTION MODE (macOS)
+=======================================================
+
+⚠️  WARNING: Production mode will take significantly longer!
+
+This script will:
+  1. Reset Weaviate vector database
+  2. Clean output directory
+  3. Run Step 1 (Enhanced Weaviate Analysis) - FULL PROCESSING
+  4. Run Step 2 (Requirements Generation) - COMPREHENSIVE
+  5. Run Step 3 (Modern Requirements & Modernization) - DETAILED
+  6. Generate comprehensive documentation
+  7. Start Web Interface
+
+⏱️  Estimated time: 30-60 minutes depending on codebase size
+💾 Resource usage: High CPU, memory, and API calls
+🤖 AI Processing: Full enterprise-grade analysis
+
+Continue with full reset and production run? (y/N): y
+
+🏭 Starting full reset and production pipeline...
+✅ Virtual environment activated
+✅ Environment configured for production mode
+   AI Provider: ollama
+   Rate Limit: production (More requests, comprehensive analysis)
+   Ollama URL: http://localhost:11434
+   Timeout: 300s
+   Java Source: /Users/thomaskamsker/Documents/Atom/vron.one/playground/java
+
+🔍 Checking Ollama availability...
+✅ Ollama is running and accessible
+🤖 Checking available AI models...
+📝 Using coding model: danielsheep/Qwen3-Coder-30B-A3B-Instruct-1M-Unsloth:latest (code-focused)
+📊 Production logs will be saved to: ./logs/20250929_161949
+
+🗄️  STEP 1: RESETTING WEAVIATE DATABASE (PRODUCTION CONFIG)
+==========================================================
+🛑 Stopping existing Weaviate container...
+weaviate
+weaviate
+🚀 Starting production Weaviate instance...
+04b76814308c7d1977fe432c81b6164a824d79a77b793e7160fe7f2591f12e70
+⏳ Waiting for Weaviate to start (45 seconds for production setup)...
+🔍 Verifying Weaviate production setup...
+✅ Weaviate is running successfully
+   📊 Version: 1.32.10
+   🧩 Modules: generative-openai,qna-openai,ref2vec-centroid,text2vec-cohere,text2vec-huggingface,text2vec-openai,
+
+🧹 STEP 2: CLEANING OUTPUT DIRECTORY WITH BACKUP
+================================================
+💾 Creating backup of existing output...
+✅ Existing output backed up to: ./output_backup_20250929_162035
+📁 Creating fresh production output directory structure...
+✅ Production directory structure created
+
+🎯 STEP 3: ENHANCED WEAVIATE ANALYSIS (STEP 1) - PRODUCTION
+==========================================================
+🏭 Starting Step 1 Enhanced Weaviate Analysis (PRODUCTION MODE)
+⏱️  Timeout: 20 minutes for comprehensive analysis
+📊 Expected: Deep code analysis, comprehensive mapping, detailed data structures
+=== STEP 1 production LOG - Mo 29 Sep 2025 16:20:35 CEST ===
+⏱️  Starting Step1 with 1200s timeout...
+🚀 Starting Enhanced AI-Powered Java Analysis with Weaviate and Data Structure Discovery
+====================================================================================
+AI Provider: ollama
+Output Directory: ./output
+Weaviate Directory: ./data/weaviate
+Rate Limiting Mode: production
+
+✅ Ollama configuration: http://localhost:11434 using model danielsheep/Qwen3-Coder-30B-A3B-Instruct-1M-Unsloth
+
+🧪 Running system validation tests...
+✅ Weaviate is running and accessible
+✅ Ollama is running and accessible
+
+📊 Starting enhanced analysis pipeline with data structure discovery...
+Phase 1: Enhanced file analysis with Weaviate storage and data structure extraction...
+2025-09-29 16:20:36,545 - INFO - HTTP Request: GET http://localhost:8080/v1/.well-known/openid-configuration "HTTP/1.1 404 Not Found"
+2025-09-29 16:20:36,570 - INFO - HTTP Request: GET http://localhost:8080/v1/meta "HTTP/1.1 200 OK"
+2025-09-29 16:20:36,630 - INFO - HTTP Request: GET https://pypi.org/pypi/weaviate-client/json "HTTP/1.1 200 OK"
+/Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag/venv/lib/python3.11/site-packages/weaviate/warnings.py:133: DeprecationWarning: Dep005: You are using weaviate-client version 4.8.1. The latest version is 4.17.0.
+            Consider upgrading to the latest version. See https://weaviate.io/developers/weaviate/client-libraries/python for details.
+  warnings.warn(
+2025-09-29 16:20:36,648 - INFO - ✅ Connected to Weaviate (v4 API)
+2025-09-29 16:20:36,649 - INFO - 🔧 Setting up Weaviate collections...
+2025-09-29 16:20:36,649 - INFO - ✅ Weaviate collections setup prepared
+2025-09-29 16:20:36,650 - INFO - 🚀 Starting comprehensive Java analysis with Weaviate and data structure discovery
+2025-09-29 16:20:36,650 - INFO - 📁 Java source directory: /Users/thomaskamsker/Documents/Atom/vron.one/playground/java
+2025-09-29 16:20:36,650 - INFO - 📤 Output directory: output
+2025-09-29 16:20:36,650 - INFO - 🔍 Data structure discovery: Enabled
+2025-09-29 16:20:36,650 - INFO - 📂 Phase 1: Discovering Java files...
+2025-09-29 16:20:36,650 - INFO - 🔍 Scanning Java files in: /Users/thomaskamsker/Documents/Atom/vron.one/playground/java
+2025-09-29 16:20:36,716 - INFO -    📄 Scanned 100 files, processed 99 successfully
+2025-09-29 16:20:36,743 - INFO -    📄 Scanned 200 files, processed 199 successfully
+2025-09-29 16:20:36,773 - INFO -    📄 Scanned 300 files, processed 299 successfully
+2025-09-29 16:20:36,799 - INFO -    📄 Scanned 400 files, processed 399 successfully
+2025-09-29 16:20:36,829 - INFO -    📄 Scanned 500 files, processed 499 successfully
+2025-09-29 16:20:36,854 - INFO -    📄 Scanned 600 files, processed 599 successfully
+2025-09-29 16:20:36,884 - INFO -    📄 Scanned 700 files, processed 699 successfully
+2025-09-29 16:20:36,906 - INFO -    📄 Scanned 800 files, processed 799 successfully
+2025-09-29 16:20:36,975 - INFO -    📄 Scanned 900 files, processed 899 successfully
+2025-09-29 16:20:37,042 - INFO -    📄 Scanned 1000 files, processed 999 successfully
+2025-09-29 16:20:37,083 - INFO -    📄 Scanned 1100 files, processed 1099 successfully
+2025-09-29 16:20:37,138 - INFO - 📊 File Discovery Summary:
+2025-09-29 16:20:37,138 - INFO -    📁 Total .java files found: 1169
+2025-09-29 16:20:37,138 - INFO -    ✅ Successfully processed: 1169
+2025-09-29 16:20:37,138 - INFO -    ⏭️  Skipped files: 0
+2025-09-29 16:20:37,138 - INFO -    ❌ Error files: 0
+2025-09-29 16:20:37,138 - INFO - ✅ Phase 1 completed: 1169 Java files discovered
+2025-09-29 16:20:37,138 - INFO - 🏗️ Phase 2: Extracting data structures...
+2025-09-29 16:20:37,138 - INFO - 🏗️ Extracting data structures...
+2025-09-29 16:20:38,563 - INFO - 📊 Found 223 data structures
+2025-09-29 16:20:38,563 - INFO - ✅ Phase 2 completed: 223 data structures extracted
+2025-09-29 16:20:38,563 - INFO - 🔗 Phase 3: Analyzing entity relationships...
+2025-09-29 16:20:38,563 - INFO - 🔗 Analyzing entity relationships...
+2025-09-29 16:20:38,563 - INFO - 🔗 Found 0 relationships
+2025-09-29 16:20:38,563 - INFO - ✅ Phase 3 completed: 0 relationships identified
+2025-09-29 16:20:38,563 - INFO - 💾 Phase 4: Storing in Weaviate...
+2025-09-29 16:20:38,563 - INFO - 💾 Storing results in Weaviate...
+2025-09-29 16:20:38,563 - INFO - 📄 Would store 1169 Java files
+2025-09-29 16:20:38,563 - INFO - 🏗️ Would store 223 data structures
+2025-09-29 16:20:38,563 - INFO - ✅ Weaviate storage completed (compatibility mode)
+2025-09-29 16:20:38,563 - INFO - ✅ Phase 4 completed: Data stored in Weaviate collections
+2025-09-29 16:20:38,563 - INFO - 📊 Phase 5: Generating analysis reports...
+2025-09-29 16:20:38,563 - INFO - 📊 Generating analysis reports...
+2025-09-29 16:20:38,587 - INFO - ✅ Phase 5 completed: Analysis reports generated
+2025-09-29 16:20:38,632 - INFO - 📁 Results saved to output
+2025-09-29 16:20:38,632 - INFO - ============================================================
+2025-09-29 16:20:38,632 - INFO - 🎉 COMPREHENSIVE ANALYSIS COMPLETED SUCCESSFULLY
+2025-09-29 16:20:38,632 - INFO - ============================================================
+2025-09-29 16:20:38,633 - INFO - ⏱️  Processing Time: 1.94 seconds
+2025-09-29 16:20:38,633 - INFO - 📁 Files Processed: 1169
+2025-09-29 16:20:38,633 - INFO - 🏗️  Data Structures Found: 223
+2025-09-29 16:20:38,633 - INFO - 🔗 Entity Relationships: 0
+2025-09-29 16:20:38,633 - INFO - 💾 Weaviate Objects Stored: 223
+2025-09-29 16:20:38,633 - INFO - 📊 Output Files Generated: output
+2025-09-29 16:20:38,633 - INFO - ============================================================
+✅ Enhanced Weaviate analysis completed successfully!
+📊 Processed 1169 files
+🏗️ Identified 223 data structures
+📋 Generated 0 requirements
+
+✅ Enhanced Weaviate analysis completed successfully!
+
+📁 Generated files:
+- ./output/weaviate_metadata.json
+- ./output/data_structures_analysis.json
+- ./output/enhanced_architecture_report.json
+- ./output/module_analysis_*.json
+- ./output/analysis_summary.json
+
+Phase 2: Generating enhanced requirements with data structure insights...
+2025-09-29 16:20:39,242 - INFO - HTTP Request: GET http://localhost:8080/v1/.well-known/openid-configuration "HTTP/1.1 404 Not Found"
+2025-09-29 16:20:39,266 - INFO - HTTP Request: GET http://localhost:8080/v1/meta "HTTP/1.1 200 OK"
+2025-09-29 16:20:39,327 - INFO - HTTP Request: GET https://pypi.org/pypi/weaviate-client/json "HTTP/1.1 200 OK"
+/Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag/venv/lib/python3.11/site-packages/weaviate/warnings.py:133: DeprecationWarning: Dep005: You are using weaviate-client version 4.8.1. The latest version is 4.17.0.
+            Consider upgrading to the latest version. See https://weaviate.io/developers/weaviate/client-libraries/python for details.
+  warnings.warn(
+2025-09-29 16:20:39,344 - INFO - ✅ Connected to Weaviate for requirements generation
+2025-09-29 16:20:39,344 - INFO - 📋 Generating comprehensive requirements with Weaviate and data structures...
+2025-09-29 16:20:39,345 - INFO - 🗃️ Generating data-driven requirements...
+2025-09-29 16:20:39,346 - INFO - 📊 Generated requirements for 6 entities and 28 DTOs
+2025-09-29 16:20:39,346 - INFO - ✅ Basic requirements generation completed
+✅ Enhanced requirements generation with data structures completed!
+⏳ Step1 running... 60s elapsed
+⏳ Step1 running... 120s elapsed
+⏳ Step1 running... 180s elapsed
+⏳ Step1 running... 240s elapsed
+⏳ Step1 running... 300s elapsed
+⏳ Step1 running... 360s elapsed
+⏳ Step1 running... 420s elapsed
+⏳ Step1 running... 480s elapsed
+⏳ Step1 running... 540s elapsed
+⏳ Step1 running... 600s elapsed
+⏳ Step1 running... 660s elapsed
+⏳ Step1 running... 720s elapsed
+⏳ Step1 running... 780s elapsed
+⏳ Step1 running... 840s elapsed
+⏳ Step1 running... 900s elapsed
+⏳ Step1 running... 960s elapsed
+⏳ Step1 running... 1020s elapsed
+⏳ Step1 running... 1080s elapsed
+⏳ Step1 running... 1140s elapsed
+⏳ Step1 running... 1200s elapsed
+⏰ Step1 timed out after 1200 seconds
+./reset_and_run_production_macos.sh: line 66: 96623 Terminated: 15          eval "$command"
+^C%                                                                                                                                                                                                                                                        (venv) (base) thomaskamsker@MacBook-Pro a1javarag % 
+
