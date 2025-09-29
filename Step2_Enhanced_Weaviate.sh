@@ -116,6 +116,42 @@ if [ -n "$DEBUGFILE" ] && [ -f "$DEBUGFILE" ]; then
     echo "Processing traditional requirements with debug enhancements..."
     
     export RATE_LIMIT_ENV=$MODE
+    
+    # First run the Weaviate full requirements generation
+    echo "Phase 1: Generating full Weaviate requirements..."
+    python3 -c "
+import json
+import sys
+import asyncio
+sys.path.insert(0, 'src')
+from weaviate_requirements_generator import WeaviateRequirementsGenerator
+
+try:
+    # Load analyzed metadata
+    with open('$WEAVIATE_METADATA_FILE', 'r') as f:
+        metadata = json.load(f)
+    
+    # Load data structures
+    try:
+        with open('$DATA_STRUCTURES_FILE', 'r') as f:
+            data_structures = json.load(f)
+    except FileNotFoundError:
+        data_structures = {}
+    
+    # Generate full requirements with data structure insights
+    generator = WeaviateRequirementsGenerator('$OUTPUT_DIR')
+    asyncio.run(generator.generate_full_requirements(metadata, data_structures))
+    
+    print('✅ Full Weaviate requirements generation completed!')
+    
+except Exception as e:
+    print(f'❌ Full requirements generation failed: {e}')
+    import traceback
+    traceback.print_exc()
+"
+    
+    # Then run traditional requirements processing
+    echo "Phase 2: Generating traditional requirements..."
     python3 -c "
 import sys
 sys.path.append('src')
@@ -165,6 +201,42 @@ else
     echo "   - AI-powered requirements with $AI_PROVIDER"
     
     export RATE_LIMIT_ENV=$MODE
+    
+    # First run the Weaviate full requirements generation
+    echo "Phase 1: Generating full Weaviate requirements..."
+    python3 -c "
+import json
+import sys
+import asyncio
+sys.path.insert(0, 'src')
+from weaviate_requirements_generator import WeaviateRequirementsGenerator
+
+try:
+    # Load analyzed metadata
+    with open('$WEAVIATE_METADATA_FILE', 'r') as f:
+        metadata = json.load(f)
+    
+    # Load data structures
+    try:
+        with open('$DATA_STRUCTURES_FILE', 'r') as f:
+            data_structures = json.load(f)
+    except FileNotFoundError:
+        data_structures = {}
+    
+    # Generate full requirements with data structure insights
+    generator = WeaviateRequirementsGenerator('$OUTPUT_DIR')
+    asyncio.run(generator.generate_full_requirements(metadata, data_structures))
+    
+    print('✅ Full Weaviate requirements generation completed!')
+    
+except Exception as e:
+    print(f'❌ Full requirements generation failed: {e}')
+    import traceback
+    traceback.print_exc()
+"
+    
+    # Then run traditional requirements processing
+    echo "Phase 2: Generating traditional requirements..."
     python3 -c "
 import sys
 sys.path.append('src')

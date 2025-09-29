@@ -48,8 +48,16 @@ class WeaviateRequirementsGenerator:
         os.makedirs(self.requirements_dir / "by_domain", exist_ok=True)
         os.makedirs(self.requirements_dir / "analysis", exist_ok=True)
         
-        # Generate different types of requirements
+        # Generate only basic requirements in Step 1 to avoid timeout
         await self._generate_data_driven_requirements(data_structures)
+        
+        logger.info("✅ Basic requirements generation completed")
+
+    async def generate_full_requirements(self, metadata: Dict[str, Any], data_structures: Dict[str, Any]):
+        """Generate full comprehensive requirements (for Step 2)"""
+        logger.info("📋 Generating full comprehensive requirements...")
+        
+        # Generate all types of requirements
         await self._generate_layer_based_requirements(metadata)
         await self._generate_domain_based_requirements(data_structures)
         await self._generate_modernization_requirements(metadata, data_structures)
@@ -58,34 +66,60 @@ class WeaviateRequirementsGenerator:
         # Generate master requirements document
         await self._generate_master_requirements_document(metadata, data_structures)
         
-        logger.info("✅ Comprehensive requirements generation completed")
+        logger.info("✅ Full comprehensive requirements generation completed")
 
     async def _generate_data_driven_requirements(self, data_structures: Dict[str, Any]):
-        """Generate requirements based on discovered data structures"""
+        """Generate requirements based on discovered data structures - simplified for Step 1"""
         logger.info("🗃️ Generating data-driven requirements...")
         
         entities = data_structures.get('entities', [])
         dtos = data_structures.get('dtos', [])
         relationships = data_structures.get('relationships', [])
         
-        # Generate entity-specific requirements
-        for entity in entities:
-            await self._generate_entity_requirements(entity)
+        # Generate simple summary requirements without AI calls
+        summary_reqs = self._generate_simple_data_summary(entities, dtos, relationships)
         
-        # Generate data management requirements
-        data_management_reqs = await self._generate_data_management_requirements(entities, relationships)
-        
-        # Save data management requirements
-        with open(self.requirements_dir / "by_data_structure" / "data_management_requirements.md", 'w') as f:
-            f.write(data_management_reqs)
-        
-        # Generate data validation requirements
-        validation_reqs = await self._generate_data_validation_requirements(entities, dtos)
-        
-        with open(self.requirements_dir / "by_data_structure" / "data_validation_requirements.md", 'w') as f:
-            f.write(validation_reqs)
+        # Save basic data summary
+        with open(self.requirements_dir / "by_data_structure" / "data_summary.md", 'w') as f:
+            f.write(summary_reqs)
         
         logger.info(f"📊 Generated requirements for {len(entities)} entities and {len(dtos)} DTOs")
+
+    def _generate_simple_data_summary(self, entities: List[Dict], dtos: List[Dict], relationships: List[Dict]) -> str:
+        """Generate a simple data summary without AI calls"""
+        summary = f"""# Data Structures Summary
+
+## Overview
+- **Entities Found**: {len(entities)}
+- **DTOs Found**: {len(dtos)}
+- **Relationships**: {len(relationships)}
+
+## Entity Details
+"""
+        for entity in entities[:10]:  # Limit to first 10
+            fields = entity.get('fields', [])
+            summary += f"""
+### {entity.get('name', 'Unknown')}
+- **Package**: {entity.get('package_name', 'Unknown')}
+- **Fields**: {len(fields)}
+- **Business Domain**: {entity.get('business_domain', 'General')}
+"""
+            if fields:
+                summary += "- **Key Fields**:\n"
+                for field in fields[:5]:  # Top 5 fields
+                    summary += f"  - {field.get('name', 'Unknown')}: {field.get('type', 'Unknown')}\n"
+
+        summary += f"""
+## DTO Details
+"""
+        for dto in dtos[:10]:  # Limit to first 10
+            summary += f"""
+### {dto.get('name', 'Unknown')}
+- **Package**: {dto.get('package_name', 'Unknown')}
+- **Fields**: {len(dto.get('fields', []))}
+"""
+
+        return summary
 
     async def _generate_entity_requirements(self, entity: Dict[str, Any]):
         """Generate requirements for a specific entity"""
