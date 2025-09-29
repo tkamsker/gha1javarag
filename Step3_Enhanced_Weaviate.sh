@@ -9,7 +9,7 @@ echo "🚀 Running Enhanced Step 3 (Modern Requirements) in $MODE mode"
 
 # Load environment variables
 if [ -f .env ]; then
-    export $(cat .env | grep -v '^#' | xargs)
+    export $(cat .env | grep -v '^#' | grep -v '^$' | sed 's/#.*//' | xargs)
 fi
 
 export TOKENIZERS_PARALLELISM=false

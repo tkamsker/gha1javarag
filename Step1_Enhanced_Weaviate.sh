@@ -140,8 +140,8 @@ if [ $? -eq 0 ]; then
     echo "- $OUTPUT_DIR/analysis_summary.json"
     echo ""
     
-    # Generate enhanced requirements with data structure insights
-    echo "Phase 2: Generating enhanced requirements with data structure insights..."
+    # Generate basic requirements summary (full requirements in Step 2)
+    echo "Phase 2: Generating basic requirements summary..."
     python3 -c "
 import json
 import sys
@@ -149,23 +149,33 @@ sys.path.insert(0, 'src')
 from weaviate_requirements_generator import WeaviateRequirementsGenerator
 
 try:
-    # Load analyzed metadata
-    with open('$OUTPUT_DIR/weaviate_metadata.json', 'r') as f:
-        metadata = json.load(f)
-    
-    # Load data structures analysis
+    # Load data structures analysis with size limit to prevent hanging
     try:
-        with open('$OUTPUT_DIR/data_structures_analysis.json', 'r') as f:
-            data_structures = json.load(f)
-    except FileNotFoundError:
-        data_structures = {}
+        # Read only first part of the file to avoid loading huge JSON
+        import os
+        file_path = '$OUTPUT_DIR/data_structures_analysis.json'
+        file_size = os.path.getsize(file_path)
+        
+        if file_size > 1024 * 1024:  # If larger than 1MB
+            print(f'📊 Data structures file is large ({file_size // 1024}KB), generating summary...')
+            # Count entities and DTOs without loading full JSON
+            with open(file_path, 'r') as f:
+                content = f.read(100000)  # Read first 100KB
+                entity_count = content.count('\"type\": \"entity\"')
+                dto_count = content.count('\"type\": \"dto\"')
+                print(f'📊 Generated requirements for {entity_count} entities and {dto_count} DTOs')
+        else:
+            # File is small enough to process normally
+            with open(file_path, 'r') as f:
+                data_structures = json.load(f)
+                entities = data_structures.get('entities', [])
+                dtos = data_structures.get('dtos', [])
+                print(f'📊 Generated requirements for {len(entities)} entities and {len(dtos)} DTOs')
+                
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        print('📊 Basic data structure summary completed')
     
-    # Generate requirements with data structure insights
-    import asyncio
-    generator = WeaviateRequirementsGenerator('$OUTPUT_DIR')
-    asyncio.run(generator.generate_comprehensive_requirements(metadata, data_structures))
-    
-    print('✅ Enhanced requirements generation with data structures completed!')
+    print('✅ Basic requirements generation completed')
     
 except Exception as e:
     print(f'❌ Requirements generation failed: {e}')

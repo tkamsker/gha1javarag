@@ -57,6 +57,13 @@ class WeaviateRequirementsGenerator:
         """Generate full comprehensive requirements (for Step 2)"""
         logger.info("📋 Generating full comprehensive requirements...")
         
+        # Create requirements directories
+        os.makedirs(self.requirements_dir, exist_ok=True)
+        os.makedirs(self.requirements_dir / "by_layer", exist_ok=True)
+        os.makedirs(self.requirements_dir / "by_data_structure", exist_ok=True)
+        os.makedirs(self.requirements_dir / "by_domain", exist_ok=True)
+        os.makedirs(self.requirements_dir / "analysis", exist_ok=True)
+        
         # Generate all types of requirements
         await self._generate_layer_based_requirements(metadata)
         await self._generate_domain_based_requirements(data_structures)
