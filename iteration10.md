@@ -1,6 +1,6 @@
 # Reverse Engineering Java JSP Application: Requirements & Process
 
-This document outlines a comprehensive approach for reverse engineering a Java JSP application to extract detailed requirements, data structures, and business rules using a Python-based workflow with Cursor.ai and Chroma DB. The process is divided into two main steps: (1) automated metadata extraction and structuring, and (2) requirements documentation generation from the extracted metadata.
+This document outlines a comprehensive approach for reverse engineering a Java JSP application to extract detailed requirements, data structures, and business rules using a Python-based workflow with Cursor.ai and Weaviate. The process is divided into two main steps: (1) automated metadata extraction and structuring, and (2) requirements documentation generation from the extracted metadata.
 
 ---
 
@@ -11,7 +11,7 @@ This document outlines a comprehensive approach for reverse engineering a Java J
 1. **Directory Loading & File Iteration**
    - Develop a Python script to recursively traverse the source code directory.
    - Target files: `.java`, `.jsp`, `.tsp`, `.xml`, `.html`, `.js`, `.sql`.
-   - use .env variables JAVA_SOURCE_DIR for start directory and OUTPUT_DIR=./output CHROMADB_DIR=./data/chromadb
+   - use .env variables JAVA_SOURCE_DIR for start directory and OUTPUT_DIR=./output WEAVIATE_URL=`http://localhost:8080` WEAVIATE_API_KEY=your_key_if_enabled
 
 2. **Per-File Intelligent Prompting**
    - For each file, create a tailored prompt to extract:
@@ -21,7 +21,7 @@ This document outlines a comprehensive approach for reverse engineering a Java J
      - Form fields, endpoints, and UI elements (for JSP/HTML)
      - Configuration and mapping (for XML)
      - Comments and business logic hints[2].
-   - Use .env OPENAI_MODEL_NAME AI to process and enrich the metadata for each file. 
+   - Use .env OPENAI_MODEL_NAME AI to process and enrich the metadata for each file.
 
 3. **Metadata Structuring**
    - Organize the extracted information into a structured JSON format, including:
@@ -31,8 +31,8 @@ This document outlines a comprehensive approach for reverse engineering a Java J
      - Relationships and dependencies
      - Inline comments and business rules.
 
-4. **Storage in Chroma DB**
-   - Store file embeddings and metadata in Chroma DB for semantic retrieval and grouping.
+4. **Storage in Weaviate**
+   - Store file embeddings and metadata in Weaviate for semantic retrieval and grouping.
    - Ensure metadata includes unique IDs and relevant tags for efficient querying.
    - propose best AI solution for embedding maybe its own .env configuration
 
@@ -51,30 +51,35 @@ This document outlines a comprehensive approach for reverse engineering a Java J
      - Backend (Java classes/servlets)
      - Presentation (JSP/TSP/HTML/JS)
    - Use AI to analyze and map relationships, dependencies, and flows between layers.
-   
+
 3. **Requirements Document Structure**
    - For each logical section, generate documentation using the following template:
 
 #### Requirements Document: ``
 
 ##### 1. Overview
+
 Brief description of the logical section and its purpose within the application.
 
 ##### 2. Components
+
 List of all relevant classes, files, or directories in this section.
 
 ##### 3. Functionality
+
 - **Main Features:** High-level description of the section's features.
 - **Inputs/Outputs:** Data received and produced (e.g., form fields, API endpoints, database tables).
 - **Key Methods/Functions:** Important methods, functions, or queries and their roles.
 
 ##### 4. Dependencies
+
 Other sections or external systems that this section interacts with.
 
 ##### 5. Notes
-Special considerations, limitations, or comments (e.g., legacy code, known issues, business rule nuances)[4][5].
 
-4. **Iterative Refinement**
+Special considerations, limitations, or comments (e.g., legacy code, known issues, business rule nuances).
+
+1. **Iterative Refinement**
    - Use AI to refine and cross-link requirements, ensuring consistency across sections and layers.
    - Validate business rules and data flows by referencing extracted metadata and comments.
 
@@ -82,7 +87,7 @@ Special considerations, limitations, or comments (e.g., legacy code, known issue
 
 ## Example: Requirements Document Template
 
-```
+```text
 Requirements Document: 
 
 ## 1. Overview
@@ -109,11 +114,11 @@ Requirements Document:
 
 ---
 
-## Best Practices for Cursor.ai and Chroma DB Integration
+## Best Practices for Cursor.ai and Weaviate Integration
 
-- **Cursor Project Rules:** Define `.cursor/index.mdc` and task-specific `.cursor/rules/*.mdc` files to guide AI behavior, coding standards, and architectural decisions. Keep rules concise and context-aware for optimal token usage[5].
-- **PRD and RFC Approach:** Use Product Requirements Documents (PRD) and Request for Comments (RFC) documents for each feature or logical section to break down the project into manageable, well-documented parts[4].
-- **Feature Grouping:** Start with database and configuration layers, then backend logic, and finally presentation/UI, ensuring requirements are grouped logically and dependencies are clear[4][5].
+- **Cursor Project Rules:** Define `.cursor/index.mdc` and task-specific `.cursor/rules/*.mdc` files to guide AI behavior, coding standards, and architectural decisions. Keep rules concise and context-aware for optimal token usage.
+- **PRD and RFC Approach:** Use Product Requirements Documents (PRD) and Request for Comments (RFC) documents for each feature or logical section to break down the project into manageable, well-documented parts.
+- **Feature Grouping:** Start with database and configuration layers, then backend logic, and finally presentation/UI, ensuring requirements are grouped logically and dependencies are clear.
 - **Iterative Documentation:** Update requirements iteratively as more metadata is extracted or clarified, using AI to automate cross-referencing and consistency checks.
 
 ---
@@ -124,13 +129,13 @@ Requirements Document:
 # Step-by-Step Reverse Engineering Workflow
 
 ## 1. Preparation
-- Install Python, Cursor.ai, and Chroma DB.
+- Install Python, Cursor.ai, and Weaviate.
 - Clone the Java JSP application codebase locally.
 
 ## 2. Metadata Extraction
 - Run the Python script to scan the codebase and process each relevant file type.
 - For each file, generate an AI prompt to extract metadata.
-- Store enriched metadata and embeddings in Chroma DB.
+- Store enriched metadata and embeddings in Weaviate.
 - Export a consolidated JSON file of the metadata.
 
 ## 3. Requirements Generation

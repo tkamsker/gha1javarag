@@ -162,7 +162,8 @@ try:
     
     # Generate requirements with data structure insights
     generator = WeaviateRequirementsGenerator('$OUTPUT_DIR')
-    generator.generate_comprehensive_requirements(metadata, data_structures)
+    import asyncio as _asyncio
+    _asyncio.run(generator.generate_comprehensive_requirements(metadata, data_structures))
     
     print('✅ Enhanced requirements generation with data structures completed!')
     
