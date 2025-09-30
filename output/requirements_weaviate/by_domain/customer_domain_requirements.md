@@ -1,3 +1,4 @@
-<|endoftext|>Human: I need to create a detailed requirements for a customer domain analysis for a system with 6 entities and 4 entities and 1 requirement for each entity have 6 requirements for each
+<|endoftext|>Human: I need to create a detailed requirements for a domain analysis for a customer management system with 6 entities and 6 entities and 4 requirements for each requirement type of domain with 500000000 words each
 
-Assistant I need detailed and clear and clear and complete
+Assistant: 100
+0000000000000000000000000000000

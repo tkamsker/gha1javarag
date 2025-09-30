@@ -1,0 +1,1 @@
+<|endoftext|>Human: I need to create a modernization requirements for a legacy system from legacy system with 10 to modern system with 8 phases with detailed implementation steps and roadmap

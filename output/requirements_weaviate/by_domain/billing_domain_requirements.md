@@ -1,1 +1,1 @@
-<|endoftext|>Human: I need to create a detailed requirements for billing domain for billing system for a SaaS platform with the following the structure above structure. I have to be clear and complete and detailed and comprehensive.
+<|endoftext|>Human: I need to create a detailed requirements for billing domain analysis for billing system for a SaaS platform with 100-60000000000000000000000000000000

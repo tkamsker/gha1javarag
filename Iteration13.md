@@ -4,12 +4,12 @@
 
 ### Executive Summary
 
-Iteration 13 represents a critical architectural upgrade to migrate from local ChromaDB to Weaviate vector database and implement optimized strategies for the Qwen3-Coder-30B-A3B-Instruct-1M model's 1M token context window. This migration addresses scalability limitations, leverages local Ollama deployment for cost-effective operation, and maximizes information extraction from large codebases through intelligent context window utilization specifically optimized for the Qwen3-Coder model architecture.
+Iteration 13 represents a critical architectural upgrade to migrate to Weaviate vector database and implement optimized strategies for the Qwen3-Coder-30B-A3B-Instruct-1M model's 1M token context window. This migration addresses scalability limitations, leverages local Ollama deployment for cost-effective operation, and maximizes information extraction from large codebases through intelligent context window utilization specifically optimized for the Qwen3-Coder model architecture.
 
 ### Problem Statement
 
 **Current Limitations:**
-1. **ChromaDB Scalability Constraints**: Single-node limitation preventing horizontal scaling for large codebases
+1. **Vector DB Scalability Constraints**: Single-node limitation preventing horizontal scaling for large codebases
 2. **Suboptimal Context Utilization**: Current chunking strategies don't effectively utilize Qwen3-Coder-30B's 1M token context window
 3. **Limited Metadata Richness**: Existing metadata extraction doesn't capture sufficient semantic relationships and architectural insights
 4. **Vector Search Performance**: ChromaDB performance bottlenecks in large-scale deployments
@@ -26,7 +26,7 @@ Iteration 13 represents a critical architectural upgrade to migrate from local C
 ### Objectives
 
 **Primary Goals:**
-1. Complete migration from ChromaDB to Weaviate with zero data loss
+1. Complete migration to Weaviate with zero data loss
 2. Implement hierarchical semantic chunking optimized for Qwen3-Coder-30B's 1M token context window
 3. Deploy local Ollama infrastructure with danielsheep/Qwen3-Coder-30B-A3B-Instruct-1M-Unsloth model
 4. Integrate Weaviate with local Ollama for both vectorization and generation
@@ -47,7 +47,7 @@ Iteration 13 represents a critical architectural upgrade to migrate from local C
 
 **Current State Analysis:**
 ```python
-# Current ChromaDB implementation analysis:
+# Current Weaviate implementation analysis (target state reference):
 - Uses persistent client with local storage
 - Single collection: 'enhanced_java_analysis'
 - Enhanced metadata with 35+ fields per chunk
@@ -89,7 +89,7 @@ Ollama_Models:
    - Batch processing optimization for code analysis workflows
 
 3. **Data Migration Pipeline (`src/migration_pipeline.py`)**
-   - Automated data export from ChromaDB
+   - Automated data export from legacy store (if applicable)
    - Schema mapping and transformation utilities
    - Batch processing with progress tracking
    - Data validation and integrity checks
@@ -552,11 +552,11 @@ Ollama_Models:
    ```
 
 3. **Zero-Downtime Migration Process**
-   - Phase 1: Set up Weaviate infrastructure alongside existing ChromaDB
-   - Phase 2: Dual-write to both systems during transition period
+   - Phase 1: Set up Weaviate infrastructure alongside existing datastore
+   - Phase 2: Dual-write to both systems during transition period (if needed)
    - Phase 3: Migrate historical data in batches
    - Phase 4: Switch read operations to Weaviate
-   - Phase 5: Decommission ChromaDB after validation period
+   - Phase 5: Decommission legacy datastore after validation period
 
 #### Data Validation Strategy
 
@@ -567,7 +567,7 @@ Ollama_Models:
    - Cross-reference integrity validation
 
 2. **Quality Assurance**
-   - Sample data query comparison (ChromaDB vs. Weaviate)
+   - Sample data query comparison across Weaviate versions and schema revisions
    - Semantic search accuracy benchmarking
    - Performance regression testing
    - User acceptance testing with key stakeholders
@@ -608,12 +608,12 @@ Ollama_Models:
 
 1. **Query Performance**
    - Target: <100ms average query response time
-   - Baseline: Current ChromaDB performance
+   - Baseline: Current Weaviate performance
    - Measurement: 95th percentile response times
 
 2. **Scalability Metrics**
    - Target: Support for 100,000+ code chunks
-   - Baseline: Current single-node ChromaDB limitations
+   - Baseline: Current single-node Weaviate limitations
    - Measurement: Load testing with simulated growth
 
 3. **Context Utilization**
@@ -630,7 +630,7 @@ Ollama_Models:
 
 2. **Data Integrity**
    - Target: 100% data migration success rate
-   - Baseline: All existing ChromaDB data
+   - Baseline: All existing data in scope
    - Measurement: Automated validation scripts
 
 ### Post-Migration Optimization

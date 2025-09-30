@@ -2,7 +2,22 @@
 # Reset and Run Enhanced Weaviate Pipeline - Iteration 14 (macOS Compatible)
 # This script supports both test and production modes for comprehensive analysis
 
-set -e
+set -euo pipefail
+
+# Error handling helpers
+die() {
+    echo "❌ Error on line $1. Exiting." >&2
+    exit 1
+}
+trap 'die $LINENO' ERR
+
+require_cmd() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        echo "❌ Required command not found: $1" >&2
+        echo "💡 Please install $1 and re-run." >&2
+        exit 1
+    fi
+}
 
 # Get mode from first argument or prompt user
 MODE=${1:-}
@@ -71,9 +86,12 @@ run_with_timeout() {
     
     echo "⏱️  Starting $command_name with ${timeout_duration}s timeout..."
     
-    # Run command in background and capture PID
-    eval "$command" &
+    # Run command in background in its own process group and capture PID
+    bash -c "$command" &
     local cmd_pid=$!
+    # Get process group id for proper cleanup
+    local pgid
+    pgid=$(ps -o pgid= "$cmd_pid" | tr -d ' ' || echo "")
     
     # Monitor the command
     local elapsed=0
@@ -82,9 +100,18 @@ run_with_timeout() {
     while kill -0 $cmd_pid 2>/dev/null; do
         if [ $elapsed -ge $timeout_duration ]; then
             echo "⏰ $command_name timed out after ${timeout_duration} seconds"
-            kill -TERM $cmd_pid 2>/dev/null || true
+            # Kill the whole process group if available, else the pid
+            if [ -n "$pgid" ]; then
+                kill -TERM -$pgid 2>/dev/null || true
+            else
+                kill -TERM $cmd_pid 2>/dev/null || true
+            fi
             sleep 2
-            kill -KILL $cmd_pid 2>/dev/null || true
+            if [ -n "$pgid" ]; then
+                kill -KILL -$pgid 2>/dev/null || true
+            else
+                kill -KILL $cmd_pid 2>/dev/null || true
+            fi
             return 124  # Standard timeout exit code
         fi
         
@@ -132,29 +159,87 @@ fi
 source venv/bin/activate
 echo "✅ Virtual environment activated"
 
-# Set environment variables based on mode
-export AI_PROVIDER="ollama"
+# Preflight required commands
+require_cmd docker
+require_cmd curl
+require_cmd jq
+require_cmd python3
+# Load .env if present (only specific keys)
+if [ -f ".env" ]; then
+    # shellcheck disable=SC2046
+    export $(grep -E '^(AI_PROVIDER|OLLAMA_BASE_URL|OLLAMA_MODEL_NAME|OLLAMA_TIMEOUT|JAVA_SOURCE_DIR|TOKENIZERS_PARALLELISM|STEP[123]_TIMEOUT_(TEST|PROD))=' .env | sed 's/^export //') || true
+fi
+
+# Set environment variables based on mode (no hardcoded LLM defaults)
 export RATE_LIMIT_ENV="$MODE"
-export OLLAMA_BASE_URL="http://localhost:11434"
-export TOKENIZERS_PARALLELISM=false
+export TOKENIZERS_PARALLELISM=${TOKENIZERS_PARALLELISM:-false}
+
+# LLM provider/base URL defaults if not provided (warn)
+if [ -z "${AI_PROVIDER:-}" ]; then
+    echo "⚠️  AI_PROVIDER not set in environment or .env; defaulting to 'ollama'"
+    export AI_PROVIDER="ollama"
+fi
+if [ -z "${OLLAMA_BASE_URL:-}" ]; then
+    echo "⚠️  OLLAMA_BASE_URL not set; defaulting to http://localhost:11434"
+    export OLLAMA_BASE_URL="http://localhost:11434"
+fi
 
 # Load JAVA_SOURCE_DIR from .env if not set
-if [ -z "$JAVA_SOURCE_DIR" ]; then
+if [ -z "${JAVA_SOURCE_DIR:-}" ]; then
     if [ -f ".env" ]; then
-        export $(grep -v '^#' .env | grep 'JAVA_SOURCE_DIR' | xargs)
+        export $(grep -v '^#' .env | grep 'JAVA_SOURCE_DIR' | xargs) || true
     fi
 fi
 
 # Set default JAVA_SOURCE_DIR if still not set
-if [ -z "$JAVA_SOURCE_DIR" ]; then
+if [ -z "${JAVA_SOURCE_DIR:-}" ]; then
     echo "⚠️  JAVA_SOURCE_DIR not set in environment or .env file"
     echo "Please set JAVA_SOURCE_DIR to your Java source code directory"
     exit 1
 fi
 
+# Manifest: scan source tree for supported file types
+if [ -d "$JAVA_SOURCE_DIR" ]; then
+    echo "🔎 Scanning $JAVA_SOURCE_DIR for supported file types..."
+    MANIFEST_TMP=$(mktemp)
+    TOTAL_SUPPORTED=$(python3 - "$JAVA_SOURCE_DIR" "$MANIFEST_TMP" << 'PY'
+import os, sys, json
+root = sys.argv[1]
+out = sys.argv[2]
+include_exts = {
+    '.java','.kt','.jsp','.js','.ts','.tsx','.jsx','.html','.css','.scss','.vue',
+    '.xml','.yml','.yaml','.properties','.sql','.proto','.gradle','.tf','.md','.adoc','.rst','.json'
+}
+exclude_dirs = {'node_modules','venv','.venv','target','build','dist','.git','__pycache__','.idea','.vscode'}
+manifest = { 'root': root, 'files': [], 'counts': {}, 'by_ext': {} }
+for dirpath, dirnames, filenames in os.walk(root):
+    dirnames[:] = [d for d in dirnames if d not in exclude_dirs]
+    for fn in filenames:
+        ext = os.path.splitext(fn)[1].lower()
+        if ext in include_exts:
+            fp = os.path.join(dirpath, fn)
+            rel = os.path.relpath(fp, root)
+            manifest['files'].append(rel)
+            manifest['counts'][ext] = manifest['counts'].get(ext, 0) + 1
+            manifest['by_ext'].setdefault(ext, []).append(rel)
+with open(out, 'w') as f:
+    json.dump(manifest, f, indent=2)
+print(sum(manifest['counts'].values()))
+PY
+    )
+    mkdir -p ./output
+    mv "$MANIFEST_TMP" ./output/file_manifest.json 2>/dev/null || true
+    echo "📄 File manifest written to ./output/file_manifest.json"
+    if [ "${TOTAL_SUPPORTED:-0}" = "0" ]; then
+        echo "❌ No supported files found under $JAVA_SOURCE_DIR"
+        echo "   Please verify JAVA_SOURCE_DIR and includes."
+        exit 1
+    fi
+fi
+
 if [ "$MODE" = "production" ]; then
-    export OLLAMA_MODEL_NAME="deepseek-r1:32b"
-    export OLLAMA_TIMEOUT="300"  # Longer timeout for production
+    # Do not set model here; require via .env or later validation
+    export OLLAMA_TIMEOUT=${OLLAMA_TIMEOUT:-300}
     echo "✅ Environment configured for production mode"
     echo "   AI Provider: $AI_PROVIDER"
     echo "   Rate Limit: $RATE_LIMIT_ENV (More requests, comprehensive analysis)"
@@ -162,8 +247,7 @@ if [ "$MODE" = "production" ]; then
     echo "   Timeout: ${OLLAMA_TIMEOUT}s"
     echo "   Java Source: $JAVA_SOURCE_DIR"
 else
-    export OLLAMA_MODEL_NAME="deepseek-r1:32b" 
-    export OLLAMA_TIMEOUT="180"  # Shorter timeout for test
+    export OLLAMA_TIMEOUT=${OLLAMA_TIMEOUT:-180}
     echo "✅ Environment configured for test mode"
     echo "   AI Provider: $AI_PROVIDER"
     echo "   Rate Limit: $RATE_LIMIT_ENV (Focused requests, targeted analysis)"
@@ -175,36 +259,39 @@ echo ""
 
 # Check Ollama is running
 echo "🔍 Checking Ollama availability..."
-if ! curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
+if ! curl -s "${OLLAMA_BASE_URL%/}/api/tags" > /dev/null 2>&1; then
     echo "❌ Ollama is not running. Please start it with: ollama serve"
     exit 1
 fi
 echo "✅ Ollama is running and accessible"
 
-# Check available models and recommend best one
+# Validate model per .env (no hardcoded choices)
 echo "🤖 Checking available AI models..."
-AVAILABLE_MODELS=$(curl -s http://localhost:11434/api/tags | jq -r '.models[].name' 2>/dev/null || echo "")
+AVAILABLE_MODELS=$(curl -s "${OLLAMA_BASE_URL%/}/api/tags" | jq -r '.models[].name' 2>/dev/null || echo "")
+if [ -z "${OLLAMA_MODEL_NAME:-}" ]; then
+    echo "⚠️  OLLAMA_MODEL_NAME not set in .env."
+    if [ -n "$AVAILABLE_MODELS" ]; then
+        echo "   Available models:"
+        echo "$AVAILABLE_MODELS" | head -10 | sed 's/^/   • /'
+    fi
+    echo "💡 Set OLLAMA_MODEL_NAME in .env to avoid this prompt."
+    read -p "Enter model to use (exact name as listed above): " OLLAMA_MODEL_NAME || true
+    if [ -z "${OLLAMA_MODEL_NAME:-}" ]; then
+        echo "❌ No model specified. Exiting."
+        exit 1
+    fi
+    export OLLAMA_MODEL_NAME
+fi
 
-if echo "$AVAILABLE_MODELS" | grep -qi "deepseek.*r1.*70b"; then
-    export OLLAMA_MODEL_NAME="deepseek-r1:70b"
-    echo "🚀 Using premium model: deepseek-r1:70b (best quality)"
-elif echo "$AVAILABLE_MODELS" | grep -qi "deepseek.*r1.*32b"; then
-    export OLLAMA_MODEL_NAME="deepseek-r1:32b"
-    echo "⭐ Using standard model: deepseek-r1:32b (good quality)"
-elif echo "$AVAILABLE_MODELS" | grep -qi "qwen.*coder.*30b"; then
-    export OLLAMA_MODEL_NAME=$(echo "$AVAILABLE_MODELS" | grep -i "qwen.*coder.*30b" | head -1)
-    echo "📝 Using coding model: $OLLAMA_MODEL_NAME (code-focused)"
-else
-    echo "⚠️  Premium models not found. Available models:"
-    echo "$AVAILABLE_MODELS" | head -5
-    echo ""
-    echo "💡 For best results, install a recommended model:"
-    echo "   ollama pull deepseek-r1:32b"
-    echo "   ollama pull deepseek-r1:70b  # Best quality, requires more RAM"
-    echo ""
-    echo "Continue with available model? (y/N)"
-    read -r model_confirm
-    if [[ ! "$model_confirm" =~ ^[Yy]$ ]]; then
+# Ensure requested model exists
+if [ -n "$AVAILABLE_MODELS" ] && ! echo "$AVAILABLE_MODELS" | grep -Fqx "$OLLAMA_MODEL_NAME"; then
+    echo "⚠️  Requested model '$OLLAMA_MODEL_NAME' not found on Ollama server."
+    echo "   Available models include:"
+    echo "$AVAILABLE_MODELS" | head -10 | sed 's/^/   • /'
+    echo "💡 Pull the model: ollama pull $OLLAMA_MODEL_NAME"
+    echo "Continue anyway? (y/N)"
+    read -r model_missing_confirm
+    if [[ ! "$model_missing_confirm" =~ ^[Yy]$ ]]; then
         exit 1
     fi
 fi
@@ -295,6 +382,9 @@ echo "🎯 STEP 3: ENHANCED WEAVIATE ANALYSIS (STEP 1) - $(echo $MODE | tr '[:lo
 echo "=========================================================="
 
 STEP1_START=$(date +%s)
+# Step timeouts (env-configurable)
+STEP1_TIMEOUT_PROD=${STEP1_TIMEOUT_PROD:-1200}
+STEP1_TIMEOUT_TEST=${STEP1_TIMEOUT_TEST:-600}
 if [ "$MODE" = "production" ]; then
     echo "🏭 Starting Step 1 Enhanced Weaviate Analysis (PRODUCTION MODE)"
     echo "⏱️  Timeout: 20 minutes for comprehensive analysis"
@@ -309,11 +399,11 @@ fi
 (
     echo "=== STEP 1 $MODE LOG - $(date) ===" 
     if [ "$MODE" = "production" ]; then
-        run_with_timeout 1200 "Step1" "./Step1_Enhanced_Weaviate.sh production"
+        run_with_timeout "$STEP1_TIMEOUT_PROD" "Step1" "./Step1_Enhanced_Weaviate.sh production"
     else
-        run_with_timeout 600 "Step1" "./Step1_Enhanced_Weaviate.sh test"
+        run_with_timeout "$STEP1_TIMEOUT_TEST" "Step1" "./Step1_Enhanced_Weaviate.sh test"
     fi
-) 2>&1 | tee "$LOGDIR/step1_$MODE.log"
+) 2>&1 | tee "$LOGDIR/step1_$MODE.log" || true
 
 STEP1_EXIT_CODE=${PIPESTATUS[0]}
 STEP1_TIME=$(($(date +%s) - STEP1_START))
@@ -404,19 +494,19 @@ if [ "$MODE" = "production" ]; then
     echo "🏭 Starting Step 2 Requirements Generation (PRODUCTION MODE)"
     echo "⏱️  Timeout: 15 minutes for comprehensive requirements"
     echo "📊 Expected: Detailed functional requirements, technical specs, business rules"
-    STEP2_TIMEOUT=900
+    STEP2_TIMEOUT=${STEP2_TIMEOUT_PROD:-900}
 else
     echo "🚀 Starting Step 2 Requirements Generation (TEST MODE)"
     echo "⏱️  Timeout: 8 minutes for core requirements"
     echo "📊 Expected: Essential requirements, key technical specs, core rules"
-    STEP2_TIMEOUT=480
+    STEP2_TIMEOUT=${STEP2_TIMEOUT_TEST:-480}
 fi
 
 # Start Step 2 with comprehensive logging using macOS compatible timeout
 (
     echo "=== STEP 2 $MODE LOG - $(date) ==="
     run_with_timeout $STEP2_TIMEOUT "Step2" "./Step2_Enhanced_Weaviate.sh $MODE"
-) 2>&1 | tee "$LOGDIR/step2_$MODE.log"
+) 2>&1 | tee "$LOGDIR/step2_$MODE.log" || true
 
 STEP2_EXIT_CODE=${PIPESTATUS[0]}
 STEP2_TIME=$(($(date +%s) - STEP2_START))
@@ -464,19 +554,19 @@ if [ "$MODE" = "production" ]; then
     echo "🏭 Starting Step 3 Modern Requirements & Modernization (PRODUCTION MODE)"
     echo "⏱️  Timeout: 15 minutes for comprehensive modernization analysis"
     echo "📊 Expected: Cloud architecture, microservices design, migration strategy"
-    STEP3_TIMEOUT=900
+    STEP3_TIMEOUT=${STEP3_TIMEOUT_PROD:-900}
 else
     echo "🚀 Starting Step 3 Modern Requirements & Modernization (TEST MODE)"
     echo "⏱️  Timeout: 8 minutes for essential modernization analysis"
     echo "📊 Expected: Key architecture patterns, core modernization opportunities"
-    STEP3_TIMEOUT=480
+    STEP3_TIMEOUT=${STEP3_TIMEOUT_TEST:-480}
 fi
 
 # Start Step 3 with comprehensive logging using macOS compatible timeout
 (
     echo "=== STEP 3 $MODE LOG - $(date) ==="
     run_with_timeout $STEP3_TIMEOUT "Step3" "./Step3_Enhanced_Weaviate.sh $MODE"
-) 2>&1 | tee "$LOGDIR/step3_$MODE.log"
+) 2>&1 | tee "$LOGDIR/step3_$MODE.log" || true
 
 STEP3_EXIT_CODE=${PIPESTATUS[0]}
 STEP3_TIME=$(($(date +%s) - STEP3_START))

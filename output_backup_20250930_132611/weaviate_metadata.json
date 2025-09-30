@@ -1,0 +1,12 @@
+{
+  "timestamp": "2025-09-30T11:42:25.357300",
+  "processing_time": 2.1094918251037598,
+  "files_processed": 1169,
+  "data_structures_found": 223,
+  "entity_relationships": 0,
+  "requirements_generated": 0,
+  "weaviate_objects_stored": 223,
+  "success": true,
+  "java_root_path": "/Users/thomaskamsker/Documents/Atom/vron.one/playground/java",
+  "output_directory": "output"
+}
