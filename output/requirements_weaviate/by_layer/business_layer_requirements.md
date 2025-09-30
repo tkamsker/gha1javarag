@@ -4,672 +4,908 @@
 ## Business Layer
 
 ## 1. Customer Management
-
 ### Customer Management
+### Customer Account Management
 - Customer Account Management
 - Customer Profile Management
 - Customer Profile Management
 - Account Management
-- Account Management
-- Service Management
-- Service Management
-- Billing Management
-- Support Management
-- Service Management
-- Customer Service
-- Account
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
-- Service
+- Account Creation
+- Account Modification
+- Account Deletion
+- Account Suspension
+- Account Recovery
+- Recovery
+Customer Data Management
+- Profile
+Customer Segmentation
+Customer Segmentation
+Customer
+Customer Lifecycle Management
+Customer Service
+Customer Service
+Customer Service
+Customer Support
+Customer Service
+Customer
+Customer Service
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomer
+Customer
+Customer
+CustomerCustomer
+Customer
+Customer
+CustomerCustomer
+CustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomer
+CustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomer
+CustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomer
+Customer
+Customer
+Customer
+CustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomerCustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomer
+Customer
+Customer
+Customer
+CustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomerCustomer
+Customer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomerCustomer
+Customer
+Customer
+Customer
+Customer
+CustomerCustomer
+CustomerCustomer
+Customer
+Customer
+Customer
+CustomerCustomer
+CustomerCustomer
+Customer
+Customer
+Customer
+CustomerCustomerCustomer
+Customer
+Customer
+CustomerCustomerCustomer
+Customer
+Customer
+CustomerCustomer
+CustomerCustomer
+Customer
+Customer
+CustomerCustomerCustomerCustomer
+Customer
+Customer
+CustomerCustomer
+CustomerCustomer
+Customer
+CustomerCustomerCustomerCustomer
+Customer
+Customer
+CustomerCustomerCustomerCustomerCustomerCustomer
+CustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomerCustomer
