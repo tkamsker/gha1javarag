@@ -1,0 +1,10 @@
+{
+  "success": true,
+  "processing_time": 507.921995,
+  "requirements_count": 38,
+  "documents_generated": 17,
+  "data_structures_analyzed": 34,
+  "entities_processed": 6,
+  "relationships_analyzed": 0,
+  "mode": "test"
+}

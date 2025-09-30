@@ -7,9 +7,12 @@ set -e
 MODE=${1:-"production"}  # Default to production mode
 echo "🚀 Running Enhanced Step 2 (Traditional Requirements) in $MODE mode"
 
-# Load environment variables
+# Load environment variables (safe: supports comments and spaces)
 if [ -f .env ]; then
-    export $(cat .env | grep -v '^#' | xargs)
+    set -a
+    # shellcheck disable=SC1091
+    . ./.env
+    set +a
 fi
 
 export TOKENIZERS_PARALLELISM=false

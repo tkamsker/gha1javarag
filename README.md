@@ -342,3 +342,63 @@ Use the web interface at http://localhost:8000 with the recommended strategies.
 
   The guide is designed to be comprehensive yet practical, providing both quick-start options for experienced users and detailed step-by-step instructions for those new to the Enhanced Weaviate system.
   
+
+  #### 30 Sept 2025
+
+  bash -n /Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag/orchestrate_weaviate_pipeline.sh && /Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag/orchestrate_weaviate_pipeline.sh test | sed -n '1,200p'
+
+
+  bash -n /Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag/Step2_Enhanced_Weaviate.sh && ./orchestrate_weaviate_pipeline.sh test | sed -n '1,200p'
+
+  ./orchestrate_weaviate_pipeline.sh test | sed -n '1,200p'
+
+  ### 30.sep  1600 
+
+  ./orchestrate_weaviate_pipeline.sh production
+
+
+./orchestrate_weaviate_pipeline.sh production | cat
+  
+  🚀 Orchestrating Weaviate pipeline in mode: production
+Root: /Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag
+🧹 Resetting Weaviate Docker state...
+⏹️  Stopping existing 'weaviate' container...
+🗑️  Removing Docker volume 'weaviate_data'...
+▶️  Starting fresh Weaviate container...
+⏳ Waiting for Weaviate to become ready...
+✅ Weaviate is ready
+\n▶️  Step 1: Enhanced Weaviate analysis
+🚀 Starting Enhanced AI-Powered Java Analysis with Weaviate and Data Structure Discovery
+====================================================================================
+AI Provider: ollama
+Output Directory: ./output
+Weaviate Directory: ./data/weaviate
+Rate Limiting Mode: production
+
+✅ Ollama configuration: http://localhost:11434 using model danielsheep/Qwen3-Coder-30B-A3B-Instruct-1M-Unsloth
+
+🧪 Running system validation tests...
+✅ Weaviate is running and accessible
+✅ Ollama is running and accessible
+
+🚀 Orchestrating Weaviate pipeline in mode: production
+Root: /Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag
+🧹 Resetting Weaviate Docker state...
+⏹️  Stopping existing 'weaviate' container...
+🗑️  Removing Docker volume 'weaviate_data'...
+▶️  Starting fresh Weaviate container...
+⏳ Waiting for Weaviate to become ready...
+✅ Weaviate is ready
+\n▶️  Step 1: Enhanced Weaviate analysis
+🚀 Starting Enhanced AI-Powered Java Analysis with Weaviate and Data Structure Discovery
+====================================================================================
+AI Provider: ollama
+Output Directory: ./output
+Weaviate Directory: ./data/weaviate
+Rate Limiting Mode: production
+
+✅ Ollama configuration: http://localhost:11434 using model danielsheep/Qwen3-Coder-30B-A3B-Instruct-1M-Unsloth
+
+🧪 Running system validation tests...
+✅ Weaviate is running and accessible
+✅ Ollama is running and accessible

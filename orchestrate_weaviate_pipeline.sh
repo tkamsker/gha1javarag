@@ -33,6 +33,37 @@ cd "$ROOT_DIR"
 echo "🚀 Orchestrating Weaviate pipeline in mode: $MODE"
 echo "Root: $ROOT_DIR"
 
+# Helper to run a step and stop on failure while printing an error message
+run_step() {
+  local step_name="$1"
+  shift
+  echo "\n▶️  ${step_name}"
+  set +e
+  bash -c "$*"
+  local rc=$?
+  set -e
+  if [ $rc -ne 0 ]; then
+    echo "❌ ${step_name} failed with exit code ${rc}. Aborting subsequent steps."
+    exit $rc
+  fi
+}
+
+# Helper to archive current output directory with a datetime suffix
+archive_output() {
+  local ts
+  ts="$(date +%Y%m%d_%H%M%S)"
+  local src="./output"
+  local dst="output_${ts}"
+  if [ -d "$src" ]; then
+    echo "🗄️  Archiving output to ${dst}"
+    mkdir -p "$dst"
+    # Copy contents preserving attributes
+    cp -a "$src/." "$dst/"
+  else
+    echo "ℹ️  No output directory to archive (${src} not found)"
+  fi
+}
+
 # Ensure Docker is available
 if ! command -v docker >/dev/null 2>&1; then
   echo "❌ Docker is required. Please install and start Docker."
@@ -83,29 +114,31 @@ fi
 export RATE_LIMIT_ENV="$MODE"
 export OUTPUT_DIR="./output"
 
-echo "\n▶️  Step 1: Enhanced Weaviate analysis"
-bash Step1_Enhanced_Weaviate.sh "$MODE"
+run_step "Step 1: Enhanced Weaviate analysis" "./Step1_Enhanced_Weaviate.sh $MODE"
 
-echo "\n▶️  Step 2: Enhanced Weaviate follow-up"
 if [ -x "Step2_Enhanced_Weaviate.sh" ]; then
-  bash Step2_Enhanced_Weaviate.sh "$MODE"
+  run_step "Step 2: Enhanced Weaviate follow-up" "./Step2_Enhanced_Weaviate.sh $MODE"
 else
   echo "ℹ️  Skipping Step2_Enhanced_Weaviate.sh (not found or not executable)"
 fi
 
-echo "\n▶️  Step 3: Weaviate finalization"
 if [ -x "Step3_Enhanced_Weaviate.sh" ]; then
-  bash Step3_Enhanced_Weaviate.sh "$MODE"
+  run_step "Step 3: Weaviate finalization (Enhanced)" "./Step3_Enhanced_Weaviate.sh $MODE"
 elif [ -x "Step3_Weaviate.sh" ]; then
-  bash Step3_Weaviate.sh "$MODE"
+  run_step "Step 3: Weaviate finalization" "./Step3_Weaviate.sh $MODE"
 else
   echo "ℹ️  Skipping Step 3 (script not found or not executable)"
 fi
 
 # If test mode requested, rerun the pipeline in production to validate
 if [ "$MODE" = "test" ]; then
+  # Archive test run outputs before production rerun
+  archive_output
   echo "\n🔁 Test mode complete. Re-running full pipeline in production mode for verification..."
   "$0" production
+else
+  # Archive production run outputs
+  archive_output
 fi
 
 echo "\n🎉 Orchestration completed for mode: $MODE"
