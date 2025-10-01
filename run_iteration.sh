@@ -409,7 +409,7 @@ EOF
 cleanup() {
     print_status "Cleaning up..."
     # Deactivate virtual environment if it was activated
-    if [ -n "$VIRTUAL_ENV" ]; then
+    if [ -n "$VIRTUAL_ENV" ] && [ "$(type -t deactivate)" = "function" ]; then
         deactivate
     fi
 }
@@ -473,6 +473,11 @@ main() {
         echo ""
         ./step2.sh
         echo ""
+        if [ -x "./step3.sh" ]; then
+            print_status "Detected step3.sh; running step 3 synthesis..."
+            ./step3.sh
+            echo ""
+        fi
         # Step 3: Statistics
         show_statistics
         echo ""
@@ -490,26 +495,30 @@ main() {
     else
         # Step 1: Indexing
         if run_indexing; then
-        echo ""
-        # Step 2: Requirements generation
-        if run_requirements; then
             echo ""
-            # Step 3: Statistics
-            show_statistics
-            echo ""
-            # Create summary
-            create_summary
-            echo ""
-            print_success "Iteration completed successfully!"
-            print_success "Output saved to: $OUTPUT_DIR"
-            echo ""
-            echo "To query the indexed data, run:"
-            echo "  python -m src.cli query"
-            echo ""
-            echo "To view statistics, run:"
-            echo "  python -m src.cli stats"
+            # Step 2: Requirements generation
+            if run_requirements; then
+                echo ""
+                # Step 3: Statistics
+                show_statistics
+                echo ""
+                # Create summary
+                create_summary
+                echo ""
+                print_success "Iteration completed successfully!"
+                print_success "Output saved to: $OUTPUT_DIR"
+                echo ""
+                echo "To query the indexed data, run:"
+                echo "  python -m src.cli query"
+                echo ""
+                echo "To view statistics, run:"
+                echo "  python -m src.cli stats"
+            else
+                print_error "Requirements generation failed - iteration incomplete"
+                exit 1
+            fi
         else
-            print_error "Requirements generation failed - iteration incomplete"
+            print_error "Indexing failed - iteration aborted"
             exit 1
         fi
     fi

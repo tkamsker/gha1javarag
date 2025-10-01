@@ -16,6 +16,8 @@ from .metadata import MetadataExtractor
 from .weaviate_client import WeaviateClient
 from .reporting import ReportingManager
 from .metadata_classification import classify_file
+from .llm_client import LLMClient
+from .prompts import prompt_for_file
 
 
 def setup_logging(level: str, verbose: bool):
@@ -122,8 +124,9 @@ def index(ctx):
 
 @cli.command(name='analyze')
 @click.option('--no-upsert', is_flag=True, default=False, help='Skip Weaviate upserts; export consolidated JSON only')
+@click.option('--llm-enrich', is_flag=True, default=True, help='Use LLM prompts to enrich per-file metadata')
 @click.pass_context
-def analyze(ctx, no_upsert: bool):
+def analyze(ctx, no_upsert: bool, llm_enrich: bool):
     """Step 1 per iteration10.md: analyze codebase, export consolidated JSON; Weaviate optional."""
     config = ctx.obj['config']
     logger = logging.getLogger(__name__)
@@ -135,6 +138,9 @@ def analyze(ctx, no_upsert: bool):
         logger.info(f"Found {len(projects)} projects")
 
         reporting = ReportingManager(config)
+        llm: LLMClient | None = None
+        if llm_enrich:
+            llm = LLMClient(config)
 
         # Build catalogs
         catalog = discovery.create_project_catalog(projects)
@@ -156,7 +162,11 @@ def analyze(ctx, no_upsert: bool):
                 'path': project.path,
                 'total_files': project.total_files,
                 'total_size_bytes': project.total_size,
-                'file_list': []
+                'file_list': [],
+                'hierarchy': {
+                    'repository': project.name,
+                    'modules': []
+                }
             }
 
             # If upserting, process and upsert similar to index path
@@ -166,6 +176,8 @@ def analyze(ctx, no_upsert: bool):
             total_files += project.total_files
 
             # Enrich JSON for each file
+            # Build a naive module grouping by top-level package/dir
+            module_map = {}
             for f in project.files:
                 try:
                     content = ""
@@ -175,8 +187,16 @@ def analyze(ctx, no_upsert: bool):
                 except Exception:
                     content = ""
 
+                # Heuristic classifier first
                 enhanced = classify_file(f.relative_path, f.language, content)
-                projects_map[project.name]['file_list'].append({
+
+                # LLM enrichment per iteration10 prompts
+                llm_meta = {}
+                if llm is not None:
+                    p = prompt_for_file(f.language, project.name, f.relative_path, content)
+                    llm_meta = llm.complete_json(p['user'], system=p['system'], max_tokens=1800) or {}
+
+                file_record = {
                     'path': f.relative_path,
                     'language': f.language,
                     'size_bytes': f.size_bytes,
@@ -185,11 +205,35 @@ def analyze(ctx, no_upsert: bool):
                     'enhanced_ai_analysis': {
                         'file_classification': enhanced,
                         'purpose': enhanced.get('primary_purpose', 'Source file')
-                    }
+                    },
+                    'llm_metadata': llm_meta
+                }
+                projects_map[project.name]['file_list'].append(file_record)
+
+                # Module key by first directory segment
+                module_key = (f.relative_path.split('/')[:1] or ['root'])[0]
+                module_map.setdefault(module_key, []).append(file_record)
+
+            # Emit hierarchy modules with file lists
+            for module_name, files_list in module_map.items():
+                projects_map[project.name]['hierarchy']['modules'].append({
+                    'name': module_name,
+                    'files': [fl['path'] for fl in files_list]
                 })
 
         # Write consolidated JSON for Step 2
         reporting.write_consolidated_metadata(catalog, projects_map)
+
+        # Also write intermediate hierarchical JSON for Step 3
+        intermediate = {
+            'generation': 'step2_intermediate',
+            'projects': projects_map,
+        }
+        from pathlib import Path
+        inter_path = Path(config.output_dir) / 'intermediate_step2.json'
+        import json
+        with open(inter_path, 'w', encoding='utf-8') as fh:
+            json.dump(intermediate, fh, indent=2)
 
         # Final processing report
         reporting.generate_final_report(total_files, total_chunks)
@@ -202,6 +246,55 @@ def analyze(ctx, no_upsert: bool):
     finally:
         if 'weaviate_client' in locals() and weaviate_client is not None:
             weaviate_client.close()
+
+
+@cli.command()
+@click.pass_context
+def step3(ctx):
+    """Generate LLM+Weaviate-driven requirements (Step 3)."""
+    config = ctx.obj['config']
+    logger = logging.getLogger(__name__)
+
+    try:
+        llm = LLMClient(config)
+        reporting = ReportingManager(config)
+        wv = WeaviateClient(config)
+
+        # Load intermediate JSON
+        from pathlib import Path
+        import json
+        inter_path = Path(config.output_dir) / 'intermediate_step2.json'
+        if not inter_path.exists():
+            logger.warning("intermediate_step2.json not found; falling back to consolidated metadata")
+            inter_path = Path(config.output_dir) / 'consolidated_metadata.json'
+        data = {}
+        if inter_path.exists():
+            with open(inter_path, 'r', encoding='utf-8') as fh:
+                data = json.load(fh)
+
+        # For each project, synthesize a brief requirements overview using LLM and Weaviate stats
+        projects = data.get('projects') or {}
+        for name, proj in projects.items():
+            stats = wv.get_all_collection_stats()
+            prompt = (
+                f"Synthesize concise requirements overview for project {name}. "
+                f"Use provided file metadata, component types, and flags. "
+                f"Weaviate stats: {stats}. Return a markdown outline only.\n\n"
+                f"Project data (truncated):\n" + json.dumps({k: proj[k] for k in ['name', 'path', 'total_files'] if k in proj})
+            )
+            md = llm._complete_text(prompt, system="You create clean requirement outlines.", max_tokens=1200)
+            # Append to master requirements
+            master = reporting.requirements_dir / '_step3_overview.md'
+            with open(master, 'a', encoding='utf-8') as f:
+                f.write(f"\n\n# Project: {name}\n\n")
+                f.write(md)
+
+        wv.close()
+        logger.info("Step 3 synthesis completed")
+
+    except Exception as e:
+        logger.error(f"Error in step3: {e}")
+        sys.exit(1)
 
 @cli.command()
 @click.pass_context
