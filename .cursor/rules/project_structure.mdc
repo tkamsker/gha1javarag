@@ -1,0 +1,20 @@
+# Project Structure Rules
+
+## Package Layout
+- Follow the recommended structure from iteration15-2.md
+- Use `src/` as the main package directory
+- Separate parsers into individual modules by file type
+- Keep CLI and main execution scripts in `src/`
+- Place tests in `tests/` with unit/integration/golden subdirectories
+
+## File Naming
+- Use snake_case for Python files
+- Use descriptive names that match functionality
+- Parser files should be named by target file type (java_parser.py, jsp_parser.py, etc.)
+- CLI module should be `cli.py`
+- Main execution scripts in `scripts/` directory
+
+## Import Organization
+- Group imports: standard library, third-party, local imports
+- Use absolute imports within the package
+- Keep imports at the top of files

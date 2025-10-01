@@ -1,0 +1,51 @@
+{
+  "processing_summary": {
+    "start_time": "2025-10-01T14:24:35.112506",
+    "end_time": "2025-10-01T14:25:30.726451",
+    "duration_seconds": 55.613945,
+    "total_files_processed": 5336,
+    "total_chunks_created": 0,
+    "successful_files": 5336,
+    "failed_files": 0,
+    "success_rate": 100.0
+  },
+  "configuration": {
+    "java_source_dir": "/Users/thomaskamsker/Documents/Atom/vron.one/playground/java",
+    "output_dir": "./output_20251001_142433",
+    "weaviate_url": "http://localhost:8080",
+    "embedding_provider": "weaviate_ollama",
+    "ai_provider": "ollama",
+    "max_file_bytes": 2000000,
+    "include_file_types": [
+      ".java",
+      ".jsp",
+      ".tsp",
+      ".xml",
+      ".html",
+      ".js",
+      ".sql",
+      ".properties",
+      ".json",
+      ".md",
+      ".css",
+      ".ui.xml",
+      ".gwt.xml"
+    ],
+    "exclude_dirs": [
+      ".git",
+      "node_modules",
+      "build",
+      "out",
+      "target",
+      "dist",
+      ".idea",
+      ".vscode",
+      ".gradle"
+    ]
+  },
+  "performance_metrics": {
+    "files_per_second": 95.94715857686413,
+    "chunks_per_second": 0.0,
+    "average_chunks_per_file": 0.0
+  }
+}

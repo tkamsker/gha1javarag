@@ -1,0 +1,27 @@
+# Requirements Generation Rules
+
+## Template Structure
+- Use the exact template from iteration15-2.md for each section
+- Generate separate requirements docs for each architectural layer
+- Group by: Database, Backend, Presentation/UI
+- Create per-project requirements in OUTPUT_DIR/requirements/{project}/
+- Generate master requirements file at OUTPUT_DIR/requirements/_master.md
+
+## Content Organization
+- Overview: Brief purpose within the application
+- Components: List of classes/files/directories
+- Functionality: Main features, inputs/outputs, key methods
+- Dependencies: Other sections or external systems
+- Notes: Legacy code, known issues, business rule nuances
+
+## Cross-Linking
+- Link dependencies between architectural layers
+- Reference related components and files
+- Include modernization hints where applicable
+- Maintain traceability from code to requirements
+
+## Output Format
+- Use Markdown format for all requirements documents
+- Include clear section headers and bullet points
+- Use consistent formatting across all generated docs
+- Include project context and file references
