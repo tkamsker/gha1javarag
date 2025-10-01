@@ -465,8 +465,31 @@ main() {
     print_status "Starting complete iteration..."
     echo ""
     
-    # Step 1: Indexing
-    if run_indexing; then
+    # If step scripts exist, prefer two-step flow, else legacy functions
+    if [ -x "./step1.sh" ] && [ -x "./step2.sh" ]; then
+        print_status "Detected step1.sh and step2.sh; running two-step workflow..."
+        echo ""
+        ./step1.sh
+        echo ""
+        ./step2.sh
+        echo ""
+        # Step 3: Statistics
+        show_statistics
+        echo ""
+        # Create summary
+        create_summary
+        echo ""
+        print_success "Iteration completed successfully!"
+        print_success "Output saved to: $OUTPUT_DIR"
+        echo ""
+        echo "To query the indexed data, run:"
+        echo "  python -m src.cli query"
+        echo ""
+        echo "To view statistics, run:"
+        echo "  python -m src.cli stats"
+    else
+        # Step 1: Indexing
+        if run_indexing; then
         echo ""
         # Step 2: Requirements generation
         if run_requirements; then
@@ -489,9 +512,6 @@ main() {
             print_error "Requirements generation failed - iteration incomplete"
             exit 1
         fi
-    else
-        print_error "Indexing failed - iteration aborted"
-        exit 1
     fi
 }
 

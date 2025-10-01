@@ -1,0 +1,1067 @@
+# __root__ - Backend Layer Requirements
+
+## 1. Overview
+
+Brief purpose within the application for the backend layer.
+
+## 2. Components
+
+### Component Type: dao
+
+- cuco-core/src/test/java/at/a1ta/cuco/core/dao/esb/EsbBrianDaoBeanConverterTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/dao/esb/AbstractParametrizedESBDaoTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/dao/esb/CustomerInventoryTest.java (java) domain:customer
+- cuco-core/src/test/java/at/a1ta/cuco/core/dao/esb/EsbBrianDaoTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/dao/esb/ITestDefaultPartnerCenterLandingPageDao.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/dao/esb/ITestProductBrowser.java (java) domain:product
+- cuco-core/src/test/java/at/a1ta/cuco/core/dao/util/PhoneNumberParserTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/dao/cusco/impl/HttpPostCusCoDaoTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/dao/solr/SolrPartyQueryHelperTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/dao/db/impl/SalesInfoDaoImplTest.java (java) domain:sales
+- cuco-core/src/test/java/at/a1ta/cuco/core/dao/db/impl/MyNotesDaoImplTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/dao/db/impl/CustomerUnlockRequestDaoImplTest.java (java) [db] domain:customer
+
+### Component Type: database_script
+
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_ESB_ACCESS_PARAMETERS.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/ROLLOUT/075_create_del_old_data_job.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/ROLLOUT/094_insert_app_esb_xxx.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/ROLLOUT/080_create_main_alert_job.sql (sql)
+- cuco.dbmaintain/sql/repeat/cronjobs/@custc_cronjobs_#prod.sql (sql) [db]
+- cuco.dbmaintain/sql/repeat/cronjobs/@custc_cronjobs_#dev.sql (sql) [db]
+- cuco.dbmaintain/sql/repeat/cronjobs/@custc_cronjobs_#int.sql (sql) [db]
+- cuco.dbmaintain/sql/repeat/esb/@custc_esb_assignments_#int.sql (sql) [db]
+- cuco.dbmaintain/sql/repeat/esb/@custc_esb_assignments_#dev.sql (sql) [db]
+- cuco.dbmaintain/sql/repeat/esb/@custc_esb_assignments_#e2e.sql (sql) [db]
+- cuco.dbmaintain/sql/repeat/esb/@custc_esb_assignments_#prod.sql (sql) [db]
+- cuco.dbmaintain/sql/11/65_CuCo_V21.09/06_@custc_esb_asmp_environment.sql (sql) [db]
+- cuco.dbmaintain/sql/09/07_CuCo_V4.1.0/01_@custc_cct_sequenceResetJob.sql (sql) [db]
+
+### Component Type: dto
+
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/dto/RTCodeModel.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/dto/RpcStatus.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/dto/ApplicationInitData.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/shared/dto/IndexationStatusTest.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/LinksPortlet.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/ProductOfferingTypeHandler.java (java) [db] domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/AttributeHistory.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/ContactPerson.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/Message.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/Granularity.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/GamificationRequest.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/AggregatedInventoryProductGroupUsage.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/BillingCycleEntry.java (java) domain:billing
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/InventoryProductGroupAssignable.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/NotesFilter.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/CreditType.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/SingleTurnaround.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/Salesstage.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/Party.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/LocationPlaceholder.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/Tupel.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/Team.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/Image.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/MyOpportunity.java (java) domain:opportunity
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/StandardAddress.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/SalesConvEmailData.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/PointOfSaleInfo.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/PhoneNumberStructure.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/Product.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/EsbParty.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/BANCollection.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/MobileChurnLikeliness.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/Customer.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/IndexationStatus.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/Inventory.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/Segment.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/Invoice.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/Auth.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/BillingAccountNumber.java (java) [db] domain:billing
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/ToDoNotesFilter.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/ContractOwnerAssignment.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/PartyCustomerLoyaltyInfo.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/PartyProfileNPSInfo.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/Category.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/ClearingAccount.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/SelectedProductOffering.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/InsuranceBrokerInfo.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/CustomerFilter.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/ProductGroup.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/CustomerBlock.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/SearchResultComparator.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/PartySearch.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/PartyAdditionalInfo.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/PartyDeclarationOfConsentInfo.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/OverviewStatus.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/VipExport.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/BindingsFilter.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/ProductDetailFilter.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/CucoLogs.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/ProductFeasibilityStatus.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/UIText.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/InsuranceBrokerContractInfo.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/InventoryProductGroupAssignation.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/CrmAuthenticationInfo.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/ProductOffering.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/AccessToken.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/BusinessOffer.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/InventoryProductGroupUsage.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/UnknownAreaCode.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/Turnover.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/Person.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/PartyProfileInfo.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/ReadOnlyStatusBasedOnCategory.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/GamificationMessageComparator.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/MatrixPosition.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/GamificationData.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/GamificationResponse.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/ChargingType.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/PartyProfileSolvency.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/InventoryProductGroup.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/PartySummaryPrintModel.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/UserInfoStatistics.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/SupportingUnit.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/CMBuddyLogin.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/MyFlashInfo.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/VipStatus.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/ProductLevel.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/FlashInfo.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/Recipient.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/VIPHistoryEntry.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/PartnerCenterAccessTokenRequest.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/RTCode.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/GamificationCuCoMessages.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/CustomerBinding.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/Attribute.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/MatrixData.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/FlashInfoBase.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/KumsCustomerInfo.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/PayableTicket.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/SimplePage.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/CuCoGamificationLoginMessage.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/UserAdminSegment.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/ImageSize.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/ProductHierarchy.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/CrmAuthenticationPasswordInfo.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/CustomerInteractionAttributes.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/BillingCycle.java (java) domain:billing
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/UserShopAssignment.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/PhoneNumber.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/GamificationMessage.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/OpportunityFilter.java (java) domain:opportunity
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/UserShopAssignmentLogLine.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/AccessTokenRequest.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/ProductFeasibility.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/freeunits/FreeUnits.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/freeunits/FreeUnitsData.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/freeunits/FreeUnitsResult.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/access/ContextAwareCustomerUnlockRequest.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/access/UnlockRequestContext.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/access/UnlockStateEnum.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/usagedata/DateValueBean.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/usagedata/UsageDetail.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/usagedata/AonProduct.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/usagedata/Product.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/usagedata/MobileUsage.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/usagedata/NetworkProvider.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/usagedata/ProductType.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/usagedata/InetUsage.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/usagedata/VoiceUsage.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/usagedata/ProductNode.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/usagedata/ProductChartRequest.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/usagedata/ProductRootNode.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/nbo/VBMProductDetails.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/nbo/VBMProductFeedback.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/nbo/VBMProduct.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/nbo/VBMDeclineReason.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/tariff/TariffSimulationContainer.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/tariff/Price.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/tariff/TariffLists.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/tariff/TariffSimulation.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/tariff/Tariff.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/tariff/TariffCharacteristic.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/tariff/ContributionMargin.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/tariff/TariffSimulationRequest.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/mobilpoints/MobilPointsBundle.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/mobilpoints/BusinessHardwareReplacement.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/mobilpoints/MobilPoints.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/chart/ChartData.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/chart/ChartDataSet.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/chart/Chart.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/chart/ChartOptions.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/chart/ChartMetaData.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/chart/ChartColor.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/marketingproduct/ProductMoveAction.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/marketingproduct/MarketingProductGroup.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/DefaultProductNode.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/NodeHelper.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/ProductHeaderNode.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/SubscriptionHeaderNode.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/SAPSubscriptionNode.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/Node.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/CuCoComponentProductPrice.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/CCTSupervisorSelect.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/Promotion.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/PhysicalResourceNode.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/PartyNode.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/DefaultSubscriptionType.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/AccountAware.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/CallNumber.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/DefaultSubscriptionNode.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/BillableUser.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/BaseNode.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/Coordinates.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/LastMileId.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/GetPartySummaryResponse.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/SAPProductNode.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/MetaData.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/CuCoProductPriceBase.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/CuCoProdPriceCharge.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/CCTClearanceStage.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/EmptyProductNode.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/AccountNode.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/ProductTree.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/GeoCallNumber.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/Location.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/SAPPhysicalResourceNode.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/BRKAccountInfo.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/CuCoProdPriceAlterations.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/CCTOrgStructureElement.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/LocationNode.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/AsyncPlaceholderNode.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/CuCoPrice.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/CCTAuthorizedQuoteApproversForLevel.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/MetaDataEntryType.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/SubscriptionTree.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/AutoVvlInfo.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/SubscriptionNode.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/MetaDataEntry.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/product/PartySummaryItem.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/customerequipment/Equipment.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/customerequipment/EquipmentTree.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/customerequipment/EquipmentAttribute.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/customerequipment/EquipmentSum.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/customerequipment/EquipmentConsignee.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/customerequipment/DummyEquipmentConsignee.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/HistoryNote.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/VisitReportSuccessorExistsException.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/FeedbackQuestionsRow.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/SimpleNote.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/SalesInfoNote.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/AppointmentNote.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/SalesConvProductNoteRow.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/SalesInfoNoteHistoryModificationType.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/SbsNoteReportRow.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/SalesInfoNoteHistory.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/Task.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/SalesConvNoteReportRow.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/CompetitorNote.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/SalesInfoOverviewRow.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/ToDoGroupNote.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/SmartHomeNew.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/SecurityOld.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/InternetSpeedNew.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/MobileTariff.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/MobileTariffNew.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/SecurityBase.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/MobileTariffBase.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/InternetSpeedOld.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/Payment.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/SecurityNew.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/SmartHomeOld.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/MobilePhoneBase.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/InternetSpeedMainUseType.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/Household.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/TV.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/MusicSpeakerType.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/MobileTariffOld.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/SummaryItem.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/MobilePhoneMainUseType.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/InternetSpeedType.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/InternetSpeed.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/DigitalSellingNote.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/MusicApp.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/TVOld.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/Security.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/InternetType.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/InternetSpeedBase.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/MobilePhoneOld.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/PaymentOld.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/MobilePhone.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/SmartHome.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/TVType.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/TVNew.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/TVBase.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/SmartHomeBase.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/HouseholdType.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/MobileTariffMainUseType.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/MobilePhoneNew.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/PaymentNew.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/Music.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/sbs/Country.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/sbs/SetupType.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/sbs/HandlingAssigneeType.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/sbs/SBSOrgUnit.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/sbs/CommunicationType.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/sbs/ContactSource.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/sbs/SBSProductNote.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/sbs/SBSProduct.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/sbs/SetupCategory.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/sbs/SBSNote.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/sbs/QuoteStatus.java (java) domain:quote
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/sbs/ContactType.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/sbs/VisitReportDetail.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/sbs/CommunicationChannel.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/generic/GenericNote.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/generic/FileAttachment.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/salesconvnote/SalesConvNote.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/salesconvnote/TeamEmailAdminGroup.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/salesconvnote/ProductHistoryItem.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/salesconvnote/ContactType.java (java) domain:sales
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/testdtos/MobileSubscriptionCategory.java (java)
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/testdtos/FixedLineTelephoneSet.java (java)
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/testdtos/MobileSubscription.java (java)
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/testdtos/FixedLineTelephoneSetConfiguration.java (java)
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/shared/dto/TariffSocMappings.java (java)
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/shared/dto/CctAttributeList.java (java)
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/shared/dto/Totals.java (java)
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/shared/dto/ProductInstance.java (java) domain:product
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/shared/dto/ApproverUserInfo.java (java)
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/shared/dto/POVHistory.java (java)
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/shared/dto/POV.java (java)
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/shared/dto/CctAttribute.java (java)
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/shared/dto/Quote.java (java) domain:quote
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/shared/dto/Copyable.java (java)
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/shared/dto/QuoteForFlash.java (java) domain:quote
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/shared/dto/Opportunity.java (java) domain:opportunity
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/shared/dto/SalesInformation.java (java) domain:sales
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/shared/dto/Priceable.java (java)
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/shared/dto/CCTClearanceRule.java (java)
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/shared/dto/Role.java (java)
+
+### Component Type: repository
+
+- cuco-core/src/test/java/at/a1ta/cuco/core/dao/solr/SolrPartyRepositoryWithPhoneNumbersTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/dao/solr/SolrPartyRepositoryTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/dao/solr/AbstractSolrRepositoryTest.java (java)
+
+### Component Type: service_layer
+
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/ui/ServiceImageRenderer.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/GwtSelectServiceDialog.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/GwtEditServiceDialog.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditServiceDialog.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/SelectServiceDialog.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/ServicePortlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/GwtServicePortlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/widget/TeamServicePanel.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/widget/TeamServiceManagementPanel.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/SettingsServiceLocator.java (java) [consumes_api, db]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/ChargingTypeServlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/ReportingServlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/ReportingException.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/ChargingTypeServletAsync.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/IbatisServletAsync.java (java) [consumes_api, db]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/IbatisServlet.java (java) [consumes_api, db]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/CreditTypeServletAsync.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/TeamServletAsync.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/TeamServlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/ReportingServletAsync.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/CreditTypeServlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/AuthServlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/AuthServletAsync.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/server/ServiceServletImpl.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/dto/ServiceModel.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/service/UnknownAreaCodeServlet.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/service/SystemTrackingServlet.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/service/CCTOrgStructureElementServlet.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/service/CommonServiceLocator.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/service/VIPHistoryServlet.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/service/VIPHistoryServletAsync.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/service/UserShopAssignmentServlet.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/service/UserShopAssignmentServletAsync.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/service/UserRoleServlet.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/service/UnknownAreaCodeServletAsync.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/service/SystemTrackingServletAsync.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/service/ServiceServletAsync.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/service/ServiceServlet.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/service/UserRoleServletAsync.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/service/CCTOrgStructureElementServletAsync.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/event/AddServicesEvent.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/event/RemoveServicesEvent.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ServiceProxy.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/command/RPCService.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/command/RPCServiceAsync.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/service/ServiceLocator.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/service/ApplicationInitDataServletAsync.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/service/SystemMessageServletAsync.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/service/ApplicationInitDataServlet.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/service/SystemMessageServlet.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/dao/esb/ITestESBLocationService.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/dao/esb/ITestESBPartyService.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/FlashInfoServiceTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/InvoiceServiceTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/CustomerAssignmentServiceTest.java (java) domain:customer
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/impl/IMailServiceTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/impl/AccessTokenServiceImplTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/impl/UnknownAreaCodeServiceImplTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/impl/KumsCustomerServiceImplTest.java (java) domain:customer
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/impl/CustomerUnlockServiceImplTest.java (java) domain:customer
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/impl/PayableTicketServiceImplTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/impl/IAutoVvlServiceImplTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/impl/GamificationHttpServiceImplTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/impl/ProductBrowserServiceImplTest.java (java) domain:product
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/impl/BillingCycleServiceImplTest.java (java) domain:billing
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/impl/CustomerInteractionServiceImplTest.java (java) domain:customer
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/impl/LocationServiceImplTests.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/impl/ClearingAccountServiceImplTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/impl/ContactPersonServiceImplTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/impl/PartyServiceTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/impl/IAttributeServiceImplTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/visitreport/VisitReportServiceImplTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/customerequipment/CustomerEquipmentHelperTest.java (java) domain:customer
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/report/ITestUserActionStatistics.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/report/DepartmentActionStatisticsTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/report/UserActionStatisticsTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/report/UserActionStatisticsTestBase.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/cron/DataTheftRapidAlertJobTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/service/cron/IKumsSkzShopSynchronizationJobTest.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/ServiceClassInfo.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/Service.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/ServicesOld.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/ServicesNew.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/ServicesBase.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/dto/salesinfo/visitreport/digitalselling/Services.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/VIPHistoryService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/ProductBrowserService.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/CustomerInteractionService.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/CustomerEquipmentService.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/UserShopAssignmentService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/BillingCycleService.java (java) domain:billing
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/PartyProfileService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/CustomerUnlockService.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/KUMSCommonService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/VBMProductsService.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/CucoLogsService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/AttributeService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/CdPersonService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/DuposMobileSignatureService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/CrmAuthenticationService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/PartySearchValueFormatHelper.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/ProductAdminService.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/POSService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/UnknownAreaCodeService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/FreeUnitService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/LinksPortletService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/UITextsEditorService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/EsbPartyService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/GamificationLocalService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/ImageSizeService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/KumsCustomerService.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/SalesInfoService.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/SettingsEditorService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/CustomerBlockService.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/FlashInfoService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/ChargingTypeService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/ReportingService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/UserInfoStatisticsService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/CCTOrgStructureElementService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/ContactPersonService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/CuCoGamificationPlainWebsocketEndPoint.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/MarketplaceInventoryService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/LocationService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/InvoiceService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/TurnoverService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/CreditTypeService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/InsuranceBrokerCpiService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/PhoneNumberService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/UsageDataService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/PartyDeclarationOfConsentService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/PartyCustomerLoyaltyService.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/AccessTokenService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/ServiceService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/AutoVvlService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/PayableTicketService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/PromotionService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/InsuranceBrokerHsiService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/ImageService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/MasterSessionControlService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/MobilPointsService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/CMBuddyHttpService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/CuscoUnlockService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/PartyService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/GamificationHttpService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/BrkServiceClient.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/TeamService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/ClearingAccountService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/PayableTicketServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/ContactPersonServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/KumsCustomerServiceImpl.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/MobilPointsServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/ImageServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/NoteMailHelper.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/MasterSessionControlServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/BusinessHardwareReplacementCallable.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/UITextsEditorServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/PhoneNumberServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/PartyDeclarationOfConsentServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/SettingsEditorServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/CdPersonServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/TeamServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/ReportingServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/CustomerInteractionServiceImpl.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/VIPHistoryServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/MobilPointsCallable.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/ImageSizeServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/LocationServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/BillingCycleServiceImpl.java (java) domain:billing
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/CustomerUnlockServiceImpl.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/ChargingTypeServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/LinksPortletServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/PartyCustomerLoyaltyServiceImpl.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/KUMSCommonServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/MailService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/CustomerBlockServiceImpl.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/CCTOrgStructureElementServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/ProductAdminServiceImpl.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/SalesInfoServiceImpl.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/CreditTypeServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/ServiceServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/FlashInfoServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/KumsAccountService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/UsageDataServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/UserShopAssignmentServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/CustomerAssignmentService.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/PartyProfileServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/BrkServiceClientImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/ClearingAccountServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/CrmAuthenticationServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/GamificationHttpServiceImpl.java (java) [consumes_api]
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/GamificationLocalServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/CMBuddyHttpServiceImpl.java (java) [consumes_api]
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/VBMProductsServiceImpl.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/FreeUnitServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/AccessTokenServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/InvoiceServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/EsbPartyServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/DuposMobileSignatureServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/UnknownAreaCodeServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/AutoVvlServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/InsuranceBrokerHsiServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/UserInfoStatisticsServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/POSServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/AttributeServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/TurnoverServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/PartyServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/InsuranceBrokerCpiServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/CuscoUnlockServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/MarketplaceInventoryServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/impl/CucoLogsServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/visitreport/VisitReportPrintService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/visitreport/VisitReportServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/visitreport/DigitalSellingNotePrintModel.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/visitreport/VisitReportService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/util/JasperUtil.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/util/ImageUtil.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/util/ReportUtil.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/customerequipment/CustomerEquipmentHelper.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/customerequipment/CustomerEquipmentServiceImpl.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/customerequipment/CustomerEquipmentExcelHelper.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/customerequipment/CustomerEquipmentTranslator.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/customerequipment/PartySummaryServiceImpl.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/customerequipment/PromotionServiceImpl.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/customerequipment/ProductBrowserServiceImpl.java (java) domain:product
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/customerequipment/MetaDataHelper.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/customerequipment/PartySummaryService.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/mycuco/MyNotesServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/mycuco/MyNotesService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/mycuco/MyCustomersServiceImpl.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/mycuco/MyBindingsService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/mycuco/MyToDoNotesServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/mycuco/MyToDoNotesService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/mycuco/MyFlashInfosService.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/mycuco/MyQuoteServiceImpl.java (java) domain:quote
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/mycuco/MyCustomersService.java (java) domain:customer
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/mycuco/MyBindingsServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/mycuco/MyFlashInfosServiceImpl.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/mycuco/MyQuoteService.java (java) domain:quote
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/report/UserActionStatistics.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/report/DepartmentActionStatistics.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/report/ActionStatisticBase.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/cron/DataTheftRapidAlertJob.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/cron/PhoneNumberCacheJob.java (java) [db]
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/cron/LDAPSynchronizationJob.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/cron/SalesInfoReminderMailJob.java (java) domain:sales
+- cuco-core/src/main/java/at/a1ta/cuco/core/service/cron/KumsSkzShopSynchronizationJob.java (java)
+- cuco-ui-admin/src/test/java/at/a1ta/cuco/test/AsyncServiceCaller.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/popup/DeviceAsAServiceSurchargeDialog.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/DeviceAsAServiceProductsPresenter.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/DeviceAsAServiceAdditionalProductsPresenter.java (java) domain:product
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/service/impl/XsltTest.java (java)
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/service/impl/QuoteServiceImplTest.java (java) domain:quote
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/service/impl/IQuoteDaoTest.java (java) domain:quote
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/service/impl/DefaultConfigParserTest.java (java)
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/service/impl/ICuscoServiceImplTest.java (java)
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/service/impl/IOpportunityServiceImplTest.java (java) domain:opportunity
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/service/impl/IQuoteServiceImplTest.java (java) domain:quote
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/service/impl/ICuscoCustomerContactServiceImplTest.java (java) domain:customer
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/service/QuoteFlashInfoService.java (java) domain:quote
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/service/QuoteClearanceService.java (java) domain:quote
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/service/QuoteService.java (java) domain:quote
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/service/OpportunityService.java (java) domain:opportunity
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/service/impl/OpportunityServiceImpl.java (java) domain:opportunity
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/service/impl/QuoteClearanceServiceImpl.java (java) domain:quote
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/service/impl/QuoteFlashInfoServiceImpl.java (java) domain:quote
+- cuco-cct-core/src/main/java/at/a1ta/cuco/cct/service/impl/QuoteServiceImpl.java (java) domain:quote
+
+### Component Type: servlet
+
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/AuthServletImpl.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/PastExportServlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/UploadFileServlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/IbatisServletImpl.java (java) [consumes_api, db]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/CreditTypeServletImpl.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/ReportingServletImpl.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/TeamServletImpl.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/ChargingTypeServletImpl.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/FileContentServlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/server/UsageStatisticsServlet.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/server/CCTOrgStructureElementUploadServlet.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/server/UserRoleServletImpl.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/server/SystemTrackingServletImpl.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/server/UserShopAssignmentUploadServlet.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/server/UnknownAreaCodeServletImpl.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/server/UserShopAssignmentServletImpl.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/server/CCTOrgStructureElementServletImpl.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/server/VIPHistoryServletImpl.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/server/UserShopAssignmentDownloadServlet.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/server/RPCServletImpl.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/server/ApplicationInitDataServletImpl.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/server/SystemMessageServletImpl.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/server/servlet/QuoteFlashInfoServletImpl.java (java) domain:quote
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/server/servlet/ProductOverviewConfigurationServletImpl.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/server/servlet/FlashInfoServletImpl.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/server/servlet/UserAdminSegmentServletImpl.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/server/servlet/ProductAdminServletImpl.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/server/servlet/SalesInfoServletImpl.java (java) domain:sales
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/server/servlet/SettingsEditorServletImpl.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/server/servlet/UITextsEditorServletImpl.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/servlet/ProductAdminServlet.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/servlet/ProductAdminServletAsync.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/servlet/UITextsEditorServlet.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/servlet/SalesInfoServlet.java (java) domain:sales
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/servlet/FlashInfoServlet.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/servlet/SettingsEditorServlet.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/servlet/ProductOverviewConfigurationServletAsync.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/servlet/QuoteFlashInfoServlet.java (java) domain:quote
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/servlet/QuoteFlashInfoServletAsync.java (java) domain:quote
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/servlet/ProductOverviewConfigurationServlet.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/servlet/FlashInfoServletAsync.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/servlet/UserAdminSegmentServletAsync.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/servlet/UserAdminSegmentServlet.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/servlet/UITextsEditorServletAsync.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/servlet/SalesInfoServletAsync.java (java) domain:sales
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/servlet/SettingsEditorServletAsync.java (java)
+
+### Component Type: unknown
+
+- cuco/src/main/java/at/a1ta/cuco/cacheControl/GWTCacheControlFilter.java (java)
+- cuco/src/main/java/at/a1ta/cuco/cacheControl/app/starter/client/AppStarter.java (java)
+- cuco/src/main/java/at/a1ta/cuco/admin/starter/client/AdminStarter.java (java)
+- cuco/src/main/java/at/a1ta/cuco/mycuco/starter/client/MyCuCoStarter.java (java)
+- cuco/src/main/java/at/a1ta/pkb/starter/client/PkbStarter.java (java)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/util/FileUtil.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/ui/SystemMessagesGrid.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/ui/IconButtonRenderer.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/ui/ReportingWidget.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/ui/MarkableCheckbox.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/ui/SystemMessageGrid.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/ui/ImageRenderer.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/ui/SettingsCell.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditUnknownAreasCodeDialog.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/GwtSelectTeamMemberDialog.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditTeamDialog.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditUserDialog.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditRoleGroupManagementDialog.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditCreditTypeDialog.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/GwtEditMessageDialog.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditMessageDialog.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/SelectTeamMemberDialog.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditTeamsDialog.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/SelectRolesDialog.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditUnknownAreaCodeDialog.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/GwtSelectRolesDialog.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditCreditTypesDialog.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditRoleGroupDialog.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/CheckUsagePortlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/RoleGroupManagementPortlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/IbatisPortlet.java (java) [consumes_api, db]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/UserManagementPortlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/AllMessagesPortlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/UserShopAssignmentPortlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/CuCoSettBasePortlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/ReportingPortlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/CCTOrgStructureElementPortlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/RoleGroupsManagementPortlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/vip/VipSearchPortlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/vip/VipSearchComponent.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/TeamManagementPortlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/CreditTypesPortlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/CreditTypePortlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/TeamPortlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/UnknownAreasCodePortlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/UnknownAreaCodePortlet.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/widget/TeamPanel.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/widget/TeamMemberPanel.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/widget/TeamMemberManagementPanel.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/widget/TeamManagementPanel.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/server/CCTOrgStructureErrorExport.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/ui/PortletHelper.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/ui/LocalPagingDetails.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/ui/ImageRenderer.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/ui/BooleanRenderer.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/ui/SystemMessagePreviewComponent.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/bundle/AdminCommonTextPool.java (java) [db]
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/bundle/AdminUI.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/event/AddCreditTypeEvent.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/event/SelectRolesEvent.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/event/AddTeamMemberEvent.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/event/AddUnknownAreaCodeEvent.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/event/GwtAddTeamMembersEvent.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/event/AddTeamEvent.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/event/CuCoEventType.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/event/AddTeamMembersEvent.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/event/RoleEvent.java (java)
+- administration.ui/src/main/java/at/a1ta/cuco/admin/ui/common/client/event/ProductgroupEvent.java (java) domain:product
+- administration.ui/src/main/java/at/a1ta/framework/gxt/ui/PopupImplExtended.java (java)
+- administration.ui/src/main/java/at/a1ta/framework/gxt/ui/Util.java (java)
+- administration.ui/src/main/java/at/a1ta/framework/gxt/ui/PopupImplMozillaExtended.java (java)
+- administration.ui/src/main/java/at/a1ta/framework/gxt/ui/PagingGridContainer.java (java)
+- administration.ui/src/main/java/at/a1ta/framework/gxt/ui/ProxyFilterField.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/framework/gxt/ui/ButtonRenderer.java (java)
+- administration.ui/src/main/java/at/a1ta/framework/gxt/ui/ProxyFilter.java (java) [consumes_api]
+- administration.ui/src/main/java/at/a1ta/framework/gxt/ui/NumberFieldFixed.java (java)
+- administration.ui/src/main/java/at/a1ta/framework/gxt/ui/DetailsDialog.java (java)
+- administration.ui/src/main/java/at/a1ta/framework/gxt/ui/FilterablePagingMemoryProxy.java (java)
+- administration.ui/src/main/java/at/a1ta/framework/gxt/ui/BaseFilterableMemoryProxy.java (java)
+- administration.ui/src/main/java/at/a1ta/framework/gxt/ui/LinkCellRenderer.java (java)
+- administration.ui/src/main/java/at/a1ta/framework/gxt/ui/GridContainer.java (java)
+- administration.ui/src/main/java/at/a1ta/framework/gxt/ui/FilterableMemoryProxy.java (java)
+- administration.ui/src/main/java/at/a1ta/framework/gxt/ui/ComboBoxFix.java (java)
+- administration.ui/src/main/java/at/a1ta/framework/gxt/ui/PopupImplIE6Extended.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/server/dispatch/SessionAwareActionHandler.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/server/dispatch/SpringSessionAwareDispatch.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/server/dispatch/ActionHandlerRegistryBean.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/server/dispatch/SimpleSessionAwareDispatch.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/server/dispatch/AbstractActionHandler.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/server/dispatch/AbstractSessionAwareDispatch.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/shared/RPCString.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/shared/RPCVoid.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/shared/RPCArrayList.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/EventQueue.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ErrorHandler.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/TextWidget.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/ExtendedGrid.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/WaitingWidget.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/TooltipListener.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/LimitTextArea.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/AbstractPortlet.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/DoubleClickListener.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/StyledLabel.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/SuggestBoxFix.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/PkbListBox.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/PortletPopupPanel.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/PortletHeader.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/ModelDataCombo.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/ClickListener.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/ModelDataSuggestBox.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/ModelData.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/ErrorWidgetHolder.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/EditableListBox.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/WaitingPopup.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/HasTableDataStore.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/dialog/DialogPanel.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/dialog/CloseableComponent.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/dialog/PopupCloseListener.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/dialog/DialogComponent.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/table/DataTableFilter.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/table/TableDataComparator.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/table/StoreChangedHandler.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/ui/table/TableDataStore.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/tinymce/TinyMCE.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/util/HtmlUtils.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/util/Validator.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/util/PrintHelper.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/bundle/FrameworkUI.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/bundle/AdminImageResources.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/bundle/AdminStyleResources.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/binding/FillComboAsyncCallback.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/action/HasUserAction.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/command/BaseHasUserAction.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/command/BaseAction.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/command/BaseAsyncCallback.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/event/PortletEventType.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/event/Observable.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/event/GenericEvent.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/event/PortletEvent.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/event/PortletEventManager.java (java)
+- framework.ui/src/main/java/at/a1ta/framework/ui/client/event/PortletEventListener.java (java)
+- cuco-core/src/test/resources/configuration.properties (properties) [db]
+- cuco-core/src/test/java/at/a1ta/cuco/core/shared/validator/HousenumberValidatorTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/shared/validator/CityValidatorTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/shared/validator/FirstnameValidatorTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/shared/validator/ZipCodeValidatorTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/shared/validator/AONNumberValidatorTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/shared/validator/StreetValidatorTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/shared/validator/PartyIdValidatorTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/shared/validator/LastnameValidatorTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/shared/validator/PhonenumberValidatorTest.java (java)
+- cuco-core/src/test/java/at/a1ta/cuco/core/shared/validator/BANValidatorTest.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/bean/Reporting.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/bean/KeyableBean.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/bean/File.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/bean/ReportingWhitelist.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/bean/PWUTokenResponse.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/healthcheck/SolrHealthCheck.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/validator/PhonenumberValidator.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/validator/PartyIdValidator.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/validator/BANValidator.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/validator/OfferNumberValidator.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/validator/LastnameValidator.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/validator/ZipCodeValidator.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/validator/HousenumberValidator.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/validator/OneTVUserValidator.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/validator/BvkUserValidator.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/validator/FirstnameValidator.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/validator/StreetValidator.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/validator/AONNumberValidator.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/validator/CityValidator.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/shared/validator/CommonValidator.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/audit/CuCoAuditEvent.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/audit/CuCoAuditScope.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/audit/CuCoAuditAttribute.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/audit/CuCoAuditActivity.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/audit/ContextAwareAuditHelper.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/export/CSVFieldFormater.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/export/CSVRowFormater.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/export/DateFormater.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/export/TableContent.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/export/Formater.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/export/ExportContent.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/export/BooleanFormater.java (java)
+- cuco-core/src/main/java/at/a1ta/cuco/core/export/NullFormater.java (java)
+- cuco-ui-admin/src/test/java/at/a1ta/cuco/ui/admin/shared/helper/SbsNoteReportTreeGeneratorTest.java (java)
+- cuco-ui-admin/src/test/java/at/a1ta/cuco/ui/admin/shared/helper/SbsNoteReportGeneratorTest.java (java)
+- cuco-ui-admin/src/test/java/at/a1ta/cuco/ui/admin/client/presenter/popup/CouponSeriesEditPresenterTest.java (java)
+- cuco-ui-admin/src/test/java/at/a1ta/cuco/ui/admin/client/presenter/portlet/CouponSeriesAdministrationPresenterTest.java (java)
+- cuco-ui-admin/src/test/java/at/a1ta/cuco/ui/admin/client/presenter/portlet/ProductAdministrationPortletPresenterTest.java (java) domain:product
+- cuco-ui-admin/src/test/java/at/a1ta/cuco/ui/admin/client/flashinfo/FlashAdministrationPresenterTest.java (java)
+- cuco-ui-admin/src/test/java/at/a1ta/cuco/ui/admin/client/flashinfo/popup/FlashInfoEditPresenterTest.java (java)
+- cuco-ui-admin/src/test/java/at/a1ta/cuco/test/TestUtils.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/shared/bean/InitData.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/shared/helper/SbsNoteReportTreeGenerator.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/shared/helper/AbstractReportExcelGenerator.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/shared/helper/TreeNode.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/shared/helper/SortedList.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/shared/helper/SbsNoteTreeData.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/shared/helper/TreeNodeIter.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/shared/helper/SalesConvNoteReportExcelGenerator.java (java) domain:sales
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/shared/helper/SbsNoteReportExcelGenerator.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/shared/helper/GranularityKey.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/AdminPortletFactory.java (java) [consumes_api, db]
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/LegacyInitializer.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/AdminEventBus.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/handler/InitializationHandler.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/AdminMainView.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/AdminUI.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/AdminHeader.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/AdminPortletPresenter.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/AdminMainPresenter.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/popup/CouponSeriesEditPresenter.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/popup/InventoryProductGroupPresenter.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/popup/CloneProductsHelper.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/popup/CouponSeriesEditView.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/popup/UserAdminSegmentView.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/popup/DeleteBaseMarketingProductPopup.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/popup/CloneProductsDialog.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/popup/EditBaseMarketingProductDialog.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/popup/UserAdminSegmentPresenter.java (java) [consumes_api, db]
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/popup/InventoryProductGroupView.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/PaymentHardwarePresenter.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/KimCellTree.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/UITextsEditorPortletView.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/ETGTProductsPresenter.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/SalesConvAdministrationPortletPresenter.java (java) domain:sales
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/UITextsEditorPortletPresenter.java (java) [consumes_api, db]
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/MarketingProductActionItemHasCell.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/MarketplaceProductsPresenter.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/CloudCommunicationHardwarePresenter.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/CloudCommunicationProductsPresenter.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/MarketingProductTooltipItemHasCell.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/SalesInfoReportingPortletPresenter.java (java) domain:sales
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/SalesInfoAdministrationPortletView.java (java) domain:sales
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/ProductAdministrationPortletView.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/SalesConvReportingPortletPresenter.java (java) domain:sales
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/SalesConvAdministrationPortletView.java (java) domain:sales
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/CouponSeriesAdministrationView.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/ProductManageAdministrationPortletView.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/BaseMarketingProductPresenter.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/BusinessInternetProductsPresenter.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/MarketingProductView.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/BusinessNetworkProductsPresenter.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/MarketingProductViewInterface.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/ProductAdministrationPortletPresenter.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/BusinessNetworkHardwarePresenter.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/ProductManageAdministrationPortletPresenter.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/CouponSeriesAdministrationPresenter.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/SalesConvReportingPortletView.java (java) domain:sales
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/SalesInfoReportingPortletView.java (java) domain:sales
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/SalesInfoAdministrationPortletPresenter.java (java) domain:sales
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/portlet/coupon/AdminCouponSeriesTextPool.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/cct/portlet/BusinessInternetProfessionalPresenter.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/cct/portlet/BusinessFirewallPresenter.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/cct/portlet/BusinessInternetProfessionalView.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/ui/cct/portlet/BusinessFirewallView.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/popup/InventoryProductGroupPopup.java (java) domain:product
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/popup/CouponSeriesEditPopup.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/quoteflashinfo/popup/QuoteFlashInfoEditPresenter.java (java) domain:quote
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/quoteflashinfo/popup/QuoteFlashInfoEditPopup.java (java) domain:quote
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/quoteflashinfo/popup/QuoteFlashInfoEditView.java (java) domain:quote
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/gwtIbatis/GwtIbatisPortletPresenter.java (java) [consumes_api, db]
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/gwtIbatis/GwtIbatis.java (java) [db]
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/gwtIbatis/GwtIbatisPortletView.java (java) [consumes_api, db]
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/flashinfo/FlashAdministrationPresenter.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/flashinfo/FlashAdministrationView.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/flashinfo/AdminFlashInfoTextPool.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/flashinfo/popup/FlashInfoEditPresenter.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/flashinfo/popup/CustomerBlockEditView.java (java) domain:customer
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/flashinfo/popup/FlashInfoEditView.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/flashinfo/popup/RoleSelectionPresenter.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/flashinfo/popup/FlashInfoEditPopup.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/flashinfo/popup/CustomerBlockEditPresenter.java (java) domain:customer
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/flashinfo/popup/RoleSelectionPopup.java (java)
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/flashinfo/popup/CustomerBlockEditPopup.java (java) domain:customer
+- cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/flashinfo/popup/RoleSelectionView.java (java)
+- cuco-cct-core/src/test/resources/configuration.properties (properties) [db]
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/util/CCTClearanceXSLTTester.java (java)
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/util/ReflectionUtilTest.java (java)
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/util/ConfigDataGenerator.java (java)
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/a1cml/v2/shared/A1CMLV2DefaultConfigurationTest.java (java) domain:product
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/a1cml/v2/shared/A1CMLV2ConfigurationSmokeTest.java (java) domain:product
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/bfw1/v1/shared/BFWV1DefaultConfigurationTest.java (java) domain:product
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/bfw1/v1/shared/BFWV1ConfigurationSmokeTest.java (java) domain:product
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/etgt/v12/shared/ETGTV12ConfigurationSmokeTest.java (java) domain:product
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/etgt/v12/shared/ETGTV12DefaultConfigurationTest.java (java) domain:product
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/etgt/v11/shared/ETGTV11DefaultConfigurationTest.java (java) domain:product
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/etgt/v11/shared/ETGTV11ConfigurationSmokeTest.java (java) domain:product
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/etgt/v10/shared/ETGTV10ConfigurationSmokeTest.java (java) domain:product
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/etgt/v10/shared/ETGTV10DefaultConfigurationTest.java (java) domain:product
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/marketplace/v1/shared/MarketplaceProductGenerator.java (java) domain:product
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/marketplace/v1/shared/MarketplaceV1ConfigurationSmokeTest.java (java) domain:product
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/marketplace/v1/shared/MarketplaceV1DefaultConfigurationTest.java (java) domain:product
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/bpb/v6/shared/BpbV6DefaultConfigurationTest.java (java) domain:product
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/bpb/v6/shared/BpbV6ConfigurationSmokeTest.java (java) domain:product
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/bpb/v1/shared/BpbV1DefaultConfigurationTest.java (java) domain:product
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/bpb/v1/shared/BpbV1ConfigurationSmokeTest.java (java) domain:product
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/bpb/v7/shared/BpbV7ConfigurationSmokeTest.java (java) domain:product
+- cuco-cct-core/src/test/java/at/a1ta/cuco/cct/productoffering/bpb/v7/shared/BpbV7DefaultConfigurationTest.java (java) domain:product
+
+
+## 3. Functionality
+
+- **Main Features:** Heuristic summary based on component classification.
+- **Technology Stack (top):** spring_framework, mybatis
+- **Design Patterns (top):** service_layer
+- **Inputs/Outputs:** API exposure 0, API consumers 86, DB interactions 29.
+- **Key Methods/Functions:** [To be derived in advanced analysis]
+
+### API Endpoints Summary
+
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/AuthServletImpl.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/PastExportServlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/UploadFileServlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/IbatisServletImpl.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/CreditTypeServletImpl.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/ReportingServletImpl.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/TeamServletImpl.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/ChargingTypeServletImpl.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/FileContentServlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/server/util/FileUtil.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/ui/SystemMessagesGrid.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/ui/IconButtonRenderer.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/ui/ReportingWidget.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/ui/MarkableCheckbox.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/ui/SystemMessageGrid.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/ui/ServiceImageRenderer.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/ui/ImageRenderer.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/ui/SettingsCell.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditUnknownAreasCodeDialog.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/GwtSelectServiceDialog.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/GwtEditServiceDialog.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditServiceDialog.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/GwtSelectTeamMemberDialog.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditTeamDialog.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditUserDialog.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditRoleGroupManagementDialog.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditCreditTypeDialog.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/GwtEditMessageDialog.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditMessageDialog.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/SelectTeamMemberDialog.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditTeamsDialog.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/SelectRolesDialog.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditUnknownAreaCodeDialog.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/GwtSelectRolesDialog.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/SelectServiceDialog.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditCreditTypesDialog.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/dialog/EditRoleGroupDialog.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/CheckUsagePortlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/RoleGroupManagementPortlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/IbatisPortlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/UserManagementPortlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/AllMessagesPortlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/UserShopAssignmentPortlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/CuCoSettBasePortlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/ReportingPortlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/CCTOrgStructureElementPortlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/RoleGroupsManagementPortlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/vip/VipSearchPortlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/vip/VipSearchComponent.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/TeamManagementPortlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/ServicePortlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/CreditTypesPortlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/CreditTypePortlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/TeamPortlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/UnknownAreasCodePortlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/GwtServicePortlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/UnknownAreaCodePortlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/widget/TeamPanel.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/widget/TeamMemberPanel.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/widget/TeamServicePanel.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/widget/TeamMemberManagementPanel.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/widget/TeamServiceManagementPanel.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/portlet/past/widget/TeamManagementPanel.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/SettingsServiceLocator.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/ChargingTypeServlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/ReportingServlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/ReportingException.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/ChargingTypeServletAsync.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/IbatisServletAsync.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/IbatisServlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/CreditTypeServletAsync.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/TeamServletAsync.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/TeamServlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/ReportingServletAsync.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/CreditTypeServlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/AuthServlet.java (consumes)
+- administration.ui/src/main/java/at/a1ta/webclient/cucosett/client/service/AuthServletAsync.java (consumes)
+- administration.ui/src/main/java/at/a1ta/framework/gxt/ui/ProxyFilterField.java (consumes)
+- administration.ui/src/main/java/at/a1ta/framework/gxt/ui/ProxyFilter.java (consumes)
+
+## 4. Dependencies
+
+- [To be cross-linked]
+
+## 5. Notes
+
+- [Business rule nuances]

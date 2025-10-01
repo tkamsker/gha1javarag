@@ -143,53 +143,36 @@ class ReportingManager:
     def generate_requirements(self):
         """Generate requirements documentation from indexed data."""
         try:
-            # This would typically query Weaviate for data and generate requirements
-            # For now, create a placeholder structure
-            
-            requirements_data = {
-                'generation_timestamp': datetime.now().isoformat(),
-                'projects': []
-            }
-            
-            # Create master requirements file
+            # Consume consolidated JSON if available (Step 2 per iteration10.md)
+            consolidated_path = self.output_dir / 'consolidated_metadata.json'
+
+            projects = []
+            if consolidated_path.exists():
+                with open(consolidated_path, 'r', encoding='utf-8') as f:
+                    consolidated = json.load(f)
+                    projects = [p.get('name', 'unknown') for p in consolidated.get('projects', [])]
+
+                # Generate per-project requirements structured by layers
+                for project in consolidated.get('projects', []):
+                    project_name = project.get('name', 'unknown')
+                    self._generate_requirements_from_project_json(project_name, project)
+            else:
+                self.logger.warning("consolidated_metadata.json not found. Generating placeholder requirements.")
+
+            # Master requirements
             master_requirements = self.requirements_dir / '_master.md'
-            
             with open(master_requirements, 'w', encoding='utf-8') as f:
                 f.write("# Master Requirements Document\n\n")
                 f.write(f"Generated: {datetime.now().isoformat()}\n\n")
                 f.write("This document contains consolidated requirements from all analyzed projects.\n\n")
-                f.write("## Project Structure\n\n")
-                f.write("Requirements are organized by project and architectural layer:\n\n")
-                f.write("- Database Layer: Data models, schemas, and persistence logic\n")
-                f.write("- Backend Layer: Business logic, services, and APIs\n")
-                f.write("- UI Layer: User interfaces, components, and interactions\n\n")
-                f.write("## Individual Project Requirements\n\n")
-                f.write("See individual project directories for detailed requirements.\n")
-            
+                f.write("## Projects\n\n")
+                for name in projects:
+                    f.write(f"- {name}\n")
+                f.write("\n## Architectural Layers\n\n")
+                f.write("- Database (SQL/XML)\n")
+                f.write("- Backend (Java classes/servlets)\n")
+                f.write("- Presentation (JSP/TSP/HTML/JS)\n")
             self.logger.info(f"Generated master requirements: {master_requirements}")
-            
-            # Create placeholder for each architectural layer
-            for layer in ['database', 'backend', 'ui']:
-                layer_dir = self.requirements_dir / layer
-                layer_dir.mkdir(exist_ok=True)
-                
-                layer_file = layer_dir / f'{layer}_requirements.md'
-                
-                with open(layer_file, 'w', encoding='utf-8') as f:
-                    f.write(f"# {layer.title()} Layer Requirements\n\n")
-                    f.write(f"Generated: {datetime.now().isoformat()}\n\n")
-                    f.write("## Overview\n")
-                    f.write(f"Requirements for the {layer} layer of the application.\n\n")
-                    f.write("## Components\n")
-                    f.write("- [To be populated from Weaviate data]\n\n")
-                    f.write("## Functionality\n")
-                    f.write("- [To be populated from Weaviate data]\n\n")
-                    f.write("## Dependencies\n")
-                    f.write("- [To be populated from Weaviate data]\n\n")
-                    f.write("## Notes\n")
-                    f.write("- [To be populated from Weaviate data]\n")
-                
-                self.logger.info(f"Generated {layer} requirements: {layer_file}")
         
         except Exception as e:
             self.logger.error(f"Error generating requirements: {e}")
@@ -257,3 +240,136 @@ class ReportingManager:
         
         except Exception as e:
             self.logger.error(f"Error cleaning up old logs: {e}")
+
+    # --- JSON export/ingestion helpers for 2-step flow ---
+
+    def write_consolidated_metadata(self, catalog: Dict[str, Any], projects_data: Dict[str, Any]):
+        """Write consolidated metadata JSON for Step 2 consumption."""
+        try:
+            consolidated = {
+                'generation_timestamp': datetime.now().isoformat(),
+                'catalog': catalog,
+                'projects': list(projects_data.values())
+            }
+            out_file = self.output_dir / 'consolidated_metadata.json'
+            with open(out_file, 'w', encoding='utf-8') as f:
+                json.dump(consolidated, f, indent=2, default=str)
+            self.logger.info(f"Wrote consolidated metadata: {out_file}")
+        except Exception as e:
+            self.logger.error(f"Error writing consolidated metadata: {e}")
+
+    def _generate_requirements_from_project_json(self, project_name: str, project: Dict[str, Any]):
+        """Generate requirements files from a single project's JSON structure."""
+        try:
+            project_dir = self.requirements_dir / project_name
+            project_dir.mkdir(exist_ok=True)
+
+            # Prefer enhanced classifier fields to group layers; fallback to language
+            files = project.get('file_list', [])
+
+            def infer_layer_from_classifier(fi: Dict[str, Any]) -> str:
+                cls = (fi.get('enhanced_ai_analysis') or {}).get('file_classification') or {}
+                layer = (cls.get('architectural_layer') or '').lower()
+                if layer in ['frontend']:
+                    return 'ui'
+                if layer in ['data_access', 'persistence', 'configuration']:
+                    return 'database'
+                if layer in ['backend_service', 'integration', 'security', 'batch_process', 'configuration']:
+                    return 'backend'
+                return ''
+
+            database_files: List[Dict[str, Any]] = []
+            backend_files: List[Dict[str, Any]] = []
+            ui_files: List[Dict[str, Any]] = []
+
+            for fi in files:
+                inferred = infer_layer_from_classifier(fi)
+                if inferred == 'database':
+                    database_files.append(fi)
+                elif inferred == 'backend':
+                    backend_files.append(fi)
+                elif inferred == 'ui':
+                    ui_files.append(fi)
+                else:
+                    # Fallback to language-based grouping if classifier not decisive
+                    lang = (fi.get('language') or '').lower()
+                    if lang in ['sql', 'xml']:
+                        database_files.append(fi)
+                    elif lang in ['jsp', 'html', 'javascript', 'css']:
+                        ui_files.append(fi)
+                    else:
+                        backend_files.append(fi)
+
+            def write_layer(layer_name: str, file_group: List[Dict[str, Any]]):
+                layer_path = project_dir / f"{layer_name}_requirements.md"
+                with open(layer_path, 'w', encoding='utf-8') as f:
+                    f.write(f"# {project_name} - {layer_name.title()} Layer Requirements\n\n")
+                    f.write("## 1. Overview\n\n")
+                    f.write(f"Brief purpose within the application for the {layer_name} layer.\n\n")
+
+                    # Components grouped by component_type with flags
+                    f.write("## 2. Components\n\n")
+                    from collections import defaultdict
+                    comps: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+                    for fi in file_group[:1000]:
+                        cls = (fi.get('enhanced_ai_analysis') or {}).get('file_classification') or {}
+                        comps[(cls.get('component_type') or 'unknown')].append(fi)
+                    for comp_type, items in sorted(comps.items(), key=lambda x: x[0]):
+                        f.write(f"### Component Type: {comp_type}\n\n")
+                        for item in items[:300]:
+                            cls = (item.get('enhanced_ai_analysis') or {}).get('file_classification') or {}
+                            api_flags = []
+                            if cls.get('exposes_api'): api_flags.append('exposes_api')
+                            if cls.get('consumes_api'): api_flags.append('consumes_api')
+                            if cls.get('database_interactions'): api_flags.append('db')
+                            flags_str = (" [" + ", ".join(api_flags) + "]") if api_flags else ""
+                            domain = cls.get('business_domain') or ''
+                            domain_str = f" domain:{domain}" if domain else ""
+                            f.write(f"- {item.get('path')} ({item.get('language')}){flags_str}{domain_str}\n")
+                        f.write("\n")
+
+                    # Functional summary from heuristics
+                    f.write("\n## 3. Functionality\n\n")
+                    tech_counts: Dict[str, int] = {}
+                    pattern_counts: Dict[str, int] = {}
+                    exposes = consumes = dbi = 0
+                    for fi in file_group:
+                        cls = (fi.get('enhanced_ai_analysis') or {}).get('file_classification') or {}
+                        for t in cls.get('technology_stack', []) or []:
+                            tech_counts[t] = tech_counts.get(t, 0) + 1
+                        for p in cls.get('design_patterns', []) or []:
+                            pattern_counts[p] = pattern_counts.get(p, 0) + 1
+                        if cls.get('exposes_api'): exposes += 1
+                        if cls.get('consumes_api'): consumes += 1
+                        if cls.get('database_interactions'): dbi += 1
+
+                    top_tech = ', '.join([k for k,_ in sorted(tech_counts.items(), key=lambda x: -x[1])[:8]]) or 'n/a'
+                    top_patterns = ', '.join([k for k,_ in sorted(pattern_counts.items(), key=lambda x: -x[1])[:8]]) or 'n/a'
+
+                    f.write("- **Main Features:** Heuristic summary based on component classification.\n")
+                    f.write(f"- **Technology Stack (top):** {top_tech}\n")
+                    f.write(f"- **Design Patterns (top):** {top_patterns}\n")
+                    f.write(f"- **Inputs/Outputs:** API exposure {exposes}, API consumers {consumes}, DB interactions {dbi}.\n")
+                    f.write("- **Key Methods/Functions:** [To be derived in advanced analysis]\n\n")
+
+                    # Endpoint summary if applicable
+                    if layer_name == 'backend' and (exposes > 0 or consumes > 0):
+                        f.write("### API Endpoints Summary\n\n")
+                        for fi in file_group[:500]:
+                            cls = (fi.get('enhanced_ai_analysis') or {}).get('file_classification') or {}
+                            if cls.get('exposes_api') or cls.get('consumes_api'):
+                                flags = []
+                                if cls.get('exposes_api'): flags.append('exposes')
+                                if cls.get('consumes_api'): flags.append('consumes')
+                                f.write(f"- {fi.get('path')} ({', '.join(flags)})\n")
+                        f.write("\n")
+
+                    f.write("## 4. Dependencies\n\n- [To be cross-linked]\n\n")
+                    f.write("## 5. Notes\n\n- [Business rule nuances]\n")
+
+            write_layer('database', database_files)
+            write_layer('backend', backend_files)
+            write_layer('ui', ui_files)
+            self.logger.info(f"Generated requirements from JSON for project {project_name}")
+        except Exception as e:
+            self.logger.error(f"Error generating project requirements from JSON for {project_name}: {e}")

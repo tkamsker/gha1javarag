@@ -1,17 +1,22 @@
 # Master Requirements Document
 
-Generated: 2025-10-01T14:48:49.028454
+Generated: 2025-10-01T16:04:49.174618
 
 This document contains consolidated requirements from all analyzed projects.
 
-## Project Structure
+## Projects
 
-Requirements are organized by project and architectural layer:
+- __root__
+- cuco
+- administration.ui
+- framework.ui
+- cuco-core
+- cuco.dbmaintain
+- cuco-ui-admin
+- cuco-cct-core
 
-- Database Layer: Data models, schemas, and persistence logic
-- Backend Layer: Business logic, services, and APIs
-- UI Layer: User interfaces, components, and interactions
+## Architectural Layers
 
-## Individual Project Requirements
-
-See individual project directories for detailed requirements.
+- Database (SQL/XML)
+- Backend (Java classes/servlets)
+- Presentation (JSP/TSP/HTML/JS)

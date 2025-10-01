@@ -1,0 +1,342 @@
+# cuco.dbmaintain - Database Layer Requirements
+
+## 1. Overview
+
+Brief purpose within the application for the database layer.
+
+## 2. Components
+
+### Component Type: database_script
+
+- cuco.dbmaintain/SchemaCreation/CUSTC_USER.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_rufnummer.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_umsatz.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_voice_nutzung.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_voice_nutzung_detail.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_standort.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/create_umsatz_supra.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_internet_nutzung.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_produkt_hierarchie.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/create_view.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_bestand.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_ansprechpartner.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/sync_11g210g.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/disable_index.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_konto_rufnummer.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_kunde_detail.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/enable_index.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/get_user_limit.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/create_copy_data.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_voice_nutzung_gzfz.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_konto.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/drop_tables.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/trg_app_applikation.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_umsatz_supra.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/create_copy_data_package.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_rechnung.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/resend_alerts.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_mobil_nutzung.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/compare_dwh_tables.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_kunde.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_mk_interaktion.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_einmal_umsatz.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/create_gen_trg_for_vss_repl.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/TOOLS/copy_w11_struktur.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Synonyms.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Types.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/DO.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Trigger/TRG_CUSTC_HEADER.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Trigger/TRG_DELETE_REPORTING.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Trigger/TRG_CUSTC_TABLE_CONTROL.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/PackageBody/LOGGER.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/PackageBody/TOOLS_COMMON.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/PackageBody/LOAD_DATA.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/PackageBody/LOAD_DWH_DATA.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/PackageBody/COPY_DATA.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Function/CREATE_TRG_FOR_VSS_REPL.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Function/CREATE_COPY_DATA.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Function/CREATE_PACK_PROCESS_PROC.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Procedure/PRINT_OUT.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Procedure/EXECUTELONGRUNNINGREPORTINGS.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Type/ROLE_ARRAY.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_SYS_TRACK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_MATRIX~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/VOICE_NUTZUNG_GZFZ2~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_SEGMENT~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/INTERNET_NUTZUNG1.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/MK_INTERAKTION2~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/BESTAND2.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_VERRECHNUNGSART~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/RUFNUMMER1~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_BENUTZER_ROLLE~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_KUNDE_ERWEITERT.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_KATEGORIE.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KONTO_RUFNUMMER1.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KUNDE2~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_ROLLENGRUPPE_ROLLE~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_ESB_ACCESS_ASSIGNMENTS~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_TAB~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KONTO_RUFNUMMER2~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_ESB_ACCESS_ASSIGNMENTS~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_ERINNERUNG~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/INTERNET_NUTZUNG2.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_GULA~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/BESTAND1.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUSTC_HEADER.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_SYS_MESSAGE~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KONTO_RUFNUMMER2.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_SEGIMPORT_MATRIX~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_NOTIZ_AENDERUNG~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_APPLIKATION~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/BESTAND1~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/EINMAL_UMSATZ1~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_BEST_PRODGRP_PROD_HIER.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/UMSATZ1~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_UNGUELTIGEVORWAHL~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_VIP_HISTORY~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KONTO1~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_TAB_CONTAINER~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/RECHNUNG1~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/INTERNET_NUTZUNG2~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_MENU.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/STANDORT1~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_PRODUKTGRUPPE~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_VIP_HISTORY~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_KUNDE_ERWEITERT~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_DIENSTLEISTUNG~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_SYS_MESSAGE.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_DIENSTLEISTUNGSART~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/UMSATZ_SUPRA1~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_SYS_MESSAGE_ROLLE.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_SEGIMPORT_PATH.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/ANSPRECHPARTNER1~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_SEGIMPORT_MAPPING~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_APPLIKATION.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_EINSTELLUNG~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_TAB_PORTLET~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/UMSATZ_SUPRA2.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/MOBIL_NUTZUNG1.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_SEGIMPORT_MAPPING.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_ROLLENGRUPPE.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_ROLLE_AUTH~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_ROLLE~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_IMAGE_SIZE~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_ROLLENGRUPPE~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_RT_CODE~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_REPORTING~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUSTC_HEADER~CHK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_CONTAINER~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_BENUTZER_ROLLE.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/RUFNUMMER2~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_ESB_ACCESS_ASSIGNMENTS.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_NOTIZ.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_BENUTZER_EINSTELLUNG.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/UMSATZ_SUPRA1.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/MK_INTERAKTION1~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/MOBIL_NUTZUNG2.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_MENU~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/VOICE_NUTZUNG_GZFZ1~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KONTO_RUFNUMMER1~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_TEAM.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KUNDE1~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_DIENSTLEISTUNG~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_BENUTZER~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_NOTIZ~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_SEGIMPORT_MAPPING~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_VIP_HISTORY.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_TEAM_USER.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_PROTOCOL.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/RUFNUMMER1.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/STANDORT2~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_BESTAND_PRODUKTGRUPPE.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/INTERNET_NUTZUNG1~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/RECHNUNG2~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUSTC_TABLE_CONTROL~CHK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_REPORTING.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_SEGIMPORT~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_KATEGORIE~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUSTC_INDEXES.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_MENU~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_SEGIMPORT.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/ANSPRECHPARTNER2~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/LOGGING.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_SESSION_TRACK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUSTC_TABLE_CONTROL~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/UMSATZ_SUPRA2~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_ROLLENGRUPPE_ROLLE~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/UMSATZ2~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/EINMAL_UMSATZ2~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_NOTIZ~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_NOTIZ_AENDERUNG~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_TAB_CONTAINER.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_CONTAINER.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_APPLIKATION_TAB.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_SYS_MESSAGE_ROLLE~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_EINSTELLUNG.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_SYS_MESSAGE_ROLLE~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/RUFNUMMER2.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/BESTAND2~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_ROLLENGRUPPE_ROLLE.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_ESB_ACCESS_PARAMETERS~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KONTO2~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_IMAGE~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_BENUTZER_EINSTELLUNG~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_NOTIZ_AENDERUNG.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/STANDORT1~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_VIP_IMPORT.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/RECHNUNG1~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/INTERNET_NUTZUNG2~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/RECHNUNG1.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_RT_CODE.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_DIENSTLEISTUNG.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_VIP_HISTORY~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_AUTH.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/ANSPRECHPARTNER1~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_GULA~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KONTO2.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/MK_INTERAKTION2.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_BENUTZER_EINSTELLUNG~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_APPLIKATION_MENU~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/W11_STRUKTUR2~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_SEGMENT.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/TOAD_PLAN_TABLE.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/BESTAND1~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_DIENSTLEISTUNGSART.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/RECHNUNG2.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_VIP_IMPORT~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KONTO1.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KONTO1~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/MK_INTERAKTION1.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_PORTLET.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_IMAGE.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_TAB.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_ERINNERUNG~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_TAB_PORTLET.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/VOICE_NUTZUNG_DETAIL2.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/MOBIL_NUTZUNG2~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_SEGIMPORT_PATH~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/VOICE_NUTZUNG1~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KUNDE_DETAIL2~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_SYS_MESSAGE~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_VIP_IMPORT~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_BENUTZER.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_TEAM_USER~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/RUFNUMMER1~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_CONTAINER_PORTLET.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/VOICE_NUTZUNG_DETAIL1.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/VOICE_NUTZUNG_DETAIL1~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/MK_INTERAKTION2~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_ROLLE~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/PRODUKT_HIERARCHIE1~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KUNDE2~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_AUTH~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_SEGIMPORT_MATRIX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KONTO_RUFNUMMER2~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUSTC_TABLE_CONTROL.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_UNGUELTIGEVORWAHL.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_RT_PRODGRP.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_SYS_MESSAGE_VIEWED~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_ROLLE_AUTH.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/BESTAND2~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_TEAM_USER~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/STANDORT2.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_GULA.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_SYS_MESSAGE_VIEWED.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/W11_STRUKTUR1~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/VOICE_NUTZUNG_GZFZ2.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KUNDE_DETAIL2.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KONTO2~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_ROLLE.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUSTC_ADJUSTMENTS.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_RT_PRODGRP~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_PORTLET~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_NOTIZ~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/INTERNET_NUTZUNG1~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/RECHNUNG2~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_PROTOCOL~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_APPLIKATION_TAB~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/STANDORT1.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/STANDORT2~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_BEST_PRODGRP_PROD_HIER~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/VOICE_NUTZUNG_GZFZ1.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KUNDE_DETAIL1.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/ANSPRECHPARTNER2~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_VERRECHNUNGSART.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/VOICE_NUTZUNG1.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/MK_INTERAKTION1~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/VOICE_NUTZUNG_DETAIL2~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_TEAM_DIENSTLEISTUNG~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/PRODUKT_HIERARCHIE1.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/RUFNUMMER2~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_ERINNERUNG.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_TEAM~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_APPLIKATION_MENU.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_BESTAND_PRODUKTGRUPPE~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KUNDE1.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/W11_STRUKTUR2.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/UMSATZ2.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KONTO_RUFNUMMER1~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/EINMAL_UMSATZ1.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_ROLLE_AUTH~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_BENUTZER~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KUNDE1~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/PRODUKT_HIERARCHIE2~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/ANSPRECHPARTNER1.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/VOICE_NUTZUNG2.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/MOBIL_NUTZUNG1~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_ERINNERUNG~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_TEAM_DIENSTLEISTUNG.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/PRODUKT_HIERARCHIE2.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_EINSTELLUNG~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_MATRIX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_CONTAINER_PORTLET~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_IMAGE_SIZE.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_BENUTZER_ROLLE~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/DBMAINTAIN_SCRIPTS.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KUNDE2.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/W11_STRUKTUR1.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/CUCO_PRODUKTGRUPPE.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/UMSATZ1.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_ROLLENGRUPPE~FK.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/EINMAL_UMSATZ2.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/APP_AUTH~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/KUNDE_DETAIL1~UNQ.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/VOICE_NUTZUNG2~INX.sql (sql)
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/Table/ANSPRECHPARTNER2.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/View/V_W11_STRUKTUR.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/View/V_ANSPRECHPARTNER.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/View/V_KONTO_RUFNUMMER.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/View/V_UMSATZ.sql (sql) [db]
+- cuco.dbmaintain/SchemaCreation/01_CuCo_V3.0.0.0/CUSTC/View/V_RUFNUMMER.sql (sql) [db]
+
+### Component Type: unknown
+
+- cuco.dbmaintain/CuCoMigrationDEV.xml (xml) [db]
+- cuco.dbmaintain/CuCoMigrationE2E.xml (xml) [db]
+- cuco.dbmaintain/pom.xml (xml) [db]
+- cuco.dbmaintain/CuCoMigrationPROD.xml (xml) [db]
+- cuco.dbmaintain/CuCoMigrationT360.xml (xml) [db]
+- cuco.dbmaintain/CuCoMigrationINT.xml (xml) [db]
+- cuco.dbmaintain/src/main/resources/dbmaintain.int.properties (properties) [db]
+- cuco.dbmaintain/src/main/resources/dbmaintain.local.properties (properties) [db]
+- cuco.dbmaintain/src/main/resources/dbmaintain.e2e.properties (properties) [db]
+- cuco.dbmaintain/src/main/resources/dbmaintain.t360.properties (properties) [db]
+- cuco.dbmaintain/src/main/resources/dbmaintain.prod.properties (properties) [db]
+- cuco.dbmaintain/src/main/resources/dbmaintain.dev.properties (properties) [db]
+
+
+## 3. Functionality
+
+- **Main Features:** Heuristic summary based on component classification.
+- **Technology Stack (top):** mybatis
+- **Design Patterns (top):** n/a
+- **Inputs/Outputs:** API exposure 0, API consumers 4, DB interactions 661.
+- **Key Methods/Functions:** [To be derived in advanced analysis]
+
+## 4. Dependencies
+
+- [To be cross-linked]
+
+## 5. Notes
+
+- [Business rule nuances]

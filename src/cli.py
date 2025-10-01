@@ -15,6 +15,7 @@ from .chunking import ChunkingStrategy
 from .metadata import MetadataExtractor
 from .weaviate_client import WeaviateClient
 from .reporting import ReportingManager
+from .metadata_classification import classify_file
 
 
 def setup_logging(level: str, verbose: bool):
@@ -118,6 +119,89 @@ def index(ctx):
         if 'weaviate_client' in locals():
             weaviate_client.close()
 
+
+@cli.command(name='analyze')
+@click.option('--no-upsert', is_flag=True, default=False, help='Skip Weaviate upserts; export consolidated JSON only')
+@click.pass_context
+def analyze(ctx, no_upsert: bool):
+    """Step 1 per iteration10.md: analyze codebase, export consolidated JSON; Weaviate optional."""
+    config = ctx.obj['config']
+    logger = logging.getLogger(__name__)
+
+    try:
+        logger.info("Starting analysis (Step 1) ...")
+        discovery = ProjectDiscovery(config)
+        projects = discovery.discover_projects()
+        logger.info(f"Found {len(projects)} projects")
+
+        reporting = ReportingManager(config)
+
+        # Build catalogs
+        catalog = discovery.create_project_catalog(projects)
+
+        # Optionally upsert chunks to Weaviate but not required for JSON export
+        weaviate_client = None
+        if not no_upsert:
+            weaviate_client = WeaviateClient(config)
+            logger.info("Creating Weaviate schemas...")
+            weaviate_client.create_schemas()
+
+        # Collect per-project file lists and enrich with heuristic classification
+        projects_map = {}
+        total_files = 0
+        total_chunks = 0
+        for project in projects:
+            projects_map[project.name] = {
+                'name': project.name,
+                'path': project.path,
+                'total_files': project.total_files,
+                'total_size_bytes': project.total_size,
+                'file_list': []
+            }
+
+            # If upserting, process and upsert similar to index path
+            if weaviate_client is not None:
+                created = process_project(project, config, weaviate_client, reporting)
+                total_chunks += created
+            total_files += project.total_files
+
+            # Enrich JSON for each file
+            for f in project.files:
+                try:
+                    content = ""
+                    # Only sample content lightly to keep memory reasonable
+                    with open(f.file_path, 'r', encoding='utf-8', errors='ignore') as fh:
+                        content = fh.read(40000)  # 40KB sample
+                except Exception:
+                    content = ""
+
+                enhanced = classify_file(f.relative_path, f.language, content)
+                projects_map[project.name]['file_list'].append({
+                    'path': f.relative_path,
+                    'language': f.language,
+                    'size_bytes': f.size_bytes,
+                    'sha256': f.sha256,
+                    'last_modified': f.last_modified.isoformat(),
+                    'enhanced_ai_analysis': {
+                        'file_classification': enhanced,
+                        'purpose': enhanced.get('primary_purpose', 'Source file')
+                    }
+                })
+
+        # Write consolidated JSON for Step 2
+        reporting.write_consolidated_metadata(catalog, projects_map)
+
+        # Final processing report
+        reporting.generate_final_report(total_files, total_chunks)
+
+        logger.info("Analysis completed successfully!")
+
+    except Exception as e:
+        logger.error(f"Error during analyze: {e}")
+        sys.exit(1)
+    finally:
+        if 'weaviate_client' in locals() and weaviate_client is not None:
+            weaviate_client.close()
 
 @cli.command()
 @click.pass_context

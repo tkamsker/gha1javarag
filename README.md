@@ -91,6 +91,55 @@ src/
 
 ## Usage
 
+### Two-step workflow (per iteration10.md)
+
+Step 1: Analyze and export consolidated JSON (Weaviate optional)
+
+```bash
+# Pure JSON export (no Weaviate upserts)
+python -m src.cli analyze --no-upsert
+
+# Optional: also upsert to Weaviate while analyzing
+python -m src.cli analyze
+```
+
+This writes a consolidated metadata file to `OUTPUT_DIR/consolidated_metadata.json` and a processing report.
+
+Step 2: Generate requirements from the consolidated JSON
+
+```bash
+python -m src.cli requirements
+```
+
+Outputs are written under `OUTPUT_DIR/requirements/` with per-project files (`database`, `backend`, `ui`) and a `_master.md` index.
+
+#### Shell helpers
+
+You can also use the provided shell helpers for a streamlined two-step run:
+
+```bash
+# Step 1: Analyze and export consolidated JSON (env STEP1_NO_UPSERT=1 to skip Weaviate upserts)
+./step1.sh
+
+# Step 2: Generate requirements from the JSON
+./step2.sh
+
+# Or run the full iteration wrapper, which prefers step scripts if present
+./run_iteration.sh
+```
+
+`step1.sh` and `step2.sh` bootstrap the virtualenv, install dependencies, and run the corresponding CLI commands. The iteration wrapper will automatically detect and use them when available.
+
+### Legacy single-step indexing
+
+You can still run the combined indexing flow (schema + upserts + report):
+
+```bash
+python -m src.cli index
+```
+
+Use this if you want to push vectors to Weaviate explicitly outside the two-step analyze flow.
+
 ### Indexing (Step 1)
 
 ```bash
@@ -207,3 +256,22 @@ Check the logs in `output/logs/app.log.jsonl` for detailed error information.
 ## License
 
 [Add your license information here]
+
+
+
+source venv/bin/activate
+
+python -m src.cli stats
+
+
+#### 
+
+Added heuristic classification (src/metadata_classification.py) and wired it into analyze so each file in consolidated_metadata.json now has enriched fields (layer, component, tech, flags).
+Ran analyze --no-upsert; verified JSON contains enhanced metadata for files.
+You can now run:
+
+Step 1: python -m src.cli analyze --no-upsert
+
+Step 2: python -m src.cli requirements
+
+If you want, I can enhance requirements generation to leverage these new fields next.

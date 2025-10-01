@@ -1,8 +1,8 @@
 {
   "processing_summary": {
-    "start_time": "2025-10-01T14:30:57.045296",
-    "end_time": "2025-10-01T14:48:48.435596",
-    "duration_seconds": 1071.3903,
+    "start_time": "2025-10-01T15:42:21.137589",
+    "end_time": "2025-10-01T16:01:19.496798",
+    "duration_seconds": 1138.359209,
     "total_files_processed": 5336,
     "total_chunks_created": 34394,
     "successful_files": 5336,
@@ -44,8 +44,8 @@
     ]
   },
   "performance_metrics": {
-    "files_per_second": 4.980444568146641,
-    "chunks_per_second": 32.102213357727805,
+    "files_per_second": 4.6874483535714955,
+    "chunks_per_second": 30.213661670303228,
     "average_chunks_per_file": 6.445652173913044
   }
 }

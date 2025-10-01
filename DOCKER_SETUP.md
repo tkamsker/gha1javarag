@@ -145,8 +145,12 @@ WEAVIATE_BATCH_SIZE=100
 Once Weaviate is running with the required modules:
 
 1. **Update .env**: Ensure `WEAVIATE_URL=http://localhost:8080`
-2. **Run Analysis**: `./run_iteration.sh`
-3. **Check Results**: View output in `output_YYYYMMDD_HHMMSS/`
+2. **Two-step workflow (recommended)**
+   - Step 1 (analyze/export JSON only): `python -m src.cli analyze --no-upsert`
+   - Step 1 (analyze + upsert to Weaviate): `python -m src.cli analyze`
+   - Step 2 (generate requirements from JSON): `python -m src.cli requirements`
+3. **Single-step legacy**: `python -m src.cli index`
+4. **Check Results**: View output in `output_YYYYMMDD_HHMMSS/`
 
 ## Monitoring
 
