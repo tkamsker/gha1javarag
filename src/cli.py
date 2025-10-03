@@ -249,48 +249,28 @@ def analyze(ctx, no_upsert: bool, llm_enrich: bool):
 
 
 @cli.command()
+@click.option('--parallel/--sequential', default=True, help='Enable parallel processing of projects')
+@click.option('--max-workers', default=3, help='Maximum number of parallel workers')
+@click.option('--incremental', is_flag=True, help='Run incremental processing (skip existing outputs)')
+@click.option('--force', is_flag=True, help='Force regenerate all outputs (used with --incremental)')
 @click.pass_context
-def step3(ctx):
-    """Generate LLM+Weaviate-driven requirements (Step 3)."""
+def step3(ctx, parallel: bool, max_workers: int, incremental: bool, force: bool):
+    """Generate LLM+Weaviate-driven requirements (Step 3) - Refactored Implementation."""
     config = ctx.obj['config']
     logger = logging.getLogger(__name__)
 
     try:
-        llm = LLMClient(config)
-        reporting = ReportingManager(config)
-        wv = WeaviateClient(config)
-
-        # Load intermediate JSON
-        from pathlib import Path
-        import json
-        inter_path = Path(config.output_dir) / 'intermediate_step2.json'
-        if not inter_path.exists():
-            logger.warning("intermediate_step2.json not found; falling back to consolidated metadata")
-            inter_path = Path(config.output_dir) / 'consolidated_metadata.json'
-        data = {}
-        if inter_path.exists():
-            with open(inter_path, 'r', encoding='utf-8') as fh:
-                data = json.load(fh)
-
-        # For each project, synthesize a brief requirements overview using LLM and Weaviate stats
-        projects = data.get('projects') or {}
-        for name, proj in projects.items():
-            stats = wv.get_all_collection_stats()
-            prompt = (
-                f"Synthesize concise requirements overview for project {name}. "
-                f"Use provided file metadata, component types, and flags. "
-                f"Weaviate stats: {stats}. Return a markdown outline only.\n\n"
-                f"Project data (truncated):\n" + json.dumps({k: proj[k] for k in ['name', 'path', 'total_files'] if k in proj})
-            )
-            md = llm._complete_text(prompt, system="You create clean requirement outlines.", max_tokens=1200)
-            # Append to master requirements
-            master = reporting.requirements_dir / '_step3_overview.md'
-            with open(master, 'a', encoding='utf-8') as f:
-                f.write(f"\n\n# Project: {name}\n\n")
-                f.write(md)
-
-        wv.close()
-        logger.info("Step 3 synthesis completed")
+        from .step3_processor import Step3Processor
+        
+        logger.info("Starting Step 3 requirements synthesis (refactored)...")
+        processor = Step3Processor(config)
+        
+        if incremental:
+            processor.run_incremental(force_regenerate=force)
+        else:
+            processor.run(parallel=parallel, max_workers=max_workers)
+        
+        logger.info("Step 3 synthesis completed successfully")
 
     except Exception as e:
         logger.error(f"Error in step3: {e}")

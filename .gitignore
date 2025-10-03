@@ -39,3 +39,5 @@ clever*
 data/*
 *.venv*
 logs/*
+output*
+weaviate*
