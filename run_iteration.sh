@@ -462,11 +462,66 @@ main() {
     echo ""
     
     # Run the iteration
-    print_status "Starting complete iteration..."
+    print_status "Starting complete iteration with CrewAI analysis..."
     echo ""
     
-    # If step scripts exist, prefer two-step flow, else legacy functions
-    if [ -x "./step1.sh" ] && [ -x "./step2.sh" ]; then
+    # If step scripts exist, prefer three-step flow, else legacy functions
+    if [ -x "./step1.sh" ] && [ -x "./step2.sh" ] && [ -x "./step3-crewai.sh" ]; then
+        print_status "Running enhanced three-step workflow with CrewAI..."
+        echo ""
+        
+        # Step 1: Index and Discovery
+        print_status "=== Step 1: Project Discovery and Indexing ==="
+        if ./step1.sh; then
+            print_success "Step 1 completed successfully"
+        else
+            print_error "Step 1 failed - iteration aborted"
+            exit 1
+        fi
+        echo ""
+        
+        # Step 2: Analysis
+        print_status "=== Step 2: Component Analysis ==="
+        if ./step2.sh; then
+            print_success "Step 2 completed successfully"
+        else
+            print_error "Step 2 failed - iteration aborted"
+            exit 1
+        fi
+        echo ""
+        
+        # Step 3: CrewAI Requirements Generation
+        print_status "=== Step 3: CrewAI Agent-Based Requirements Generation ==="
+        if ./step3-crewai.sh --no-verbose; then
+            print_success "Step 3 CrewAI completed successfully"
+        else
+            print_error "Step 3 CrewAI failed - iteration incomplete"
+            print_warning "Continuing with statistics collection..."
+        fi
+        echo ""
+        
+        # Step 4: Statistics
+        print_status "=== Step 4: Statistics Collection ==="
+        show_statistics
+        echo ""
+        
+        # Create summary
+        create_summary
+        echo ""
+        print_success "Enhanced iteration completed successfully!"
+        print_success "Output saved to: $OUTPUT_DIR"
+        echo ""
+        echo "📊 Generated Outputs:"
+        echo "  📁 Requirements (CrewAI): $OUTPUT_DIR/requirements/crewai/"
+        echo "  📁 Component Analysis: $OUTPUT_DIR/projects/"
+        echo "  📁 Vector Database: Weaviate collections"
+        echo "  📄 Summary: $OUTPUT_DIR/iteration_summary.txt"
+        echo ""
+        echo "🔧 Next Steps:"
+        echo "  python -m src.cli query       # Search indexed data"
+        echo "  python -m src.cli stats       # View statistics"
+        echo "  ./step3-pgm.sh               # Run programmatic requirements"
+    elif [ -x "./step1.sh" ] && [ -x "./step2.sh" ]; then
         print_status "Detected step1.sh and step2.sh; running two-step workflow..."
         echo ""
         ./step1.sh

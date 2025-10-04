@@ -40,4 +40,12 @@ data/*
 *.venv*
 logs/*
 output*
-weaviate*
+*weaviate*
+weaviate-data/
+weaviate-data/javacodechunks/zqVBBGrXLdCS/indexcount
+weaviate-data/javacodechunks/zqVBBGrXLdCS/indexcount
+weaviate-data/javacodechunks/zqVBBGrXLdCS/proplengths
+weaviate-data/javacodechunks/zqVBBGrXLdCS/main.hnsw.commitlog.d/1759321856
+
+# generated vector DB
+weaviate-data/

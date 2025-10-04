@@ -322,13 +322,16 @@ class Step3CrewAIProcessor:
             description=f'''Analyze the backend components of project "{project_name}".
             
             Your task is to:
-            1. Identify and categorize DAO (Data Access Object) components
-            2. Identify and categorize DTO (Data Transfer Object) components  
-            3. Identify and categorize Service layer components
-            4. Extract relationships between these components
-            5. Document business logic and transaction boundaries
-            6. Use the source_code_revisitor tool to examine specific files in detail
+            1. For each Java file in the project, use the source_code_revisitor tool to read its content
+            2. Identify and categorize DAO (Data Access Object) components based on actual annotations and patterns
+            3. Identify and categorize DTO (Data Transfer Object) components from the source code
+            4. Identify and categorize Service layer components using actual @Service annotations
+            5. Extract relationships between these components from import statements and dependency injection
+            6. Document business logic and transaction boundaries found in the source code
             7. Use the weaviate_enrichment tool to find related code patterns and examples
+            
+            **IMPORTANT**: You must use the source_code_revisitor tool for each significant Java file
+            to examine actual source code content, not just file metadata.
             
             Project files to analyze:
             {file_list_summary}
@@ -340,8 +343,11 @@ class Step3CrewAIProcessor:
             - Business logic encapsulation
             - Transaction management
             
-            Output a detailed JSON report with categorized components, relationships, and business logic.''',
-            expected_output='Comprehensive JSON report of backend component analysis with DAO/DTO/Service categorization',
+            Output a detailed JSON report with components categorized into dao, dto, and service arrays.
+            Include relationships between components, business logic descriptions, and a list of 
+            source files analyzed using the source_code_revisitor tool. Each component should include
+            file_path, class_name, methods/fields, and annotations found in the actual source code.''',
+            expected_output='Comprehensive JSON report of backend component analysis with actual source code analysis',
             agent=agent
         )
     
@@ -354,13 +360,16 @@ class Step3CrewAIProcessor:
             description=f'''Analyze the frontend components of project "{project_name}".
             
             Your task is to:
-            1. Identify UI components and their purposes
-            2. Extract form definitions and input validations
-            3. Identify event handlers and user interaction patterns
-            4. Document API calls and data binding
-            5. Analyze navigation flows and routing
-            6. Use the source_code_revisitor tool to examine UI files in detail
+            1. For each frontend file (JSP, HTML, JS, CSS), use the source_code_revisitor tool to read its content
+            2. Identify UI components and their purposes from actual source code
+            3. Extract form definitions and input validations from HTML/JSP source
+            4. Identify event handlers and user interaction patterns from JavaScript code
+            5. Document API calls and data binding found in the source files
+            6. Analyze navigation flows and routing from actual implementation
             7. Use the weaviate_enrichment tool to find similar UI patterns
+            
+            **IMPORTANT**: You must use the source_code_revisitor tool for each frontend file
+            to examine actual source code content, not just file metadata.
             
             Project files to analyze:
             {file_list_summary}
@@ -373,8 +382,10 @@ class Step3CrewAIProcessor:
             - UI component relationships
             - Navigation and routing patterns
             
-            Output a detailed JSON report with UI components, workflows, and interaction patterns.''',
-            expected_output='Comprehensive JSON report of frontend component analysis with UI workflows and interactions',
+            Output a detailed JSON report with ui_components, workflows, api_calls, and navigation arrays.
+            Include source_files_analyzed list showing which files were examined with the source_code_revisitor tool.
+            Each component should include file_path, forms, interactions, and API calls found in actual source code.''',
+            expected_output='Comprehensive JSON report of frontend component analysis with actual source code analysis',
             agent=agent
         )
     
@@ -411,12 +422,16 @@ class Step3CrewAIProcessor:
             description=f'''Synthesize comprehensive requirements for project "{project_name}".
             
             Your task is to:
-            1. Collect and integrate results from Backend and Frontend analysis agents
-            2. Identify data flows between backend and frontend components
-            3. Document API contracts and integration points
-            4. Create comprehensive requirements documentation
-            5. Ensure all cross-cutting concerns are addressed
-            6. Generate traceability mapping from requirements to source code
+            1. Collect and integrate actual analysis results from Backend and Frontend analysis agents
+            2. Use the specific component lists, relationships, and source files identified by other agents
+            3. Map data flows between the actual DAO/DTO/Service components and UI components found
+            4. Document API contracts based on the actual endpoints and services discovered
+            5. Create comprehensive requirements documentation from real source code analysis
+            6. Generate traceability mapping from requirements back to the specific source files analyzed
+            
+            **IMPORTANT**: Base your requirements on the actual components, methods, and relationships
+            found by the Backend and Frontend agents in their source code analysis. Do not create
+            generic requirements - use the specific findings from source_code_revisitor tool results.
             
             Integration focus areas:
             - Backend-to-Frontend data flow
