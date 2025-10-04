@@ -31,3 +31,7 @@ lxml>=4.9.0
 # Optional: For async processing
 aiohttp>=3.8.0
 asyncio-throttle>=1.0.0
+
+# CrewAI for agent-based processing
+crewai>=0.28.0
+crewai-tools>=0.1.0

@@ -276,6 +276,52 @@ def step3(ctx, parallel: bool, max_workers: int, incremental: bool, force: bool)
         logger.error(f"Error in step3: {e}")
         sys.exit(1)
 
+
+@cli.command(name='step3-pgm')
+@click.option('--parallel/--sequential', default=True, help='Enable parallel processing of projects')
+@click.option('--max-workers', default=3, help='Maximum number of parallel workers')
+@click.pass_context
+def step3_pgm(ctx, parallel: bool, max_workers: int):
+    """Generate enhanced requirements with backend/frontend separation (Step 3-PGM)."""
+    config = ctx.obj['config']
+    logger = logging.getLogger(__name__)
+
+    try:
+        from .step3_pgm_processor import Step3PgmProcessor
+        
+        logger.info("Starting Step 3-PGM (Programmatic) processing...")
+        processor = Step3PgmProcessor(config)
+        processor.run(parallel=parallel, max_workers=max_workers)
+        logger.info("Step 3-PGM processing completed successfully")
+
+    except Exception as e:
+        logger.error(f"Error in step3-pgm: {e}")
+        sys.exit(1)
+
+
+@cli.command(name='step3-crewai')
+@click.pass_context
+def step3_crewai(ctx):
+    """Generate requirements using CrewAI agent-based analysis (Step 3-CrewAI)."""
+    config = ctx.obj['config']
+    logger = logging.getLogger(__name__)
+
+    try:
+        from .step3_crewai_processor import Step3CrewAIProcessor
+        
+        logger.info("Starting Step 3-CrewAI (Agent-based) processing...")
+        processor = Step3CrewAIProcessor(config)
+        processor.run()
+        logger.info("Step 3-CrewAI processing completed successfully")
+
+    except ImportError as e:
+        logger.error("CrewAI dependencies not installed. Run: pip install crewai crewai-tools")
+        sys.exit(1)
+    except Exception as e:
+        logger.error(f"Error in step3-crewai: {e}")
+        sys.exit(1)
+
+
 @cli.command()
 @click.pass_context
 def requirements(ctx):
