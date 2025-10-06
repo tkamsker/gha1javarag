@@ -11,6 +11,7 @@ echo "[INFO] Running Step 3-PGM: Programmatic Backend/Frontend Analysis"
 PARALLEL="--parallel"
 MAX_WORKERS="3"
 VERBOSE="--verbose"
+CLASSIFICATION="--enhanced"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -30,18 +31,32 @@ while [[ $# -gt 0 ]]; do
       VERBOSE=""
       shift
       ;;
+    --enhanced)
+      CLASSIFICATION="--enhanced"
+      shift
+      ;;
+    --pattern-based)
+      CLASSIFICATION="--pattern-based"
+      shift
+      ;;
     -h|--help)
       echo "Usage: $0 [OPTIONS]"
       echo ""
       echo "Step 3-PGM: Programmatic Backend/Frontend Requirements Analysis"
       echo ""
       echo "Features:"
-      echo "  - Distinguishes backend (DAO/DTO/Service) and frontend components"
-      echo "  - Revisits source code for detailed analysis"
-      echo "  - Enriches requirements with Weaviate semantic data"
-      echo "  - Generates layered documentation with traceability"
+      echo "  - 🧠 LLM-based component classification (enhanced mode)"
+      echo "  - 📁 Distinguishes backend (DAO/DTO/Service) and frontend components"
+      echo "  - 📄 Revisits source code for detailed analysis"  
+      echo "  - 🔍 Enriches requirements with Weaviate semantic data"
+      echo "  - 📊 Generates quality metrics and classification reports"
+      echo "  - 🗂️ Creates layered documentation with traceability"
       echo ""
-      echo "Options:"
+      echo "Classification Methods:"
+      echo "  --enhanced        🧠 Use LLM-based content analysis (default, recommended)"
+      echo "  --pattern-based   📝 Use filename pattern matching (legacy)"
+      echo ""
+      echo "Processing Options:"
       echo "  --sequential      Disable parallel processing"
       echo "  --parallel        Enable parallel processing (default)"
       echo "  --max-workers N   Set maximum number of workers (default: 3)"
@@ -129,10 +144,11 @@ if [ -n "$VERBOSE" ]; then
   CMD="$CMD $VERBOSE"
 fi
 
-CMD="$CMD step3-pgm $PARALLEL --max-workers $MAX_WORKERS"
+CMD="$CMD step3-pgm $PARALLEL --max-workers $MAX_WORKERS $CLASSIFICATION"
 
 echo "[INFO] Executing: $CMD"
 echo "[INFO] Processing mode: $([ "$PARALLEL" = "--parallel" ] && echo "Parallel ($MAX_WORKERS workers)" || echo "Sequential")"
+echo "[INFO] Classification: $([ "$CLASSIFICATION" = "--enhanced" ] && echo "🧠 LLM-based Content Analysis" || echo "📝 Pattern-based (Legacy)")"
 echo "[INFO] Analysis type: Backend/Frontend Component Analysis with Weaviate Enrichment"
 
 # Execute step3-pgm processing

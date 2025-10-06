@@ -280,20 +280,45 @@ def step3(ctx, parallel: bool, max_workers: int, incremental: bool, force: bool)
 @cli.command(name='step3-pgm')
 @click.option('--parallel/--sequential', default=True, help='Enable parallel processing of projects')
 @click.option('--max-workers', default=3, help='Maximum number of parallel workers')
+@click.option('--enhanced/--pattern-based', default=True, help='Use enhanced LLM-based classification or pattern-based (legacy)')
 @click.pass_context
-def step3_pgm(ctx, parallel: bool, max_workers: int):
+def step3_pgm(ctx, parallel: bool, max_workers: int, enhanced: bool):
     """Generate enhanced requirements with backend/frontend separation (Step 3-PGM)."""
     config = ctx.obj['config']
     logger = logging.getLogger(__name__)
 
     try:
-        from .step3_pgm_processor import Step3PgmProcessor
+        if enhanced:
+            logger.info("Starting Step 3-PGM with Enhanced LLM-based Classification...")
+            from .step3_pgm_processor_enhanced import EnhancedStep3PgmProcessor
+            processor = EnhancedStep3PgmProcessor(config)
+        else:
+            logger.info("Starting Step 3-PGM with Pattern-based Classification (legacy)...")
+            from .step3_pgm_processor import Step3PgmProcessor
+            processor = Step3PgmProcessor(config)
         
-        logger.info("Starting Step 3-PGM (Programmatic) processing...")
-        processor = Step3PgmProcessor(config)
-        processor.run(parallel=parallel, max_workers=max_workers)
+        processor.parallel_processing = parallel
+        processor.max_workers = max_workers
+        processor.run()
+        
         logger.info("Step 3-PGM processing completed successfully")
 
+    except ImportError as e:
+        if enhanced:
+            logger.error("Enhanced classification dependencies not available, falling back to pattern-based")
+            try:
+                from .step3_pgm_processor import Step3PgmProcessor
+                processor = Step3PgmProcessor(config)
+                processor.parallel_processing = parallel
+                processor.max_workers = max_workers
+                processor.run()
+                logger.info("Step 3-PGM processing completed with pattern-based fallback")
+            except Exception as fallback_e:
+                logger.error(f"Error in step3-pgm fallback: {fallback_e}")
+                sys.exit(1)
+        else:
+            logger.error(f"Error importing step3-pgm: {e}")
+            sys.exit(1)
     except Exception as e:
         logger.error(f"Error in step3-pgm: {e}")
         sys.exit(1)
