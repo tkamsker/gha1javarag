@@ -70,6 +70,7 @@ class Step3PgmProcessor:
         # Output directories
         self.requirements_dir = Path(self.config.output_dir) / 'requirements'
         self.pgm_output_dir = self.requirements_dir / 'pgm'
+        self.pgm_projects_dir = self.pgm_output_dir / 'projects'
         
         # Component classification patterns
         self.backend_patterns = {
@@ -742,7 +743,7 @@ All components analyzed with Weaviate enrichment and source code revisiting.
     def generate_output_files(self, analysis: ProjectLayerAnalysis) -> None:
         """Generate structured output files for a project."""
         try:
-            project_dir = self.pgm_output_dir / analysis.project_name
+            project_dir = self.pgm_projects_dir / analysis.project_name
             project_dir.mkdir(parents=True, exist_ok=True)
             
             # Generate main requirements
@@ -861,6 +862,7 @@ All components analyzed with Weaviate enrichment and source code revisiting.
             
             # Create output directories
             self.pgm_output_dir.mkdir(parents=True, exist_ok=True)
+            self.pgm_projects_dir.mkdir(parents=True, exist_ok=True)
             
             # Process projects
             project_analyses = {}

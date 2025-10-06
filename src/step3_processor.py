@@ -55,7 +55,10 @@ class Step3Config:
         """Validate file system prerequisites."""
         output_dir = Path(self.config.output_dir)
         if not output_dir.exists():
-            raise FileNotFoundError(f"Output directory does not exist: {output_dir}")
+            try:
+                output_dir.mkdir(parents=True, exist_ok=True)
+            except Exception:
+                raise FileNotFoundError(f"Output directory does not exist: {output_dir}")
 
 
 class Step3ProcessingError(Exception):

@@ -196,6 +196,17 @@ def analyze(ctx, no_upsert: bool, llm_enrich: bool):
                     p = prompt_for_file(f.language, project.name, f.relative_path, content)
                     llm_meta = llm.complete_json(p['user'], system=p['system'], max_tokens=1800) or {}
 
+                # Normalize a META section for later refactoring steps
+                meta = {
+                    'kind': enhanced.get('primary_purpose', f.language),
+                    'provides_endpoints': bool(llm_meta.get('endpoints')) if isinstance(llm_meta, dict) else False,
+                    'uses_tables': [t.get('name') for t in llm_meta.get('tables', [])] if isinstance(llm_meta, dict) and isinstance(llm_meta.get('tables', []), list) else [],
+                    'queries': llm_meta.get('queries', []) if isinstance(llm_meta, dict) else [],
+                    'config_keys': list(llm_meta.get('keys', {}).keys()) if isinstance(llm_meta, dict) and isinstance(llm_meta.get('keys', {}), dict) else [],
+                    'ui_components': llm_meta.get('uiComponents', []) if isinstance(llm_meta, dict) else [],
+                    'navigation': llm_meta.get('navigation', []) if isinstance(llm_meta, dict) else [],
+                }
+
                 file_record = {
                     'path': f.relative_path,
                     'language': f.language,
@@ -206,7 +217,8 @@ def analyze(ctx, no_upsert: bool, llm_enrich: bool):
                         'file_classification': enhanced,
                         'purpose': enhanced.get('primary_purpose', 'Source file')
                     },
-                    'llm_metadata': llm_meta
+                    'llm_metadata': llm_meta,
+                    'meta': meta
                 }
                 projects_map[project.name]['file_list'].append(file_record)
 

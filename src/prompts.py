@@ -55,6 +55,15 @@ def prompt_for_file(language: str, project: str, path: str, content_sample: str)
         user = ("Extract functions/classes (JS) or rules (CSS). Return a SINGLE JSON object (double-quoted) strictly matching:\n" + schema)
         return {"system": SYSTEM_BASE, "user": base_user + "\n\n" + user}
 
+    if language in ['ini', 'properties', 'config']:
+        schema = (
+            '{"file":"' + path + '","language":"' + language + '","sections":[],"keys":{},"envDependencies":[]}'
+        )
+        user = (
+            "Extract sections and key-value pairs, and identify environment-dependent keys (URLs, credentials, feature flags). Return STRICT JSON matching:\n" + schema
+        )
+        return {"system": SYSTEM_BASE, "user": base_user + "\n\n" + user}
+
     # default
     schema = '{"file":"' + path + '","language":"' + language + '","notes":""}'
     user = ("Extract any useful metadata. Return a SINGLE JSON object (double-quoted) strictly matching:\n" + schema)

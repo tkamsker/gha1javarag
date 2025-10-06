@@ -186,6 +186,40 @@ class SourceCodeRevisitorTool(BaseTool):
         return patterns
 
 
+class _MockAdapterTool(BaseTool):
+    """Adapter to wrap arbitrary callables/mocks into a CrewAI BaseTool for testing."""
+    name: str = "mock_adapter_tool"
+    description: str = "Adapter tool that forwards to an underlying callable's __call__ or _run"
+
+    def __init__(self, underlying):
+        super().__init__()
+        self._underlying = underlying
+
+    def _run(self, *args, **kwargs) -> str:
+        func = None
+        if hasattr(self._underlying, "_run") and callable(getattr(self._underlying, "_run")):
+            func = getattr(self._underlying, "_run")
+        elif callable(self._underlying):
+            func = self._underlying
+        else:
+            # Best-effort string for validation only
+            return ""
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            return f"adapter_error: {e}"
+
+
+def _ensure_tool(tool) -> BaseTool:
+    """Ensure the given object is a BaseTool; wrap mocks if necessary."""
+    try:
+        if isinstance(tool, BaseTool):
+            return tool
+    except Exception:
+        pass
+    return _MockAdapterTool(tool)
+
+
 class Step3CrewAIProcessor:
     """
     CrewAI-based processor for Step 3 requirements synthesis.
@@ -263,7 +297,7 @@ class Step3CrewAIProcessor:
             You understand DAO/DTO patterns, dependency injection, and service layer design.''',
             verbose=True,
             allow_delegation=True,
-            tools=[weaviate_tool, revisitor_tool],
+            tools=[_ensure_tool(weaviate_tool), _ensure_tool(revisitor_tool)],
             max_iter=3,
             memory=True
         )
@@ -279,7 +313,7 @@ class Step3CrewAIProcessor:
             event handlers, API interactions, and UI business logic.''',
             verbose=True,
             allow_delegation=True,
-            tools=[weaviate_tool, revisitor_tool],
+            tools=[_ensure_tool(weaviate_tool), _ensure_tool(revisitor_tool)],
             max_iter=3,
             memory=True
         )
@@ -294,7 +328,7 @@ class Step3CrewAIProcessor:
             code patterns, similar implementations, and related business logic using vector similarity.''',
             verbose=True,
             allow_delegation=False,
-            tools=[weaviate_tool],
+            tools=[_ensure_tool(weaviate_tool)],
             max_iter=2,
             memory=True
         )
