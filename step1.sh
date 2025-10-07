@@ -27,12 +27,16 @@ if [ ! -f ".env" ]; then
   exit 1
 fi
 
-# Ensure OUTPUT_DIR exists; if not set in .env, append once
-if ! grep -q '^OUTPUT_DIR=' .env; then
-  TS=$(date +"%Y%m%d_%H%M%S")
-  echo "OUTPUT_DIR=./output_${TS}" >> .env
+# Ensure OUTPUT_DIR exists; prefer environment, then .env, else default
+if [ -n "$OUTPUT_DIR" ]; then
+  OUT_DIR="$OUTPUT_DIR"
+else
+  if ! grep -q '^OUTPUT_DIR=' .env; then
+    TS=$(date +"%Y%m%d_%H%M%S")
+    echo "OUTPUT_DIR=./output_${TS}" >> .env
+  fi
+  OUT_DIR=$(grep '^OUTPUT_DIR=' .env | cut -d'=' -f2)
 fi
-OUT_DIR=$(grep '^OUTPUT_DIR=' .env | cut -d'=' -f2)
 mkdir -p "$OUT_DIR"
 
 print_status "Running analysis (Step 1) ..."
@@ -46,7 +50,8 @@ fi
 
 # Write completion marker for run_iteration.sh to detect reuse
 MARKER_FILE="$OUT_DIR/.step1_complete"
-echo "completed_at=$(date -Is)" > "$MARKER_FILE"
+# Portable ISO-like timestamp for macOS/BSD date
+echo "completed_at=$(date +"%Y-%m-%dT%H:%M:%S%z")" > "$MARKER_FILE"
 echo "source_dir=$(grep '^JAVA_SOURCE_DIR=' .env | cut -d'=' -f2)" >> "$MARKER_FILE"
 
 print_status "Step 1 completed. Consolidated JSON should be in \"$OUT_DIR/consolidated_metadata.json\""

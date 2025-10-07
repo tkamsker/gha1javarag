@@ -255,8 +255,26 @@ class WeaviateClient:
                 limit=limit,
                 return_metadata=["score"]
             )
-            
-            return result.objects if hasattr(result, 'objects') else []
+            # Normalize v4 result objects to plain dictionaries expected by callers
+            normalized: List[Dict[str, Any]] = []
+            objects = result.objects if hasattr(result, 'objects') else []
+            for obj in objects:
+                # v4 returns objects with `.properties` and `.metadata`
+                props = getattr(obj, 'properties', {}) or {}
+                meta = getattr(obj, 'metadata', {}) or {}
+                normalized.append({
+                    'filePath': props.get('filePath', ''),
+                    'content': props.get('content', ''),
+                    'chunkKind': props.get('chunkKind', ''),
+                    'language': props.get('language', ''),
+                    'className': props.get('className', ''),
+                    'functionName': props.get('functionName', ''),
+                    '_additional': {
+                        'score': getattr(meta, 'score', None) if hasattr(meta, 'score') else meta.get('score', None),
+                        'distance': getattr(meta, 'distance', None) if hasattr(meta, 'distance') else meta.get('distance', None)
+                    }
+                })
+            return normalized
         
         except Exception as e:
             self.logger.error(f"Error querying {collection_name}: {e}")
@@ -314,5 +332,11 @@ class WeaviateClient:
     def close(self):
         """Close the Weaviate client connection."""
         if self.client:
-            self.client = None
+            # Properly close v4 client if possible to avoid resource warnings
+            try:
+                close_method = getattr(self.client, 'close', None)
+                if callable(close_method):
+                    close_method()
+            finally:
+                self.client = None
             self.logger.info("Closed Weaviate client connection")

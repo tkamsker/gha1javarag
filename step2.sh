@@ -27,9 +27,13 @@ if [ ! -f ".env" ]; then
   exit 1
 fi
 
-OUT_DIR=$(grep '^OUTPUT_DIR=' .env | cut -d'=' -f2)
+if [ -n "$OUTPUT_DIR" ]; then
+  OUT_DIR="$OUTPUT_DIR"
+else
+  OUT_DIR=$(grep '^OUTPUT_DIR=' .env | cut -d'=' -f2)
+fi
 if [ -z "$OUT_DIR" ]; then
-  print_error "OUTPUT_DIR not set in .env"
+  print_error "OUTPUT_DIR not set (env or .env)"
   exit 1
 fi
 

@@ -102,3 +102,13 @@ Leverage autonomous agent(s) to:
 - Supports distributed/parallel runs if needed in the future.
 - All agent interactions, LLM prompts, and vector queries are auditable.
 
+
+
+## 2025.10.07 
+
+bash -lc "cd /Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag && source venv/bin/activate && echo CURRENT_ENV_OUTPUT_DIR=$(grep '^OUTPUT_DIR=' .env | cut -d'=' -f2); ls -1d output_* | tail -n 1"
+
+now 
+
+./run_iteration.sh --rotate-output --force-step1 --repeat-step2 --step3=both --step3-parallel --step3-max-workers 3
+

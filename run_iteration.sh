@@ -536,6 +536,7 @@ main() {
         fi
     fi
     print_status "Using output directory: $OUTPUT_DIR"
+    export OUTPUT_DIR  # ensure child scripts and Python see this OUTPUT_DIR
     mkdir -p "$OUTPUT_DIR"
     print_success "Environment setup completed"
     echo ""
@@ -591,7 +592,7 @@ main() {
         if [ ! -d "$OUTPUT_DIR/requirements" ]; then RUN_STEP2=1; fi
         if [ $RUN_STEP2 -eq 1 ]; then
             print_status "=== Step 2: Component Analysis ==="
-            if ./step2.sh; then
+            if OUTPUT_DIR="$OUTPUT_DIR" ./step2.sh; then
                 print_success "Step 2 completed successfully"
             else
                 print_error "Step 2 failed - iteration aborted"; exit 1
@@ -605,16 +606,16 @@ main() {
         case "$STEP3_MODE" in
             pgm)
                 print_status "=== Step 3: Programmatic Requirements Generation (PGM) ==="
-                ./step3-pgm.sh $([ "$STEP3_PARALLEL" = "--parallel" ] && echo "--parallel" || echo "--sequential") --max-workers "$STEP3_MAX_WORKERS" $PGM_CLASSIFICATION_FLAG || print_warning "Step 3-PGM failed"
+                OUTPUT_DIR="$OUTPUT_DIR" ./step3-pgm.sh $([ "$STEP3_PARALLEL" = "--parallel" ] && echo "--parallel" || echo "--sequential") --max-workers "$STEP3_MAX_WORKERS" $PGM_CLASSIFICATION_FLAG || print_warning "Step 3-PGM failed"
                 ;;
             crewai)
                 print_status "=== Step 3: CrewAI Agent-Based Requirements Generation ==="
-                ./step3-crewai.sh $CREWAI_VERBOSE_FLAG || print_warning "Step 3-CrewAI failed"
+                OUTPUT_DIR="$OUTPUT_DIR" ./step3-crewai.sh $CREWAI_VERBOSE_FLAG || print_warning "Step 3-CrewAI failed"
                 ;;
             both)
                 print_status "=== Step 3: PGM then CrewAI (Comparison) ==="
-                ./step3-pgm.sh $([ "$STEP3_PARALLEL" = "--parallel" ] && echo "--parallel" || echo "--sequential") --max-workers "$STEP3_MAX_WORKERS" $PGM_CLASSIFICATION_FLAG || print_warning "Step 3-PGM failed"
-                ./step3-crewai.sh $CREWAI_VERBOSE_FLAG || print_warning "Step 3-CrewAI failed"
+                OUTPUT_DIR="$OUTPUT_DIR" ./step3-pgm.sh $([ "$STEP3_PARALLEL" = "--parallel" ] && echo "--parallel" || echo "--sequential") --max-workers "$STEP3_MAX_WORKERS" $PGM_CLASSIFICATION_FLAG || print_warning "Step 3-PGM failed"
+                OUTPUT_DIR="$OUTPUT_DIR" ./step3-crewai.sh $CREWAI_VERBOSE_FLAG || print_warning "Step 3-CrewAI failed"
                 write_comparison_index
                 ;;
             *) print_warning "Unknown --step3 mode '$STEP3_MODE'";;
