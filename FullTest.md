@@ -99,3 +99,34 @@ OUTPUT_DIR=./output_20251007_132632 ./step3-crewai.sh --no-verbose
 ####
 
 bash -lc "cd /Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag && source venv/bin/activate && export OLLAMA_NUM_CTX=32768 OLLAMA_KEEP_ALIVE=5m LITELLM_TIMEOUT=180 LITELLM_MAX_TOKENS=800 && OUTPUT_DIR=./output_20251007_132632 ./step3-crewai.sh --no-verbose | sed -n '1,140p'"
+
+###
+bash -lc "cd /Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag && source venv/bin/activate && export OLLAMA_NUM_CTX=32768 OLLAMA_KEEP_ALIVE=5m LITELLM_TIMEOUT=180 LITELLM_MAX_TOKENS=800 && OUTPUT_DIR=./output_20251007_132632 ./step3-crewai.sh --no-verbose | sed -n '1,120p'"
+
+##
+
+export OLLAMA_NUM_CTX=32768 OLLAMA_KEEP_ALIVE=5m LITELLM_TIMEOUT=240 LITELLM_MAX_TOKENS=600
+export LITELLM_RETRIES=2 LITELLM_RETRY_AFTER=2
+OUTPUT_DIR=./output_20251007_132632 ./step3-crewai.sh --no-verbose
+
+
+##
+bash -lc "cd /Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag && source venv/bin/activate && export OLLAMA_NUM_CTX=32768 OLLAMA_KEEP_ALIVE=5m LITELLM_TIMEOUT=240 LITELLM_MAX_TOKENS=600 && OUTPUT_DIR=./output_20251007_132632 ./step3-crewai.sh --no-verbose | sed -n '1,120p'"
+
+## malloc issue 
+export OLLAMA_NUM_CTX=32768
+export OLLAMA_KEEP_ALIVE=5m
+OLLAMA_NUM_PARALLEL=1
+OLLAMA_KV_OVERHEAD=0.95
+export LITELLM_TIMEOUT=180
+export LITELLM_RETRIES=3
+export LITELLM_RETRY_AFTER=2
+export LITELLM_MAX_TOKENS=800
+OUTPUT_DIR=./output_20251007_132632 ./step3-crewai.sh --no-verbose
+
+## 
+export OLLAMA_FALLBACK_MODEL_NAME=llama3.1:8b
+export OLLAMA_NUM_CTX=32768 OLLAMA_KEEP_ALIVE=5m OLLAMA_NUM_PARALLEL=1
+export LITELLM_TIMEOUT=240 LITELLM_RETRIES=3 LITELLM_RETRY_AFTER=2 LITELLM_MAX_TOKENS=700
+export LITELLM_STREAM=false
+OUTPUT_DIR=./output_20251007_132632 ./step3-crewai.sh --no-verbose

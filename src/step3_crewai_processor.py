@@ -10,6 +10,7 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from datetime import datetime
+import os
 
 try:
     from crewai import Agent, Task, Crew, Process, LLM as CrewLLM
@@ -237,6 +238,7 @@ class Step3CrewAIProcessor:
         self.weaviate_client: Optional[WeaviateClient] = None
         self.reporting: Optional[ReportingManager] = None
         self.crewai_llm: Optional[CrewLLM] = None
+        self.crewai_llm_fallback_model: Optional[str] = None
         
         # Output directories
         self.requirements_dir = Path(self.config.output_dir) / 'requirements'
@@ -256,7 +258,18 @@ class Step3CrewAIProcessor:
             # Configure CrewAI LLM to use local Ollama (avoid LiteLLM OpenAI default)
             try:
                 if getattr(self.config, 'ai_provider', 'ollama') == 'ollama':
-                    model_name = getattr(self.config, 'ollama_model_name', 'llama3.2:3b')
+                    # Priority: explicit config -> .env OLLAMA_MODEL_NAME -> default
+                    model_name = (
+                        getattr(self.config, 'ollama_model_name', None)
+                        or os.getenv('OLLAMA_MODEL_NAME')
+                        or 'llama3.2:3b'
+                    )
+                    # Fallback smaller model if primary is flaky (env override supported)
+                    self.crewai_llm_fallback_model = (
+                        getattr(self.config, 'ollama_fallback_model_name', None)
+                        or os.getenv('OLLAMA_FALLBACK_MODEL_NAME')
+                        or 'llama3.1:8b'
+                    )
                     base_url = getattr(self.config, 'ollama_base_url', 'http://localhost:11434')
                     # CrewAI expects model format like "ollama/<model>"
                     self.crewai_llm = CrewLLM(
@@ -268,11 +281,14 @@ class Step3CrewAIProcessor:
                         presence_penalty=0.0,
                         frequency_penalty=0.0,
                         stop=["<|endoftext|>", "Human:", "```"],
+                        request_timeout=180,
                     )
+                    self.logger.info(f"CrewAI LLM initialized (Ollama): model={model_name}, fallback={self.crewai_llm_fallback_model}")
                 else:
                     # Fallback: try provider's model name directly; relies on env keys if needed
                     openai_model = getattr(self.config, 'openai_model_name', 'gpt-4o')
-                    self.crewai_llm = CrewLLM(model=openai_model, temperature=0.1, max_tokens=800, top_p=0.8, presence_penalty=0.0, frequency_penalty=0.0, stop=["<|endoftext|>", "Human:", "```"])
+                    self.crewai_llm = CrewLLM(model=openai_model, temperature=0.1, max_tokens=800, top_p=0.8, presence_penalty=0.0, frequency_penalty=0.0, stop=["<|endoftext|>", "Human:", "```"], request_timeout=180)
+                    self.logger.info(f"CrewAI LLM initialized (provider): model={openai_model}")
             except Exception as e:
                 self.logger.warning(f"Could not initialize CrewAI LLM, will use framework default: {e}")
             
@@ -582,9 +598,24 @@ class Step3CrewAIProcessor:
             memory=False
         )
         
-        try:
-            # Execute crew
-            result = crew.kickoff()
+        def _run_once(limit: int = 20) -> Dict[str, Any]:
+            # Rebuild tasks with a reduced file cap if needed
+            nonlocal backend_task, frontend_task
+            backend_task = self.create_backend_analysis_task(backend_agent, project_name, {**project_data, 'file_list': project_data.get('file_list', [])[:limit]})
+            frontend_task = self.create_frontend_analysis_task(frontend_agent, project_name, {**project_data, 'file_list': project_data.get('file_list', [])[:limit]})
+            enrichment_task = self.create_enrichment_task(enricher_agent, project_name)
+            integration_task = self.create_integration_synthesis_task(integration_agent, project_name)
+            integration_task.context = [backend_task, frontend_task, enrichment_task]
+
+            crew_local = Crew(
+                agents=[backend_agent, frontend_agent, enricher_agent, integration_agent],
+                tasks=[backend_task, frontend_task, enrichment_task, integration_task],
+                process=Process.sequential,
+                verbose=True,
+                memory=False
+            )
+
+            result_local = crew_local.kickoff()
 
             # Sanitize agent outputs to remove junk prefixes and enforce markdown bullets
             def _sanitize(text: Any, max_lines: int = 20) -> str:
@@ -616,7 +647,7 @@ class Step3CrewAIProcessor:
             # Extract results
             crew_results = {
                 'project_name': project_name,
-                'execution_result': str(result),
+                'execution_result': str(result_local),
                 'backend_analysis': backend_sane,
                 'frontend_analysis': frontend_sane,
                 'enrichment_data': enrich_sane,
@@ -628,10 +659,37 @@ class Step3CrewAIProcessor:
                     'execution_time': None  # Would be tracked in real implementation
                 }
             }
-            
-            self.logger.info(f"CrewAI processing completed for project: {project_name}")
             return crew_results
-            
+
+        try:
+            # First attempt with default cap (20)
+            result_primary = _run_once(limit=20)
+            if (not result_primary.get('backend_analysis')) or (not result_primary.get('frontend_analysis')):
+                self.logger.warning("Primary CrewAI run yielded empty outputs, retrying with smaller scope (limit=10)...")
+                result_secondary = _run_once(limit=10)
+                # If still empty, switch to fallback model and retry once more
+                if ((not result_secondary.get('backend_analysis')) or (not result_secondary.get('frontend_analysis'))) and self.crewai_llm_fallback_model:
+                    try:
+                        self.logger.warning(f"Secondary run still empty. Switching to fallback LLM model: {self.crewai_llm_fallback_model}")
+                        base_url = getattr(self.config, 'ollama_base_url', 'http://localhost:11434')
+                        self.crewai_llm = CrewLLM(
+                            model=f"ollama/{self.crewai_llm_fallback_model}",
+                            base_url=base_url,
+                            temperature=0.1,
+                            max_tokens=600,
+                            top_p=0.8,
+                            presence_penalty=0.0,
+                            frequency_penalty=0.0,
+                            stop=["<|endoftext|>", "Human:", "```"],
+                            request_timeout=180,
+                        )
+                        result_tertiary = _run_once(limit=10)
+                        return result_tertiary
+                    except Exception as e:
+                        self.logger.error(f"Fallback model run failed: {e}")
+                        return result_secondary
+                return result_secondary
+            return result_primary
         except Exception as e:
             self.logger.error(f"CrewAI processing failed for project {project_name}: {e}")
             return self._generate_fallback_crew_result(project_name, project_data, str(e))
