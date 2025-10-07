@@ -259,11 +259,20 @@ class Step3CrewAIProcessor:
                     model_name = getattr(self.config, 'ollama_model_name', 'llama3.2:3b')
                     base_url = getattr(self.config, 'ollama_base_url', 'http://localhost:11434')
                     # CrewAI expects model format like "ollama/<model>"
-                    self.crewai_llm = CrewLLM(model=f"ollama/{model_name}", base_url=base_url)
+                    self.crewai_llm = CrewLLM(
+                        model=f"ollama/{model_name}",
+                        base_url=base_url,
+                        temperature=0.1,
+                        max_tokens=800,
+                        top_p=0.8,
+                        presence_penalty=0.0,
+                        frequency_penalty=0.0,
+                        stop=["<|endoftext|>", "Human:", "```"],
+                    )
                 else:
                     # Fallback: try provider's model name directly; relies on env keys if needed
                     openai_model = getattr(self.config, 'openai_model_name', 'gpt-4o')
-                    self.crewai_llm = CrewLLM(model=openai_model)
+                    self.crewai_llm = CrewLLM(model=openai_model, temperature=0.1, max_tokens=800, top_p=0.8, presence_penalty=0.0, frequency_penalty=0.0, stop=["<|endoftext|>", "Human:", "```"])
             except Exception as e:
                 self.logger.warning(f"Could not initialize CrewAI LLM, will use framework default: {e}")
             
@@ -395,11 +404,11 @@ class Step3CrewAIProcessor:
             - Business logic encapsulation
             - Transaction management
             
-            Output a detailed JSON report with components categorized into dao, dto, and service arrays.
-            Include relationships between components, business logic descriptions, and a list of 
-            source files analyzed using the source_code_revisitor tool. Each component should include
-            file_path, class_name, methods/fields, and annotations found in the actual source code.''',
-            expected_output='Comprehensive JSON report of backend component analysis with actual source code analysis',
+            Output strictly as markdown bullets (max 15 bullets). Do NOT return JSON. Do NOT prefix with "Human:".
+            - Use the source_code_revisitor tool to read actual files when possible
+            - If a file's content is not available, skip it silently (no placeholders)
+            - Each bullet must be grounded in code (methods, annotations, relationships)''',
+            expected_output='Markdown bullet list (<=15) of backend findings grounded in code',
             agent=agent
         )
     
@@ -434,10 +443,11 @@ class Step3CrewAIProcessor:
             - UI component relationships
             - Navigation and routing patterns
             
-            Output a detailed JSON report with ui_components, workflows, api_calls, and navigation arrays.
-            Include source_files_analyzed list showing which files were examined with the source_code_revisitor tool.
-            Each component should include file_path, forms, interactions, and API calls found in actual source code.''',
-            expected_output='Comprehensive JSON report of frontend component analysis with actual source code analysis',
+            Output strictly as markdown bullets (max 15 bullets). Do NOT return JSON. Do NOT prefix with "Human:".
+            - Use the source_code_revisitor tool to read actual files when possible
+            - If a file's content is not available, skip it silently (no placeholders)
+            - Each bullet must be grounded in code (forms, handlers, API calls, navigation)''',
+            expected_output='Markdown bullet list (<=15) of frontend findings grounded in code',
             agent=agent
         )
     
@@ -459,12 +469,12 @@ class Step3CrewAIProcessor:
             - Locate comparable UI components
             - Discover business rule patterns
             
-            Provide enrichment data that helps other agents understand:
+            Provide enrichment data that helps other agents understand (output as max 10 markdown bullets, no JSON, no placeholders):
             - Common implementation patterns
             - Related business logic
             - Integration examples
             - Best practice implementations''',
-            expected_output='Semantic enrichment data supporting backend and frontend analysis',
+            expected_output='Markdown bullets (<=10) with enrichment insights (patterns, examples)',
             agent=agent
         )
     
@@ -493,7 +503,7 @@ class Step3CrewAIProcessor:
             - Security and authorization touchpoints
             - Error handling and exception flows
             
-            Generate structured markdown documentation with:
+            Generate structured markdown documentation (concise, grounded in prior findings, no JSON):
             - Executive summary
             - Backend requirements (DAO/DTO/Service details)
             - Frontend requirements (UI/Workflow details)
@@ -502,7 +512,7 @@ class Step3CrewAIProcessor:
             - API documentation
             - Business process flows
             - Traceability matrix''',
-            expected_output='Complete requirements documentation with backend/frontend integration analysis',
+            expected_output='Concise markdown requirements grounded in previous agent outputs',
             agent=agent
         )
     
@@ -575,15 +585,42 @@ class Step3CrewAIProcessor:
         try:
             # Execute crew
             result = crew.kickoff()
+
+            # Sanitize agent outputs to remove junk prefixes and enforce markdown bullets
+            def _sanitize(text: Any, max_lines: int = 20) -> str:
+                if not isinstance(text, str):
+                    return ""
+                cleaned = text.replace('\r', '')
+                for token in ["<|endoftext|>", "Human:", "```json", "```", "<|im_start|>"]:
+                    cleaned = cleaned.replace(token, "")
+                lines = [ln.strip() for ln in cleaned.splitlines() if ln.strip()]
+                # keep only bullet-like lines or short paragraphs
+                selected: List[str] = []
+                for ln in lines:
+                    if ln.startswith("- ") or ln.startswith("* "):
+                        selected.append(ln)
+                    elif len(ln) <= 160 and len(selected) < 3:
+                        selected.append(f"- {ln}")
+                return "\n".join(selected[:max_lines])
+
+            backend_raw = backend_task.output.raw if hasattr(backend_task, 'output') else None
+            frontend_raw = frontend_task.output.raw if hasattr(frontend_task, 'output') else None
+            enrich_raw = enrichment_task.output.raw if hasattr(enrichment_task, 'output') else None
+            integ_raw = integration_task.output.raw if hasattr(integration_task, 'output') else None
+
+            backend_sane = _sanitize(backend_raw, 15) or "- No backend findings."
+            frontend_sane = _sanitize(frontend_raw, 15) or "- No frontend findings."
+            enrich_sane = _sanitize(enrich_raw, 10) or "- No enrichment insights."
+            integ_sane = _sanitize(integ_raw, 60) or "# Requirements\n\n- No integration output."
             
             # Extract results
             crew_results = {
                 'project_name': project_name,
                 'execution_result': str(result),
-                'backend_analysis': backend_task.output.raw if hasattr(backend_task, 'output') else None,
-                'frontend_analysis': frontend_task.output.raw if hasattr(frontend_task, 'output') else None,
-                'enrichment_data': enrichment_task.output.raw if hasattr(enrichment_task, 'output') else None,
-                'integration_requirements': integration_task.output.raw if hasattr(integration_task, 'output') else None,
+                'backend_analysis': backend_sane,
+                'frontend_analysis': frontend_sane,
+                'enrichment_data': enrich_sane,
+                'integration_requirements': integ_sane,
                 'agent_interactions': self._extract_agent_interactions(crew),
                 'execution_stats': {
                     'agents_used': len(crew.agents),

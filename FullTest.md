@@ -83,3 +83,19 @@ To rerun
 
 Now CrewAI logs show it using Ollama successfully.
 
+## 
+OUTPUT_DIR=./output_20251007_132632 STEP3_CREWAI_SCOPE=backend ./step3-crewai.sh --no-verbose
+
+OUTPUT_DIR=./output_20251007_132632 STEP3_CREWAI_SCOPE=frontend ./step3-crewai.sh --no-verbose
+
+## malloc issue 
+export OLLAMA_NUM_CTX=32768
+export OLLAMA_KEEP_ALIVE=5m
+export LITELLM_TIMEOUT=180
+export LITELLM_MAX_TOKENS=800
+OUTPUT_DIR=./output_20251007_132632 ./step3-crewai.sh --no-verbose
+
+
+####
+
+bash -lc "cd /Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag && source venv/bin/activate && export OLLAMA_NUM_CTX=32768 OLLAMA_KEEP_ALIVE=5m LITELLM_TIMEOUT=180 LITELLM_MAX_TOKENS=800 && OUTPUT_DIR=./output_20251007_132632 ./step3-crewai.sh --no-verbose | sed -n '1,140p'"
