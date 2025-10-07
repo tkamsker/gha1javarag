@@ -763,6 +763,11 @@ All components analyzed with Weaviate enrichment and source code revisiting.
             trace_file = project_dir / 'traceability.json'
             with open(trace_file, 'w', encoding='utf-8') as f:
                 f.write(traceability)
+
+            # Generate compact, code-derived requirements (deeper pass)
+            compact_md = self._generate_compact_code_requirements(analysis)
+            with open(project_dir / 'compact_requirements.md', 'w', encoding='utf-8') as f:
+                f.write(compact_md)
             
             self.logger.info(f"Generated PGM output files for project: {analysis.project_name}")
             
@@ -980,3 +985,76 @@ Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             f.write(summary_content)
         
         self.logger.info(f"Generated PGM summary report for {len(project_analyses)} projects")
+
+    def _generate_compact_code_requirements(self, analysis: ProjectLayerAnalysis) -> str:
+        """Create a compact requirements doc distilled directly from source files.
+
+        Strategy:
+        - For each identified component, revisit source and ask the LLM for concise requirements
+          (role, responsibilities, key inputs/outputs, constraints) with strict length.
+        - Group by layer (DAO/DTO/Service, Frontend) and deduplicate similar bullets.
+        """
+        def summarize_component(comp: ComponentAnalysis) -> List[str]:
+            file_content = self.revisit_source_file(comp.file_path)
+            if not file_content:
+                return []
+            # Truncate content to keep prompt size bounded
+            snippet = file_content[:6000]
+            try:
+                prompt = (
+                    "From the following source code snippet, extract 3-6 concise, implementation-grounded "
+                    "requirements that describe what this component must do. Focus on responsibilities, key "
+                    "inputs/outputs, business rules, and external interactions. Use short bullet points. "
+                    "Avoid generic statements; base on actual code cues.\n\n"
+                    f"Component: {comp.component_name} ({comp.component_type})\n"
+                    f"File: {comp.file_path}\n\n"
+                    "Code snippet (may be truncated):\n" + snippet
+                )
+                text = self.llm_client._complete_text(
+                    prompt,
+                    system=(
+                        "You are a senior software analyst. Return only bullets, each starting with '- '. "
+                        "Keep total under 10 lines."
+                    ),
+                    max_tokens=400,
+                )
+                bullets = [line.strip() for line in text.splitlines() if line.strip().startswith('- ')]
+                return bullets[:10]
+            except Exception:
+                return []
+
+        def render_section(title: str, comps: List[ComponentAnalysis]) -> str:
+            if not comps:
+                return f"\n### {title}\nNo items.\n"
+            lines = [f"\n### {title}"]
+            for comp in comps[:60]:  # cap per section for speed
+                bullets = summarize_component(comp)
+                if not bullets:
+                    continue
+                lines.append(f"\n#### {comp.component_name} ({comp.file_path})")
+                lines.extend(bullets)
+            return "\n".join(lines) + "\n"
+
+        # Build document
+        doc_lines = [
+            f"# Compact Requirements (Code-Derived) - {analysis.project_name}",
+            f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            "",
+            "This document distills concise, implementation-based requirements directly from source files.",
+            "Use it as a compact reference alongside the full requirements.md.",
+        ]
+
+        doc_lines.append(render_section(
+            "Data Access Objects (DAOs)", analysis.backend_components.get('dao', [])
+        ))
+        doc_lines.append(render_section(
+            "Data Transfer Objects (DTOs)", analysis.backend_components.get('dto', [])
+        ))
+        doc_lines.append(render_section(
+            "Services", analysis.backend_components.get('service', [])
+        ))
+        doc_lines.append(render_section(
+            "Frontend Components", analysis.frontend_components
+        ))
+
+        return "\n".join(doc_lines)

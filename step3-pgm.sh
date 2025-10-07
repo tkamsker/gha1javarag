@@ -129,11 +129,18 @@ else
   echo "[WARNING] Consider adding JAVA_SOURCE_DIR=/path/to/your/java/projects to .env"
 fi
 
-# Check for required intermediate data
-OUTPUT_DIR=$(grep -E '^OUTPUT_DIR=' .env | cut -d'=' -f2 | tr -d '"' || echo "output")
-if [ ! -f "$OUTPUT_DIR/intermediate_step2.json" ] && [ ! -f "$OUTPUT_DIR/consolidated_metadata.json" ]; then
+# Check for required intermediate data (prefer env OUTPUT_DIR)
+if [ -n "$OUTPUT_DIR" ]; then
+  OUT_DIR="$OUTPUT_DIR"
+else
+  OUT_DIR=$(grep -E '^OUTPUT_DIR=' .env | cut -d'=' -f2 | tr -d '"')
+fi
+if [ -z "$OUT_DIR" ]; then
+  OUT_DIR="output"
+fi
+if [ ! -f "$OUT_DIR/intermediate_step2.json" ] && [ ! -f "$OUT_DIR/consolidated_metadata.json" ]; then
   echo "[ERROR] No intermediate data found"
-  echo "[ERROR] Expected: $OUTPUT_DIR/intermediate_step2.json or $OUTPUT_DIR/consolidated_metadata.json"
+  echo "[ERROR] Expected: $OUT_DIR/intermediate_step2.json or $OUT_DIR/consolidated_metadata.json"
   echo "[ERROR] Run step 2 (analyze) first to generate required metadata"
   exit 1
 fi
@@ -158,7 +165,7 @@ echo ""
 echo "[SUCCESS] Step 3-PGM completed successfully!"
 echo ""
 echo "📊 Output Structure:"
-echo "   📁 $OUTPUT_DIR/requirements/pgm/"
+echo "   📁 $OUT_DIR/requirements/pgm/"
 echo "   ├── 📄 _pgm_summary.md                 # Cross-project analysis summary"
 echo "   └── 📁 projects/"
 echo "       └── 📁 {project_name}/"

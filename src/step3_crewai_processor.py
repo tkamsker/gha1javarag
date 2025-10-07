@@ -12,7 +12,7 @@ from typing import Dict, List, Optional, Any
 from datetime import datetime
 
 try:
-    from crewai import Agent, Task, Crew, Process
+    from crewai import Agent, Task, Crew, Process, LLM as CrewLLM
     from crewai.tools import BaseTool
     from crewai_tools import FileReadTool, DirectoryReadTool
     from pydantic import Field
@@ -236,6 +236,7 @@ class Step3CrewAIProcessor:
         self.llm_client: Optional[LLMClient] = None
         self.weaviate_client: Optional[WeaviateClient] = None
         self.reporting: Optional[ReportingManager] = None
+        self.crewai_llm: Optional[CrewLLM] = None
         
         # Output directories
         self.requirements_dir = Path(self.config.output_dir) / 'requirements'
@@ -252,6 +253,19 @@ class Step3CrewAIProcessor:
             self.llm_client = LLMClient(self.config)
             self.weaviate_client = WeaviateClient(self.config)
             self.reporting = ReportingManager(self.config)
+            # Configure CrewAI LLM to use local Ollama (avoid LiteLLM OpenAI default)
+            try:
+                if getattr(self.config, 'ai_provider', 'ollama') == 'ollama':
+                    model_name = getattr(self.config, 'ollama_model_name', 'llama3.2:3b')
+                    base_url = getattr(self.config, 'ollama_base_url', 'http://localhost:11434')
+                    # CrewAI expects model format like "ollama/<model>"
+                    self.crewai_llm = CrewLLM(model=f"ollama/{model_name}", base_url=base_url)
+                else:
+                    # Fallback: try provider's model name directly; relies on env keys if needed
+                    openai_model = getattr(self.config, 'openai_model_name', 'gpt-4o')
+                    self.crewai_llm = CrewLLM(model=openai_model)
+            except Exception as e:
+                self.logger.warning(f"Could not initialize CrewAI LLM, will use framework default: {e}")
             
             # Test connectivity
             self.weaviate_client.get_all_collection_stats()
@@ -299,7 +313,8 @@ class Step3CrewAIProcessor:
             allow_delegation=True,
             tools=[_ensure_tool(weaviate_tool), _ensure_tool(revisitor_tool)],
             max_iter=3,
-            memory=True
+            memory=False,
+            llm=self.crewai_llm
         )
     
     def create_frontend_agent(self, weaviate_tool: WeaviateEnrichmentTool, 
@@ -315,7 +330,8 @@ class Step3CrewAIProcessor:
             allow_delegation=True,
             tools=[_ensure_tool(weaviate_tool), _ensure_tool(revisitor_tool)],
             max_iter=3,
-            memory=True
+            memory=False,
+            llm=self.crewai_llm
         )
     
     def create_enricher_agent(self, weaviate_tool: WeaviateEnrichmentTool) -> Agent:
@@ -330,7 +346,8 @@ class Step3CrewAIProcessor:
             allow_delegation=False,
             tools=[_ensure_tool(weaviate_tool)],
             max_iter=2,
-            memory=True
+            memory=False,
+            llm=self.crewai_llm
         )
     
     def create_integration_agent(self) -> Agent:
@@ -344,7 +361,8 @@ class Step3CrewAIProcessor:
             verbose=True,
             allow_delegation=True,
             max_iter=3,
-            memory=True
+            memory=False,
+            llm=self.crewai_llm
         )
     
     def create_backend_analysis_task(self, agent: Agent, project_name: str, 
@@ -549,10 +567,9 @@ class Step3CrewAIProcessor:
         crew = Crew(
             agents=[backend_agent, frontend_agent, enricher_agent, integration_agent],
             tasks=[backend_task, frontend_task, enrichment_task, integration_task],
-            process=Process.hierarchical,
-            manager_llm=self._get_llm_for_crew(),
+            process=Process.sequential,
             verbose=True,
-            memory=True
+            memory=False
         )
         
         try:

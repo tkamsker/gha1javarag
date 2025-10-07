@@ -112,3 +112,27 @@ now
 
 ./run_iteration.sh --rotate-output --force-step1 --repeat-step2 --step3=both --step3-parallel --step3-max-workers 3
 
+
+# afternoon 2025.10.7 15 28
+bash -lc "cd /Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag && source venv/bin/activate && OUTPUT_DIR=./output_20251007_132632 ./step3-pgm.sh --parallel --max-workers 3 --enhanced"
+
+
+bash -lc "cd /Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag && source venv/bin/activate && OUTPUT_DIR=./output_20251007_132632 ./step3-crewai.sh --no-verbose | sed -n '1,80p'"
+
+bash -lc "cd /Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag && source venv/bin/activate && OUTPUT_DIR=./output_20251007_132632 ./step3-crewai.sh --no-verbose | sed -n '1,80p'"
+
+#  **PGM**
+bash -lc "cd /Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag
+source venv/bin/activate
+OUTPUT_DIR=./output_20251007_132632 ./step3-pgm.sh --parallel --max-workers 3 --enhanced
+
+# **CREWAI**
+
+cd /Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag
+source venv/bin/activate
+OUTPUT_DIR=./output_20251007_132632 ./step3-crewai.sh --no-verbose
+
+Notes
+Replace OUTPUT_DIR with your latest run directory that contains either intermediate_step2.json or consolidated_metadata.json.
+
+ls -1d output_* | tail -n 1

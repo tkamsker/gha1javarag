@@ -64,3 +64,22 @@ ls -R output_* | sed -n '1,80p'
   - `output_YYYYMMDD_HHMMSS/requirements/`
   - `output_YYYYMMDD_HHMMSS/requirements/pgm/` and `/crewai/`
   - `output_YYYYMMDD_HHMMSS/requirements/_comparison/index.md`
+
+
+
+  ### crewai fix 
+  bash -lc "cd /Users/thomaskamsker/Documents/Atom/vron.one/playground/a1javarag && source venv/bin/activate && OUTPUT_DIR=./output_20251007_132632 ./step3-crewai.sh --no-verbose | sed -n '1,80p'"
+
+
+  I'll update the CrewAI processor to explicitly use the Ollama model through CrewAI's LLM interface and attach it to all agents, preventing the fallback to OpenAI via LiteLLM. Then you can rerun step3-crewai.
+
+[2 tools called]
+
+- Root cause: CrewAI defaulted to OpenAI via LiteLLM, causing invalid OpenAI API key errors.
+- Fix applied: Configured CrewAI to use the local Ollama model explicitly and disabled memory/RAG. Also kept sequential process.
+
+To rerun
+- OUTPUT_DIR=./output_20251007_132632 ./step3-crewai.sh --no-verbose
+
+Now CrewAI logs show it using Ollama successfully.
+
