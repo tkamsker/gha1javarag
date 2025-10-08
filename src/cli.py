@@ -24,6 +24,7 @@ from extract.backend_llm import BackendLLMExtractor
 from chunk.build_chunks import ChunkBuilder
 from store.weaviate_client import WeaviateClient
 from synth.prd_markdown import PRDMarkdownGenerator
+from synth.requirements_agent import RequirementsAgent
 
 # Setup logging
 logging.basicConfig(
@@ -429,6 +430,37 @@ def all(project: Optional[str], include_frontend: bool):
     ctx.invoke(prd, project=project, frontend=include_frontend)
     
     console.print("[bold green]Complete pipeline finished![/bold green]")
+
+@cli.command(name="requirements")
+@click.option('--project', '-p', required=True, help='Project name')
+def requirements_cmd(project: str):
+    """Generate extreme-detailed requirements per artifact (DAO/JSP/Backend/GWT UI)."""
+    console.print(f"[bold blue]Generating detailed requirements for project: {project}[/bold blue]")
+    try:
+        # Load artifacts from build directory
+        build_dir = settings.build_dir
+        artifacts: Dict[str, List[Dict]] = {}
+        mapping = {
+            'dao_calls': ('java_calls', 'all_dao_calls.json'),
+            'jsp_forms': ('jsp_forms', 'all_forms.json'),
+            'backend_docs': ('backend_docs', 'all_backend_docs.json'),
+            'gwt_uibinder': ('gwt_uibinder', 'all_uibinder.json'),
+        }
+        import json as _json
+        for key, (subdir, fname) in mapping.items():
+            p = build_dir / subdir / fname
+            if p.exists():
+                with p.open('r', encoding='utf-8') as f:
+                    artifacts[key] = _json.load(f)
+            else:
+                artifacts[key] = []
+
+        agent = RequirementsAgent()
+        index_path = agent.run(project, artifacts)
+        console.print(f"[bold green]Requirements index created:[/bold green] {index_path}")
+    except Exception as e:
+        console.print(f"[bold red]Requirements generation failed: {e}[/bold red]")
+        sys.exit(1)
 
 if __name__ == '__main__':
     cli()
