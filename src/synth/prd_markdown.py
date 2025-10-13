@@ -21,10 +21,11 @@ class PRDMarkdownGenerator:
         self.output_dir = settings.output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
-        # Ollama API endpoint (use localhost if host.docker.internal is set)
+        # Ollama API endpoint (prefer 127.0.0.1 on host to avoid IPv6 issues)
         base_url = settings.ollama_base_url
         if 'host.docker.internal' in base_url:
             base_url = 'http://127.0.0.1:11434'
+        self._ollama_base = base_url
         self.ollama_generate_url = f"{base_url}/api/generate"
     
     def generate_prd(self, artifacts: Dict[str, List[Dict[str, Any]]], project_name: str) -> str:
@@ -32,13 +33,33 @@ class PRDMarkdownGenerator:
         logger.info(f"Generating PRD for project: {project_name}")
         
         # Generate different sections
+        logger.info("Generating section: overview")
         overview = self._generate_overview_section(artifacts, project_name)
+        logger.info("OK: section overview generated")
+
+        logger.info("Generating section: features")
         features = self._generate_features_section(artifacts)
+        logger.info("OK: section features generated")
+
+        logger.info("Generating section: technical")
         technical = self._generate_technical_section(artifacts)
+        logger.info("OK: section technical generated")
+
+        logger.info("Generating section: frontend")
         frontend = self._generate_frontend_section(artifacts)
+        logger.info("OK: section frontend generated")
+
+        logger.info("Generating section: flows")
         flows = self._generate_flows_section(artifacts)
+        logger.info("OK: section flows generated")
+
+        logger.info("Generating section: requirements")
         requirements = self._generate_requirements_section(artifacts)
+        logger.info("OK: section requirements generated")
+
+        logger.info("Generating section: traceability")
         traceability = self._generate_traceability_section(artifacts)
+        logger.info("OK: section traceability generated")
         
         # Combine all sections
         prd_content = self._combine_prd_sections(
@@ -420,29 +441,42 @@ class PRDMarkdownGenerator:
     
     def _call_ollama(self, prompt: str) -> str:
         """Call Ollama API for text generation."""
-        try:
-            payload = {
-                "model": settings.ollama_model_name,
-                "prompt": prompt,
-                "stream": False
-            }
-            
-            response = requests.post(
-                self.ollama_generate_url,
-                json=payload,
-                timeout=60
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                return result.get('response', 'No response generated')
-            else:
-                logger.error(f"Ollama API error: {response.status_code} - {response.text}")
-                return "Error generating content"
-                
-        except Exception as e:
-            logger.error(f"Failed to call Ollama: {e}")
-            return "Error generating content"
+        payload = {
+            "model": settings.ollama_model_name,
+            "prompt": prompt,
+            "stream": False
+        }
+        timeouts = [60, 90, 120]
+        for attempt, to in enumerate(timeouts, 1):
+            try:
+                # quick health check
+                try:
+                    health = requests.get(f"{self._ollama_base}/api/tags", timeout=5)
+                    if health.status_code == 200:
+                        logger.info("OK: Ollama health check passed")
+                    else:
+                        logger.warning("Ollama health check non-200: %s", health.status_code)
+                except Exception:
+                    logger.warning("Ollama health check failed (attempt %s)", attempt)
+
+                response = requests.post(
+                    self.ollama_generate_url,
+                    json=payload,
+                    timeout=to
+                )
+                if response.status_code == 200:
+                    result = response.json()
+                    logger.info("OK: Ollama call succeeded (attempt %s, timeout %ss)", attempt, to)
+                    return result.get('response', 'No response generated')
+                else:
+                    logger.warning("Ollama API error %s: %s", response.status_code, response.text)
+            except Exception as e:
+                logger.warning("Ollama call attempt %s failed: %s", attempt, e)
+            # backoff
+            import time as _t
+            _t.sleep(2 * attempt)
+        logger.error("Failed to call Ollama after retries")
+        return "Error generating content"
     
     def _call_ollama_json(self, prompt: str) -> Optional[Dict[str, Any]]:
         """Call Ollama API and parse JSON response."""

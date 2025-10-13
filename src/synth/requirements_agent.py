@@ -20,19 +20,31 @@ def _ollama_generate(prompt: str) -> str:
     if 'host.docker.internal' in base_url:
         base_url = 'http://127.0.0.1:11434'
     url = f"{base_url}/api/generate"
-    try:
-        resp = requests.post(url, json={
-            "model": settings.ollama_model_name,
-            "prompt": prompt,
-            "stream": False
-        }, timeout=120)
-        if resp.status_code == 200:
-            return resp.json().get("response", "")
-        logger.warning("Ollama generation failed %s: %s", resp.status_code, resp.text)
-        return ""
-    except Exception as e:
-        logger.warning("Ollama generation exception: %s", e)
-        return ""
+    payload = {
+        "model": settings.ollama_model_name,
+        "prompt": prompt,
+        "stream": False
+    }
+    timeouts = [60, 90, 120]
+    for attempt, to in enumerate(timeouts, 1):
+        try:
+            # health check
+            try:
+                hc = requests.get(f"{base_url}/api/tags", timeout=5)
+                if hc.status_code != 200:
+                    logger.warning("Ollama health non-200: %s", hc.status_code)
+            except Exception:
+                logger.warning("Ollama health check failed (attempt %s)", attempt)
+
+            resp = requests.post(url, json=payload, timeout=to)
+            if resp.status_code == 200:
+                return resp.json().get("response", "")
+            logger.warning("Ollama generation failed %s: %s", resp.status_code, resp.text)
+        except Exception as e:
+            logger.warning("Ollama generation attempt %s exception: %s", attempt, e)
+        import time as _t
+        _t.sleep(2 * attempt)
+    return ""
 
 
 def _short(text: str, n: int = 2000) -> str:
@@ -72,6 +84,7 @@ class RequirementsAgent:
         safe_stem = stem.replace('/', '_')[:120]
         out_path = out_dir / f"{safe_stem}.md"
         out_path.write_text(content or "No content generated.", encoding='utf-8')
+        logger.info("OK: wrote requirements file %s", out_path)
         return out_path
 
     def run(self, project: str, artifacts: Dict[str, List[Dict[str, Any]]]) -> Path:
