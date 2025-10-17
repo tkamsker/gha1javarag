@@ -36,8 +36,8 @@ print_error() {
 check_venv() {
     if [ -n "$VIRTUAL_ENV" ]; then
         print_info "Virtual environment detected: $VIRTUAL_ENV"
-        PYTHON_CMD="python"
-        PIP_CMD="pip"
+        PYTHON_CMD="$VIRTUAL_ENV/bin/python"
+        PIP_CMD="$VIRTUAL_ENV/bin/pip"
     else
         print_warning "No virtual environment detected. Please activate your virtual environment first:"
         echo "  python -m venv venv"
@@ -84,7 +84,11 @@ check_ollama() {
     MODELS=$($PYTHON_CMD -c "
 import sys
 from pathlib import Path
-sys.path.append(str(Path('.').absolute() / 'src'))
+
+# Add src to Python path (same as main.py)
+src_path = Path('.').absolute() / 'src'
+sys.path.insert(0, str(src_path))
+
 from config.settings import settings
 print(f'{settings.ollama_model_name} {settings.ollama_embed_model_name}')
 ")
@@ -137,7 +141,10 @@ setup_weaviate() {
     cat > temp_update_weaviate.py << 'EOF'
 import sys
 from pathlib import Path
-sys.path.append(str(Path('.').absolute() / 'src'))
+
+# Add src to Python path (same as main.py)
+src_path = Path(__file__).parent / "src"
+sys.path.insert(0, str(src_path))
 
 from store.weaviate_client import WeaviateClient
 
@@ -171,7 +178,10 @@ update_weaviate_config() {
     cat > temp_update_config.py << 'EOF'
 import sys
 from pathlib import Path
-sys.path.append(str(Path('.').absolute() / 'src'))
+
+# Add src to Python path (same as main.py)
+src_path = Path(__file__).parent / "src"
+sys.path.insert(0, str(src_path))
 
 # Read the current weaviate_client.py
 with open('src/store/weaviate_client.py', 'r') as f:
@@ -201,7 +211,11 @@ test_setup() {
     if $PYTHON_CMD -c "
 import sys
 from pathlib import Path
-sys.path.append(str(Path('.').absolute() / 'src'))
+
+# Add src to Python path (same as main.py)
+src_path = Path('.').absolute() / 'src'
+sys.path.insert(0, str(src_path))
+
 from store.weaviate_client import WeaviateClient
 client = WeaviateClient(ensure_schema=False)
 print('Weaviate connection: OK')
