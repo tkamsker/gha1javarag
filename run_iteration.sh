@@ -77,8 +77,8 @@ check_dependencies() {
     # Check if we're in a virtual environment
     if [ -n "$VIRTUAL_ENV" ]; then
         print_info "Virtual environment detected: $VIRTUAL_ENV"
-        PYTHON_CMD="python"
-        PIP_CMD="pip"
+        PYTHON_CMD="$VIRTUAL_ENV/bin/python"
+        PIP_CMD="$VIRTUAL_ENV/bin/pip"
     else
         print_warning "No virtual environment detected. Please activate your virtual environment first:"
         echo "  python -m venv venv"
@@ -143,6 +143,13 @@ run_pipeline() {
     print_info "Starting iteration17b pipeline for project: $PROJECT_NAME"
     
     cd "$SCRIPT_DIR"
+    
+    # Test Python imports before running pipeline
+    print_info "Testing Python imports..."
+    $PYTHON_CMD -c "import sys; sys.path.insert(0, 'src'); from store.weaviate_client import WeaviateClient; print('Imports OK')" || {
+        print_error "Python imports failed. Please check your virtual environment and dependencies."
+        exit 1
+    }
     
     # Step 1: Discover files
     print_info "Step 1: Discovering files..."
