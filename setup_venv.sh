@@ -73,7 +73,7 @@ setup_venv() {
     
     # Install essential build tools
     print_info "Installing essential build tools..."
-    pip install setuptools wheel
+    pip install --upgrade setuptools wheel
     
     # Install dependencies
     print_info "Installing Python dependencies..."
