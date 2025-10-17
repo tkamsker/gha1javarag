@@ -13,6 +13,7 @@ format_duration() {
     local secs=$((seconds % 60))
     printf "%02d:%02d:%02d" $hours $minutes $secs
 }
+source .venv/bin/activate
 
 # Record start time
 START_TIME_EPOCH=$(date +%s)
