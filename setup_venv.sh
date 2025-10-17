@@ -71,6 +71,10 @@ setup_venv() {
     print_info "Upgrading pip..."
     pip install --upgrade pip
     
+    # Install essential build tools
+    print_info "Installing essential build tools..."
+    pip install setuptools wheel
+    
     # Install dependencies
     print_info "Installing Python dependencies..."
     pip install -r requirements.txt
