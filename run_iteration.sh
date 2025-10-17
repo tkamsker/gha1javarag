@@ -148,9 +148,14 @@ run_pipeline() {
     print_info "Testing Python imports..."
     $PYTHON_CMD -c "
 import sys
+import os
 from pathlib import Path
-src_path = Path('.').absolute() / 'src'
-sys.path.insert(0, str(src_path))
+
+# Get the current working directory and add src to Python path
+current_dir = os.getcwd()
+src_path = os.path.join(current_dir, 'src')
+sys.path.insert(0, src_path)
+
 from store.weaviate_client import WeaviateClient
 print('Imports OK')
 " || {
