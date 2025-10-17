@@ -7,6 +7,9 @@ services:
     ports:
       - "8080:8080"
       - "50051:50051"
+    # 👇 Make 'host.docker.internal' work on Linux
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       # Authentication
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
