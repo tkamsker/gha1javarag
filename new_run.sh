@@ -22,6 +22,12 @@ if [ -z "$VIRTUAL_ENV" ]; then
   err "No virtual environment detected. Activate with: source venv/bin/activate"
 fi
 
+# Use venv python explicitly
+PYTHON_CMD="$VIRTUAL_ENV/bin/python"
+if [ ! -f "$PYTHON_CMD" ]; then
+  err "Virtual environment Python not found at $PYTHON_CMD"
+fi
+
 # Timestamped project name
 TS=$(date +%Y%m%d_%H%M%S)
 PROJECT="$TS"
@@ -47,18 +53,25 @@ else
   warn "Ollama not found; ensure it's installed and running."
 fi
 
+# Ensure we're in the correct directory
+cd "$(dirname "$0")"
+
+# Test Python imports
+info "Testing Python imports..."
+$PYTHON_CMD -c "import sys; sys.path.insert(0, 'src'); from store.weaviate_client import WeaviateClient; print('Imports OK')" || err "Python imports failed"
+
 # Run pipeline: discover, extract, index, prd
 info "Running discover..."
-python main.py discover --project "$PROJECT" --include-frontend || err "discover failed"
+$PYTHON_CMD main.py discover --project "$PROJECT" --include-frontend || err "discover failed"
 
 info "Running extract..."
-python main.py extract --project "$PROJECT" --include-frontend || err "extract failed"
+$PYTHON_CMD main.py extract --project "$PROJECT" --include-frontend || err "extract failed"
 
 info "Running index..."
-python main.py index --project "$PROJECT" || err "index failed"
+$PYTHON_CMD main.py index --project "$PROJECT" || err "index failed"
 
 info "Generating PRD..."
-python main.py prd --project "$PROJECT" --frontend || warn "PRD generation completed with warnings"
+$PYTHON_CMD main.py prd --project "$PROJECT" --frontend || warn "PRD generation completed with warnings"
 
 ok "Full run complete"
 echo "Project: $PROJECT"
