@@ -146,7 +146,14 @@ run_pipeline() {
     
     # Test Python imports before running pipeline
     print_info "Testing Python imports..."
-    $PYTHON_CMD -c "import sys; sys.path.insert(0, 'src'); from store.weaviate_client import WeaviateClient; print('Imports OK')" || {
+    $PYTHON_CMD -c "
+import sys
+from pathlib import Path
+src_path = Path('.').absolute() / 'src'
+sys.path.insert(0, str(src_path))
+from store.weaviate_client import WeaviateClient
+print('Imports OK')
+" || {
         print_error "Python imports failed. Please check your virtual environment and dependencies."
         exit 1
     }
