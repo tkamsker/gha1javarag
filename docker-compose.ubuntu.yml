@@ -4,7 +4,7 @@ services:
   weaviate:
     image: semitechnologies/weaviate:latest
     container_name: weaviate-java-analysis
-    # Use host networking to access localhost Ollama
+    # Use host networking to access localhost Ollama on Ubuntu
     network_mode: host
     environment:
       # Authentication

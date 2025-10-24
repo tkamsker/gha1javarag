@@ -4,8 +4,10 @@ services:
   weaviate:
     image: semitechnologies/weaviate:latest
     container_name: weaviate-java-analysis
-    # Use host networking to access localhost Ollama
-    network_mode: host
+    ports:
+      - "8080:8080"
+      - "50051:50051"
+    # macOS supports host.docker.internal natively
     environment:
       # Authentication
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
@@ -17,8 +19,8 @@ services:
       ENABLE_MODULES: "text2vec-ollama,generative-ollama"
       DEFAULT_VECTORIZER_MODULE: "text2vec-ollama"
       
-      # Ollama Integration - Use localhost since we're in host network mode
-      OLLAMA_API_ENDPOINT: "http://localhost:11434"
+      # Ollama Integration - macOS supports host.docker.internal
+      OLLAMA_API_ENDPOINT: "http://host.docker.internal:11434"
       
       # CORS
       ENABLE_CORS: "true"
