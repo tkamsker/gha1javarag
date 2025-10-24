@@ -107,12 +107,9 @@ if [[ "$os" == "macos" ]]; then
 elif [[ "$os" == "linux" ]]; then
     info "Starting Weaviate with Linux configuration (host networking)..."
     
-    # Get the host's IP address for Ollama connection
-    HOST_IP=$(ip route | grep default | awk '{print $3}' | head -1)
-    if [ -z "$HOST_IP" ]; then
-        HOST_IP="172.17.0.1"  # Docker default bridge IP
-    fi
-    info "Using host IP for Ollama: $HOST_IP"
+    # Use localhost for Ollama connection (Ollama typically binds to 127.0.0.1)
+    HOST_IP="127.0.0.1"
+    info "Using localhost IP for Ollama: $HOST_IP"
     
     # Linux: Use host networking to access localhost Ollama
     docker run -d \
@@ -176,11 +173,8 @@ if curl -s http://localhost:8080/v1/meta > /dev/null 2>&1; then
             echo "This may cause indexing issues"
         fi
     elif [[ "$os" == "linux" ]]; then
-        # Linux: Test via host IP (host networking)
-        HOST_IP=$(ip route | grep default | awk '{print $3}' | head -1)
-        if [ -z "$HOST_IP" ]; then
-            HOST_IP="172.17.0.1"  # Docker default bridge IP
-        fi
+        # Linux: Test via localhost (host networking)
+        HOST_IP="127.0.0.1"
         if docker exec weaviate-java-analysis wget -qO- http://$HOST_IP:11434/api/tags > /dev/null 2>&1; then
             ok "Ollama is accessible from Weaviate container (Linux) via $HOST_IP"
         else
