@@ -58,7 +58,7 @@ info "Project name: $PROJECT"
 
 # Start fresh Weaviate (clean)
 info "Resetting Weaviate container and data..."
-./docker-weaviate.sh clean || true
+# not ok ./docker-weaviate.sh clean || true
 # old ./docker-weaviate.sh || err "Failed to start Weaviate"
 ./start_weaviate_simple.sh || err "Failed to start Weaviate"
 
