@@ -23,7 +23,9 @@ err(){ echo -e "${RED}[ERROR]${NC} $1"; }
 detect_os() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
         echo "macos"
-    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    elif [[ "$OSTYPE" == "linux-gnu"* ]] || [[ -f /etc/os-release ]] && grep -q "Ubuntu" /etc/os-release; then
+        echo "linux"
+    elif [[ -f /etc/os-release ]] && grep -q "Ubuntu" /etc/os-release; then
         echo "linux"
     else
         echo "unknown"
@@ -60,7 +62,7 @@ get_docker_compose_cmd() {
 
 # Function to show usage
 show_usage() {
-    echo "Usage: $0 [COMMAND]"
+    echo "Usage: $0 [COMMAND] [OS]"
     echo ""
     echo "Commands:"
     echo "  start     Start Weaviate container"
@@ -70,16 +72,59 @@ show_usage() {
     echo "  status    Show container status"
     echo "  logs      Show container logs"
     echo ""
-    echo "Environment:"
-    echo "  OS: $(detect_os)"
+    echo "OS Options (optional):"
+    echo "  macos     Force macOS configuration"
+    echo "  ubuntu    Force Ubuntu/Linux configuration"
+    echo "  auto      Auto-detect OS (default)"
+    echo ""
+    echo "Examples:"
+    echo "  $0 start                    # Auto-detect OS"
+    echo "  $0 start ubuntu             # Force Ubuntu config"
+    echo "  $0 start macos              # Force macOS config"
+    echo ""
+    echo "Current Environment:"
+    echo "  Detected OS: $(detect_os)"
     echo "  Compose file: $(get_compose_file)"
 }
 
 # Main script logic
-case "${1:-start}" in
+COMMAND="${1:-start}"
+FORCE_OS="${2:-auto}"
+
+# Function to get compose file with manual override
+get_compose_file_with_override() {
+    local os
+    if [[ "$FORCE_OS" == "auto" ]]; then
+        os=$(detect_os)
+    else
+        os="$FORCE_OS"
+    fi
+    
+    case $os in
+        "macos")
+            echo "docker-compose.macos.yml"
+            ;;
+        "ubuntu"|"linux")
+            echo "docker-compose.ubuntu.yml"
+            ;;
+        *)
+            echo "docker-compose.yml"
+            ;;
+    esac
+}
+
+case "$COMMAND" in
     "start")
         info "Starting Weaviate container..."
-        COMPOSE_FILE=$(get_compose_file)
+        local os
+        if [[ "$FORCE_OS" == "auto" ]]; then
+            os=$(detect_os)
+            info "Auto-detected OS: $os"
+        else
+            os="$FORCE_OS"
+            info "Forced OS: $os"
+        fi
+        COMPOSE_FILE=$(get_compose_file_with_override)
         info "Using Docker Compose file: $COMPOSE_FILE"
         
         # Check if Ollama is running
@@ -106,16 +151,16 @@ case "${1:-start}" in
         
     "stop")
         info "Stopping Weaviate container..."
-        COMPOSE_FILE=$(get_compose_file)
+        COMPOSE_FILE=$(get_compose_file_with_override)
         $(get_docker_compose_cmd) -f "$COMPOSE_FILE" down
         ok "Weaviate container stopped"
         ;;
         
     "restart")
         info "Restarting Weaviate container..."
-        $0 stop
+        $0 stop "$FORCE_OS"
         sleep 2
-        $0 start
+        $0 start "$FORCE_OS"
         ;;
         
     "clean")
@@ -124,7 +169,7 @@ case "${1:-start}" in
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             info "Stopping Weaviate container..."
-            COMPOSE_FILE=$(get_compose_file)
+            COMPOSE_FILE=$(get_compose_file_with_override)
             $(get_docker_compose_cmd) -f "$COMPOSE_FILE" down
             
             info "Removing Weaviate data..."
