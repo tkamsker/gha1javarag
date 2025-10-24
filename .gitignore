@@ -12,11 +12,11 @@ dist/
 *.egg-info/
 
 # Environment files
-.env
 .env.*
 *.env
 .env.local
 .env.*.local
+# Note: .env is NOT ignored (keep it in git)
 
 # IDE specific files
 .idea/
@@ -49,3 +49,6 @@ weaviate-data/javacodechunks/zqVBBGrXLdCS/main.hnsw.commitlog.d/1759321856
 
 # generated vector DB
 weaviate-data/
+
+# Shell scripts
+*.sh
