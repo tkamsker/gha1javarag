@@ -25,6 +25,19 @@ echo ""
 # Ensure we're in the correct directory
 cd "$(dirname "$0")"
 
+# Function to detect OS
+detect_os() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "macos"
+    elif [[ "$OSTYPE" == "linux-gnu"* ]] || [[ -f /etc/os-release ]] && grep -q "Ubuntu" /etc/os-release; then
+        echo "linux"
+    elif [[ -f /etc/os-release ]] && grep -q "Ubuntu" /etc/os-release; then
+        echo "linux"
+    else
+        echo "unknown"
+    fi
+}
+
 echo "🔍 Step 1: Check Docker Status"
 echo "=============================="
 
@@ -62,29 +75,58 @@ else
 fi
 
 echo ""
-echo "🔍 Step 4: Start Weaviate (macOS)"
-echo "================================="
+echo "🔍 Step 4: Start Weaviate"
+echo "========================="
 
-# Start Weaviate with macOS configuration
-info "Starting Weaviate with macOS configuration..."
+# Detect OS and start Weaviate accordingly
+os=$(detect_os)
+info "Detected OS: $os"
 
-# Use direct docker run command instead of docker-compose
-docker run -d \
-  --name weaviate-java-analysis \
-  -p 8080:8080 \
-  -p 50051:50051 \
-  --add-host host.docker.internal:host-gateway \
-  -e AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED=true \
-  -e PERSISTENCE_DATA_PATH=/var/lib/weaviate \
-  -e ENABLE_MODULES=text2vec-ollama,generative-ollama \
-  -e DEFAULT_VECTORIZER_MODULE=text2vec-ollama \
-  -e OLLAMA_API_ENDPOINT=http://host.docker.internal:11434 \
-  -e ENABLE_CORS=true \
-  -e CORS_ALLOWED_ORIGINS="*" \
-  -e CLUSTER_HOSTNAME=node1 \
-  -e QUERY_DEFAULTS_LIMIT=25 \
-  -v "$(pwd)/weaviate-data:/var/lib/weaviate" \
-  semitechnologies/weaviate:latest
+if [[ "$os" == "macos" ]]; then
+    info "Starting Weaviate with macOS configuration (bridge networking)..."
+    
+    # macOS: Use bridge networking with host.docker.internal
+    docker run -d \
+      --name weaviate-java-analysis \
+      -p 8080:8080 \
+      -p 50051:50051 \
+      --add-host host.docker.internal:host-gateway \
+      -e AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED=true \
+      -e PERSISTENCE_DATA_PATH=/var/lib/weaviate \
+      -e ENABLE_MODULES=text2vec-ollama,generative-ollama \
+      -e DEFAULT_VECTORIZER_MODULE=text2vec-ollama \
+      -e OLLAMA_API_ENDPOINT=http://host.docker.internal:11434 \
+      -e ENABLE_CORS=true \
+      -e CORS_ALLOWED_ORIGINS="*" \
+      -e CLUSTER_HOSTNAME=node1 \
+      -e QUERY_DEFAULTS_LIMIT=25 \
+      -v "$(pwd)/weaviate-data:/var/lib/weaviate" \
+      semitechnologies/weaviate:latest
+      
+elif [[ "$os" == "linux" ]]; then
+    info "Starting Weaviate with Linux configuration (host networking)..."
+    
+    # Linux: Use host networking to access localhost Ollama
+    docker run -d \
+      --name weaviate-java-analysis \
+      --network=host \
+      -e AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED=true \
+      -e PERSISTENCE_DATA_PATH=/var/lib/weaviate \
+      -e ENABLE_MODULES=text2vec-ollama,generative-ollama \
+      -e DEFAULT_VECTORIZER_MODULE=text2vec-ollama \
+      -e OLLAMA_API_ENDPOINT=http://localhost:11434 \
+      -e ENABLE_CORS=true \
+      -e CORS_ALLOWED_ORIGINS="*" \
+      -e CLUSTER_HOSTNAME=node1 \
+      -e QUERY_DEFAULTS_LIMIT=25 \
+      -v "$(pwd)/weaviate-data:/var/lib/weaviate" \
+      semitechnologies/weaviate:latest
+      
+else
+    err "Unsupported OS: $os"
+    echo "Supported OS: macOS, Linux (Ubuntu)"
+    exit 1
+fi
 
 ok "Weaviate container started"
 
@@ -117,11 +159,22 @@ if curl -s http://localhost:8080/v1/meta > /dev/null 2>&1; then
     
     # Test Ollama connection from Weaviate perspective
     info "Testing Ollama connection from Weaviate..."
-    if docker exec weaviate-java-analysis curl -s http://host.docker.internal:11434/api/tags > /dev/null 2>&1; then
-        ok "Ollama is accessible from Weaviate container"
-    else
-        warn "Ollama is not accessible from Weaviate container"
-        echo "This may cause indexing issues"
+    if [[ "$os" == "macos" ]]; then
+        # macOS: Test via host.docker.internal
+        if docker exec weaviate-java-analysis curl -s http://host.docker.internal:11434/api/tags > /dev/null 2>&1; then
+            ok "Ollama is accessible from Weaviate container (macOS)"
+        else
+            warn "Ollama is not accessible from Weaviate container (macOS)"
+            echo "This may cause indexing issues"
+        fi
+    elif [[ "$os" == "linux" ]]; then
+        # Linux: Test via localhost (host networking)
+        if docker exec weaviate-java-analysis curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
+            ok "Ollama is accessible from Weaviate container (Linux)"
+        else
+            warn "Ollama is not accessible from Weaviate container (Linux)"
+            echo "This may cause indexing issues"
+        fi
     fi
 else
     err "Weaviate API is not accessible"
@@ -134,6 +187,12 @@ echo "🎉 Weaviate is Ready!"
 echo "===================="
 echo ""
 echo "✅ Weaviate is running on http://localhost:8080"
+echo "✅ OS: $os"
+if [[ "$os" == "macos" ]]; then
+    echo "✅ Configuration: Bridge networking with host.docker.internal"
+elif [[ "$os" == "linux" ]]; then
+    echo "✅ Configuration: Host networking with localhost"
+fi
 echo "✅ Ready for indexing and searching"
 echo ""
 echo "Next steps:"
