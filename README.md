@@ -294,3 +294,19 @@ python main.py --verbose discover --project my-project
 - [Ollama Documentation](https://ollama.ai/docs)
 - [GWT Documentation](https://www.gwtproject.org/)
 - [iBATIS Documentation](https://ibatis.apache.org/) 
+
+
+
+# ---
+# 2025.10.24
+
+# For Ubuntu deployment
+./docker-weaviate.sh start ubuntu
+
+# For macOS (auto-detect)
+./docker-weaviate.sh start
+
+# Other commands with OS override
+./docker-weaviate.sh stop ubuntu
+./docker-weaviate.sh restart ubuntu
+./docker-weaviate.sh status

@@ -116,7 +116,7 @@ get_compose_file_with_override() {
 case "$COMMAND" in
     "start")
         info "Starting Weaviate container..."
-        local os
+        os=""
         if [[ "$FORCE_OS" == "auto" ]]; then
             os=$(detect_os)
             info "Auto-detected OS: $os"
