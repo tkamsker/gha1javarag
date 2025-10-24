@@ -78,6 +78,7 @@ echo ""
 echo "🔍 Step 4: Start Weaviate"
 echo "========================="
 
+
 # Detect OS and start Weaviate accordingly
 os=$(detect_os)
 info "Detected OS: $os"

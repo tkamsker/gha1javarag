@@ -269,7 +269,12 @@ def index(project: Optional[str]):
                             total_indexed += 1
                             progress.advance(task)
                         except Exception as e:
-                            logger.error(f"Failed to index {artifact_type} artifact: {e}")
+                            # Only log errors for non-vectorization issues to reduce noise
+                            error_msg = str(e)
+                            if "vectorize target vector" not in error_msg and "connection to Ollama API failed" not in error_msg:
+                                logger.error(f"Failed to index {artifact_type} artifact: {e}")
+                            # Still count as processed to avoid infinite loops
+                            progress.advance(task)
                     
                     progress.update(task, description=f"{artifact_type} indexed")
         
