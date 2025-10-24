@@ -46,6 +46,18 @@ get_compose_file() {
     esac
 }
 
+# Function to get Docker Compose command
+get_docker_compose_cmd() {
+    if command -v "docker" >/dev/null 2>&1 && $(get_docker_compose_cmd) version >/dev/null 2>&1; then
+        echo "$(get_docker_compose_cmd)"
+    elif command -v "docker-compose" >/dev/null 2>&1; then
+        echo "docker-compose"
+    else
+        err "Neither '$(get_docker_compose_cmd)' nor 'docker-compose' command found"
+        exit 1
+    fi
+}
+
 # Function to show usage
 show_usage() {
     echo "Usage: $0 [COMMAND]"
@@ -77,7 +89,7 @@ case "${1:-start}" in
             exit 1
         fi
         
-        docker-compose -f "$COMPOSE_FILE" up -d weaviate
+        $(get_docker_compose_cmd) -f "$COMPOSE_FILE" up -d weaviate
         ok "Weaviate container started"
         
         # Wait for Weaviate to be ready
@@ -95,7 +107,7 @@ case "${1:-start}" in
     "stop")
         info "Stopping Weaviate container..."
         COMPOSE_FILE=$(get_compose_file)
-        docker-compose -f "$COMPOSE_FILE" down
+        $(get_docker_compose_cmd) -f "$COMPOSE_FILE" down
         ok "Weaviate container stopped"
         ;;
         
@@ -113,7 +125,7 @@ case "${1:-start}" in
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             info "Stopping Weaviate container..."
             COMPOSE_FILE=$(get_compose_file)
-            docker-compose -f "$COMPOSE_FILE" down
+            $(get_docker_compose_cmd) -f "$COMPOSE_FILE" down
             
             info "Removing Weaviate data..."
             rm -rf weaviate-data/*
