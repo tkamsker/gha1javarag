@@ -107,6 +107,13 @@ if [[ "$os" == "macos" ]]; then
 elif [[ "$os" == "linux" ]]; then
     info "Starting Weaviate with Linux configuration (host networking)..."
     
+    # Get the host's IP address for Ollama connection
+    HOST_IP=$(ip route | grep default | awk '{print $3}' | head -1)
+    if [ -z "$HOST_IP" ]; then
+        HOST_IP="172.17.0.1"  # Docker default bridge IP
+    fi
+    info "Using host IP for Ollama: $HOST_IP"
+    
     # Linux: Use host networking to access localhost Ollama
     docker run -d \
       --name weaviate-java-analysis \
@@ -115,7 +122,7 @@ elif [[ "$os" == "linux" ]]; then
       -e PERSISTENCE_DATA_PATH=/var/lib/weaviate \
       -e ENABLE_MODULES=text2vec-ollama,generative-ollama \
       -e DEFAULT_VECTORIZER_MODULE=text2vec-ollama \
-      -e OLLAMA_API_ENDPOINT=http://localhost:11434 \
+      -e OLLAMA_API_ENDPOINT=http://$HOST_IP:11434 \
       -e ENABLE_CORS=true \
       -e CORS_ALLOWED_ORIGINS="*" \
       -e CLUSTER_HOSTNAME=node1 \
@@ -169,11 +176,15 @@ if curl -s http://localhost:8080/v1/meta > /dev/null 2>&1; then
             echo "This may cause indexing issues"
         fi
     elif [[ "$os" == "linux" ]]; then
-        # Linux: Test via localhost (host networking)
-        if docker exec weaviate-java-analysis curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
-            ok "Ollama is accessible from Weaviate container (Linux)"
+        # Linux: Test via host IP (host networking)
+        HOST_IP=$(ip route | grep default | awk '{print $3}' | head -1)
+        if [ -z "$HOST_IP" ]; then
+            HOST_IP="172.17.0.1"  # Docker default bridge IP
+        fi
+        if docker exec weaviate-java-analysis wget -qO- http://$HOST_IP:11434/api/tags > /dev/null 2>&1; then
+            ok "Ollama is accessible from Weaviate container (Linux) via $HOST_IP"
         else
-            warn "Ollama is not accessible from Weaviate container (Linux)"
+            warn "Ollama is not accessible from Weaviate container (Linux) via $HOST_IP"
             echo "This may cause indexing issues"
         fi
     fi
