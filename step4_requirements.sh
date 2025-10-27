@@ -102,12 +102,13 @@ except Exception as e:
     print('Continuing anyway...')
 " || warn "Continuing without Weaviate verification"
 
-# Step 1: Generate Per-Artifact Requirements
+# Step 1: Generate Per-Artifact Requirements using CrewAI
 echo ""
-echo "📝 Step 1: Per-Artifact Requirements Generation"
-echo "================================================"
-info "Generating detailed requirements for individual artifacts (DAO calls, JSP forms, backend docs, GWT UI)..."
-python main.py requirements --project "$PROJECT" || warn "Requirements generation had issues"
+echo "📝 Step 1: CrewAI Multi-Agent Requirements Generation"
+echo "====================================================="
+info "Generating detailed requirements using CrewAI with multiple specialized agents..."
+info "Agents: Code Analyst, Dependency Analyst, UI Flow Mapper, Technical Writer"
+python main.py requirements --project "$PROJECT" --use-crewai || warn "CrewAI requirements generation had issues"
 
 # Step 2: Generate Backend Services Requirements
 echo ""
@@ -191,9 +192,19 @@ for key, (subdir, fname) in mapping.items():
     p = build_dir / subdir / fname
     if p.exists():
         with p.open('r', encoding='utf-8') as f:
-            frontend_artifacts[key] = json.load(f)
+            data = json.load(f)
+            # Handle special case for gwt_client which is a dict
+            if key == 'gwt_client' and isinstance(data, dict):
+                frontend_artifacts[key] = data
+            elif isinstance(data, list):
+                frontend_artifacts[key] = data
+            elif isinstance(data, dict) and 'activities_places' in data:
+                # Extract the list from the dict
+                frontend_artifacts[key] = data.get('activities_places', [])
+            else:
+                frontend_artifacts[key] = data
 
-print(f'Loaded {sum(len(v) for v in frontend_artifacts.values())} frontend artifacts')
+print(f'Loaded {sum(len(v) if isinstance(v, (list, dict)) else 1 for v in frontend_artifacts.values())} frontend artifacts')
 
 # Generate frontend requirements document
 generator = PRDMarkdownGenerator()

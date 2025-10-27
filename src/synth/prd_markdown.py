@@ -694,10 +694,23 @@ This document describes the frontend components and user interface requirements 
         
         if 'gwt_client' in frontend_artifacts:
             navigation.append("### GWT Place/Activity Navigation")
-            for client in frontend_artifacts['gwt_client'][:15]:
-                place = client.get('placeClass', 'Unknown')
-                activity = client.get('activityClass', 'Unknown')
-                navigation.append(f"- **Place**: {place} → **Activity**: {activity}")
+            gwt_client_data = frontend_artifacts['gwt_client']
+            # Handle dict structure (from all_artifacts.json)
+            if isinstance(gwt_client_data, dict):
+                # If it's a dict, check for activities_places key
+                if 'activities_places' in gwt_client_data and isinstance(gwt_client_data['activities_places'], list):
+                    for client in gwt_client_data['activities_places'][:15]:
+                        place = client.get('placeClass', 'Unknown')
+                        activity = client.get('activityClass', 'Unknown')
+                        navigation.append(f"- **Place**: {place} → **Activity**: {activity}")
+                else:
+                    navigation.append("No GWT client navigation data available")
+            # Handle list structure
+            elif isinstance(gwt_client_data, list):
+                for client in gwt_client_data[:15]:
+                    place = client.get('placeClass', 'Unknown')
+                    activity = client.get('activityClass', 'Unknown')
+                    navigation.append(f"- **Place**: {place} → **Activity**: {activity}")
             navigation.append("")
         
         return "\n".join(navigation) if navigation else "### Navigation Structure\n\nNo navigation patterns identified."

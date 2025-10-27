@@ -54,3 +54,7 @@ pytest-cov==4.1.0
 # Web Client
 flask==3.0.0
 flask-cors==4.0.0
+
+# CrewAI for multi-agent requirements generation
+crewai==0.203.1
+crewai-tools==0.1.0

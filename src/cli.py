@@ -25,6 +25,7 @@ from chunk.build_chunks import ChunkBuilder
 from store.weaviate_client import WeaviateClient
 from synth.prd_markdown import PRDMarkdownGenerator
 from synth.requirements_agent import RequirementsAgent
+from synth.crewai_requirements import generate_requirements_with_crewai
 
 # Setup logging
 logging.basicConfig(
@@ -438,7 +439,8 @@ def all(project: Optional[str], include_frontend: bool):
 
 @cli.command(name="requirements")
 @click.option('--project', '-p', required=True, help='Project name')
-def requirements_cmd(project: str):
+@click.option('--use-crewai', is_flag=True, help='Use CrewAI multi-agent approach')
+def requirements_cmd(project: str, use_crewai: bool):
     """Generate extreme-detailed requirements per artifact (DAO/JSP/Backend/GWT UI)."""
     console.print(f"[bold blue]Generating detailed requirements for project: {project}[/bold blue]")
     try:
@@ -460,9 +462,16 @@ def requirements_cmd(project: str):
             else:
                 artifacts[key] = []
 
-        agent = RequirementsAgent()
-        index_path = agent.run(project, artifacts)
-        console.print(f"[bold green]Requirements index created:[/bold green] {index_path}")
+        if use_crewai:
+            console.print("[bold cyan]Using CrewAI multi-agent approach...[/bold cyan]")
+            output_files = generate_requirements_with_crewai(project, artifacts)
+            console.print(f"[bold green]CrewAI requirements generated:[/bold green] {len(output_files)} files")
+            for file_path in output_files:
+                console.print(f"  - {file_path}")
+        else:
+            agent = RequirementsAgent()
+            index_path = agent.run(project, artifacts)
+            console.print(f"[bold green]Requirements index created:[/bold green] {index_path}")
     except Exception as e:
         console.print(f"[bold red]Requirements generation failed: {e}[/bold red]")
         sys.exit(1)
