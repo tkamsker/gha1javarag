@@ -459,12 +459,22 @@ def generate_answer(query: str, artifacts: List[Dict[str, Any]]) -> str:
     return '\n'.join(answer_parts)
 
 if __name__ == '__main__':
+    import sys
+    
+    # Parse port from command line argument
+    port = 8080  # Default port
+    if len(sys.argv) > 1:
+        try:
+            port = int(sys.argv[1])
+        except ValueError:
+            print(f"Invalid port: {sys.argv[1]}. Using default port 8080.")
+            port = 8080
+    
     # Initialize Weaviate client
     if init_weaviate_client():
         logger.info("Weaviate client initialized successfully")
         
         # Start the Flask app
-        port = 80  # Use standard HTTP port (requires sudo)
         print("\n" + "="*60)
         print("🚀 Codebase Assistant Web Interface")
         print("="*60)

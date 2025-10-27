@@ -42,16 +42,23 @@ ok "Virtual environment activated"
 # Check if Flask is installed
 info "Checking dependencies..."
 if ! python -c "import flask" 2>/dev/null; then
-    warn "Flask not installed. Installing dependencies..."
-    pip install flask flask-cors
-fi
-
-if ! python -c "import flask_cors" 2>/dev/null; then
+    warn "Flask not installed. Attempting to install dependencies..."
+    if pip install flask flask-cors 2>/dev/null; then
+        ok "Dependencies installed successfully"
+    else
+        err "Failed to install dependencies. Network may be unreachable."
+        err "Trying to continue anyway..."
+    fi
+elif ! python -c "import flask_cors" 2>/dev/null; then
     warn "Flask-CORS not installed. Installing..."
-    pip install flask-cors
+    if pip install flask-cors 2>/dev/null; then
+        ok "Flask-CORS installed successfully"
+    else
+        warn "Failed to install Flask-CORS, but continuing..."
+    fi
+else
+    ok "All dependencies are installed"
 fi
-
-ok "Dependencies checked"
 
 # Check if Weaviate is running
 echo ""
@@ -85,20 +92,23 @@ detect_os() {
 
 os=$(detect_os)
 
+# Parse port from command line argument
+PORT=${1:-8080}
+
 echo ""
 echo "🚀 Starting Web Client"
 echo "======================"
 echo ""
-info "Starting Flask web server on http://localhost"
-info "Note: Port 80 requires sudo privileges"
+info "Starting Flask web server on http://localhost:$PORT"
+
+# Check if running on privileged ports
+if [ "$PORT" -lt 1024 ] && [ "$(id -u)" -ne 0 ]; then
+    warn "Port $PORT requires root privileges"
+    warn "You may need to run with: sudo ./start_web_client.sh $PORT"
+fi
+
 info "Press Ctrl+C to stop the server"
 echo ""
 
-# Check if running on port 80
-if [ "$(id -u)" -ne 0 ]; then
-    warn "Running on port 80 requires root privileges"
-    warn "You may need to run with: sudo ./start_web_client.sh"
-fi
-
-# Start the web client
-python src/web/weaviate_client.py
+# Start the web client with the specified port
+python src/web/weaviate_client.py $PORT
