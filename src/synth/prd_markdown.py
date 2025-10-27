@@ -492,3 +492,212 @@ class PRDMarkdownGenerator:
         except Exception as e:
             logger.error(f"Failed to parse JSON from Ollama response: {e}")
             return None
+    
+    def generate_backend_requirements(self, project_name: str, backend_artifacts: Dict[str, List[Dict[str, Any]]]) -> str:
+        """Generate structured backend services requirements document."""
+        logger.info(f"Generating backend requirements for project: {project_name}")
+        
+        # Generate backend-specific sections
+        overview = self._generate_backend_overview(backend_artifacts, project_name)
+        services = self._generate_backend_services(backend_artifacts)
+        data_flow = self._generate_data_flow(backend_artifacts)
+        endpoints = self._generate_api_endpoints(backend_artifacts)
+        
+        return f"""# Backend Services Requirements Document
+## {project_name}
+
+{overview}
+
+{services}
+
+{data_flow}
+
+{endpoints}
+
+---
+*Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*
+"""
+    
+    def generate_frontend_requirements(self, project_name: str, frontend_artifacts: Dict[str, List[Dict[str, Any]]]) -> str:
+        """Generate structured frontend requirements document."""
+        logger.info(f"Generating frontend requirements for project: {project_name}")
+        
+        # Generate frontend-specific sections
+        overview = self._generate_frontend_overview(frontend_artifacts, project_name)
+        components = self._generate_frontend_components_detailed(frontend_artifacts)
+        navigation = self._generate_navigation_structure(frontend_artifacts)
+        
+        return f"""# Frontend Requirements Document
+## {project_name}
+
+{overview}
+
+{components}
+
+{navigation}
+
+---
+*Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*
+"""
+    
+    def generate_consolidated_requirements(self, project_name: str, backend_content: str, frontend_content: str) -> str:
+        """Generate consolidated requirements document combining backend and frontend."""
+        logger.info(f"Generating consolidated requirements for project: {project_name}")
+        
+        return f"""# Comprehensive Requirements Document
+## {project_name}
+
+Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+---
+
+## Backend Requirements
+
+{backend_content}
+
+---
+
+## Frontend Requirements
+
+{frontend_content}
+
+---
+
+*This document consolidates both backend and frontend requirements for the {project_name} project.*
+"""
+    
+    def _generate_backend_overview(self, backend_artifacts: Dict[str, List[Dict[str, Any]]], project_name: str) -> str:
+        """Generate backend overview section."""
+        artifact_counts = {k: len(v) for k, v in backend_artifacts.items() if v}
+        total_count = sum(artifact_counts.values())
+        
+        return f"""## 1. Backend Overview
+
+This document describes the backend services and data layer requirements for {project_name}.
+
+### Artifact Summary
+{chr(10).join([f"- **{k.replace('_', ' ').title()}**: {v} artifacts" for k, v in artifact_counts.items()])}
+
+**Total Backend Artifacts**: {total_count}
+
+### Key Components
+- DAO (Data Access Object) layer for database operations
+- Service layer for business logic
+- RESTful API endpoints for frontend communication
+- Database schema and data modeling
+"""
+    
+    def _generate_backend_services(self, backend_artifacts: Dict[str, List[Dict[str, Any]]]) -> str:
+        """Generate backend services section."""
+        services = []
+        
+        # DAO calls
+        if 'dao_calls' in backend_artifacts:
+            services.append("### DAO Services")
+            for dao in backend_artifacts['dao_calls'][:10]:  # Limit to first 10
+                method_name = dao.get('methodName', 'Unknown')
+                owner_type = dao.get('ownerType', 'Unknown')
+                services.append(f"- **{method_name}** ({owner_type})")
+            services.append("")
+        
+        # JSP forms (backend handling)
+        if 'jsp_forms' in backend_artifacts:
+            services.append("### Form Handlers")
+            for form in backend_artifacts['jsp_forms'][:10]:
+                form_action = form.get('formAction', 'Unknown')
+                form_method = form.get('formMethod', 'POST')
+                services.append(f"- **{form_action}** ({form_method})")
+            services.append("")
+        
+        return "\n".join(services) if services else "### Backend Services\n\nNo specific services identified."
+    
+    def _generate_data_flow(self, backend_artifacts: Dict[str, List[Dict[str, Any]]]) -> str:
+        """Generate data flow section."""
+        flows = []
+        
+        if 'ibatis_statements' in backend_artifacts:
+            flows.append("### SQL Data Operations")
+            for stmt in backend_artifacts['ibatis_statements'][:5]:  # Limit to 5
+                stmt_id = stmt.get('statementId', 'Unknown')
+                operation = stmt.get('operation', 'Unknown')
+                flows.append(f"- **{stmt_id}**: {operation}")
+            flows.append("")
+        
+        if 'db_tables' in backend_artifacts:
+            flows.append("### Database Tables")
+            for table in backend_artifacts['db_tables'][:10]:
+                table_name = table.get('tableName', 'Unknown')
+                flows.append(f"- **{table_name}**")
+        
+        return "\n".join(flows) if flows else "### Data Flow\n\nNo data flow information available."
+    
+    def _generate_api_endpoints(self, backend_artifacts: Dict[str, List[Dict[str, Any]]]) -> str:
+        """Generate API endpoints section."""
+        endpoints = []
+        
+        if 'jsp_forms' in backend_artifacts:
+            endpoints.append("### Form Submission Endpoints")
+            for form in backend_artifacts['jsp_forms']:
+                action = form.get('formAction', 'Unknown')
+                method = form.get('formMethod', 'POST')
+                endpoints.append(f"- **{method} {action}**")
+                fields = form.get('fields', [])
+                if fields:
+                    endpoints.append(f"  - Fields: {len(fields)}")
+        
+        return "\n".join(endpoints) if endpoints else "### API Endpoints\n\nNo endpoints identified."
+    
+    def _generate_frontend_overview(self, frontend_artifacts: Dict[str, List[Dict[str, Any]]], project_name: str) -> str:
+        """Generate frontend overview section."""
+        artifact_counts = {k: len(v) for k, v in frontend_artifacts.items() if v}
+        total_count = sum(artifact_counts.values())
+        
+        return f"""## 1. Frontend Overview
+
+This document describes the frontend components and user interface requirements for {project_name}.
+
+### Artifact Summary
+{chr(10).join([f"- **{k.replace('_', ' ').title()}**: {v} artifacts" for k, v in artifact_counts.items()])}
+
+**Total Frontend Artifacts**: {total_count}
+
+### Key Technologies
+- GWT (Google Web Toolkit) for rich client applications
+- JavaScript for interactive features
+- UiBinder for declarative UI definitions
+"""
+    
+    def _generate_frontend_components_detailed(self, frontend_artifacts: Dict[str, List[Dict[str, Any]]]) -> str:
+        """Generate detailed frontend components section."""
+        components = []
+        
+        if 'gwt_uibinder' in frontend_artifacts:
+            components.append("### GWT UiBinder Components")
+            for uibinder in frontend_artifacts['gwt_uibinder'][:20]:
+                owner_type = uibinder.get('ownerType', 'Unknown')
+                file_path = uibinder.get('path', 'Unknown')
+                components.append(f"- **{owner_type}** ({Path(file_path).name})")
+            components.append("")
+        
+        if 'gwt_modules' in frontend_artifacts:
+            components.append("### GWT Modules")
+            for module in frontend_artifacts['gwt_modules'][:10]:
+                module_name = module.get('moduleName', 'Unknown')
+                components.append(f"- **{module_name}**")
+            components.append("")
+        
+        return "\n".join(components) if components else "### Frontend Components\n\nNo components identified."
+    
+    def _generate_navigation_structure(self, frontend_artifacts: Dict[str, List[Dict[str, Any]]]) -> str:
+        """Generate navigation structure section."""
+        navigation = []
+        
+        if 'gwt_client' in frontend_artifacts:
+            navigation.append("### GWT Place/Activity Navigation")
+            for client in frontend_artifacts['gwt_client'][:15]:
+                place = client.get('placeClass', 'Unknown')
+                activity = client.get('activityClass', 'Unknown')
+                navigation.append(f"- **Place**: {place} → **Activity**: {activity}")
+            navigation.append("")
+        
+        return "\n".join(navigation) if navigation else "### Navigation Structure\n\nNo navigation patterns identified."
