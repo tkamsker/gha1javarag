@@ -310,3 +310,21 @@ python main.py --verbose discover --project my-project
 ./docker-weaviate.sh stop ubuntu
 ./docker-weaviate.sh restart ubuntu
 ./docker-weaviate.sh status
+
+./start_weaviate_simple !!! 
+
+# 26.Okt. 
+source venv/bin/activate
+
+ ./docker-weaviate.sh clean
+
+nohup ./new_run.sh > "lognew_run_$(date +'%Y-%m-%d_%H-%M-%S').log" 2>&1 &
+
+###
+
+
+./start_web_client.sh 
+
+#
+pkill -f weaviate_client.py
+
