@@ -62,21 +62,11 @@ info "Project name: $PROJECT"
 
 # Check if new_run.sh was run first
 if [ ! -d "data/build/java_calls" ] || [ -z "$(ls -A data/build/java_calls 2>/dev/null)" ]; then
-    warn "No build artifacts found. Running initial extraction..."
-    info "This will run: python main.py discover --project $PROJECT --include-frontend"
-    info "Then: python main.py extract --project $PROJECT --include-frontend"
-    read -p "Proceed with initial extraction? (y/n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        err "Initial extraction required. Run: ./new_run.sh first"
-    fi
-    
+    warn "No build artifacts found. Running initial extraction non-interactively..."
     info "Running discover..."
     python main.py discover --project "$PROJECT" --include-frontend || err "discover failed"
-    
     info "Running extract..."
     python main.py extract --project "$PROJECT" --include-frontend || err "extract failed"
-    
     info "Running index..."
     python main.py index --project "$PROJECT" || err "index failed"
 else
@@ -138,7 +128,7 @@ mapping = {
     'dao_calls': ('java_calls', 'all_dao_calls.json'),
     'jsp_forms': ('jsp_forms', 'all_forms.json'),
     'ibatis_statements': ('ibatis_statements', 'all_statements.json'),
-    'db_tables': ('db_schema', 'all_schemas.json')
+    'db_tables': ('db_schema', 'all_tables.json')
 }
 
 for key, (subdir, fname) in mapping.items():
@@ -249,9 +239,33 @@ else:
     print('⚠️  Missing backend or frontend requirements files')
 "
 
+# Step 5: Generate Target Solution (Node.js + Postgres + Next.js)
+echo ""
+echo "🏗️  Step 5: Target Solution Blueprint"
+echo "====================================="
+info "Generating solution architecture, DB design, and UI plan for Node.js microservices + PostgreSQL + Next.js..."
+
+python -c "
+import sys
+sys.path.insert(0, 'src')
+from synth.solution_agent import SolutionAgent
+from pathlib import Path
+
+backend_path = Path('data/output/${PROJECT}_backend_requirements.md')
+frontend_path = Path('data/output/${PROJECT}_frontend_requirements.md')
+backend_md = backend_path.read_text(encoding='utf-8') if backend_path.exists() else ''
+frontend_md = frontend_path.read_text(encoding='utf-8') if frontend_path.exists() else ''
+
+agent = SolutionAgent()
+files = agent.run('${PROJECT}', backend_md, frontend_md)
+print('✓ Generated solution files:')
+for k, v in files.items():
+    print(f'  - {k}: {v}')
+" || warn "Solution blueprint generation had issues"
+
 # Summary
 echo ""
-echo "📊 Step 5: Requirements Summary"
+echo "📊 Step 6: Requirements Summary"
 echo "==============================="
 
 if [ -d "data/output/requirements/$PROJECT" ]; then
@@ -274,6 +288,11 @@ if [ -f "data/output/${PROJECT}_full_requirements.md" ]; then
     info "Consolidated requirements: $FULL_SIZE lines"
 fi
 
+if [ -f "data/output/${PROJECT}_solution.md" ]; then
+    SOL_SIZE=$(wc -l < "data/output/${PROJECT}_solution.md" | tr -d ' ')
+    info "Solution blueprint: $SOL_SIZE lines"
+fi
+
 # Record end time
 END_TIME_EPOCH=$(date +%s)
 END_TIME_FORMATTED=$(date +"%Y-%m-%d %H:%M:%S")
@@ -294,6 +313,10 @@ echo "   • Per-artifact requirements: data/output/requirements/$PROJECT/"
 echo "   • Backend requirements: data/output/${PROJECT}_backend_requirements.md"
 echo "   • Frontend requirements: data/output/${PROJECT}_frontend_requirements.md"
 echo "   • Full requirements: data/output/${PROJECT}_full_requirements.md"
+echo "   • Solution architecture: data/output/${PROJECT}_solution_architecture.md"
+echo "   • Database design: data/output/${PROJECT}_db_design.md"
+echo "   • UI plan: data/output/${PROJECT}_ui_plan.md"
+echo "   • Combined solution: data/output/${PROJECT}_solution.md"
 echo ""
 ok "Requirements generation complete for project: $PROJECT"
 

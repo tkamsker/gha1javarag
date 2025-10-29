@@ -294,22 +294,40 @@ class CrewAIRequirementsGenerator:
         
         return "\n".join(summary_parts) if summary_parts else "No artifacts found"
     
-    def _save_results(self, project: str, results: Dict[str, str]) -> List[Path]:
+    def _save_results(self, project: str, results: Dict[str, Any]) -> List[Path]:
         """Save crew outputs to files."""
         project_dir = self.output_root / project / "crewai"
         project_dir.mkdir(parents=True, exist_ok=True)
         
         saved_files = []
         
+        def _normalize_content(value: Any) -> str:
+            # CrewAI Task.output may be a TaskOutput; try to extract text
+            if isinstance(value, str):
+                return value
+            # common attributes seen on LLM outputs
+            for attr in ("raw", "output", "final_output", "content"):
+                try:
+                    v = getattr(value, attr)
+                    if isinstance(v, str) and v.strip():
+                        return v
+                except Exception:
+                    pass
+            try:
+                return str(value)
+            except Exception:
+                return ""
+
         for section_name, content in results.items():
             file_path = project_dir / f"{section_name}.md"
-            file_path.write_text(content or "No content generated", encoding='utf-8')
+            text = _normalize_content(content)
+            file_path.write_text(text or "No content generated", encoding='utf-8')
             saved_files.append(file_path)
             logger.info(f"Saved: {file_path}")
         
         # Save the final consolidated requirements as the main output
         main_output = settings.output_dir / f"{project}_crewai_requirements.md"
-        main_output.write_text(results['final_requirements'], encoding='utf-8')
+        main_output.write_text(_normalize_content(results.get('final_requirements')), encoding='utf-8')
         saved_files.append(main_output)
         logger.info(f"Saved main requirements: {main_output}")
         
