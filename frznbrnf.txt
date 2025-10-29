@@ -1,0 +1,27 @@
+total 240
+-rw-r--r--@  1 thomaskamsker  staff  8326 29 Okt 17:11 AI_PROVIDERS.md
+-rw-r--r--@  1 thomaskamsker  staff  6800 29 Okt 17:11 HOWTO.md
+-rwxr-xr-x@  1 thomaskamsker  staff  9911 29 Okt 17:11 Lofalassn.sh
+-rw-r--r--@  1 thomaskamsker  staff  7047 29 Okt 17:11 OLLAMA_DEBUGGING.md
+-rw-r--r--@  1 thomaskamsker  staff  8541 29 Okt 17:11 RATE_LIMITING.md
+-rw-r--r--@  1 thomaskamsker  staff  6796 29 Okt 17:11 README.md
+-rw-r--r--@  1 thomaskamsker  staff  4760 29 Okt 17:11 USAGE.md
+drwxr-xr-x@  4 thomaskamsker  staff   128 29 Okt 17:11 config
+-rw-r--r--@  1 thomaskamsker  staff   872 29 Okt 17:11 env.example
+-rw-r--r--@  1 thomaskamsker  staff  2676 29 Okt 17:11 fastapi_app.py
+-rw-r--r--@  1 thomaskamsker  staff  2870 29 Okt 17:11 flask_app.py
+-rw-r--r--   1 thomaskamsker  staff     0 29 Okt 17:11 frznbrnf.txt
+drwxr-xr-x@  6 thomaskamsker  staff   192 29 Okt 17:11 infra
+-rw-r--r--@  1 thomaskamsker  staff  7165 29 Okt 17:11 iteration10.md
+-rw-r--r--@  1 thomaskamsker  staff  5872 29 Okt 17:11 iteration8.md
+-rw-r--r--@  1 thomaskamsker  staff  1906 29 Okt 17:11 iteration9a.md
+drwxr-xr-x@  7 thomaskamsker  staff   224 29 Okt 17:11 k8s
+drwxr-xr-x@  5 thomaskamsker  staff   160 29 Okt 17:11 output
+-rw-r--r--@  1 thomaskamsker  staff   228 29 Okt 17:11 requirements.txt
+-rwxr-xr-x@  1 thomaskamsker  staff    89 29 Okt 17:11 run_fastapi.sh
+-rwxr-xr-x@  1 thomaskamsker  staff   180 29 Okt 17:11 run_flask.sh
+-rwxr-xr-x@  1 thomaskamsker  staff   663 29 Okt 17:11 setup.sh
+drwxr-xr-x@ 19 thomaskamsker  staff   608 29 Okt 17:11 src
+-rwxr-xr-x@  1 thomaskamsker  staff   887 29 Okt 17:11 start_web.sh
+drwxr-xr-x@  4 thomaskamsker  staff   128 29 Okt 17:11 strictdoc
+drwxr-xr-x@  3 thomaskamsker  staff    96 29 Okt 17:11 templates
