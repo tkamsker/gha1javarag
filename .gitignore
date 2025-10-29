@@ -37,3 +37,4 @@ log/
 # Data directory (pipeline outputs, builds, logs)
 data/
 *.venv*
+scripts/weaviate*

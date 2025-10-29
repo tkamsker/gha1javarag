@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  weaviate:
+    image: semitechnologies/weaviate:latest
+    container_name: weaviate-java-analysis
+    # Use host networking to access localhost Ollama on Ubuntu
+    network_mode: host
+    environment:
+      # Authentication
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      
+      # Persistence
+      PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
+      
+      # Modules
+      ENABLE_MODULES: "text2vec-ollama,generative-ollama"
+      DEFAULT_VECTORIZER_MODULE: "text2vec-ollama"
+      
+      # Ollama Integration - Use localhost since we're in host network mode
+      OLLAMA_API_ENDPOINT: "http://localhost:11434"
+      
+      # CORS
+      ENABLE_CORS: "true"
+      CORS_ALLOWED_ORIGINS: "*"
+      
+      # Cluster
+      CLUSTER_HOSTNAME: "node1"
+      
+      # Performance
+      QUERY_DEFAULTS_LIMIT: "25"
+      
+    volumes:
+      - ./weaviate-data:/var/lib/weaviate
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/meta"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Ollama service (if you want to run Ollama in Docker too)
+  # Uncomment the following if you want to run Ollama in Docker
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: ollama-java-analysis
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama-data:/root/.ollama
+  #   restart: unless-stopped
+  #   environment:
+  #     - OLLAMA_HOST=0.0.0.0
+
+# volumes:
+#   ollama-data:
