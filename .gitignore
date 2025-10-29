@@ -34,8 +34,6 @@ log/
 *.tmp
 *.temp
 .cache/ 
-data/chroma*
-clever*
-data/*
+# Data directory (pipeline outputs, builds, logs)
+data/
 *.venv*
-logs/*
