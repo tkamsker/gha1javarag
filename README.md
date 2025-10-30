@@ -209,4 +209,4 @@ See `IMPLEMENTATION_PLAN.md` for detailed architecture and implementation notes.
 
 ## 2025.10.29 Iteration 18 
 # nohup
-nohup ./run_full.sh > "log_full_run_$(date +'%Y-%m-%d_%H-%M-%S').log" 2>&1 &
+nohup ./scripts/run_full.sh > "log_full_run_$(date +'%Y-%m-%d_%H-%M-%S').log" 2>&1 &
