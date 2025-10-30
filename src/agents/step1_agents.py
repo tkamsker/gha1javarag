@@ -61,7 +61,8 @@ class SourceReaderTool(BaseTool):
         
         for glob_pattern in globs:
             try:
-                found_files = list(directory.rglob(glob_pattern.lstrip("./**/")))
+                # Use glob pattern as-is; do not lstrip characters (that breaks patterns like **/*.java)
+                found_files = list(directory.rglob(glob_pattern))
                 for file_path in found_files:
                     if file_path.is_file():
                         file_type = self._determine_file_type(file_path)

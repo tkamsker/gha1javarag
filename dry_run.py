@@ -57,6 +57,32 @@ def main():
             print(f"    ... and {len(files) - 5} more files")
     
     print("\n" + "=" * 80)
+
+    # Write machine-readable check report
+    try:
+        from pathlib import Path
+        import json
+        Config.BUILD_DIR.mkdir(parents=True, exist_ok=True)
+        check = {
+            "sourceDir": str(Config.JAVA_SOURCE_DIR),
+            "projectCount": len(projects),
+            "totalFiles": total_files,
+            "projects": {}
+        }
+        for project_name, files in projects.items():
+            types = {}
+            for f in files:
+                t = f.get("type", "unknown")
+                types[t] = types.get(t, 0) + 1
+            check["projects"][project_name] = {
+                "fileCount": len(files),
+                "byType": types,
+                "sample": files[:10]
+            }
+        (Config.BUILD_DIR / "source_check.json").write_text(json.dumps(check, indent=2), encoding='utf-8')
+        print(f"Wrote discovery report to {Config.BUILD_DIR / 'source_check.json'}")
+    except Exception as e:
+        print(f"Could not write source_check.json: {e}")
     print("Estimated Processing Time")
     print("=" * 80)
     print("\nNote: This is a rough estimate. Actual time depends on:")

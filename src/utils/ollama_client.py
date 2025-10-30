@@ -153,38 +153,36 @@ Return only valid JSON, no markdown formatting."""
             if not text or not text.strip():
                 logger.warning("Empty text provided for embedding")
                 return None
-                
+            
             url = f"{self.base_url}/api/embeddings"
-            # Ollama embeddings API uses "input" (not "prompt") and accepts string or array
-            # Ensure model name includes tag if not present
             model_name = self.embed_model
             if ":" not in model_name:
                 model_name = f"{model_name}:latest"
             
             payload = {
                 "model": model_name,
-                "input": text[:8192]  # Limit text size, use "input" field
+                "input": text[:8192]
             }
             
-            response = httpx.post(
-                url, 
-                json=payload, 
-                headers={"Content-Type": "application/json"},
-                timeout=60.0
-            )
-            response.raise_for_status()
-            result = response.json()
-            
-            # Ollama returns embedding in "embedding" field (array of floats)
-            embedding = result.get("embedding")
-            if embedding and len(embedding) > 0:
-                return embedding
-            else:
-                logger.warning(f"Empty embedding returned from Ollama for model {model_name}")
-                # Some versions might return it differently
+            # Retry up to 2 times if empty embedding is returned
+            for attempt in range(2):
+                response = httpx.post(
+                    url,
+                    json=payload,
+                    headers={"Content-Type": "application/json"},
+                    timeout=60.0
+                )
+                response.raise_for_status()
+                result = response.json()
+                embedding = result.get("embedding")
+                if embedding and len(embedding) > 0:
+                    return embedding
                 if result.get("data") and len(result["data"]) > 0:
-                    return result["data"][0].get("embedding")
-                return None
+                    candidate = result["data"][0].get("embedding")
+                    if candidate:
+                        return candidate
+            logger.warning(f"Empty embedding returned from Ollama for model {model_name}")
+            return None
         except httpx.HTTPStatusError as e:
             logger.error(f"HTTP error getting embedding: {e.response.status_code} - {e.response.text}")
             return None

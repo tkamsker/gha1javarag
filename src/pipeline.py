@@ -40,6 +40,14 @@ class RequirementsExtractionPipeline:
         total_files = discovery_result.get("total_files", 0)
         
         logger.info(f"Discovered {total_files} files across {len(projects)} projects")
+
+        # Persist discovery for auditing and cross-checking
+        try:
+            Config.BUILD_DIR.mkdir(parents=True, exist_ok=True)
+            discovery_file = Config.BUILD_DIR / "source_discovery.json"
+            discovery_file.write_text(json.dumps(discovery_result, indent=2), encoding='utf-8')
+        except Exception:
+            pass
         
         # Process each file
         file_extractor_tool = self.step1_agents["tools"]["file_extractor"]
@@ -47,6 +55,7 @@ class RequirementsExtractionPipeline:
         
         processed_files = {}
         extracted_data = {}  # Store extracted info as fallback
+        files_passed = []
         for project_name, files in projects.items():
             logger.info(f"\nProcessing project: {project_name} ({len(files)} files)")
             processed_files[project_name] = []
@@ -76,20 +85,28 @@ class RequirementsExtractionPipeline:
                         extracted_info=extracted_info
                     )
                     
-                    processed_files[project_name].append({
+                    status_entry = {
                         "path": file_path,
                         "uuid": uuid,
-                        "status": "processed"
-                    })
+                        "status": "processed",
+                        "project": project_name,
+                        "type": file_type
+                    }
+                    processed_files[project_name].append(status_entry)
+                    files_passed.append(status_entry)
                     
                     logger.debug(f"Processed: {file_path}")
                 except Exception as e:
                     logger.error(f"Error processing {file_path}: {e}")
-                    processed_files[project_name].append({
+                    fail_entry = {
                         "path": file_path,
                         "status": "failed",
-                        "error": str(e)
-                    })
+                        "error": str(e),
+                        "project": project_name,
+                        "type": file_type
+                    }
+                    processed_files[project_name].append(fail_entry)
+                    files_passed.append(fail_entry)
         
         # Save processing log and extracted data (fallback for Step 2)
         Config.BUILD_DIR.mkdir(parents=True, exist_ok=True)
@@ -99,6 +116,10 @@ class RequirementsExtractionPipeline:
         extracted_file = Config.BUILD_DIR / "step1_extracted_data.json"
         extracted_file.write_text(json.dumps(extracted_data, indent=2), encoding='utf-8')
         logger.debug(f"Saved extracted data to {extracted_file} (Step 2 fallback)")
+
+        # Save flattened file pass/fail list for completeness checks
+        files_passed_file = Config.BUILD_DIR / "files_passed.json"
+        files_passed_file.write_text(json.dumps(files_passed, indent=2), encoding='utf-8')
         
         logger.info(f"\nStep 1 complete. Processed {total_files} files.")
         return {
@@ -127,20 +148,68 @@ class RequirementsExtractionPipeline:
             # Structure project - try Weaviate first, fallback to local file
             project_structure = project_structurer_tool._run(project)
             
-            # Fallback: if Weaviate returned no files, use local extracted data
-            if not project_structure.get("files"):
-                logger.warning(f"No files found in Weaviate for {project}, using fallback extracted data")
-                extracted_file = Config.BUILD_DIR / "step1_extracted_data.json"
-                if extracted_file.exists():
-                    try:
-                        fallback_data = json.loads(extracted_file.read_text(encoding='utf-8'))
-                        project_files = fallback_data.get(project, [])
+            # Merge fallback extracted data to ensure completeness
+            extracted_file = Config.BUILD_DIR / "step1_extracted_data.json"
+            if extracted_file.exists():
+                try:
+                    fallback_data = json.loads(extracted_file.read_text(encoding='utf-8'))
+                    project_files = fallback_data.get(project, [])
+                    if not project_structure.get("files"):
+                        logger.warning(f"No files found in Weaviate for {project}, using fallback extracted data")
                         logger.info(f"Loaded {len(project_files)} files from fallback data")
-                        
-                        # Rebuild structure with fallback data
                         project_structure["files"] = project_files
-                        
-                        # Re-categorize files with fallback data
+                    else:
+                        # Merge missing files by filePath
+                        existing_paths = {f.get("filePath") for f in project_structure.get("files", [])}
+                        new_files = [f for f in project_files if f.get("filePath") not in existing_paths]
+                        if new_files:
+                            logger.info(f"Merging {len(new_files)} missing files from fallback into project structure")
+                            project_structure["files"].extend(new_files)
+                    
+                    # Re-categorize files based on full set
+                    project_structure["entities"] = {
+                        "daos": [],
+                        "dtos": [],
+                        "services": [],
+                        "controllers": [],
+                        "entities": [],
+                        "ui_files": [],
+                        "sql_files": []
+                    }
+                    for file_info in project_structure.get("files", []):
+                        file_type = file_info.get("fileType", "")
+                        extracted = file_info.get("extractedInfo", {})
+                        if file_type == "java":
+                            classes = extracted.get("classes", [])
+                            for cls in classes:
+                                class_name = cls.get("name", "").lower()
+                                purpose = str(cls.get("purpose", "")).upper()
+                                entity_data = {
+                                    "className": cls.get("name", ""),
+                                    "purpose": cls.get("purpose", ""),
+                                    "filePath": file_info.get("filePath", ""),
+                                    "methods": cls.get("methods", []),
+                                    "fields": cls.get("fields", []),
+                                    "annotations": cls.get("annotations", [])
+                                }
+                                if purpose == "DAO" or "dao" in class_name or class_name.endswith("dao"):
+                                    project_structure["entities"]["daos"].append(entity_data)
+                                elif purpose == "DTO" or "dto" in class_name or class_name.endswith("dto"):
+                                    project_structure["entities"]["dtos"].append(entity_data)
+                                elif purpose == "SERVICE" or "service" in class_name:
+                                    project_structure["entities"]["services"].append(entity_data)
+                                elif purpose == "CONTROLLER" or "controller" in class_name:
+                                    project_structure["entities"]["controllers"].append(entity_data)
+                                elif purpose == "ENTITY" or "@Entity" in str(cls.get("annotations", [])):
+                                    project_structure["entities"]["entities"].append(entity_data)
+                                else:
+                                    project_structure["entities"]["entities"].append(entity_data)
+                        elif file_type in ["jsp", "html"]:
+                            project_structure["entities"]["ui_files"].append(extracted)
+                        elif file_type == "sql":
+                            project_structure["entities"]["sql_files"].append(extracted)
+                except Exception as e:
+                    logger.error(f"Error loading fallback data: {e}")
                         for file_info in project_files:
                             file_type = file_info.get("fileType", "")
                             extracted = file_info.get("extractedInfo", {})
