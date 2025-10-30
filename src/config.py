@@ -44,6 +44,9 @@ class Config:
     
     # Project Configuration
     DEFAULT_PROJECT_NAME: str = os.getenv("DEFAULT_PROJECT_NAME", "default-project")
+    # If true, treat each immediate subdirectory of JAVA_SOURCE_DIR as a separate project,
+    # even if the root contains a pom.xml
+    FORCE_MULTIPROJECT_DISCOVERY: bool = os.getenv("FORCE_MULTIPROJECT_DISCOVERY", "false").lower() in ("1", "true", "yes", "on")
     
     @classmethod
     def get_all_globs(cls) -> List[str]:

@@ -9,6 +9,7 @@ if [ -d "venv" ]; then
 fi
 
 export PYTHONPATH=.
+export FORCE_MULTIPROJECT_DISCOVERY=true
 
 # Use defaults from .env; ensure broad globs for full run
 export JAVA_INCLUDE_GLOBS="${JAVA_INCLUDE_GLOBS:-**/*.java}"

@@ -34,13 +34,16 @@ class SourceReaderTool(BaseTool):
         source_path = Path(source_dir)
         projects = {}
         
-        # Check if root has pom.xml (single project)
-        if (source_path / "pom.xml").exists():
+        # Decide discovery mode
+        root_has_pom = (source_path / "pom.xml").exists()
+        force_multi = getattr(Config, "FORCE_MULTIPROJECT_DISCOVERY", False)
+        if root_has_pom and not force_multi:
+            # Single-project mode (root pom.xml present and not overridden)
             project_name = source_path.name or Config.DEFAULT_PROJECT_NAME
             files = self._find_files(source_path, project_name)
             projects[project_name] = files
         else:
-            # Multiple projects - each directory is a project
+            # Multi-project mode - each immediate directory is a project
             for dir_item in source_path.iterdir():
                 if dir_item.is_dir():
                     files = self._find_files(dir_item, dir_item.name)

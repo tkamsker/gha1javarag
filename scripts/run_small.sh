@@ -9,6 +9,7 @@ if [ -d "venv" ]; then
 fi
 
 export PYTHONPATH=.
+export FORCE_MULTIPROJECT_DISCOVERY=true
 
 # Override env for a small, fast run (limit to a couple Java files; skip others)
 export JAVA_INCLUDE_GLOBS="**/ServiceDao.java,**/ServiceDaoImpl.java"
