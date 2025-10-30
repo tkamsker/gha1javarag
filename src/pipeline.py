@@ -210,46 +210,6 @@ class RequirementsExtractionPipeline:
                             project_structure["entities"]["sql_files"].append(extracted)
                 except Exception as e:
                     logger.error(f"Error loading fallback data: {e}")
-                        for file_info in project_files:
-                            file_type = file_info.get("fileType", "")
-                            extracted = file_info.get("extractedInfo", {})
-                            
-                            if file_type == "java":
-                                classes = extracted.get("classes", [])
-                                if not classes:
-                                    logger.debug(f"No classes extracted from {file_info.get('filePath')}")
-                                
-                                for cls in classes:
-                                    class_name = cls.get("name", "").lower()
-                                    purpose = str(cls.get("purpose", "")).upper()
-                                    
-                                    entity_data = {
-                                        "className": cls.get("name", ""),
-                                        "purpose": cls.get("purpose", ""),
-                                        "filePath": file_info.get("filePath", ""),
-                                        "methods": cls.get("methods", []),
-                                        "fields": cls.get("fields", []),
-                                        "annotations": cls.get("annotations", [])
-                                    }
-                                    
-                                    if purpose == "DAO" or "dao" in class_name or class_name.endswith("dao"):
-                                        project_structure["entities"]["daos"].append(entity_data)
-                                    elif purpose == "DTO" or "dto" in class_name or class_name.endswith("dto"):
-                                        project_structure["entities"]["dtos"].append(entity_data)
-                                    elif purpose == "SERVICE" or "service" in class_name:
-                                        project_structure["entities"]["services"].append(entity_data)
-                                    elif purpose == "CONTROLLER" or "controller" in class_name:
-                                        project_structure["entities"]["controllers"].append(entity_data)
-                                    elif purpose == "ENTITY" or "@Entity" in str(cls.get("annotations", [])):
-                                        project_structure["entities"]["entities"].append(entity_data)
-                                    else:
-                                        project_structure["entities"]["entities"].append(entity_data)
-                            elif file_type in ["jsp", "html"]:
-                                project_structure["entities"]["ui_files"].append(extracted)
-                            elif file_type == "sql":
-                                project_structure["entities"]["sql_files"].append(extracted)
-                    except Exception as e:
-                        logger.error(f"Error loading fallback data: {e}")
             
             # Analyze DAOs/DTOs
             dao_dto_analysis = dao_dto_analyzer_tool._run(project_structure)
