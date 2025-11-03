@@ -115,9 +115,42 @@ class WeaviateClient:
                              extracted_info: Dict, embedding: Optional[List[float]] = None) -> str:
         """Store file extraction in Weaviate - gracefully handles failures"""
         import json
-        if not self._connection_healthy or not self.client:
-            # Silently skip if Weaviate is not healthy (fallback storage handles this)
-            return ""
+        # REST fallback if SDK client is unavailable
+        if not self.client:
+            try:
+                props = {
+                    "filePath": file_path,
+                    "project": project,
+                    "fileType": file_type,
+                    "extractedInfo": json.dumps(extracted_info),
+                    "metadata": str(extracted_info.get("extractionStatus", "complete")),
+                    "processed": True,
+                }
+                payload = {"class": "FileExtraction", "properties": props}
+                # Try vectors if embedding provided
+                if embedding and len(embedding) > 0:
+                    with_vectors = dict(payload)
+                    with_vectors["vectors"] = {"default": embedding}
+                    r = httpx.post(f"{self.base_url}/v1/objects", json=with_vectors, timeout=15.0)
+                    if r.status_code in (200, 201):
+                        return str(r.json().get("id", ""))
+                    # fallback to legacy 'vector'
+                    with_vector = dict(payload)
+                    with_vector["vector"] = embedding
+                    r = httpx.post(f"{self.base_url}/v1/objects", json=with_vector, timeout=15.0)
+                    if r.status_code in (200, 201):
+                        return str(r.json().get("id", ""))
+                    logger.debug(f"REST insert with vector failed: {r.status_code} {r.text}")
+                    return ""
+                # No vector
+                r = httpx.post(f"{self.base_url}/v1/objects", json=payload, timeout=15.0)
+                if r.status_code in (200, 201):
+                    return str(r.json().get("id", ""))
+                logger.debug(f"REST insert failed: {r.status_code} {r.text}")
+                return ""
+            except Exception as e:
+                logger.debug(f"REST insert exception: {e}")
+                return ""
         
         try:
             collection = self.client.collections.get("FileExtraction", timeout=5.0)

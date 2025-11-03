@@ -94,7 +94,17 @@ def main():
     wc = WeaviateClient()
 
     is_connected = bool(getattr(wc, "client", None))
-    print(f"Connected: {is_connected}")
+    print(f"Connected (SDK): {is_connected}")
+
+    # Check REST reachability
+    rest_ok = False
+    try:
+        import httpx
+        ping = httpx.get(f"{wc.base_url}/v1/meta", timeout=5.0)
+        rest_ok = ping.status_code == 200
+    except Exception:
+        rest_ok = False
+    print(f"Connected (REST): {rest_ok}")
 
     # Try to verify collection exists and vectorizer setting
     collection_ok = False
@@ -116,10 +126,8 @@ def main():
     print(f"Collection exists: {collection_ok}")
     print(f"Vectorizer: {vectorizer}")
 
-    # Count projects in Weaviate
-    project_counts = Counter()
-    if is_connected and collection_ok:
-        project_counts = list_projects_in_weaviate(wc)
+    # Count projects in Weaviate (use REST if SDK not connected)
+    project_counts = list_projects_in_weaviate(wc)
     top_projects = project_counts.most_common(10)
     total_objects = sum(project_counts.values())
 
@@ -156,8 +164,10 @@ def main():
     # Simple guidance based on findings
     print("")
     print("== Heuristics ==")
-    if not is_connected or not collection_ok:
-        print("- Weaviate not reachable or collection missing. Expect fallback to be used.")
+    if files_preview:
+        print("- Objects present via REST. SDK connection is optional for pipeline.")
+    elif not rest_ok or not collection_ok:
+        print("- Weaviate REST not reachable or collection missing. Fix server/collection before pipeline.")
     elif vectorizer != "none":
         print("- Collection vectorizer is not 'none'. Recreate with vectorizer=none to avoid embedding calls.")
     elif full_count_estimate == 0 and fb_stats.get("fallback_project_files", 0) > 0:
