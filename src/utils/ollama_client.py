@@ -151,7 +151,7 @@ Return only valid JSON, no markdown formatting."""
         """Get embedding vector for text using Ollama embeddings API"""
         try:
             if not text or not text.strip():
-                logger.warning("Empty text provided for embedding")
+                logger.debug("Empty text provided for embedding; skipping embedding")
                 return None
             
             url = f"{self.base_url}/api/embeddings"
@@ -181,7 +181,7 @@ Return only valid JSON, no markdown formatting."""
                     candidate = result["data"][0].get("embedding")
                     if candidate:
                         return candidate
-            logger.warning(f"Empty embedding returned from Ollama for model {model_name}")
+            logger.info(f"Empty embedding returned from Ollama for model {model_name}; proceeding without vector")
             return None
         except httpx.HTTPStatusError as e:
             logger.error(f"HTTP error getting embedding: {e.response.status_code} - {e.response.text}")

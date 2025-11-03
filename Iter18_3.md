@@ -45,3 +45,15 @@ If PROJECT env var is set, runs:
 .
     python scripts/diagnose_weaviate.py --project "$PROJECT" --preview 5    ```  - Logs stored at `data/output/logs/pipeline_small.log`.
 Logs stored at data/output/logs/pipeline_small.log.
+
+# 11:33
+
+ adjusted the embedding client so empty embeddings no longer produce warnings and the pipeline proceeds without vectors.
+What changed:
+src/utils/ollama_client.py
+Empty text for embedding now logs at debug and returns None.
+Empty embedding responses now log at info (“proceeding without vector”) instead of warning.
+Next:
+Re-run your prod small run:
+PROJECT=cuco-ui-cct-common bash scripts/run_small.sh
+You should no longer see the “Empty embedding returned from Ollama …” warnings; the run will continue using non-vector inserts.
