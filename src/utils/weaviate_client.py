@@ -165,9 +165,38 @@ class WeaviateClient:
     
     def query_by_project(self, project: str) -> List[Dict]:
         """Query all files for a project - gracefully handles failures"""
-        if not self._connection_healthy or not self.client:
-            # Silently return empty - fallback will handle it
-            return []
+        # If SDK client unavailable, try REST fallback to list objects
+        if not self.client:
+            try:
+                import json as _json
+                # Fetch objects via REST and filter in Python
+                resp = httpx.get(f"{self.base_url}/v1/objects?class=FileExtraction&limit=10000", timeout=10.0)
+                if resp.status_code != 200:
+                    return []
+                data = resp.json()
+                objs = (data or {}).get("objects", []) or []
+                files: List[Dict] = []
+                for obj in objs:
+                    props = (obj or {}).get("properties", {}) or {}
+                    if props.get("project") != project:
+                        continue
+                    extracted_info_str = props.get("extractedInfo", "{}")
+                    if isinstance(extracted_info_str, str):
+                        try:
+                            extracted_info = _json.loads(extracted_info_str)
+                        except Exception:
+                            extracted_info = {}
+                    else:
+                        extracted_info = extracted_info_str or {}
+                    files.append({
+                        "filePath": props.get("filePath"),
+                        "fileType": props.get("fileType"),
+                        "extractedInfo": extracted_info,
+                        "metadata": props.get("metadata", {}),
+                    })
+                return files
+            except Exception:
+                return []
         
         try:
             from weaviate.classes.query import Filter

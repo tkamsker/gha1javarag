@@ -43,16 +43,31 @@ def read_fallback_counts(project: str) -> dict:
 
 
 def list_projects_in_weaviate(wc: WeaviateClient, sample_limit: int = 10000) -> Counter:
-    """Fetch all objects (best-effort) and count by project."""
+    """Fetch all objects (best-effort) and count by project. Falls back to REST."""
+    counter = Counter()
+    # Try SDK first if available
     try:
-        collection = wc.client.collections.get("FileExtraction", timeout=5.0)
-        try:
+        if getattr(wc, "client", None):
+            collection = wc.client.collections.get("FileExtraction", timeout=5.0)
             results = collection.query.fetch_objects(limit=sample_limit, timeout=10.0)
-        except Exception:
+            for obj in getattr(results, "objects", []) or []:
+                proj = obj.properties.get("project")
+                if proj:
+                    counter[proj] += 1
+            return counter
+    except Exception:
+        pass
+
+    # REST fallback
+    try:
+        import httpx
+        resp = httpx.get(f"{wc.base_url}/v1/objects?class=FileExtraction&limit={sample_limit}", timeout=10.0)
+        if resp.status_code != 200:
             return Counter()
-        counter = Counter()
-        for obj in getattr(results, "objects", []) or []:
-            proj = obj.properties.get("project")
+        data = resp.json()
+        for obj in (data or {}).get("objects", []) or []:
+            props = obj.get("properties", {}) or {}
+            proj = props.get("project")
             if proj:
                 counter[proj] += 1
         return counter
