@@ -40,10 +40,11 @@ class OllamaClient:
         """Extract structured information from a file using LLM"""
         # Enhanced system prompt for Java files
         if file_type == "java":
-            system_prompt = """You are an expert Java code analyzer. Extract detailed structural information.
-Identify classes as DAO, DTO, Service, Controller, or Entity based on naming patterns and annotations.
-Extract ALL methods with complete signatures and ALL fields with types and annotations.
-Return structured JSON with complete class information."""
+            system_prompt = """You are an expert Java code analyzer. Extract exhaustive structural information.
+Identify classes as DAO, DTO, Service, Controller, or Entity based on naming and annotations.
+Include package, imports, class-level annotations, interfaces, and inheritance.
+Extract ALL methods (name, returnType, parameters with names and types, annotations) and ALL fields (type, annotations, access).
+Return ONLY valid JSON (no markdown)."""
         else:
             system_prompt = """You are an expert code analyzer. Extract maximum information from code files including:
 - Classes, methods, fields, and their relationships
@@ -71,6 +72,8 @@ Return ONLY valid JSON (no markdown blocks) with this structure:
 {{
   "filePath": "{file_path}",
   "fileType": "java",
+  "package": "",
+  "imports": [],
   "classes": [
     {{
       "name": "FullClassName",
@@ -88,7 +91,6 @@ Return ONLY valid JSON (no markdown blocks) with this structure:
       "comment": ""
     }}
   ],
-  "imports": [],
   "endpoints": [],
   "businessRules": [],
   "dataModels": [],
