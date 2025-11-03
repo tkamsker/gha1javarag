@@ -116,3 +116,21 @@ Notes:
 I added Config.WEAVIATE_VECTORIZER (default text2vec-ollama).
 The Weaviate client now honors this when creating FileExtraction, and logs if an existing collection uses a different vectorizer (with guidance to recreate).
 Step 2 and 3 will benefit from immediate semantic vectors on insert.
+
+
+#  1216 
+
+Use the new middle-size runner to sample 100 files from two directories, then run the pipeline and optional diagnosis.
+Example:
+python scripts/run_middle.py \  --dir1 /mnt/cucocalcai/cuco-master/cuco-master@d34bb6b6d1c/cuco-core/src/main/java/at/a1ta/cuco/core/dao \  --dir2 /mnt/cucocalcai/cuco-master/cuco-master@d34bb6b6d1c/cuco-core/src/main/java/at/a1ta/cuco/core/service \  --count 100 \  --project cuco-core \  --preview 5
+What it does:
+Copies up to N Java files (split across --dir1 and --dir2) into data/build/middle_src.
+Runs the pipeline with JAVA_SOURCE_DIR pointed to that temp folder.
+Optionally runs diagnosis for --project after the run.
+Logs to data/output/logs/pipeline_middle.log.
+Flags:
+--dir1, --dir2: required absolute paths.
+--count: total files (default 100).
+--project: project name to diagnose after run (optional).
+--preview: number of entries to preview in diagnosis.
+--log-level: defaults to INFO.
