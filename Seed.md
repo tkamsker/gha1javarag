@@ -26,3 +26,5 @@ It can:
     - Ensure or recreate FileExtraction with vectorizer=none or text2vec-ollama.
     - Generate embeddings via Ollama (Config.OLLAMA_BASE_URL, Config.OLLAMA_EMBED_MODEL_NAME) and attach vectors on insert.
     - Insert via REST (tries vectors.default, falls back to vector).
+
+

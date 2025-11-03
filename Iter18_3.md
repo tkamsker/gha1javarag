@@ -57,3 +57,29 @@ Next:
 Re-run your prod small run:
 PROJECT=cuco-ui-cct-common bash scripts/run_small.sh
 You should no longer see the “Empty embedding returned from Ollama …” warnings; the run will continue using non-vector inserts.
+
+
+## -----------
+
+#  11:39 
+#
+# check weaviate 
+#
+
+Here are quick ways to verify Weaviate has all run_small data and that it’s searchable.
+Check counts and samples (recommended)
+python scripts/diagnose_weaviate.py --project cuco-ui-cct-common --preview 5# Also check cuco-core since run_small targets that project by defaultpython scripts/diagnose_weaviate.py --project cuco-core --preview 5
+Count objects per project via REST
+curl -sS 'http://localhost:8080/v1/objects?class=FileExtraction&limit=10000' \| jq -r '.objects[].properties.project' | sort | uniq -c
+Verify run_small files exist (e.g., ServiceDao.java/ServiceDaoImpl.java in cuco-core)
+'
+curl -sS 'http://localhost:8080/v1/objects?class=FileExtraction&limit=10000' \| jq -r '.objects[].properties | select(.project=="cuco-core") | .filePath'# Narrow to expected filescurl -sS 'http://localhost:8080/v1/objects?class=FileExtraction&limit=10000' \| jq -r '.objects[].properties| select(.project=="cuco-core" and (.filePath|test("ServiceDao(Impl)?\\.java$"))) | .filePath'
+Full object check for cuco-core
+# Countcurl -sS 'http://localhost:8080/v1/objects?class=FileExtraction&limit=10000' \| jq '[.objects[].properties | select(.project=="cuco-core")] | length'# Show a couple entriescurl -sS 'http://localhost:8080/v1/objects?class=FileExtraction&limit=10000' \| jq '.objects[].properties | select(.project=="cuco-core") | {filePath,fileType} ' | head -n 20
+Text searchability check (GraphQL)
+If vectorizer is text2vec-ollama (semantic):
+curl -sS -X POST http://localhost:8080/v1/graphql \  -H 'Content-Type: application/json' \  -d '{    "query":"{ Get { FileExtraction(nearText:{concepts:[\"Service DAO\" ]} limit:5) { filePath project } } }"  }' | jq .
+If vectorizer is none (keyword filter):
+.
+curl -sS -X POST http://localhost:8080/v1/graphql \  -H 'Content-Type: application/json' \  -d '{    "query":"{ Get { FileExtraction(where:{path:[\"project\"], operator:Equal, valueText:\"cuco-core\"} limit:5) { filePath project } } }"  }' | jq .
+Tip: run_small targets cuco-core by default (filters **/ServiceDao.java,**/ServiceDaoImpl.java). Use the cuco-core checks above to confirm all expected files are present and queryable.
