@@ -118,7 +118,7 @@ The Weaviate client now honors this when creating FileExtraction, and logs if an
 Step 2 and 3 will benefit from immediate semantic vectors on insert.
 
 
-#  1216 
+#  1216  middle
 
 Use the new middle-size runner to sample 100 files from two directories, then run the pipeline and optional diagnosis.
 Example:
