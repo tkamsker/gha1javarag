@@ -33,3 +33,15 @@ Validates environment with validate_setup.py (can skip).
 Runs pipeline via main.py with broad globs; logs to data/output/logs/full_cycle.log (can skip).
 Diagnoses via scripts/diagnose_weaviate.py for the project and prints a summary.
 Script: scripts/rerun_full_cycle.py (no linter issues).
+
+# 11:18
+
+Set PROJECT and run the small cycle; it will now also run a post-run diagnosis.
+Run:
+PROJECT=cuco-ui-cct-common bash scripts/run_small.sh
+Changes made to scripts/run_small.sh:
+Ensures data/output/logs exists.
+If PROJECT env var is set, runs:
+.
+    python scripts/diagnose_weaviate.py --project "$PROJECT" --preview 5    ```  - Logs stored at `data/output/logs/pipeline_small.log`.
+Logs stored at data/output/logs/pipeline_small.log.
