@@ -49,6 +49,10 @@ class ProjectStructureTool(BaseTool):
         }
         
         # Categorize files
+        dao_names: List[str] = []
+        service_names: List[str] = []
+        controller_names: List[str] = []
+        entity_names: List[str] = []
         for file_info in files:
             file_type = file_info.get("fileType", "")
             extracted = file_info.get("extractedInfo", {})
@@ -69,26 +73,76 @@ class ProjectStructureTool(BaseTool):
                         "filePath": file_info.get("filePath", ""),
                         "methods": cls.get("methods", []),
                         "fields": cls.get("fields", []),
-                        "annotations": cls.get("annotations", [])
+                        "annotations": cls.get("annotations", []),
+                        "imports": extracted.get("imports", [])
                     }
                     
                     if purpose == "DAO" or "dao" in class_name or class_name.endswith("dao"):
                         structure["entities"]["daos"].append(entity_data)
+                        if entity_data["className"]:
+                            dao_names.append(entity_data["className"])
                     elif purpose == "DTO" or "dto" in class_name or class_name.endswith("dto"):
                         structure["entities"]["dtos"].append(entity_data)
                     elif purpose == "SERVICE" or "service" in class_name:
                         structure["entities"]["services"].append(entity_data)
+                        if entity_data["className"]:
+                            service_names.append(entity_data["className"])
                     elif purpose == "CONTROLLER" or "controller" in class_name:
                         structure["entities"]["controllers"].append(entity_data)
-                    elif purpose == "ENTITY" or "@Entity" in str(cls.get("annotations", [])):
+                        if entity_data["className"]:
+                            controller_names.append(entity_data["className"])
+                    elif purpose == "ENTITY" or "@Entity" in str(cls.get("annotations", [])) or "@entity" in str(cls.get("annotations", [])).lower():
                         structure["entities"]["entities"].append(entity_data)
+                        if entity_data["className"]:
+                            entity_names.append(entity_data["className"])
                     else:
                         structure["entities"]["entities"].append(entity_data)
+                        if entity_data["className"]:
+                            entity_names.append(entity_data["className"])
             elif file_type in ["jsp", "html"]:
                 structure["entities"]["ui_files"].append(extracted)
             elif file_type == "sql":
                 structure["entities"]["sql_files"].append(extracted)
-        
+
+        # Build simple relationships using imports/name hints
+        relationships: List[Dict] = []
+        dao_set = set(dao_names)
+        service_set = set(service_names)
+        controller_set = set(controller_names)
+
+        # Map services -> DAOs
+        for svc in structure["entities"]["services"]:
+            imports = [str(i) for i in (svc.get("imports") or [])]
+            targets = set()
+            for dao in dao_set:
+                if any(dao in imp for imp in imports):
+                    targets.add(dao)
+            # name-based heuristic
+            for dao in dao_set:
+                if dao.lower().replace("dao", "") in svc.get("className", "").lower():
+                    targets.add(dao)
+            for tgt in targets:
+                relationships.append({
+                    "type": "service_to_dao",
+                    "from": svc.get("className"),
+                    "to": tgt
+                })
+
+        # Map controllers -> Services
+        for ctrl in structure["entities"]["controllers"]:
+            imports = [str(i) for i in (ctrl.get("imports") or [])]
+            targets = set()
+            for svc in service_set:
+                if any(svc in imp for imp in imports):
+                    targets.add(svc)
+            for tgt in targets:
+                relationships.append({
+                    "type": "controller_to_service",
+                    "from": ctrl.get("className"),
+                    "to": tgt
+                })
+
+        structure["relationships"] = relationships
         return structure
 
 
