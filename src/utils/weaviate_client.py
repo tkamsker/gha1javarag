@@ -66,7 +66,7 @@ class WeaviateClient:
             self.client = None
     
     def _ensure_collection_via_rest(self):
-        """Create collection using REST API (more reliable than Python client for cluster issues)"""
+        """Create collection using REST API honoring configured vectorizer."""
         collection_name = "FileExtraction"
         try:
             # Check if collection exists via REST
@@ -74,11 +74,11 @@ class WeaviateClient:
             
             if response.status_code == 404:
                 # Collection doesn't exist, create it
-                logger.info(f"Creating collection {collection_name} via REST API...")
+                logger.info(f"Creating collection {collection_name} via REST API (vectorizer={Config.WEAVIATE_VECTORIZER})...")
                 schema = {
                     "class": collection_name,
                     "description": "File extraction storage",
-                    "vectorizer": "none",  # No vectorizer - we provide embeddings manually
+                    "vectorizer": Config.WEAVIATE_VECTORIZER,
                     "properties": [
                         {"name": "filePath", "dataType": ["text"]},
                         {"name": "project", "dataType": ["text"]},
@@ -102,7 +102,16 @@ class WeaviateClient:
                     logger.debug(f"Could not create collection via REST: {create_response.status_code} - {create_response.text}")
                     self._connection_healthy = False
             elif response.status_code == 200:
-                logger.debug(f"Collection {collection_name} already exists")
+                current = response.json()
+                current_vec = current.get("vectorizer")
+                if current_vec != Config.WEAVIATE_VECTORIZER:
+                    logger.info(
+                        f"Collection {collection_name} exists with vectorizer={current_vec},"
+                        f" config requests {Config.WEAVIATE_VECTORIZER}."
+                        " To change, delete the collection or run the seeding script with --recreate."
+                    )
+                else:
+                    logger.debug(f"Collection {collection_name} already exists with desired vectorizer")
                 self._connection_healthy = True
             else:
                 logger.debug(f"Unexpected status checking collection: {response.status_code}")

@@ -83,3 +83,36 @@ If vectorizer is none (keyword filter):
 .
 curl -sS -X POST http://localhost:8080/v1/graphql \  -H 'Content-Type: application/json' \  -d '{    "query":"{ Get { FileExtraction(where:{path:[\"project\"], operator:Equal, valueText:\"cuco-core\"} limit:5) { filePath project } } }"  }' | jq .
 Tip: run_small targets cuco-core by default (filters **/ServiceDao.java,**/ServiceDaoImpl.java). Use the cuco-core checks above to confirm all expected files are present and queryable.
+
+# -----------------------------------------
+## vectorizer = text2vec-ollama 
+#
+Set the vectorizer to text2vec-ollama via config and the client will now create the collection accordingly.
+Do this once (env or .env):
+
+Export:
+export WEAVIATE_VECTORIZER=text2vec-ollama
+
+Or add to .env:
+ollama
+WEAVIATE_VECTORIZER=text2vec-ollama
+
+Recreate the collection to switch vectorizer:
+Option A: Use our seeding script:
+python scripts/seed_weaviate.py --project cuco-ui-cct-common --count 0 --vectorizer text2vec-ollama --recreate
+
+Option B: Manual curl delete + rerun pipeline (if needed):
+
+curl -sS -X DELETE http://localhost:8080/v1/schema/FileExtraction
+
+Verify:
+
+curl -sS http://localhost:8080/v1/schema/FileExtraction | jq '.vectorizer'
+
+# should print "text2vec-ollama"
+python scripts/diagnose_weaviate.py --project cuco-ui-cct-common --preview 5
+
+Notes:
+I added Config.WEAVIATE_VECTORIZER (default text2vec-ollama).
+The Weaviate client now honors this when creating FileExtraction, and logs if an existing collection uses a different vectorizer (with guidance to recreate).
+Step 2 and 3 will benefit from immediate semantic vectors on insert.

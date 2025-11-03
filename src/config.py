@@ -30,6 +30,8 @@ class Config:
     WEAVIATE_URL: str = os.getenv("WEAVIATE_URL", "http://localhost:8080")
     WEAVIATE_API_KEY: str = os.getenv("WEAVIATE_API_KEY", "")
     WEAVIATE_GRPC_URL: str = os.getenv("WEAVIATE_GRPC_URL", "localhost:50051")
+    # Vectorizer mode: "none" or "text2vec-ollama"
+    WEAVIATE_VECTORIZER: str = os.getenv("WEAVIATE_VECTORIZER", "text2vec-ollama").strip()
     
     # Heuristics
     GWT_RPC_DEFAULT_PATH: str = os.getenv("GWT_RPC_DEFAULT_PATH", "/gwt.rpc")
