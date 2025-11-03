@@ -30,6 +30,18 @@ class RequirementsWriterTool(BaseTool):
     
     def _run(self, project: str, structured_data: Dict) -> str:
         """Write requirements document"""
+        # Summaries for stronger guidance
+        entities = structured_data.get("entities", structured_data.get("structure", {}).get("entities", {}))
+        counts = {
+            "daos": len(entities.get("daos", [])),
+            "dtos": len(entities.get("dtos", [])),
+            "services": len(entities.get("services", [])),
+            "controllers": len(entities.get("controllers", [])),
+            "entities": len(entities.get("entities", [])),
+            "ui_files": len(entities.get("ui_files", [])),
+            "sql_files": len(entities.get("sql_files", [])),
+        }
+
         prompt = f"""Create a comprehensive requirements document for project: {project}
 
 Based on this structured data:
@@ -50,11 +62,14 @@ Write a detailed Markdown requirements document with the following sections:
    - Entities and DTOs
    - Relationships
    - Validation Rules
-5. Integration Points
+5. Integration Points (use relationships if present)
    - Frontend-Backend Mappings
    - Data Flow
 
-Be detailed and reference specific components from the structured data."""
+CRITICAL:
+- There are DAOs={counts['daos']}, DTOs={counts['dtos']}, Services={counts['services']}, Controllers={counts['controllers']}, Entities={counts['entities']}.
+- Reference specific classes and methods; prefer lists/tables over prose. Cover ALL items, not samples.
+"""
         
         requirements_md = self.ollama.generate(prompt)
         
@@ -70,7 +85,7 @@ Be detailed and reference specific components from the structured data."""
     def _format_structured_data(self, data: Dict) -> str:
         """Format structured data for prompt"""
         import json
-        return json.dumps(data, indent=2)[:4000]  # Limit size
+        return json.dumps(data, indent=2)[:12000]  # Larger context for better coverage
 
 
 class SolutionMappingTool(BaseTool):
