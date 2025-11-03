@@ -147,3 +147,12 @@ Strengthen Step 2 categorization and relationships; merge fallback cleanly.
 Add a backfill script later to re-embed historical data.
 Validate with diagnosis and simple KPIs after runs.
 If you want, I can start implementing the embedding text builder and prompt refinements next.
+
+# 15:33
+
+nohup scripts/run_small.sh --project dao > frznbrnf.log &
+
+
+Updated Java extraction prompts to include package/imports and require exhaustive classes/methods/fields:
+src/utils/ollama_client.py now asks for package, imports, and stronger detail; still returns strict JSON.
+Next: run a middle/small cycle to populate richer structures and relationships, then inspect requirements.md/mapping.md.

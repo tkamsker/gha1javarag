@@ -215,3 +215,11 @@ nohup ./scripts/run_full.sh > "log_full_run_$(date +'%Y-%m-%d_%H-%M-%S').log" 2>
 #  2025.11.03 Middle 
 
 nohup python scripts/run_middle.py   --dir1 /mnt/cucocalcai/cuco-master/cuco-master@d34bb6b6d1c/cuco-core/src/main/java/at/a1ta/cuco/core/dao   --dir2 /mnt/cucocalcai/cuco-master/cuco-master@d34bb6b6d1c/cuco-core/src/main/java/at/a1ta/cuco/core/service   --count 100   --project cuco-core   --preview 5  > frznbrnf.log &
+
+
+python scripts/run_middle.py \
+  --dir1 /mnt/cucocalcai/cuco-master/cuco-master@d34bb6b6d1c/cuco-core/src/main/java/at/a1ta/cuco/core/dao \
+  --dir2 /mnt/cucocalcai/cuco-master/cuco-master@d34bb6b6d1c/cuco-core/src/main/java/at/a1ta/cuco/core/service \
+  --count 100 \
+  --project cuco-core \
+  --preview 5
