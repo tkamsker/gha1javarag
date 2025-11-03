@@ -134,3 +134,16 @@ Flags:
 --project: project name to diagnose after run (optional).
 --preview: number of entries to preview in diagnosis.
 --log-level: defaults to INFO.
+
+
+# -> 18.4 
+I wrote a concrete step-by-step plan and analysis in Iter18_4.md, focusing on fixing empty/weak embeddings and increasing Step 2/3 detail.
+Read it:
+Iter18_4.md
+Key actions summarized:
+Harden embeddings: fallback model, richer embedding text (file path, classes, methods, annotations), optional chunking.
+Improve Step 1/3 prompts for exhaustive structure and mappings.
+Strengthen Step 2 categorization and relationships; merge fallback cleanly.
+Add a backfill script later to re-embed historical data.
+Validate with diagnosis and simple KPIs after runs.
+If you want, I can start implementing the embedding text builder and prompt refinements next.

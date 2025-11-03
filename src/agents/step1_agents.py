@@ -201,7 +201,7 @@ class DataStoreTool(BaseTool):
         """Store extracted information"""
         try:
             # Generate embedding for the file
-            content_for_embedding = self._prepare_content_for_embedding(extracted_info)
+            content_for_embedding = self._prepare_content_for_embedding(extracted_info, file_path)
             embedding = self.ollama.get_embedding(content_for_embedding)
             
             uuid = self.weaviate.store_file_extraction(
@@ -218,18 +218,58 @@ class DataStoreTool(BaseTool):
             logger.error(f"Error storing {file_path}: {e}")
             return ""
     
-    def _prepare_content_for_embedding(self, extracted_info: Dict) -> str:
-        """Prepare content for embedding generation"""
-        parts = []
-        if "classes" in extracted_info:
-            parts.append(f"Classes: {extracted_info['classes']}")
-        if "businessRules" in extracted_info:
-            parts.append(f"Business Rules: {extracted_info['businessRules']}")
-        if "dataModels" in extracted_info:
-            parts.append(f"Data Models: {extracted_info['dataModels']}")
-        if "rawAnalysis" in extracted_info:
-            parts.append(extracted_info['rawAnalysis'])
-        return " ".join(str(p) for p in parts)
+    def _prepare_content_for_embedding(self, extracted_info: Dict, file_path: str) -> str:
+        """Prepare rich, code-aware content for embedding.
+        Prefers structured data; falls back to file head if sparse.
+        """
+        parts: List[str] = []
+        # Always include basics
+        try:
+            parts.append(f"filePath: {extracted_info.get('filePath') or file_path}")
+            if extracted_info.get("fileType"):
+                parts.append(f"fileType: {extracted_info.get('fileType')}")
+        except Exception:
+            parts.append(f"filePath: {file_path}")
+
+        # Classes, annotations, methods
+        classes = extracted_info.get("classes") or []
+        if isinstance(classes, list) and classes:
+            for cls in classes[:8]:  # cap per-file to keep payload compact
+                name = cls.get("name") if isinstance(cls, dict) else None
+                ctype = cls.get("type") if isinstance(cls, dict) else None
+                purpose = cls.get("purpose") if isinstance(cls, dict) else None
+                ann = cls.get("annotations") if isinstance(cls, dict) else None
+                if name:
+                    parts.append(f"class: {name} type:{ctype or ''} purpose:{purpose or ''} ann:{','.join(ann or [])}")
+                methods = cls.get("methods") if isinstance(cls, dict) else None
+                if isinstance(methods, list) and methods:
+                    for m in methods[:12]:
+                        mname = m.get("name")
+                        rtype = m.get("returnType")
+                        params = m.get("parameters") or []
+                        pstr = ",".join([f"{p.get('type')} {p.get('name')}" for p in params if isinstance(p, dict)])
+                        parts.append(f"method: {mname} returns:{rtype} params:{pstr}")
+
+        # Imports / dependencies if present
+        imports = extracted_info.get("imports")
+        if isinstance(imports, list) and imports:
+            parts.append("imports: " + ",".join(imports[:20]))
+
+        # Business rules / data models (concise)
+        if extracted_info.get("businessRules"):
+            parts.append(f"businessRules: {str(extracted_info.get('businessRules'))[:512]}")
+        if extracted_info.get("dataModels"):
+            parts.append(f"dataModels: {str(extracted_info.get('dataModels'))[:512]}")
+
+        # If still sparse, fallback to file head content
+        combined = "\n".join([p for p in parts if p])
+        if len(combined) < 64:
+            try:
+                head = Path(file_path).read_text(encoding='utf-8', errors='ignore')[:8192]
+                combined = f"filePath: {file_path}\n{head}"
+            except Exception:
+                pass
+        return combined
 
 
 def create_step1_agents(ollama_client: Optional[OllamaClient] = None,

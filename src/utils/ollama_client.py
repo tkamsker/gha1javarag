@@ -159,28 +159,30 @@ Return only valid JSON, no markdown formatting."""
             if ":" not in model_name:
                 model_name = f"{model_name}:latest"
             
-            payload = {
-                "model": model_name,
-                "input": text[:8192]
-            }
+            # Try native Ollama schema first (prompt), then fallback to input
+            payloads = [
+                {"model": model_name, "prompt": text[:8192]},
+                {"model": model_name, "input": text[:8192]},
+            ]
             
-            # Retry up to 2 times if empty embedding is returned
-            for attempt in range(2):
-                response = httpx.post(
-                    url,
-                    json=payload,
-                    headers={"Content-Type": "application/json"},
-                    timeout=60.0
-                )
-                response.raise_for_status()
-                result = response.json()
-                embedding = result.get("embedding")
-                if embedding and len(embedding) > 0:
-                    return embedding
-                if result.get("data") and len(result["data"]) > 0:
-                    candidate = result["data"][0].get("embedding")
-                    if candidate:
-                        return candidate
+            # Retry up to 2 times per payload form
+            for payload in payloads:
+                for attempt in range(2):
+                    response = httpx.post(
+                        url,
+                        json=payload,
+                        headers={"Content-Type": "application/json"},
+                        timeout=60.0
+                    )
+                    response.raise_for_status()
+                    result = response.json()
+                    embedding = result.get("embedding")
+                    if embedding and len(embedding) > 0:
+                        return embedding
+                    if result.get("data") and len(result["data"]) > 0:
+                        candidate = result["data"][0].get("embedding")
+                        if candidate:
+                            return candidate
             logger.info(f"Empty embedding returned from Ollama for model {model_name}; proceeding without vector")
             return None
         except httpx.HTTPStatusError as e:
