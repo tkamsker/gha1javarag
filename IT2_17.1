@@ -64,3 +64,16 @@ source venv/bin/activate
 ./docker-weaviate.sh start
 python main.py verify
 python main.py all --project it17 --include-frontend
+
+# 16:24
+
+verify looks good:
+JAVA_SOURCE_DIR OK
+Ollama reachable
+Weaviate connected (version 1.32.11)
+The weaviate-client deprecation warning is informational. We're intentionally using 3.25.3 because the code is adapted to the v3 API. The warning can be ignored.
+You can now run the full pipeline:
+python main.py all --project it17 --include-frontend
+Or step by step:
+python main.py discover --project it17 --include-frontendpython main.py extract --project it17 --include-frontendpython main.py index --project it17python main.py prd --project it17 --frontend
+If you want to suppress the weaviate warning, I can add a filter. Should I add it?
