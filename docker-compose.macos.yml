@@ -3,7 +3,7 @@ version: '3.8'
 services:
   weaviate:
     image: semitechnologies/weaviate:latest
-    container_name: weaviate-java-analysis
+    container_name: weaviate-i17
     ports:
       - "8080:8080"
       - "50051:50051"

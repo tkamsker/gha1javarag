@@ -3,7 +3,7 @@ version: '3.8'
 services:
   weaviate:
     image: semitechnologies/weaviate:latest
-    container_name: weaviate-java-analysis
+    container_name: weaviate-i17
     # Use host networking to access localhost Ollama on Ubuntu
     network_mode: host
     environment:

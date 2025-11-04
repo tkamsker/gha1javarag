@@ -4,7 +4,7 @@ Command-line interface for the Java/JSP/GWT/JS → PRD pipeline.
 import logging
 import sys
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Dict
 import click
 from rich.console import Console
 from rich.table import Table
@@ -25,7 +25,7 @@ from chunk.build_chunks import ChunkBuilder
 from store.weaviate_client import WeaviateClient
 from synth.prd_markdown import PRDMarkdownGenerator
 from synth.requirements_agent import RequirementsAgent
-from synth.crewai_requirements import generate_requirements_with_crewai
+# CrewAI optional import is deferred to runtime inside the command
 
 # Setup logging
 logging.basicConfig(
@@ -206,34 +206,35 @@ def index(project: Optional[str]):
         build_dir = settings.build_dir
         all_artifacts = {}
         
-        # Load all artifact JSON files
-        artifact_files = {
-            'ibatis_statements': 'all_statements.json',
-            'dao_calls': 'all_dao_calls.json', 
-            'jsp_forms': 'all_forms.json',
-            'db_tables': 'all_tables.json',
-            'gwt_modules': 'all_modules.json',
-            'gwt_uibinder': 'all_uibinder.json',
-            'gwt_client': 'all_artifacts.json',
-            'js_artifacts': 'all_js_artifacts.json',
-            'backend_docs': 'all_backend_docs.json'
+        # Load all artifact JSON files (support multiple filename variants)
+        candidates: Dict[str, List[str]] = {
+            'ibatis_statements': ['all_statements.json', 'all_artifacts.json'],
+            'dao_calls': ['all_dao_calls.json', 'all_artifacts.json'], 
+            'jsp_forms': ['all_forms.json', 'all_artifacts.json'],
+            'db_tables': ['all_tables.json', 'all_artifacts.json'],
+            'gwt_modules': ['all_modules.json', 'all_artifacts.json'],
+            'gwt_uibinder': ['all_uibinder.json', 'all_artifacts.json'],
+            'gwt_client': ['all_artifacts.json'],
+            'js_artifacts': ['all_js_artifacts.json', 'all_artifacts.json'],
+            'backend_docs': ['all_backend_docs.json']
         }
-        
-        for artifact_type, filename in artifact_files.items():
-            artifact_file = build_dir / artifact_type / filename
-            if artifact_file.exists():
-                import json
-                with open(artifact_file, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    # Handle different data structures
-                    if isinstance(data, dict) and artifact_type == 'gwt_client':
-                        # For gwt_client, extract the arrays from the dict
-                        all_artifacts[artifact_type] = []
-                        for key, value in data.items():
-                            if isinstance(value, list):
-                                all_artifacts[artifact_type].extend(value)
-                    else:
-                        all_artifacts[artifact_type] = data
+        import json as _json
+        for artifact_type, names in candidates.items():
+            loaded = False
+            for filename in names:
+                artifact_file = build_dir / artifact_type / filename
+                if artifact_file.exists():
+                    with open(artifact_file, 'r', encoding='utf-8') as f:
+                        data = _json.load(f)
+                        if isinstance(data, dict) and artifact_type == 'gwt_client':
+                            all_artifacts[artifact_type] = []
+                            for key, value in data.items():
+                                if isinstance(value, list):
+                                    all_artifacts[artifact_type].extend(value)
+                        else:
+                            all_artifacts[artifact_type] = data
+                    loaded = True
+                    break
         
         # Index artifacts
         with Progress(
@@ -373,22 +374,25 @@ def prd(project: Optional[str], frontend: bool):
         build_dir = settings.build_dir
         all_artifacts = {}
         
-        # Load all artifact JSON files
+        # Load all artifact JSON files (support variant filenames)
+        import json as _json
         for artifact_type in ['ibatis_statements', 'dao_calls', 'jsp_forms', 'db_tables']:
-            artifact_file = build_dir / artifact_type / "all_artifacts.json"
-            if artifact_file.exists():
-                import json
-                with open(artifact_file, 'r', encoding='utf-8') as f:
-                    all_artifacts[artifact_type] = json.load(f)
+            for fname in ["all_artifacts.json", "all_statements.json", "all_dao_calls.json", "all_forms.json", "all_tables.json"]:
+                artifact_file = build_dir / artifact_type / fname
+                if artifact_file.exists():
+                    with artifact_file.open('r', encoding='utf-8') as f:
+                        all_artifacts[artifact_type] = _json.load(f)
+                    break
         
         if frontend:
             for artifact_type in ['gwt_modules', 'gwt_activities_places', 'gwt_uibinder', 
                                  'gwt_endpoints', 'js_artifacts']:
-                artifact_file = build_dir / artifact_type / "all_artifacts.json"
-                if artifact_file.exists():
-                    import json
-                    with open(artifact_file, 'r', encoding='utf-8') as f:
-                        all_artifacts[artifact_type] = json.load(f)
+                for fname in ["all_artifacts.json", "all_modules.json", "all_uibinder.json", "all_js_artifacts.json"]:
+                    artifact_file = build_dir / artifact_type / fname
+                    if artifact_file.exists():
+                        with artifact_file.open('r', encoding='utf-8') as f:
+                            all_artifacts[artifact_type] = _json.load(f)
+                        break
         
         # Generate PRD
         prd_generator = PRDMarkdownGenerator()
@@ -464,6 +468,12 @@ def requirements_cmd(project: str, use_crewai: bool):
 
         if use_crewai:
             console.print("[bold cyan]Using CrewAI multi-agent approach...[/bold cyan]")
+            try:
+                from synth.crewai_requirements import generate_requirements_with_crewai  # type: ignore
+            except Exception as e:
+                console.print("[bold yellow]CrewAI not available. Install crewai/crewai-tools to enable this feature.[/bold yellow]")
+                console.print(f"Details: {e}")
+                sys.exit(1)
             output_files = generate_requirements_with_crewai(project, artifacts)
             console.print(f"[bold green]CrewAI requirements generated:[/bold green] {len(output_files)} files")
             for file_path in output_files:
@@ -478,3 +488,54 @@ def requirements_cmd(project: str, use_crewai: bool):
 
 if __name__ == '__main__':
     cli()
+
+# --- Extra utility commands ---
+@cli.command(name="config")
+def config_cmd():
+    """Print effective configuration (redacted if needed)."""
+    table = Table(title="Effective Configuration")
+    table.add_column("Key", style="cyan")
+    table.add_column("Value", style="magenta")
+    for key in [
+        "java_source_dir", "ollama_base_url", "ollama_model_name", "ollama_embed_model_name",
+        "weaviate_url", "build_dir", "output_dir", "default_project_name", "log_level"
+    ]:
+        value = getattr(settings, key)
+        table.add_row(key, str(value))
+    console.print(table)
+
+@cli.command(name="verify")
+def verify_cmd():
+    """Verify environment: JAVA_SOURCE_DIR, Ollama, Weaviate, build dirs."""
+    ok = True
+    # JAVA_SOURCE_DIR
+    if settings.is_java_source_valid():
+        console.print("[green]JAVA_SOURCE_DIR OK[/green]")
+    else:
+        console.print(f"[red]JAVA_SOURCE_DIR invalid: {settings.java_source_dir}[/red]")
+        ok = False
+    # Ollama
+    import requests as _req
+    try:
+        r = _req.get(f"{settings.ollama_base_url}/api/tags", timeout=5)
+        if r.status_code == 200:
+            console.print("[green]Ollama reachable[/green]")
+        else:
+            console.print(f"[yellow]Ollama responded {r.status_code}[/yellow]")
+    except Exception as e:
+        console.print(f"[red]Ollama unreachable: {e}[/red]")
+        ok = False
+    # Weaviate
+    try:
+        _ = WeaviateClient(ensure_schema=False)
+        console.print("[green]Weaviate reachable[/green]")
+    except Exception as e:
+        console.print(f"[red]Weaviate unreachable: {e}[/red]")
+        ok = False
+    # Build dirs
+    if settings.build_dir.exists():
+        console.print(f"[green]Build dir exists: {settings.build_dir}[/green]")
+    else:
+        console.print(f"[yellow]Build dir missing (will be created when needed): {settings.build_dir}[/yellow]")
+    if not ok:
+        sys.exit(1)

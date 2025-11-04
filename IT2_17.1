@@ -1,0 +1,66 @@
+I'll find all occurrences of the old container name to update them, then refactor the compose files and scripts to use the new name `weaviate-i17`.
+
+[10 tools called]
+
+Renamed the Weaviate container everywhere from weaviate-java-analysis to weaviate-i17.
+
+- Updated compose files:
+  - `docker-compose.yml`
+  - `docker-compose.macos.yml`
+  - `docker-compose.ubuntu.yml`
+  - Set `container_name: weaviate-i17`
+- Updated script references in `docker-weaviate.sh`:
+  - Status and logs now target `weaviate-i17`
+- Updated docs:
+  - `DEPLOY_UBUNTU.md` (logs example)
+  - `IT17_4.md` (container listing)
+
+Next steps:
+- Stop and remove the old container if it exists:
+  - `docker rm -f weaviate-java-analysis` (safe to run if it’s stuck)
+- Start fresh:
+  - `./docker-weaviate.sh start`
+  - `./docker-weaviate.sh status`
+
+  # 15:18
+
+  Use these commands:
+
+- Create venv and install deps:
+  - python -m venv venv
+  - source venv/bin/activate
+  - python -m pip install -U pip
+  - pip install -r requirements.txt
+- Run tests:
+  - pytest -q
+
+  # 15:27
+
+  Done.
+requirements.txt: removed CrewAI packages to avoid pulling chromadb.
+Removed: crewai, crewai-tools
+Deleted chromadb K8s resources:
+k8s/configmap.yaml
+k8s/deployment.yaml
+k8s/namespace.yaml
+k8s/pvc.yaml
+k8s/traefik.yaml
+Next:
+source venv/bin/activate
+pip install -r requirements.txt
+pytest -q
+If you still need CrewAI features later, we can reintroduce them behind an optional extras file without chromadb.
+
+# 15:56
+
+Great—tests passed. The remaining lines are deprecation warnings from Pydantic v2 due to using Field(..., env=...). Optional cleanups:
+Quick suppression during tests:
+Create pytest.ini:
+]
+    [pytest]    filterwarnings =      ignore:Using extra keyword arguments on `Field` is deprecated:DeprecationWarning
+Or refactor later: replace Field(..., env="X") with Pydantic v2’s json_schema_extra or use model_config env mapping. Not urgent.
+Next steps:
+source venv/bin/activate
+./docker-weaviate.sh start
+python main.py verify
+python main.py all --project it17 --include-frontend

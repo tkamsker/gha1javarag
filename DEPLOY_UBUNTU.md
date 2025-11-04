@@ -166,7 +166,7 @@ netstat -tlnp | grep 11434
 docker ps | grep weaviate
 
 # Check Weaviate logs
-docker logs weaviate-java-analysis
+docker logs weaviate-i17
 
 # Restart Weaviate
 ./docker-weaviate.sh restart ubuntu

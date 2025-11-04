@@ -479,15 +479,28 @@ class PRDMarkdownGenerator:
         return "Error generating content"
     
     def _call_ollama_json(self, prompt: str) -> Optional[Dict[str, Any]]:
-        """Call Ollama API and parse JSON response."""
+        """Call Ollama API and parse JSON response more robustly."""
         try:
             response_text = self._call_ollama(prompt)
-            # Try to extract JSON from response
+            if not response_text:
+                return None
+            # Prefer fenced JSON blocks
+            try:
+                import re as _re
+                fence = _re.search(r"```json\s*(\{[\s\S]*?\})\s*```", response_text, _re.IGNORECASE)
+                if fence:
+                    return json.loads(fence.group(1))
+            except Exception:
+                pass
+            # Fallback: first to last brace slice
             if '{' in response_text and '}' in response_text:
                 start = response_text.find('{')
                 end = response_text.rfind('}') + 1
                 json_str = response_text[start:end]
-                return json.loads(json_str)
+                try:
+                    return json.loads(json_str)
+                except Exception:
+                    pass
             return None
         except Exception as e:
             logger.error(f"Failed to parse JSON from Ollama response: {e}")

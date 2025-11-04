@@ -426,28 +426,33 @@ class ChunkBuilder:
     
     def _generate_embedding(self, text: str) -> Optional[List[float]]:
         """Generate embedding for text using Ollama."""
-        try:
-            payload = {
-                "model": settings.ollama_embed_model_name,
-                "prompt": text
-            }
-            
-            response = requests.post(
-                self.ollama_embed_url,
-                json=payload,
-                timeout=30
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                return result.get('embedding', [])
-            else:
-                logger.error(f"Failed to generate embedding: {response.status_code} - {response.text}")
-                return None
-                
-        except Exception as e:
-            logger.error(f"Failed to generate embedding: {e}")
-            return None
+        payload = {
+            "model": settings.ollama_embed_model_name,
+            "prompt": text
+        }
+        timeouts = [10, 20, 40]
+        for attempt, to in enumerate(timeouts, 1):
+            try:
+                response = requests.post(
+                    self.ollama_embed_url,
+                    json=payload,
+                    timeout=to
+                )
+                if response.status_code == 200:
+                    result = response.json()
+                    return result.get('embedding', [])
+                else:
+                    logger.warning("Embedding API error %s: %s", response.status_code, response.text)
+            except Exception as e:
+                logger.warning("Embedding attempt %s failed: %s", attempt, e)
+            # backoff between attempts
+            try:
+                import time as _t
+                _t.sleep(1.5 * attempt)
+            except Exception:
+                pass
+        logger.error("Failed to generate embedding after retries")
+        return None
     
     def _save_all_chunks_json(self, chunks: List[Dict[str, Any]]):
         """Save all chunks as JSON files."""

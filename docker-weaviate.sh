@@ -50,14 +50,19 @@ get_compose_file() {
 
 # Function to get Docker Compose command
 get_docker_compose_cmd() {
-    if command -v "docker" >/dev/null 2>&1 && $(get_docker_compose_cmd) version >/dev/null 2>&1; then
-        echo "$(get_docker_compose_cmd)"
-    elif command -v "docker-compose" >/dev/null 2>&1; then
-        echo "docker-compose"
-    else
-        err "Neither '$(get_docker_compose_cmd)' nor 'docker-compose' command found"
-        exit 1
+    # Prefer docker compose (plugin), fallback to docker-compose (standalone)
+    if command -v docker >/dev/null 2>&1; then
+        if docker compose version >/dev/null 2>&1; then
+            echo "docker compose"
+            return
+        fi
     fi
+    if command -v docker-compose >/dev/null 2>&1; then
+        echo "docker-compose"
+        return
+    fi
+    err "Neither 'docker compose' nor 'docker-compose' found"
+    exit 1
 }
 
 # Function to show usage
@@ -183,9 +188,9 @@ case "$COMMAND" in
         
     "status")
         info "Weaviate container status:"
-        if docker ps | grep -q weaviate-java-analysis; then
+        if docker ps | grep -q weaviate-i17; then
             ok "Weaviate container is running"
-            docker ps | grep weaviate-java-analysis
+            docker ps | grep weaviate-i17
         else
             warn "Weaviate container is not running"
         fi
@@ -209,7 +214,7 @@ case "$COMMAND" in
         
     "logs")
         info "Showing Weaviate container logs..."
-        docker logs weaviate-java-analysis
+        docker logs weaviate-i17
         ;;
         
     "help"|"-h"|"--help")

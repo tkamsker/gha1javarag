@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Optional
 from dotenv import load_dotenv
 from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Load environment variables
 load_dotenv()
@@ -48,9 +48,12 @@ class Settings(BaseSettings):
     # Project Configuration
     default_project_name: str = Field(default="default-project", env="DEFAULT_PROJECT_NAME")
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
+    # Pydantic v2-style config: load .env and ignore unknown/extra env vars
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=False,
+        extra='ignore'
+    )
         
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

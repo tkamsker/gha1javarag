@@ -63,25 +63,34 @@ class FileDiscovery:
     
     def _discover_java_files(self):
         """Discover Java source files."""
+        ignore_dirs = {"target", "build", "node_modules", ".git", ".idea", ".gradle", "dist", "out"}
         for pattern in settings.get_java_include_globs():
             pattern_path = self.java_source_path / pattern
             for file_path in glob.glob(str(pattern_path), recursive=True):
+                if any(f"/{d}/" in file_path for d in ignore_dirs):
+                    continue
                 if os.path.isfile(file_path) and file_path.endswith('.java'):
                     self.discovered_files['java'].add(file_path)
     
     def _discover_jsp_files(self):
         """Discover JSP files."""
+        ignore_dirs = {"target", "build", "node_modules", ".git", ".idea", ".gradle", "dist", "out"}
         for pattern in settings.get_jsp_include_globs():
             pattern_path = self.java_source_path / pattern
             for file_path in glob.glob(str(pattern_path), recursive=True):
+                if any(f"/{d}/" in file_path for d in ignore_dirs):
+                    continue
                 if os.path.isfile(file_path) and (file_path.endswith('.jsp') or file_path.endswith('.jspf')):
                     self.discovered_files['jsp'].add(file_path)
     
     def _discover_gwt_files(self):
         """Discover GWT-related files."""
+        ignore_dirs = {"target", "build", "node_modules", ".git", ".idea", ".gradle", "dist", "out"}
         for pattern in settings.get_gwt_include_globs():
             pattern_path = self.java_source_path / pattern
             for file_path in glob.glob(str(pattern_path), recursive=True):
+                if any(f"/{d}/" in file_path for d in ignore_dirs):
+                    continue
                 if os.path.isfile(file_path):
                     if (file_path.endswith('.gwt.xml') or 
                         file_path.endswith('.ui.xml') or
@@ -94,9 +103,12 @@ class FileDiscovery:
     
     def _discover_js_files(self):
         """Discover JavaScript files."""
+        ignore_dirs = {"target", "build", "node_modules", ".git", ".idea", ".gradle", "dist", "out"}
         for pattern in settings.get_js_include_globs():
             pattern_path = self.java_source_path / pattern
             for file_path in glob.glob(str(pattern_path), recursive=True):
+                if any(f"/{d}/" in file_path for d in ignore_dirs):
+                    continue
                 if os.path.isfile(file_path) and file_path.endswith('.js'):
                     self.discovered_files['js'].add(file_path)
     
@@ -108,10 +120,12 @@ class FileDiscovery:
             "**/pom.xml",
             "**/build.xml"
         ]
-        
+        ignore_dirs = {"target", "build", "node_modules", ".git", ".idea", ".gradle", "dist", "out"}
         for pattern in xml_patterns:
             pattern_path = self.java_source_path / pattern
             for file_path in glob.glob(str(pattern_path), recursive=True):
+                if any(f"/{d}/" in file_path for d in ignore_dirs):
+                    continue
                 if os.path.isfile(file_path) and file_path.endswith('.xml'):
                     self.discovered_files['xml'].add(file_path)
     
@@ -122,10 +136,12 @@ class FileDiscovery:
             "**/*.ddl",
             "**/*.dml"
         ]
-        
+        ignore_dirs = {"target", "build", "node_modules", ".git", ".idea", ".gradle", "dist", "out"}
         for pattern in sql_patterns:
             pattern_path = self.java_source_path / pattern
             for file_path in glob.glob(str(pattern_path), recursive=True):
+                if any(f"/{d}/" in file_path for d in ignore_dirs):
+                    continue
                 if os.path.isfile(file_path) and (file_path.endswith('.sql') or 
                                                  file_path.endswith('.ddl') or 
                                                  file_path.endswith('.dml')):
