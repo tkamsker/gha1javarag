@@ -19,8 +19,11 @@ services:
       ENABLE_MODULES: "text2vec-ollama,generative-ollama"
       DEFAULT_VECTORIZER_MODULE: "text2vec-ollama"
       
-      # Ollama Integration - macOS supports host.docker.internal
+      # Ollama Integration - macOS: use host.docker.internal to reach host services from container
       OLLAMA_API_ENDPOINT: "http://host.docker.internal:11434"
+      TEXT2VEC_OLLAMA_API_ENDPOINT: "http://host.docker.internal:11434"
+      GENERATIVE_OLLAMA_API_ENDPOINT: "http://host.docker.internal:11434"
+      OLLAMA_BASE_URL: "http://host.docker.internal:11434"
       
       # CORS
       ENABLE_CORS: "true"

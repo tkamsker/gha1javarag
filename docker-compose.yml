@@ -17,8 +17,10 @@ services:
       ENABLE_MODULES: "text2vec-ollama,generative-ollama"
       DEFAULT_VECTORIZER_MODULE: "text2vec-ollama"
       
-      # Ollama Integration - Use localhost since we're in host network mode
-      OLLAMA_API_ENDPOINT: "http://localhost:11434"
+      # Ollama Integration - Prefer 127.0.0.1 to avoid IPv6 (::1) resolution issues
+      OLLAMA_API_ENDPOINT: "http://127.0.0.1:11434"
+      TEXT2VEC_OLLAMA_API_ENDPOINT: "http://127.0.0.1:11434"
+      GENERATIVE_OLLAMA_API_ENDPOINT: "http://127.0.0.1:11434"
       
       # CORS
       ENABLE_CORS: "true"

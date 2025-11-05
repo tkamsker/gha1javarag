@@ -47,9 +47,20 @@ class GwtUiBinderExtractor:
     def _extract_single_uibinder(self, ui_file: str) -> Optional[Dict[str, Any]]:
         """Extract information from a single UiBinder XML file."""
         try:
-            # Parse XML
-            tree = etree.parse(ui_file)
-            root = tree.getroot()
+            # Preprocess to handle HTML entities like &nbsp; which are invalid in XML
+            try:
+                content = Path(ui_file).read_text(encoding='utf-8', errors='ignore')
+            except Exception:
+                content = ''
+            if content:
+                content = content.replace('&nbsp;', ' ')
+                parser = etree.XMLParser(recover=True, resolve_entities=False)
+                tree = etree.fromstring(content.encode('utf-8'), parser=parser)
+                root = tree
+            else:
+                parser = etree.XMLParser(recover=True, resolve_entities=False)
+                tree = etree.parse(ui_file, parser=parser)
+                root = tree.getroot()
             
             # Extract owner type (usually from the root element or ui:UiBinder)
             owner_type = self._extract_owner_type(root, ui_file)

@@ -25,6 +25,9 @@ class IbatisXmlExtractor:
         statements = []
         
         for xml_file in xml_files:
+            # Fast skip: ignore UiBinder and GWT UI XMLs
+            if xml_file.endswith('.ui.xml') or xml_file.endswith('.gwt.xml'):
+                continue
             try:
                 logger.info(f"Processing iBATIS XML file: {xml_file}")
                 file_statements = self._extract_from_single_xml(xml_file)
@@ -45,8 +48,9 @@ class IbatisXmlExtractor:
         statements = []
         
         try:
-            # Parse XML
-            tree = etree.parse(xml_file)
+            # Parse XML; tolerate minor issues but do not expand external entities
+            parser = etree.XMLParser(recover=True, resolve_entities=False)
+            tree = etree.parse(xml_file, parser=parser)
             root = tree.getroot()
             
             # Check if this is an iBATIS mapper file

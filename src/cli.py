@@ -151,9 +151,8 @@ def extract(project: Optional[str], include_frontend: bool):
         if include_frontend:
             task5 = progress.add_task("Extracting GWT modules...", total=None)
             if 'gwt' in discovered_files:
-                all_artifacts['gwt_modules'] = extractors['gwt_modules'].extract_modules(
-                    list(discovered_files['gwt'])
-                )
+                gwt_module_files = [f for f in discovered_files['gwt'] if f.endswith('.gwt.xml')]
+                all_artifacts['gwt_modules'] = extractors['gwt_modules'].extract_modules(gwt_module_files)
             progress.update(task5, description="GWT modules extracted")
             
             task6 = progress.add_task("Extracting GWT client code...", total=None)
