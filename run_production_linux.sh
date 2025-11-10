@@ -28,15 +28,44 @@ if [ ! -d "venv" ]; then
     exit 1
 fi
 
+# Get script directory and ensure we're in the right place
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$SCRIPT_DIR"
+
 # Activate virtual environment
 info "Activating virtual environment..."
 source venv/bin/activate
+
+# Ensure we're using the venv's Python
+PYTHON_CMD="$(which python)"
+info "Using Python: $PYTHON_CMD"
+
+# Set PYTHONPATH to include src directory
+export PYTHONPATH="${SCRIPT_DIR}/src:${PYTHONPATH:-}"
 
 # Check if .env exists
 if [ ! -f ".env" ]; then
     warn ".env file not found. Please create it from .env.example"
     exit 1
 fi
+
+# Verify src directory structure
+if [ ! -d "src/store" ] || [ ! -f "src/store/weaviate_client.py" ]; then
+    err "src/store/weaviate_client.py not found. Please check project structure."
+    exit 1
+fi
+
+# Verify critical packages are installed
+info "Verifying Python packages..."
+if ! "$PYTHON_CMD" -c "import weaviate" 2>/dev/null; then
+    err "weaviate-client not installed. Run: pip install -r requirements.txt"
+    exit 1
+fi
+if ! "$PYTHON_CMD" -c "import click" 2>/dev/null; then
+    err "click not installed. Run: pip install -r requirements.txt"
+    exit 1
+fi
+ok "Required packages are installed"
 
 # Check services
 info "Checking services..."
@@ -65,9 +94,9 @@ ok "Weaviate is running"
 info "Running complete pipeline..."
 
 if [ "$INCLUDE_FRONTEND" = "true" ]; then
-    python main.py all --project "$PROJECT_NAME" --include-frontend
+    "$PYTHON_CMD" main.py all --project "$PROJECT_NAME" --include-frontend
 else
-    python main.py all --project "$PROJECT_NAME"
+    "$PYTHON_CMD" main.py all --project "$PROJECT_NAME"
 fi
 
 if [ $? -eq 0 ]; then

@@ -123,11 +123,33 @@ Expected output:
 
 ## Running a Full Iteration
 
-### Option 1: Single Command (Recommended)
+### Option 1: Using the Run Script (Recommended)
+
+The `run_production_linux.sh` script handles all path setup automatically:
+
+```bash
+# Run complete pipeline with frontend
+./run_production_linux.sh production-project true
+
+# Or without frontend
+./run_production_linux.sh production-project false
+```
+
+The script will:
+- Verify virtual environment
+- Set up Python path correctly
+- Check services (Ollama, Weaviate)
+- Run the complete pipeline
+- Report success/failure
+
+### Option 2: Manual Command
 
 ```bash
 # Activate virtual environment
 source venv/bin/activate
+
+# Set PYTHONPATH (important!)
+export PYTHONPATH="${PWD}/src:${PYTHONPATH:-}"
 
 # Run complete pipeline with frontend
 python main.py all --project production-project --include-frontend
@@ -139,10 +161,13 @@ This runs:
 3. **Index** - Index artifacts in Weaviate
 4. **PRD** - Generate Product Requirements Document
 
-### Option 2: Step-by-Step
+### Option 3: Step-by-Step
 
 ```bash
 source venv/bin/activate
+
+# Set PYTHONPATH (important!)
+export PYTHONPATH="${PWD}/src:${PYTHONPATH:-}"
 
 # Step 1: Discover files
 python main.py discover --project production-project --include-frontend
@@ -157,7 +182,7 @@ python main.py index --project production-project
 python main.py prd --project production-project --frontend
 ```
 
-### Option 3: Generate Detailed Requirements (Optional)
+### Option 4: Generate Detailed Requirements (Optional)
 
 ```bash
 # Generate extreme-detailed requirements per artifact
@@ -250,6 +275,50 @@ ls -lh data/build/
 ```
 
 ## Troubleshooting
+
+### Issue: ModuleNotFoundError: No module named 'store.weaviate_client'
+
+**Symptoms:**
+```
+ModuleNotFoundError: No module named 'store.weaviate_client'
+```
+
+**Solution:**
+
+1. **Ensure you're in the project directory:**
+   ```bash
+   cd /opt/gha1javarag  # or your project path
+   ```
+
+2. **Verify file structure:**
+   ```bash
+   ls -la src/store/weaviate_client.py
+   # Should show the file exists
+   ```
+
+3. **Set PYTHONPATH explicitly:**
+   ```bash
+   export PYTHONPATH="${PWD}/src:${PYTHONPATH:-}"
+   ```
+
+4. **Use the run script (recommended):**
+   ```bash
+   ./run_production_linux.sh production-project true
+   ```
+   The script automatically sets up the Python path correctly.
+
+5. **Or run manually with explicit path:**
+   ```bash
+   source venv/bin/activate
+   export PYTHONPATH="${PWD}/src:${PYTHONPATH:-}"
+   python main.py all --project production-project --include-frontend
+   ```
+
+6. **Verify virtual environment is activated:**
+   ```bash
+   which python
+   # Should show: /opt/gha1javarag/venv/bin/python
+   ```
 
 ### Issue: Ollama Connection Refused
 
