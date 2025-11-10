@@ -77,7 +77,7 @@ JS_INCLUDE_GLOBS=**/*.js
 
 # Ollama Configuration - Linux uses 127.0.0.1 with host networking
 OLLAMA_BASE_URL=http://127.0.0.1:11434
-OLLAMA_MODEL_NAME=llama3.1:8b
+OLLAMA_MODEL_NAME=gemma3:12b
 OLLAMA_EMBED_MODEL_NAME=nomic-embed-text
 
 # Weaviate Configuration

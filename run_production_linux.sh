@@ -50,10 +50,41 @@ if [ ! -f ".env" ]; then
 fi
 
 # Verify src directory structure
-if [ ! -d "src/store" ] || [ ! -f "src/store/weaviate_client.py" ]; then
-    err "src/store/weaviate_client.py not found. Please check project structure."
+info "Verifying project structure..."
+info "Current directory: $(pwd)"
+info "Script directory: $SCRIPT_DIR"
+
+if [ ! -d "src" ]; then
+    err "src/ directory not found in $(pwd)"
+    err "Please ensure you're running this script from the project root directory"
     exit 1
 fi
+
+if [ ! -d "src/store" ]; then
+    err "src/store/ directory not found"
+    info "Contents of src/:"
+    ls -la src/ 2>/dev/null || err "Cannot list src/ directory"
+    exit 1
+fi
+
+if [ ! -f "src/store/weaviate_client.py" ]; then
+    err "src/store/weaviate_client.py not found"
+    info "Contents of src/store/:"
+    ls -la src/store/ 2>/dev/null || err "Cannot list src/store/ directory"
+    err ""
+    err "Missing required files. Please ensure all project files are synced:"
+    err "  - If using git: git pull"
+    err "  - If using scp: sync the entire project directory"
+    err "  - Required file: src/store/weaviate_client.py"
+    exit 1
+fi
+
+if [ ! -f "main.py" ]; then
+    err "main.py not found in project root"
+    exit 1
+fi
+
+ok "Project structure verified"
 
 # Verify critical packages are installed
 info "Verifying Python packages..."
