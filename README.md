@@ -328,3 +328,8 @@ nohup ./new_run.sh > "lognew_run_$(date +'%Y-%m-%d_%H-%M-%S').log" 2>&1 &
 #
 pkill -f weaviate_client.py
 
+# ---
+# 2025.10.10 
+# IT 17 new try 
+
+nohup ./run_production_linux.sh production-project true  > "logprod_run_$(date +'%Y-%m-%d_%H-%M-%S').log" 2>&1 &
