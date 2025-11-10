@@ -143,3 +143,5 @@ Check health status:
 ```bash
 ./docker-weaviate.sh status
 ```
+
+test 

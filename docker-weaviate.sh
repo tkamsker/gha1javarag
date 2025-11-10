@@ -4,7 +4,7 @@
 # Docker Weaviate Management Script
 # Automatically detects OS and uses appropriate Docker Compose file
 # =============================
-
+#
 set -e
 
 # Colors for output
