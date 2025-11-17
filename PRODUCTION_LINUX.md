@@ -350,20 +350,57 @@ docker exec -it weaviate-i17 curl -s http://127.0.0.1:11434/api/tags
 # If fails, check host networking mode in docker-compose.ubuntu.yml
 ```
 
-### Issue: Schema Not Using Correct Endpoint
+### Issue: Schema Not Using Correct Endpoint (host.docker.internal error)
 
+**Symptoms:**
+```
+ERROR - Indexing failed for BackendDoc: Creating object! Unexpected status code: 500, 
+with response body: {'error': [{'message': 'vectorize target vector : update vector: 
+send POST request: Post "http://host.docker.internal:11434/api/embed": dial tcp: 
+lookup host.docker.internal on 127.0.0.53:53: no such host'}]}
+```
+
+**Cause:** Weaviate schema was created with macOS configuration (`host.docker.internal:11434`) 
+which doesn't work on Linux. The schema has the wrong endpoint hardcoded.
+
+**Solution (Quick Fix):**
+
+Use the automated fix script:
 ```bash
-# Delete existing classes to recreate with correct endpoint
-curl -s -X DELETE http://localhost:8080/v1/schema/GwtModule
-curl -s -X DELETE http://localhost:8080/v1/schema/GwtUiBinder
-curl -s -X DELETE http://localhost:8080/v1/schema/BackendDoc
+./fix_weaviate_schema_linux.sh
+```
 
-# Restart Weaviate
-./docker-weaviate.sh restart ubuntu
+This script will:
+1. Delete all existing schema classes
+2. Restart Weaviate with Ubuntu configuration
+3. Verify the container has correct environment variables
 
-# Re-run indexing
+Then re-run indexing:
+```bash
 python main.py index --project production-project
 ```
+
+**Solution (Manual Fix):**
+
+```bash
+# Delete all existing schema classes
+for class in IbatisStatement DaoCall JspForm DbTable GwtModule GwtUiBinder GwtActivityPlace GwtEndpoint JsArtifact BackendDoc; do
+    curl -s -X DELETE http://localhost:8080/v1/schema/$class
+done
+
+# Restart Weaviate with Ubuntu configuration
+./docker-weaviate.sh restart ubuntu
+
+# Verify container environment variables
+docker exec weaviate-i17 env | grep OLLAMA
+# Should show: OLLAMA_API_ENDPOINT=http://127.0.0.1:11434
+
+# Re-run indexing (schema will be recreated with correct endpoint)
+python main.py index --project production-project
+```
+
+**Prevention:** Always use `./docker-weaviate.sh start ubuntu` on Linux production servers, 
+never use the macOS configuration.
 
 ### Issue: Out of Memory
 

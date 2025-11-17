@@ -36,26 +36,39 @@ class WeaviateClient:
 
     def ensure_schema(self) -> None:
         """Ensure expected classes exist with text2vec-ollama vectorization on 'text'."""
-        # Allow overriding Ollama endpoint at class-level to avoid localhost defaults inside container
+        # On Linux with host networking, Weaviate container uses 127.0.0.1:11434 (from container env vars)
+        # On macOS with bridge networking, Weaviate container uses host.docker.internal:11434
+        # We should let Weaviate use its container's environment variables by default.
+        # Only set apiEndpoint in schema if explicitly needed to override container defaults.
         import os
         api_endpoint = (
             os.getenv("TEXT2VEC_OLLAMA_API_ENDPOINT")
             or os.getenv("OLLAMA_API_ENDPOINT")
             or os.getenv("GENERATIVE_OLLAMA_API_ENDPOINT")
-            or settings.ollama_base_url  # fallback to app config
         )
+        # Don't use settings.ollama_base_url as it's for Python app, not Weaviate container
+        # Let Weaviate use its container's OLLAMA_API_ENDPOINT environment variable
+        
+        module_config = {
+            "text2vec-ollama": {
+                "vectorizeClassName": True,
+            }
+        }
+        # Only set apiEndpoint if explicitly provided via environment variable
+        # This allows Weaviate to use its container's OLLAMA_API_ENDPOINT env var by default
+        if api_endpoint:
+            module_config["text2vec-ollama"]["apiEndpoint"] = api_endpoint
+            logger.info("Using explicit Ollama endpoint in schema: %s", api_endpoint)
+        else:
+            logger.info("Using Weaviate container's OLLAMA_API_ENDPOINT environment variable")
+        
         for class_name, properties in self._expected_classes().items():
             try:
                 if not self._client.schema.exists(class_name):
                     cfg = {
                         "class": class_name,
                         "vectorizer": "text2vec-ollama",
-                        "moduleConfig": {
-                            "text2vec-ollama": {
-                                "vectorizeClassName": True,
-                                **({"apiEndpoint": api_endpoint} if api_endpoint else {})
-                            }
-                        },
+                        "moduleConfig": module_config,
                         "properties": [{"name": p, "dataType": ["text"]} for p in properties]
                     }
                     self._client.schema.create_class(cfg)
