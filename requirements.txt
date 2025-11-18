@@ -55,4 +55,10 @@ pytest-cov==4.1.0
 flask==3.0.0
 flask-cors==4.0.0
 
-# (CrewAI removed to avoid chromadb dependency)
+# CrewAI (multi-agent requirements generation)
+# Note: crewai-tools not needed - we use custom WeaviateSearchTool
+# Note: chromadb will be installed as a dependency but is NOT used (we use Weaviate)
+# If you want to avoid chromadb entirely, install crewai separately:
+#   pip install crewai>=0.203.1
+# Then uninstall chromadb: pip uninstall chromadb -y
+crewai>=0.203.1
