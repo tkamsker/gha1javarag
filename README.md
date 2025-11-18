@@ -346,3 +346,24 @@ pip install crewai==0.203.1
 # pip uninstall chromadb -y
 
 python main.py requirements --project production-project --use-crewai
+
+# fix 16:19 18Nov 
+
+Usage
+For all projects (recommended for multi-project setups):
+python main.py requirements --all-projects
+For a specific project:
+python main.py requirements --project cuco-cct-core
+With CrewAI:
+python main.py requirements --all-projects --use-crewai
+
+**How It Works**
+1. Loads all artifacts from data/build/
+2. Extracts unique project names from the project field in artifacts
+3. For each project:
+- Filters artifacts by project name
+- Generates requirements in data/output/requirements/{project_name}/
+- Creates per-project index files
+
+This ensures each project gets its own requirements directory, preventing overwrites and keeping requirements organized.
+The solution handles your example path /mnt/cucocalcai/cuco-master/cuco-master@d34bb6b6d1c/cuco-cct-core/src/test/java/... and correctly identifies cuco-cct-core as the project name instead of mnt
