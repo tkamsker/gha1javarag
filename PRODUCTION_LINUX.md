@@ -225,6 +225,13 @@ python main.py requirements --project production-project --use-crewai
 - Requirements are generated per project in subdirectories: `data/output/requirements/{project_name}/`
 - Use `--all-projects` to automatically detect and generate requirements for all projects found in the extracted artifacts
 
+**Important:** If you see incorrect project names (like "mnt" instead of actual project names), you need to re-extract artifacts:
+```bash
+# Re-extract artifacts with updated project name detection
+python main.py extract --project production-project --include-frontend
+```
+This will update the project names in the artifacts based on the improved detection logic.
+
 ## Production Service Setup
 
 ### 1. Ollama as Systemd Service

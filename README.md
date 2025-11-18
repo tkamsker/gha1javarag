@@ -367,3 +367,71 @@ python main.py requirements --all-projects --use-crewai
 
 This ensures each project gets its own requirements directory, preventing overwrites and keeping requirements organized.
 The solution handles your example path /mnt/cucocalcai/cuco-master/cuco-master@d34bb6b6d1c/cuco-cct-core/src/test/java/... and correctly identifies cuco-cct-core as the project name instead of mnt
+
+
+**Almost ok **
+Next Steps
+Since your artifacts were already extracted with incorrect project names, you need to re-extract them:
+# Re-extract artifacts with the updated project name detectionpython main.py extract --project production-project --include-frontend# Then re-index in Weaviatepython main.py index --project production-project# Now generate requirements with correct project namespython main.py requirements --all-projects --use-crewai
+The WeaviateClient error should now be resolved, and after re-extraction, project names should be correctly detected (e.g., "cuco-cct-core" instead of "mnt").
+
+
+
+** ------------------------------- **
+
+How --all-projects is handled in run_production_linux.sh
+New parameter
+The script now has 4 parameters:
+./run_production_linux.sh [PROJECT_NAME] [INCLUDE_FRONTEND] [USE_CREWAI] [REQUIREMENTS_ALL_PROJECTS]
+PROJECT_NAME (default: "production-project")
+INCLUDE_FRONTEND (default: "true")
+USE_CREWAI (default: "true")
+REQUIREMENTS_ALL_PROJECTS (default: "true") — new
+How it works
+The REQUIREMENTS_ALL_PROJECTS parameter controls whether to use --all-projects or --project:
+
+if [ "$REQUIREMENTS_ALL_PROJECTS" = "true" ]; then    
+# Uses --all-projects flag    
+   python main.py requirements --all-projects [--use-crewai]
+else    
+# Uses --project with PROJECT_NAME    
+   python main.py requirements --project "$PROJECT_NAME" [--use-crewai]
+fi
+
+**Examples**
+
+1. Generate for all projects (default):
+./run_production_linux.sh# Equivalent to: ./run_production_linux.sh production-project true true true
+# Uses: --all-projects
+
+2. Generate for specific project only:
+./run_production_linux.sh my-project true true false
+# Uses: --project my-project
+
+3. All projects with CrewAI:
+./run_production_linux.sh my-project true true true
+# Uses: --all-projects --use-crewai
+
+4. Specific project with CrewAI:
+./run_production_linux.sh my-project true true false
+# Uses: --project my-project --use-crewai
+
+5. All projects without CrewAI:
+./run_production_linux.sh my-project true false true# Uses: --all-projects
+
+6. Specific project without CrewAI:
+./run_production_linux.sh my-project true false false# Uses: --project my-project
+
+Parameter combinations
+
+Command	Frontend	CrewAI	All Projects	Result
+./run_production_linux.sh	✅	✅	✅	--all-projects --use-crewai
+./run_production_linux.sh proj true true true	✅	✅	✅	--all-projects --use-crewai
+./run_production_linux.sh proj true true false	✅	✅	❌	--project proj --use-crewai
+./run_production_linux.sh proj true false true	✅	❌	✅	--all-projects
+./run_production_linux.sh proj true false false	✅	❌	❌	--project proj
+
+**Summary**
+REQUIREMENTS_ALL_PROJECTS=true → Uses --all-projects (discovers all projects from artifacts)
+REQUIREMENTS_ALL_PROJECTS=false → Uses --project "$PROJECT_NAME" (only the specified project)
+The script now supports both modes, with --all-projects as the default.

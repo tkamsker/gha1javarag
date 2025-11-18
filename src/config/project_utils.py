@@ -36,15 +36,15 @@ def extract_project_name_from_path(file_path: str, java_source_dir: Optional[str
     }
     
     # Strategy 1: Look for 'src' directory and get the directory before it
-    # Example: /path/to/project-name/src/main/java/... -> project-name
+    # Example: /mnt/cucocalcai/cuco-master/cuco-master@hash/cuco-cct-core/src/... -> cuco-cct-core
     for i, part in enumerate(path_parts):
         if part == 'src' and i > 0:
             # Get the directory immediately before 'src'
             project_candidate = path_parts[i - 1]
-            if project_candidate not in ignore_dirs and len(project_candidate) > 1:
-                # Clean up project name (remove @hash suffixes, etc.)
-                project_name = project_candidate.split('@')[0].split('#')[0]
-                return project_name
+            # Clean up project name (remove @hash suffixes, etc.) before checking ignore_dirs
+            clean_candidate = project_candidate.split('@')[0].split('#')[0]
+            if clean_candidate not in ignore_dirs and len(clean_candidate) > 1:
+                return clean_candidate
     
     # Strategy 2: If JAVA_SOURCE_DIR is provided, check its structure
     if java_source_dir:

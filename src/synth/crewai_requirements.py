@@ -46,17 +46,11 @@ class WeaviateSearchTool(BaseTool):
             
             class_name = class_mapping.get(artifact_type, "BackendDoc")
             
-            results = client.client.query.get(
-                class_name,
-                ["path", "text", "summary", "project"]
-            ).with_near_text({
-                "concepts": [query]
-            }).with_limit(limit).do()
+            # Use the search_artifacts method from WeaviateClient
+            artifacts = client.search_artifacts(class_name, query, project=None, limit=limit)
             
-            if not results or 'data' not in results:
+            if not artifacts:
                 return f"No results found for '{query}' in {artifact_type}"
-            
-            artifacts = results['data']['Get'][class_name]
             
             output = [f"Found {len(artifacts)} {artifact_type} artifacts:\n"]
             for i, artifact in enumerate(artifacts[:limit], 1):

@@ -1,5 +1,46 @@
 #!/bin/bash
 # Quick-start script for running full iteration on Linux production
+#
+# Usage:
+#   ./run_production_linux.sh [PROJECT_NAME] [INCLUDE_FRONTEND] [USE_CREWAI] [REQUIREMENTS_ALL_PROJECTS]
+#
+# Parameters:
+#   PROJECT_NAME            - Project name (default: "production-project")
+#   INCLUDE_FRONTEND        - Include frontend analysis: "true" or "false" (default: "true")
+#   USE_CREWAI              - Use CrewAI for requirements: "true" or "false" (default: "true")
+#   REQUIREMENTS_ALL_PROJECTS - Generate for all projects: "true" or "false" (default: "true")
+#                              If "true", uses --all-projects flag
+#                              If "false", uses --project with PROJECT_NAME
+#
+# Examples:
+#   # Run with defaults (production-project, frontend=true, CrewAI=true, all-projects=true)
+#   ./run_production_linux.sh
+#
+#   # Run for specific project with CrewAI, all projects
+#   ./run_production_linux.sh my-project true true true
+#
+#   # Run for specific project only (not all projects)
+#   ./run_production_linux.sh my-project true true false
+#
+#   # Run without frontend, with CrewAI, all projects
+#   ./run_production_linux.sh my-project false true true
+#
+#   # Run with frontend, without CrewAI, all projects
+#   ./run_production_linux.sh my-project true false true
+#
+#   # Run for specific project, without CrewAI
+#   ./run_production_linux.sh my-project true false false
+#
+# What the script does:
+#   1. Runs complete pipeline (discover, extract, index, PRD)
+#   2. Re-extracts artifacts to fix project names
+#   3. Re-indexes artifacts in Weaviate
+#   4. Generates requirements (with or without CrewAI) for all detected projects
+#
+# Output:
+#   - PRD: data/output/{PROJECT_NAME}_prd.md
+#   - Requirements: data/output/requirements/{project_name}/crewai/*.md (if CrewAI enabled)
+#   - Requirements: data/output/requirements/{project_name}/*.md (if CrewAI disabled)
 
 set -e
 
@@ -18,9 +59,13 @@ err(){ echo -e "${RED}[ERROR]${NC} $1"; }
 # Default values
 PROJECT_NAME="${1:-production-project}"
 INCLUDE_FRONTEND="${2:-true}"
+USE_CREWAI="${3:-true}"
+REQUIREMENTS_ALL_PROJECTS="${4:-true}"
 
 info "Starting production iteration for project: $PROJECT_NAME"
 info "Include frontend: $INCLUDE_FRONTEND"
+info "Use CrewAI for requirements: $USE_CREWAI"
+info "Generate requirements for all projects: $REQUIREMENTS_ALL_PROJECTS"
 
 # Check if virtual environment exists
 if [ ! -d "venv" ]; then
@@ -130,12 +175,66 @@ else
     "$PYTHON_CMD" main.py all --project "$PROJECT_NAME"
 fi
 
-if [ $? -eq 0 ]; then
-    ok "Pipeline completed successfully!"
-    info "Output files:"
-    ls -lh data/output/"${PROJECT_NAME}"_prd.md 2>/dev/null || warn "PRD file not found"
-else
+if [ $? -ne 0 ]; then
     err "Pipeline failed. Check logs above."
     exit 1
 fi
+
+# Re-extract artifacts to ensure correct project names
+info "Re-extracting artifacts with updated project name detection..."
+if [ "$INCLUDE_FRONTEND" = "true" ]; then
+    "$PYTHON_CMD" main.py extract --project "$PROJECT_NAME" --include-frontend
+else
+    "$PYTHON_CMD" main.py extract --project "$PROJECT_NAME"
+fi
+
+if [ $? -ne 0 ]; then
+    warn "Re-extraction failed, but continuing..."
+else
+    ok "Re-extraction completed"
+    
+    # Re-index artifacts in Weaviate
+    info "Re-indexing artifacts in Weaviate..."
+    "$PYTHON_CMD" main.py index --project "$PROJECT_NAME"
+    
+    if [ $? -ne 0 ]; then
+        warn "Re-indexing failed, but continuing..."
+    else
+        ok "Re-indexing completed"
+    fi
+fi
+
+# Generate requirements (with or without CrewAI, for all projects or specific project)
+if [ "$REQUIREMENTS_ALL_PROJECTS" = "true" ]; then
+    # Generate for all detected projects
+    if [ "$USE_CREWAI" = "true" ]; then
+        info "Generating requirements with CrewAI for all projects..."
+        "$PYTHON_CMD" main.py requirements --all-projects --use-crewai
+    else
+        info "Generating requirements without CrewAI for all projects..."
+        "$PYTHON_CMD" main.py requirements --all-projects
+    fi
+else
+    # Generate for specific project only
+    if [ "$USE_CREWAI" = "true" ]; then
+        info "Generating requirements with CrewAI for project: $PROJECT_NAME..."
+        "$PYTHON_CMD" main.py requirements --project "$PROJECT_NAME" --use-crewai
+    else
+        info "Generating requirements without CrewAI for project: $PROJECT_NAME..."
+        "$PYTHON_CMD" main.py requirements --project "$PROJECT_NAME"
+    fi
+fi
+
+if [ $? -eq 0 ]; then
+    ok "Requirements generation completed successfully!"
+else
+    warn "Requirements generation failed, but pipeline completed"
+fi
+
+# Final summary
+ok "Pipeline completed successfully!"
+info "Output files:"
+ls -lh data/output/"${PROJECT_NAME}"_prd.md 2>/dev/null || warn "PRD file not found"
+info "Requirements files:"
+ls -lh data/output/requirements/*/crewai/*.md 2>/dev/null | head -10 || warn "Requirements files not found"
 
