@@ -333,3 +333,16 @@ pkill -f weaviate_client.py
 # IT 17 new try 
 
 nohup ./run_production_linux.sh production-project true  > "logprod_run_$(date +'%Y-%m-%d_%H-%M-%S').log" 2>&1 &
+
+# 2025.Nov.18 
+
+# Step 1: Install all other dependencies (this should work now)
+pip install -r requirements.txt
+
+# Step 2: Install CrewAI separately (avoids resolution conflicts)
+pip install crewai==0.203.1
+
+# Optional: Remove chromadb if you don't want it
+# pip uninstall chromadb -y
+
+python main.py requirements --project production-project --use-crewai

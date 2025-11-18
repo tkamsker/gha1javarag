@@ -60,15 +60,18 @@ python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
 
-# Install all dependencies (including CrewAI)
+# Install all dependencies (CrewAI is installed separately to avoid resolution conflicts)
 pip install -r requirements.txt
+
+# Install CrewAI separately (avoids dependency resolution issues)
+pip install crewai==0.203.1
 
 # Optional: Remove chromadb if you don't want it (CrewAI installs it but we don't use it)
 # We use Weaviate for vector storage, not chromadb
 # pip uninstall chromadb -y
 ```
 
-**Note on CrewAI and chromadb:** CrewAI requires chromadb as a dependency, but our code uses Weaviate for vector storage. Chromadb will be installed but is not used by our application. You can safely uninstall it after installing crewai if desired.
+**Note on CrewAI and chromadb:** CrewAI requires chromadb as a dependency, but our code uses Weaviate for vector storage. Chromadb will be installed but is not used by our application. CrewAI is installed separately to avoid pip dependency resolution conflicts.
 
 ### 3. Configure Environment
 
