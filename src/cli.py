@@ -441,15 +441,15 @@ def all(project: Optional[str], include_frontend: bool):
     console.print("[bold green]Complete pipeline finished![/bold green]")
 
 @cli.command(name="requirements")
-@click.option('--project', '-p', required=True, help='Project name')
+@click.option('--project', '-p', default=None, help='Project name (required unless --all-projects is used)')
+@click.option('--all-projects', is_flag=True, help='Generate requirements for all projects found in artifacts')
 @click.option('--use-crewai', is_flag=True, help='Use CrewAI multi-agent approach')
-def requirements_cmd(project: str, use_crewai: bool):
+def requirements_cmd(project: Optional[str], all_projects: bool, use_crewai: bool):
     """Generate extreme-detailed requirements per artifact (DAO/JSP/Backend/GWT UI)."""
-    console.print(f"[bold blue]Generating detailed requirements for project: {project}[/bold blue]")
     try:
         # Load artifacts from build directory
         build_dir = settings.build_dir
-        artifacts: Dict[str, List[Dict]] = {}
+        all_artifacts: Dict[str, List[Dict]] = {}
         mapping = {
             'dao_calls': ('java_calls', 'all_dao_calls.json'),
             'jsp_forms': ('jsp_forms', 'all_forms.json'),
@@ -461,28 +461,62 @@ def requirements_cmd(project: str, use_crewai: bool):
             p = build_dir / subdir / fname
             if p.exists():
                 with p.open('r', encoding='utf-8') as f:
-                    artifacts[key] = _json.load(f)
+                    all_artifacts[key] = _json.load(f)
             else:
-                artifacts[key] = []
+                all_artifacts[key] = []
 
-        if use_crewai:
-            console.print("[bold cyan]Using CrewAI multi-agent approach...[/bold cyan]")
-            try:
-                from synth.crewai_requirements import generate_requirements_with_crewai  # type: ignore
-            except Exception as e:
-                console.print("[bold yellow]CrewAI not available. Install crewai/crewai-tools to enable this feature.[/bold yellow]")
-                console.print(f"Details: {e}")
-                sys.exit(1)
-            output_files = generate_requirements_with_crewai(project, artifacts)
-            console.print(f"[bold green]CrewAI requirements generated:[/bold green] {len(output_files)} files")
-            for file_path in output_files:
-                console.print(f"  - {file_path}")
+        # Determine which projects to process
+        from config.project_utils import get_all_projects_from_artifacts
+        if all_projects:
+            projects = get_all_projects_from_artifacts(all_artifacts)
+            if not projects:
+                console.print("[bold yellow]No projects found in artifacts. Using default project name.[/bold yellow]")
+                projects = {settings.default_project_name}
+            console.print(f"[bold blue]Found {len(projects)} projects: {', '.join(sorted(projects))}[/bold blue]")
+        elif project:
+            projects = {project}
         else:
-            agent = RequirementsAgent()
-            index_path = agent.run(project, artifacts)
-            console.print(f"[bold green]Requirements index created:[/bold green] {index_path}")
+            console.print("[bold red]Error: Either --project or --all-projects must be specified[/bold red]")
+            sys.exit(1)
+
+        # Generate requirements for each project
+        total_files = 0
+        for proj_name in sorted(projects):
+            console.print(f"\n[bold cyan]Processing project: {proj_name}[/bold cyan]")
+            
+            # Filter artifacts by project
+            project_artifacts: Dict[str, List[Dict]] = {}
+            for key, artifact_list in all_artifacts.items():
+                project_artifacts[key] = [
+                    art for art in artifact_list 
+                    if isinstance(art, dict) and art.get('project') == proj_name
+                ]
+                console.print(f"  {key}: {len(project_artifacts[key])} artifacts")
+
+            if use_crewai:
+                console.print(f"[bold cyan]Using CrewAI multi-agent approach for {proj_name}...[/bold cyan]")
+                try:
+                    from synth.crewai_requirements import generate_requirements_with_crewai  # type: ignore
+                except Exception as e:
+                    console.print("[bold yellow]CrewAI not available. Install crewai to enable this feature.[/bold yellow]")
+                    console.print(f"Details: {e}")
+                    sys.exit(1)
+                output_files = generate_requirements_with_crewai(proj_name, project_artifacts)
+                console.print(f"[bold green]CrewAI requirements generated for {proj_name}:[/bold green] {len(output_files)} files")
+                for file_path in output_files:
+                    console.print(f"  - {file_path}")
+                total_files += len(output_files)
+            else:
+                agent = RequirementsAgent()
+                index_path = agent.run(proj_name, project_artifacts)
+                console.print(f"[bold green]Requirements index created for {proj_name}:[/bold green] {index_path}")
+                total_files += 1
+
+        console.print(f"\n[bold green]✓ Requirements generation complete: {total_files} total files generated[/bold green]")
     except Exception as e:
         console.print(f"[bold red]Requirements generation failed: {e}[/bold red]")
+        import traceback
+        console.print(traceback.format_exc())
         sys.exit(1)
 
 if __name__ == '__main__':

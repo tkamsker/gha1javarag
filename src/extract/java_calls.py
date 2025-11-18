@@ -11,6 +11,7 @@ from javalang.tree import ClassDeclaration, MethodDeclaration, MethodInvocation,
 from javalang.parser import JavaSyntaxError
 
 from config.settings import settings
+from config.project_utils import extract_project_name_from_path
 
 logger = logging.getLogger(__name__)
 
@@ -198,18 +199,8 @@ class JavaCallsExtractor:
         return ""
     
     def _get_project_name(self, file_path: str) -> str:
-        """Extract project name from file path."""
-        path_parts = Path(file_path).parts
-        
-        for part in path_parts:
-            if part in ['src', 'main', 'java', 'webapp', 'resources', 'dao', 'service']:
-                continue
-            if '.' in part and len(part) > 3:
-                return part.split('.')[0]
-            if part and not part.startswith('.') and len(part) > 2:
-                return part
-        
-        return settings.default_project_name
+        """Extract project name from file path using improved detection logic."""
+        return extract_project_name_from_path(file_path, settings.java_source_dir)
     
     def _save_dao_call_json(self, dao_call: Dict[str, Any]):
         """Save individual DAO call as JSON."""

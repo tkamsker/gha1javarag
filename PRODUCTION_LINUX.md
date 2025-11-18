@@ -191,17 +191,39 @@ python main.py index --project production-project
 
 # Step 4: Generate PRD
 python main.py prd --project production-project --frontend
+
+# Step 5 (Optional): Generate Detailed Requirements
+# For all projects found in artifacts:
+python main.py requirements --all-projects
+
+# Or for a specific project:
+python main.py requirements --project production-project
+
+# With CrewAI (if installed):
+python main.py requirements --all-projects --use-crewai
 ```
 
 ### Option 4: Generate Detailed Requirements (Optional)
 
 ```bash
-# Generate extreme-detailed requirements per artifact
+# Generate requirements for a specific project
 python main.py requirements --project production-project
 
-# Or use CrewAI multi-agent approach (if installed)
+# Generate requirements for ALL projects found in artifacts (recommended for multi-project setups)
+python main.py requirements --all-projects
+
+# Use CrewAI multi-agent approach (if installed)
+python main.py requirements --all-projects --use-crewai
+
+# Or for a specific project with CrewAI
 python main.py requirements --project production-project --use-crewai
 ```
+
+**Note on Project Detection:**
+- If `JAVA_SOURCE_DIR` contains a `src` directory, it's treated as a single project
+- If `JAVA_SOURCE_DIR` contains multiple subdirectories, each subdirectory is treated as a separate project
+- Requirements are generated per project in subdirectories: `data/output/requirements/{project_name}/`
+- Use `--all-projects` to automatically detect and generate requirements for all projects found in the extracted artifacts
 
 ## Production Service Setup
 
