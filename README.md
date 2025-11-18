@@ -401,7 +401,8 @@ fi
 **Examples**
 
 1. Generate for all projects (default):
-./run_production_linux.sh# Equivalent to: ./run_production_linux.sh production-project true true true
+./run_production_linux.sh
+# Equivalent to: ./run_production_linux.sh production-project true true true
 # Uses: --all-projects
 
 2. Generate for specific project only:
