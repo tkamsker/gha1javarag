@@ -7,8 +7,9 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Union
 
+from pydantic import BaseModel, Field
 from crewai import Agent, Crew, Task, LLM
 from crewai.tools import BaseTool
 
@@ -18,16 +19,48 @@ from store.weaviate_client import WeaviateClient
 logger = logging.getLogger(__name__)
 
 
+class WeaviateSearchToolArgs(BaseModel):
+    """Arguments schema for WeaviateSearchTool."""
+    query: str = Field(description="Search query string")
+    artifact_type: Union[str, List[str]] = Field(
+        default="BackendDoc",
+        description=(
+            "Artifact type(s) to search. Can be a single string or a list of strings. "
+            "Available types: BackendDoc, DaoCall, JspForm, IbatisStatement, DbTable, "
+            "GwtModule, GwtUiBinder, GwtActivityPlace, JsArtifact"
+        )
+    )
+    limit: int = Field(default=5, description="Maximum number of results per artifact type")
+
+
 class WeaviateSearchTool(BaseTool):
     name: str = "search_weaviate"
     description: str = (
         "Search Weaviate vector database for relevant artifacts. "
         "Use this tool to retrieve context about DAO calls, JSP forms, backend documentation, "
-        "GWT modules, and other code artifacts."
+        "GWT modules, and other code artifacts.\n\n"
+        "Parameters:\n"
+        "- query: Search query string\n"
+        "- artifact_type: Single artifact type (string) OR list of artifact types (list). "
+        "Available types: BackendDoc, DaoCall, JspForm, IbatisStatement, DbTable, "
+        "GwtModule, GwtUiBinder, GwtActivityPlace, JsArtifact\n"
+        "- limit: Maximum number of results per artifact type (default: 5)\n\n"
+        "If artifact_type is a list, the tool will search each type and combine results. "
+        "Example: artifact_type='BackendDoc' or artifact_type=['BackendDoc', 'DaoCall']"
     )
+    args_schema: type[BaseModel] = WeaviateSearchToolArgs
     
-    def _run(self, query: str, artifact_type: str = "BackendDoc", limit: int = 5) -> str:
-        """Search Weaviate for relevant artifacts."""
+    def _run(self, query: str, artifact_type: Union[str, List[str]] = "BackendDoc", limit: int = 5) -> str:
+        """Search Weaviate for relevant artifacts.
+        
+        Args:
+            query: Search query string
+            artifact_type: Single artifact type (string) or list of artifact types
+            limit: Maximum number of results per artifact type
+            
+        Returns:
+            Formatted string with search results
+        """
         try:
             client = WeaviateClient(ensure_schema=False)
             
@@ -44,25 +77,45 @@ class WeaviateSearchTool(BaseTool):
                 "JsArtifact": "JsArtifact"
             }
             
-            class_name = class_mapping.get(artifact_type, "BackendDoc")
+            # Handle both string and list inputs
+            if isinstance(artifact_type, str):
+                artifact_types = [artifact_type]
+            elif isinstance(artifact_type, list):
+                artifact_types = artifact_type
+            else:
+                # Fallback: try to convert to string
+                artifact_types = [str(artifact_type)]
             
-            # Use the search_artifacts method from WeaviateClient
-            artifacts = client.search_artifacts(class_name, query, project=None, limit=limit)
+            all_artifacts = []
+            all_outputs = []
             
-            if not artifacts:
-                return f"No results found for '{query}' in {artifact_type}"
+            # Search each artifact type
+            for art_type in artifact_types:
+                class_name = class_mapping.get(art_type, "BackendDoc")
+                
+                # Use the search_artifacts method from WeaviateClient
+                artifacts = client.search_artifacts(class_name, query, project=None, limit=limit)
+                
+                if artifacts:
+                    all_artifacts.extend(artifacts)
+                    type_output = [f"\n=== {art_type} ({len(artifacts)} results) ==="]
+                    for i, artifact in enumerate(artifacts[:limit], 1):
+                        path = artifact.get('path', 'Unknown')
+                        text = artifact.get('text', artifact.get('summary', ''))[:500]
+                        type_output.append(f"{i}. {path}")
+                        type_output.append(f"   {text}...")
+                    all_outputs.append("\n".join(type_output))
             
-            output = [f"Found {len(artifacts)} {artifact_type} artifacts:\n"]
-            for i, artifact in enumerate(artifacts[:limit], 1):
-                path = artifact.get('path', 'Unknown')
-                text = artifact.get('text', artifact.get('summary', ''))[:500]
-                output.append(f"{i}. {path}")
-                output.append(f"   {text}...")
+            if not all_artifacts:
+                types_str = ", ".join(artifact_types) if len(artifact_types) > 1 else artifact_types[0]
+                return f"No results found for '{query}' in {types_str}"
             
-            return "\n".join(output)
+            # Combine all results
+            header = f"Found {len(all_artifacts)} total artifacts across {len(artifact_types)} type(s):"
+            return header + "\n" + "\n".join(all_outputs)
             
         except Exception as e:
-            logger.error(f"Weaviate search failed: {e}")
+            logger.error(f"Weaviate search failed: {e}", exc_info=True)
             return f"Error searching Weaviate: {e}"
 
 
@@ -154,10 +207,13 @@ class CrewAIRequirementsGenerator:
         # For Ollama, we need to prepend the base URL with the model name
         model_name = f"ollama/{settings.ollama_model_name}"
             
+        # Configure LLM with increased timeout for complex tasks
+        # Default timeout is 600s, increase to 1200s (20 minutes) for CrewAI tasks
         self.llm = LLM(
             model=model_name,
             base_url=base_url,
-            temperature=0.7
+            temperature=0.7,
+            timeout=1200.0  # 20 minutes timeout for complex multi-agent tasks
         )
         
     def generate_requirements(self, project: str, artifact_context: Dict[str, Any]) -> List[Path]:
