@@ -29,7 +29,8 @@ def fix_project_in_item(item: dict, file_path: Path) -> bool:
     if not path:
         return False
     
-    # Extract correct project name from path
+    # Extract correct project name from path using JAVA_SOURCE_DIR from settings
+    # The function will automatically use settings.java_source_dir
     correct_project = extract_project_name_from_path(path)
     
     if original_project != correct_project:
