@@ -192,8 +192,9 @@ def extract(project: Optional[str], include_frontend: bool):
     console.print(f"[bold green]Total artifacts extracted: {total_artifacts}[/bold green]")
 
 @cli.command()
-@click.option('--project', '-p', default=None, help='Project name')
-def index(project: Optional[str]):
+@click.option('--project', '-p', default=None, help='Project name (if not specified, preserves existing project names from artifacts)')
+@click.option('--all-projects', is_flag=True, help='Index all projects found in artifacts (preserves existing project names)')
+def index(project: Optional[str], all_projects: bool):
     """Index artifacts in Weaviate"""
     console.print("[bold blue]Indexing artifacts in Weaviate...[/bold blue]")
     
@@ -235,6 +236,18 @@ def index(project: Optional[str]):
                     loaded = True
                     break
         
+        # Determine project handling strategy
+        preserve_project_names = all_projects or (project is None)
+        
+        if preserve_project_names:
+            # Get all unique projects from artifacts
+            from config.project_utils import get_all_projects_from_artifacts
+            projects = get_all_projects_from_artifacts(all_artifacts)
+            if projects:
+                console.print(f"[bold cyan]Found {len(projects)} projects in artifacts: {', '.join(sorted(projects))}[/bold cyan]")
+            else:
+                console.print(f"[bold yellow]No project names found in artifacts, using default: {settings.default_project_name}[/bold yellow]")
+        
         # Index artifacts
         with Progress(
             SpinnerColumn(),
@@ -249,9 +262,16 @@ def index(project: Optional[str]):
                     
                     for artifact in artifacts:
                         try:
-                            # Ensure project is set consistently
-                            artifact_project = project or settings.default_project_name
+                            # Set project name based on strategy
+                            if preserve_project_names:
+                                # Preserve existing project name or use default if not present
+                                artifact_project = artifact.get('project') or settings.default_project_name
+                            else:
+                                # Use specified project name
+                                artifact_project = project or settings.default_project_name
+                            
                             artifact['project'] = artifact_project
+                            
                             # Map artifact types to Weaviate class names
                             class_mapping = {
                                 'ibatis_statements': 'IbatisStatement',
