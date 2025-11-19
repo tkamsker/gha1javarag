@@ -98,9 +98,10 @@ def main():
         print(f"\nFixing {len(json_files)} individual DAO call files...")
         fixed_files = 0
         for f in json_files:
-            if fix_project_in_file(f) > 0:
+            fixed = fix_project_in_file(f)
+            if fixed > 0:
                 fixed_files += 1
-        print(f"  Fixed {fixed_files} files")
+        print(f"  Fixed {fixed_files} files with project name changes")
     
     # Fix GWT client artifacts
     gwt_client_dir = build_dir / 'gwt_client'

@@ -219,7 +219,32 @@ def index(project: Optional[str], all_projects: bool):
             'backend_docs': ['all_backend_docs.json']
         }
         import json as _json
+        
+        # Special handling for java_calls directory (individual JSON files)
+        java_calls_dir = build_dir / 'java_calls'
+        if java_calls_dir.exists() and java_calls_dir.is_dir():
+            all_artifacts['dao_calls'] = []
+            json_files = list(java_calls_dir.glob('*.json'))
+            console.print(f"[dim]Loading {len(json_files)} DAO call files from java_calls directory...[/dim]")
+            for json_file in json_files:
+                try:
+                    with open(json_file, 'r', encoding='utf-8') as f:
+                        data = _json.load(f)
+                        if isinstance(data, dict):
+                            all_artifacts['dao_calls'].append(data)
+                        elif isinstance(data, list):
+                            all_artifacts['dao_calls'].extend(data)
+                except Exception as e:
+                    logger.warning(f"Failed to load {json_file.name}: {e}")
+            if all_artifacts['dao_calls']:
+                console.print(f"[dim]Loaded {len(all_artifacts['dao_calls'])} DAO call artifacts[/dim]")
+        
+        # Load other artifact types from aggregate files
         for artifact_type, names in candidates.items():
+            # Skip dao_calls if we already loaded from java_calls directory
+            if artifact_type == 'dao_calls' and 'dao_calls' in all_artifacts:
+                continue
+                
             loaded = False
             for filename in names:
                 artifact_file = build_dir / artifact_type / filename
