@@ -46,9 +46,15 @@ class WeaviateSearchTool(BaseTool):
         "GwtModule, GwtUiBinder, GwtActivityPlace, JsArtifact\n"
         "- limit: Maximum number of results per artifact type (default: 5)\n\n"
         "If artifact_type is a list, the tool will search each type and combine results. "
-        "Example: artifact_type='BackendDoc' or artifact_type=['BackendDoc', 'DaoCall']"
+        "Example: artifact_type='BackendDoc' or artifact_type=['BackendDoc', 'DaoCall']\n\n"
+        "Note: The tool automatically filters results by the current project context."
     )
     args_schema: type[BaseModel] = WeaviateSearchToolArgs
+    
+    def __init__(self, project: Optional[str] = None, **kwargs):
+        """Initialize the tool with optional project name for filtering."""
+        super().__init__(**kwargs)
+        self.project = project
     
     def _run(self, query: str, artifact_type: Union[str, List[str]] = "BackendDoc", limit: int = 5) -> str:
         """Search Weaviate for relevant artifacts.
@@ -94,7 +100,8 @@ class WeaviateSearchTool(BaseTool):
                 class_name = class_mapping.get(art_type, "BackendDoc")
                 
                 # Use the search_artifacts method from WeaviateClient
-                artifacts = client.search_artifacts(class_name, query, project=None, limit=limit)
+                # Pass project name if available to filter results
+                artifacts = client.search_artifacts(class_name, query, project=self.project, limit=limit)
                 
                 if artifacts:
                     all_artifacts.extend(artifacts)
@@ -119,9 +126,9 @@ class WeaviateSearchTool(BaseTool):
             return f"Error searching Weaviate: {e}"
 
 
-def create_code_analyst_agent(llm: LLM) -> Agent:
+def create_code_analyst_agent(llm: LLM, project: Optional[str] = None) -> Agent:
     """Create Code Analyst agent."""
-    weaviate_tool = WeaviateSearchTool()
+    weaviate_tool = WeaviateSearchTool(project=project)
     
     return Agent(
         role='Code Analyst',
@@ -138,9 +145,9 @@ def create_code_analyst_agent(llm: LLM) -> Agent:
     )
 
 
-def create_dependency_analyst_agent(llm: LLM) -> Agent:
+def create_dependency_analyst_agent(llm: LLM, project: Optional[str] = None) -> Agent:
     """Create Build/Dependency Analyst agent."""
-    weaviate_tool = WeaviateSearchTool()
+    weaviate_tool = WeaviateSearchTool(project=project)
     
     return Agent(
         role='Build and Dependency Analyst',
@@ -156,9 +163,9 @@ def create_dependency_analyst_agent(llm: LLM) -> Agent:
     )
 
 
-def create_ui_flow_analyst_agent(llm: LLM) -> Agent:
+def create_ui_flow_analyst_agent(llm: LLM, project: Optional[str] = None) -> Agent:
     """Create UI Flow Mapper agent."""
-    weaviate_tool = WeaviateSearchTool()
+    weaviate_tool = WeaviateSearchTool(project=project)
     
     return Agent(
         role='UI Flow Mapper',
@@ -229,10 +236,10 @@ class CrewAIRequirementsGenerator:
         """
         logger.info(f"Starting CrewAI requirements generation for project: {project}")
         
-        # Create agents
-        code_analyst = create_code_analyst_agent(self.llm)
-        dependency_analyst = create_dependency_analyst_agent(self.llm)
-        ui_analyst = create_ui_flow_analyst_agent(self.llm)
+        # Create agents with project context for proper Weaviate filtering
+        code_analyst = create_code_analyst_agent(self.llm, project=project)
+        dependency_analyst = create_dependency_analyst_agent(self.llm, project=project)
+        ui_analyst = create_ui_flow_analyst_agent(self.llm, project=project)
         technical_writer = create_technical_writer_agent(self.llm)
         
         # Create tasks
