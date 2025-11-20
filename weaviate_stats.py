@@ -65,29 +65,27 @@ def get_weaviate_stats():
                 except:
                     total_count = 0
                 
-                # Get sample objects (limit to 10000 for better coverage)
-                # Use simple query (no search, just get objects)
+                # Get sample objects using data_object.get (more reliable than query.get without search)
                 hits = []
                 try:
-                    res = client.query.get(
-                        class_name=class_name,
-                        properties=['project', 'path', 'text', 'summary', 'meta']
-                    ).with_limit(10000).do()
-                    
-                    hits = res.get('data', {}).get('Get', {}).get(class_name, [])
-                except Exception as query_e:
-                    # If query fails, try with just project field
-                    console.print(f"[yellow]Warning: Full query failed for {class_name}: {query_e}[/yellow]")
-                    try:
-                        res = client.query.get(
-                            class_name=class_name,
-                            properties=['project', 'path']
-                        ).with_limit(1000).do()
-                        hits = res.get('data', {}).get('Get', {}).get(class_name, [])
-                        console.print(f"[dim]  Retrieved {len(hits)} objects with limited properties[/dim]")
-                    except Exception as e2:
-                        console.print(f"[red]  Failed to query {class_name}: {e2}[/red]")
-                        hits = []
+                    # Use data_object.get which is more reliable for retrieving objects
+                    # This works even when query.get() without search method fails
+                    res = client.data_object.get(class_name=class_name, limit=10000)
+                    if res and 'objects' in res:
+                        # Convert to same format as query.get results
+                        for obj in res['objects']:
+                            props = obj.get('properties', {})
+                            # Add id for consistency
+                            props['_id'] = obj.get('id')
+                            hits.append(props)
+                        console.print(f"[dim]  Retrieved {len(hits)} objects using data_object.get[/dim]")
+                    else:
+                        console.print(f"[yellow]  No objects returned from data_object.get for {class_name}[/yellow]")
+                except Exception as e:
+                    console.print(f"[red]  Failed to get objects for {class_name}: {e}[/red]")
+                    import traceback
+                    console.print(f"[dim]{traceback.format_exc()}[/dim]")
+                    hits = []
                 
                 if hits:
                     class_stats = {

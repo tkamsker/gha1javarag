@@ -169,82 +169,106 @@ class WeaviateClient:
         # Try BM25 first (most reliable), then vector search, then simple query
         # Note: BM25 might not properly respect where clauses in some Weaviate versions
         # So we validate results and filter out wrong projects
-        methods = [
-            ("bm25", lambda b: b.with_bm25(query=query)),
-            ("vector", lambda b: b.with_near_text({"concepts": [query]})),
-            ("simple", lambda b: b),  # No search, just filter
-        ]
         
-        for method_name, search_method in methods:
-            try:
-                builder = self._client.query.get(class_name, properties)
+        # First try BM25
+        try:
+            builder = self._client.query.get(class_name, properties)
+            if where_clause:
+                builder = builder.with_where(where_clause)
+            builder = builder.with_bm25(query=query)
+            search_limit = limit * 5 if project else limit  # Get more if filtering
+            builder = builder.with_limit(search_limit)
+            result = builder.do()
+            objects = result.get("data", {}).get("Get", {}).get(class_name, [])
+            
+            if objects:
+                logger.info(f"BM25 search succeeded for {class_name}, got {len(objects)} objects")
+                # Validate and filter
+                normalized = []
+                wrong_project_count = 0
+                for o in objects:
+                    if isinstance(o, dict):
+                        if project and o.get('project') != project:
+                            wrong_project_count += 1
+                            continue
+                        # Parse meta JSON
+                        if 'meta' in o and isinstance(o['meta'], str):
+                            try:
+                                import json as _json
+                                o['meta'] = _json.loads(o['meta'])
+                            except (ValueError, TypeError):
+                                pass
+                        normalized.append(o)
                 
-                # Apply where clause if specified
-                if where_clause:
-                    builder = builder.with_where(where_clause)
+                if wrong_project_count > 0:
+                    logger.warning(f"Filtered out {wrong_project_count} objects with wrong project")
                 
-                # Apply search method
-                builder = search_method(builder)
-                
-                # Set limit - increase if we have project filter (BM25 might return wrong projects)
-                # We'll filter them out, so we need more results to get enough matching ones
-                search_limit = limit * 3 if (project and method_name == "bm25") else limit
-                builder = builder.with_limit(search_limit)
-                
-                # Execute query
-                result = builder.do()
-                objects = result.get("data", {}).get("Get", {}).get(class_name, [])
-                
-                if objects:
-                    logger.info(f"Search succeeded using {method_name} method for {class_name}, got {len(objects)} objects")
-                    # normalize to list of dicts and parse meta JSON
-                    normalized = []
-                    wrong_project_count = 0
-                    for o in objects:
-                        if isinstance(o, dict):
-                            # Validate project filter if specified (safety check)
-                            if project and o.get('project') != project:
-                                wrong_project_count += 1
-                                if wrong_project_count <= 3:  # Log first few
-                                    logger.warning(f"Object has project '{o.get('project')}' but filter is '{project}', skipping")
-                                continue
-                            
-                            # Parse meta JSON string back to dict if present
-                            if 'meta' in o and isinstance(o['meta'], str):
-                                try:
-                                    o['meta'] = _json.loads(o['meta'])
-                                except (ValueError, TypeError):
-                                    pass  # Keep as string if not valid JSON
-                            normalized.append(o)
-                    
-                    if wrong_project_count > 0:
-                        logger.warning(f"Filtered out {wrong_project_count} objects with wrong project for {class_name}")
-                    
-                    if normalized:
-                        logger.info(f"Returning {len(normalized)} normalized objects for {class_name} (filtered from {len(objects)})")
-                        return normalized
-                    else:
-                        logger.info(f"All {len(objects)} objects filtered out for {class_name} (wrong project), trying next method")
-                        # All objects were filtered out, try next method
+                if normalized:
+                    logger.info(f"Returning {len(normalized)} objects for {class_name}")
+                    return normalized[:limit]  # Return up to requested limit
+        except Exception as bm25_error:
+            logger.debug(f"BM25 search failed: {bm25_error}")
+        
+        # Try vector search
+        try:
+            builder = self._client.query.get(class_name, properties)
+            if where_clause:
+                builder = builder.with_where(where_clause)
+            builder = builder.with_near_text({"concepts": [query]})
+            builder = builder.with_limit(limit * 3 if project else limit)
+            result = builder.do()
+            objects = result.get("data", {}).get("Get", {}).get(class_name, [])
+            
+            if objects:
+                logger.info(f"Vector search succeeded for {class_name}, got {len(objects)} objects")
+                normalized = []
+                for o in objects:
+                    if isinstance(o, dict):
+                        if project and o.get('project') != project:
+                            continue
+                        if 'meta' in o and isinstance(o['meta'], str):
+                            try:
+                                import json as _json
+                                o['meta'] = _json.loads(o['meta'])
+                            except (ValueError, TypeError):
+                                pass
+                        normalized.append(o)
+                if normalized:
+                    return normalized[:limit]
+        except Exception as vector_error:
+            logger.debug(f"Vector search failed: {vector_error}")
+        
+        # Last resort: Use data_object.get with manual filtering
+        try:
+            logger.info(f"Trying data_object.get for {class_name} with project filter")
+            # Get objects directly and filter manually
+            all_objects = self._client.data_object.get(class_name=class_name, limit=limit * 10)
+            objects = []
+            if all_objects and 'objects' in all_objects:
+                for obj in all_objects['objects']:
+                    props = obj.get('properties', {})
+                    if project and props.get('project') != project:
                         continue
-                elif method_name == "simple":
-                    # If simple query returns nothing, there's no data matching the filter
-                    logger.debug(f"No objects found for {class_name} with project={project}")
-                    return []
-                    
-            except Exception as e:
-                logger.debug(f"Search method {method_name} failed for {class_name}: {e}")
-                if method_name == "simple":
-                    # Last method failed, log error and return empty
-                    logger.error(f"All search methods failed for {class_name}: {e}")
-                    import traceback
-                    logger.debug(traceback.format_exc())
-                    return []
-                # Try next method
-                continue
+                    # Convert to same format
+                    result_obj = props.copy()
+                    if 'meta' in result_obj and isinstance(result_obj['meta'], str):
+                        try:
+                            import json as _json
+                            result_obj['meta'] = _json.loads(result_obj['meta'])
+                        except (ValueError, TypeError):
+                            pass
+                    objects.append(result_obj)
+                    if len(objects) >= limit:
+                        break
+            
+            if objects:
+                logger.info(f"data_object.get returned {len(objects)} objects for {class_name}")
+                return objects
+        except Exception as simple_error:
+            logger.debug(f"Simple query failed: {simple_error}")
         
         # All methods failed
-        logger.error(f"All search methods failed for {class_name}")
+        logger.warning(f"All search methods failed for {class_name}")
         return []
 
 
