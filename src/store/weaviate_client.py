@@ -78,20 +78,21 @@ class WeaviateClient:
 
     def _expected_classes(self) -> Dict[str, List[str]]:
         return {
-            "IbatisStatement": ["project", "path", "text", "statementId", "statementType", "sqlContent"],
-            "DaoCall": ["project", "path", "text", "daoClass", "methodName"],
-            "JspForm": ["project", "path", "text", "formAction", "formMethod"],
-            "DbTable": ["project", "path", "text", "tableName"],
-            "GwtModule": ["project", "path", "text", "moduleName"],
-            "GwtUiBinder": ["project", "path", "text", "ownerType"],
-            "GwtActivityPlace": ["project", "path", "text", "placeClass", "activityClass"],
-            "GwtEndpoint": ["project", "path", "text", "style", "serviceInterface", "endpointPath"],
-            "JsArtifact": ["project", "path", "text", "scriptPath"],
-            "BackendDoc": ["project", "path", "text", "summary", "language"],
+            "IbatisStatement": ["project", "path", "text", "statementId", "statementType", "sqlContent", "meta"],
+            "DaoCall": ["project", "path", "text", "daoClass", "methodName", "meta"],
+            "JspForm": ["project", "path", "text", "formAction", "formMethod", "meta"],
+            "DbTable": ["project", "path", "text", "tableName", "meta"],
+            "GwtModule": ["project", "path", "text", "moduleName", "meta"],
+            "GwtUiBinder": ["project", "path", "text", "ownerType", "meta"],
+            "GwtActivityPlace": ["project", "path", "text", "placeClass", "activityClass", "meta"],
+            "GwtEndpoint": ["project", "path", "text", "style", "serviceInterface", "endpointPath", "meta"],
+            "JsArtifact": ["project", "path", "text", "scriptPath", "meta"],
+            "BackendDoc": ["project", "path", "text", "summary", "language", "meta"],
         }
 
     def index_artifact(self, class_name: str, artifact: Dict[str, Any]) -> Optional[str]:
         """Create or update an object for the artifact. Returns object id or None."""
+        import json as _json
         data: Dict[str, Any] = {}
         # flatten basic fields used across modules
         for key in ["project", "path", "text", "summary", "language",
@@ -102,6 +103,15 @@ class WeaviateClient:
                     "scriptPath"]:
             if key in artifact:
                 data[key] = artifact[key]
+        
+        # Store meta as JSON string for full metadata preservation
+        if 'meta' in artifact and artifact['meta']:
+            try:
+                data['meta'] = _json.dumps(artifact['meta'], ensure_ascii=False) if isinstance(artifact['meta'], dict) else str(artifact['meta'])
+            except Exception as e:
+                logger.warning(f"Failed to serialize meta for {class_name}: {e}")
+                data['meta'] = str(artifact['meta'])
+        
         try:
             uuid = self._client.data_object.create(data_object=data, class_name=class_name)
             return uuid
@@ -111,9 +121,16 @@ class WeaviateClient:
 
     def search_artifacts(self, class_name: str, query: str, project: Optional[str] = None, limit: int = 10) -> List[Dict[str, Any]]:
         """Semantic search over 'text' with optional project filter."""
+        import json as _json
         try:
+            # Include meta field in search results
             builder = self._client.query.get(class_name, [
-                "project", "path", "text", "summary", "language"
+                "project", "path", "text", "summary", "language", "meta",
+                "statementId", "statementType", "sqlContent",
+                "daoClass", "methodName", "formAction", "formMethod",
+                "tableName", "moduleName", "ownerType", "placeClass",
+                "activityClass", "style", "serviceInterface", "endpointPath",
+                "scriptPath"
             ])
             if project:
                 builder = builder.with_where({
@@ -124,8 +141,18 @@ class WeaviateClient:
             builder = builder.with_near_text({"concepts": [query]}).with_limit(limit)
             result = builder.do()
             objects = result.get("data", {}).get("Get", {}).get(class_name, [])
-            # normalize to list of dicts
-            return [o for o in objects if isinstance(o, dict)]
+            # normalize to list of dicts and parse meta JSON
+            normalized = []
+            for o in objects:
+                if isinstance(o, dict):
+                    # Parse meta JSON string back to dict if present
+                    if 'meta' in o and isinstance(o['meta'], str):
+                        try:
+                            o['meta'] = _json.loads(o['meta'])
+                        except (ValueError, TypeError):
+                            pass  # Keep as string if not valid JSON
+                    normalized.append(o)
+            return normalized
         except Exception as e:
             logger.error("Search failed for %s: %s", class_name, e)
             return []

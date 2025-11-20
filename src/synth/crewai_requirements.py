@@ -109,8 +109,22 @@ class WeaviateSearchTool(BaseTool):
                     for i, artifact in enumerate(artifacts[:limit], 1):
                         path = artifact.get('path', 'Unknown')
                         text = artifact.get('text', artifact.get('summary', ''))[:500]
-                        type_output.append(f"{i}. {path}")
-                        type_output.append(f"   {text}...")
+                        meta = artifact.get('meta', {})
+                        
+                        # Build artifact info with metadata
+                        artifact_info = [f"{i}. {path}"]
+                        artifact_info.append(f"   {text}...")
+                        
+                        # Add relevant metadata if available
+                        if isinstance(meta, dict) and meta:
+                            meta_parts = []
+                            for key, value in meta.items():
+                                if value and key not in ['rawXml', 'fullContent']:  # Skip large fields
+                                    meta_parts.append(f"{key}={value}")
+                            if meta_parts:
+                                artifact_info.append(f"   Metadata: {', '.join(meta_parts[:5])}")  # Limit to 5 fields
+                        
+                        type_output.append("\n".join(artifact_info))
                     all_outputs.append("\n".join(type_output))
             
             if not all_artifacts:
@@ -132,16 +146,21 @@ def create_code_analyst_agent(llm: LLM, project: Optional[str] = None) -> Agent:
     
     return Agent(
         role='Code Analyst',
-        goal='Analyze codebase structure, identify key components, and understand system architecture',
+        goal='Provide EXTREMELY DETAILED code analysis organized by functional areas with specific file paths, class names, and code references',
         backstory=(
-            'You are a senior software engineer with expertise in analyzing legacy codebases. '
-            'You excel at understanding complex systems, identifying patterns, and breaking down '
-            'code into meaningful components. You work with DAO patterns, service layers, '
-            'database interactions, and business logic.'
+            'You are a senior software architect with 15+ years of experience analyzing enterprise Java codebases. '
+            'You excel at deep-dive analysis, identifying every component, mapping data flows, and documenting '
+            'technical architecture in exhaustive detail. You NEVER provide generic or speculative information - '
+            'you ALWAYS reference specific files, classes, methods, and SQL statements. You organize your findings '
+            'by functional areas and provide comprehensive coverage of backend architecture, database interactions, '
+            'business logic, and integration points. Your analysis includes file paths, line numbers, class names, '
+            'method signatures, SQL statement IDs, and all relevant technical details.'
         ),
         llm=llm,
         tools=[weaviate_tool],
-        verbose=True
+        verbose=True,
+        max_iter=15,  # Allow more iterations for detailed analysis
+        max_execution_time=1800  # 30 minutes max
     )
 
 
@@ -151,15 +170,20 @@ def create_dependency_analyst_agent(llm: LLM, project: Optional[str] = None) -> 
     
     return Agent(
         role='Build and Dependency Analyst',
-        goal='Understand system dependencies, build configurations, and integration points',
+        goal='Provide EXTREMELY DETAILED dependency analysis with specific module names, endpoint paths, service interfaces, and integration contracts',
         backstory=(
-            'You are a DevOps and build engineer specialist. You understand build systems, '
-            'dependencies, module structures, and how components integrate. You identify '
-            'internal and external dependencies, API contracts, and integration requirements.'
+            'You are a senior DevOps architect and integration specialist with expertise in enterprise Java applications. '
+            'You excel at mapping complex dependency graphs, documenting build configurations, and identifying all '
+            'integration points. You NEVER provide generic dependency lists - you ALWAYS include specific module names, '
+            'GWT module inheritance, endpoint paths, service interface names, API contracts, and version information. '
+            'You document internal dependencies, external services, build requirements, runtime dependencies, and '
+            'integration patterns with complete technical detail including file paths and configuration locations.'
         ),
         llm=llm,
         tools=[weaviate_tool],
-        verbose=True
+        verbose=True,
+        max_iter=15,
+        max_execution_time=1800
     )
 
 
@@ -169,15 +193,20 @@ def create_ui_flow_analyst_agent(llm: LLM, project: Optional[str] = None) -> Age
     
     return Agent(
         role='UI Flow Mapper',
-        goal='Map user interfaces, navigation flows, and frontend interactions',
+        goal='Provide EXTREMELY DETAILED UI analysis with specific form IDs, place tokens, component names, navigation flows, and user interaction patterns',
         backstory=(
-            'You are a UX/UI analyst specialized in understanding user interfaces and workflows. '
-            'You analyze forms, screens, navigation patterns, user flows, and frontend interactions. '
-            'You excel at documenting how users interact with the system.'
+            'You are a senior UX architect and frontend specialist with deep expertise in GWT, JSP, and enterprise web applications. '
+            'You excel at mapping complex user interfaces, documenting every form field, navigation pattern, and user interaction. '
+            'You NEVER provide generic UI descriptions - you ALWAYS include specific form IDs, form actions, place tokens, '
+            'activity classes, component names, event handlers, and file paths. You document complete navigation flows, '
+            'form validations, user roles, permissions, UI state management, and all user interaction patterns with '
+            'exhaustive detail including JSP paths, UiBinder file names, and JavaScript artifacts.'
         ),
         llm=llm,
         tools=[weaviate_tool],
-        verbose=True
+        verbose=True,
+        max_iter=15,
+        max_execution_time=1800
     )
 
 
@@ -185,14 +214,20 @@ def create_technical_writer_agent(llm: LLM) -> Agent:
     """Create Technical Writer agent."""
     return Agent(
         role='Technical Writer',
-        goal='Write clear, comprehensive, and well-structured requirements documents',
+        goal='Create PROFESSIONAL, COMPREHENSIVE requirements documents with detailed sections, traceability, and specific examples organized by functional areas',
         backstory=(
-            'You are an experienced technical writer who transforms technical analysis into '
-            'clear requirements documents. You write for both technical teams and business stakeholders. '
-            'You excel at organizing information, using proper structure, and ensuring completeness.'
+            'You are a senior technical writer and requirements engineer with 20+ years of experience creating '
+            'enterprise software requirements documents. You excel at synthesizing complex technical analysis into '
+            'clear, comprehensive, and actionable requirements. You NEVER create generic or vague requirements - '
+            'you ALWAYS include specific examples, file references, class names, and traceability links. You organize '
+            'requirements by functional areas, include acceptance criteria, maintain traceability matrices, and write '
+            'for both technical development teams and business stakeholders. Your documents are professional, complete, '
+            'and suitable for software development planning and implementation.'
         ),
         llm=llm,
-        verbose=True
+        verbose=True,
+        max_iter=20,
+        max_execution_time=2400  # 40 minutes for comprehensive document
     )
 
 
@@ -249,68 +284,177 @@ class CrewAIRequirementsGenerator:
             description=(
                 f"Analyze the codebase for project '{project}'. "
                 f"Context: {artifact_summary}\n\n"
-                "Your task:\n"
-                "1. Identify key backend components (DAOs, services, controllers)\n"
-                "2. Understand the data flow and business logic\n"
-                "3. Map database interactions and data models\n"
-                "4. Document technical architecture patterns\n\n"
-                "Use the Weaviate search tool to find relevant code artifacts. "
+                "Your task is to provide a DETAILED, COMPREHENSIVE code analysis organized by functional areas:\n\n"
+                "## 1. Backend Architecture Analysis\n"
+                "- Identify all DAO (Data Access Object) classes and their methods\n"
+                "- Map service layer components and their responsibilities\n"
+                "- Document controller/servlet classes and their endpoints\n"
+                "- Identify business logic patterns and service boundaries\n\n"
+                "## 2. Database Layer Analysis\n"
+                "- Document all iBATIS/MyBatis SQL statements (SELECT, INSERT, UPDATE, DELETE)\n"
+                "- Map database tables used by this project\n"
+                "- Document parameter types, result types, and result maps\n"
+                "- Identify database relationships and foreign keys\n"
+                "- Document dynamic SQL patterns and conditional queries\n\n"
+                "## 3. Data Flow and Business Logic\n"
+                "- Trace data flow from UI → Service → DAO → Database\n"
+                "- Document business rules and validation logic\n"
+                "- Identify data transformation and mapping logic\n"
+                "- Document error handling and exception patterns\n\n"
+                "## 4. Technical Architecture Patterns\n"
+                "- Document design patterns used (DAO, Service Layer, MVC, etc.)\n"
+                "- Identify dependency injection and configuration patterns\n"
+                "- Document transaction management approaches\n"
+                "- Identify caching strategies if any\n\n"
+                "## 5. Integration Points\n"
+                "- Document internal module dependencies\n"
+                "- Identify external service integrations\n"
+                "- Document API contracts and interfaces\n\n"
+                "Use the Weaviate search tool extensively to find relevant artifacts. "
+                "Search for specific components, database operations, and business logic. "
                 "Focus on BackendDoc, DaoCall, and IbatisStatement artifacts. "
-                "Produce a comprehensive code analysis in markdown format."
+                "Include file paths, class names, method names, and SQL statement IDs in your analysis. "
+                "Produce a comprehensive, well-structured markdown document with clear sections and subsections."
             ),
             agent=code_analyst,
-            expected_output="Markdown document analyzing code structure, components, and data flow"
+            expected_output="Detailed markdown document analyzing code structure, components, data flow, organized by functional areas with specific examples and file references"
         )
         
         task2_deps = Task(
             description=(
                 f"Analyze dependencies and integration points for project '{project}'. "
-                "Your task:\n"
-                "1. Identify internal module dependencies\n"
-                "2. Document build and configuration requirements\n"
-                "3. Identify external service dependencies\n"
-                "4. Map integration points and API contracts\n\n"
-                "Use the Weaviate search tool to find relevant artifacts. "
-                "Focus on GwtModule, GwtEndpoint, and JsArtifact artifacts. "
-                "Produce a dependencies analysis in markdown format."
+                "Your task is to provide a DETAILED, COMPREHENSIVE dependencies analysis:\n\n"
+                "## 1. Internal Module Dependencies\n"
+                "- List all internal Java modules/packages this project depends on\n"
+                "- Document shared libraries and common utilities used\n"
+                "- Identify cross-project dependencies (other projects in the monorepo)\n"
+                "- Map dependency relationships and their purposes\n\n"
+                "## 2. Build and Configuration Requirements\n"
+                "- Document build system requirements (Maven, Gradle, Ant)\n"
+                "- List all external libraries and their versions (if available)\n"
+                "- Document configuration files and their purposes\n"
+                "- Identify environment-specific configurations\n"
+                "- Document deployment and packaging requirements\n\n"
+                "## 3. Frontend Dependencies\n"
+                "- Document GWT module dependencies and inheritance\n"
+                "- List JavaScript libraries and frameworks used\n"
+                "- Document CSS/styling dependencies\n"
+                "- Identify frontend build tools and processes\n\n"
+                "## 4. External Service Dependencies\n"
+                "- Document REST/SOAP API dependencies\n"
+                "- Identify external databases or data sources\n"
+                "- Document third-party service integrations\n"
+                "- Map authentication/authorization service dependencies\n\n"
+                "## 5. Integration Points and API Contracts\n"
+                "- Document GWT RPC endpoints and their contracts\n"
+                "- List RequestFactory services and their methods\n"
+                "- Document JavaScript API endpoints\n"
+                "- Map data exchange formats (JSON, XML, etc.)\n"
+                "- Document API versioning and compatibility requirements\n\n"
+                "## 6. Runtime Dependencies\n"
+                "- Document application server requirements\n"
+                "- List required runtime libraries\n"
+                "- Document JVM version requirements\n"
+                "- Identify required environment variables and configuration\n\n"
+                "Use the Weaviate search tool extensively. Search for GwtModule, GwtEndpoint, JsArtifact, "
+                "and BackendDoc artifacts. Include specific module names, endpoint paths, service interfaces, "
+                "and file references in your analysis. Produce a comprehensive markdown document with clear sections."
             ),
             agent=dependency_analyst,
-            expected_output="Markdown document outlining dependencies, build requirements, and integration points"
+            expected_output="Detailed markdown document outlining all dependencies, build requirements, and integration points with specific examples and references"
         )
         
         task3_ui = Task(
             description=(
                 f"Map UI flows and user interactions for project '{project}'. "
-                "Your task:\n"
-                "1. Identify all forms and user input screens\n"
-                "2. Map navigation flows and user journeys\n"
-                "3. Document UI components and interactions\n"
-                "4. Identify user roles and permissions\n\n"
-                "Use the Weaviate search tool to find relevant artifacts. "
-                "Focus on JspForm, GwtUiBinder, and GwtActivityPlace artifacts. "
-                "Produce a UI flow mapping document in markdown format."
+                "Your task is to provide a DETAILED, COMPREHENSIVE UI analysis:\n\n"
+                "## 1. Forms and User Input Screens\n"
+                "- List ALL JSP forms with their actions, methods, and purposes\n"
+                "- Document all form fields, their types, and validation rules\n"
+                "- Map form submissions to backend endpoints\n"
+                "- Document form dependencies and conditional fields\n"
+                "- Identify multi-step forms and wizard patterns\n\n"
+                "## 2. Navigation Flows and User Journeys\n"
+                "- Map GWT Activity-Place navigation patterns\n"
+                "- Document all Place classes and their tokens\n"
+                "- Trace navigation flows between screens\n"
+                "- Document deep linking and bookmarkable URLs\n"
+                "- Identify navigation guards and access controls\n\n"
+                "## 3. UI Components and Interactions\n"
+                "- Document GWT UiBinder components and their structure\n"
+                "- List reusable UI widgets and their properties\n"
+                "- Document event handlers and user interactions\n"
+                "- Map UI components to their Java backing classes\n"
+                "- Document i18n keys and internationalization\n\n"
+                "## 4. User Roles and Permissions\n"
+                "- Identify role-based access control patterns\n"
+                "- Document permission checks in UI components\n"
+                "- Map user roles to accessible features\n"
+                "- Document authentication flows in the UI\n\n"
+                "## 5. UI State Management\n"
+                "- Document client-side state management patterns\n"
+                "- Identify data binding and model-view relationships\n"
+                "- Document UI refresh and update mechanisms\n\n"
+                "## 6. User Experience Patterns\n"
+                "- Document error handling and user feedback mechanisms\n"
+                "- Identify loading states and progress indicators\n"
+                "- Document confirmation dialogs and user prompts\n"
+                "- Map success/error message patterns\n\n"
+                "Use the Weaviate search tool extensively. Search for JspForm, GwtUiBinder, GwtActivityPlace, "
+                "and JsArtifact artifacts. Include specific form IDs, place tokens, component names, and file paths. "
+                "Produce a comprehensive markdown document with clear sections and navigation flow diagrams."
             ),
             agent=ui_analyst,
-            expected_output="Markdown document mapping UI flows, forms, and user interactions"
+            expected_output="Detailed markdown document mapping all UI flows, forms, components, and user interactions with specific examples and file references"
         )
         
         task4_write = Task(
             description=(
-                f"Consolidate all analysis into a comprehensive requirements document for project '{project}'. "
+                f"Consolidate all analysis into a comprehensive, DETAILED requirements document for project '{project}'. "
                 "You will receive:\n"
-                "- Code analysis from Code Analyst\n"
-                "- Dependencies analysis from Dependency Analyst\n"
-                "- UI flow mapping from UI Analyst\n\n"
-                "Your task:\n"
-                "1. Synthesize all inputs into a coherent requirements document\n"
-                "2. Organize into clear sections: Overview, Functional Requirements, Technical Requirements, "
-                "User Interface Requirements, and Dependencies\n"
-                "3. Ensure completeness and traceability\n"
-                "4. Write for both technical and business audiences\n\n"
-                "Produce a complete, well-structured markdown requirements document."
+                "- Detailed code analysis from Code Analyst\n"
+                "- Comprehensive dependencies analysis from Dependency Analyst\n"
+                "- Complete UI flow mapping from UI Analyst\n\n"
+                "Your task is to create a PROFESSIONAL, DETAILED requirements document:\n\n"
+                "## Document Structure\n"
+                "1. **Executive Summary** - High-level overview of the project\n"
+                "2. **Project Overview** - Purpose, scope, and context\n"
+                "3. **Functional Requirements** (organized by area):\n"
+                "   - Data Management Requirements\n"
+                "   - Business Logic Requirements\n"
+                "   - User Interface Requirements\n"
+                "   - Integration Requirements\n"
+                "   - Security and Access Control Requirements\n"
+                "   - Error Handling and Validation Requirements\n"
+                "4. **Technical Requirements**:\n"
+                "   - Architecture and Design Patterns\n"
+                "   - Technology Stack\n"
+                "   - Performance Requirements\n"
+                "   - Scalability Requirements\n"
+                "5. **Dependencies and Integration Points**\n"
+                "6. **User Interface Specifications**\n"
+                "7. **Database Schema and Data Model**\n"
+                "8. **API and Service Contracts**\n"
+                "9. **Non-Functional Requirements**\n"
+                "10. **Traceability Matrix** - Link requirements to code artifacts\n\n"
+                "## Requirements for Each Section\n"
+                "- Use clear, specific language\n"
+                "- Include file paths, class names, method names, SQL statement IDs where relevant\n"
+                "- Organize by functional areas (e.g., User Management, Order Processing, Reporting)\n"
+                "- Include acceptance criteria for major requirements\n"
+                "- Add traceability references to source artifacts\n"
+                "- Use proper markdown formatting with headings, lists, tables, and code blocks\n"
+                "- Write for both technical teams and business stakeholders\n\n"
+                "## Quality Standards\n"
+                "- Be comprehensive - include ALL findings from the analysis\n"
+                "- Be specific - use concrete examples and references\n"
+                "- Be organized - clear structure and logical flow\n"
+                "- Be traceable - link requirements to source code artifacts\n"
+                "- Be actionable - requirements should be implementable\n\n"
+                "Produce a complete, professional requirements document suitable for software development teams."
             ),
             agent=technical_writer,
-            expected_output="Complete requirements document in markdown format with all sections"
+            expected_output="Complete, detailed requirements document in markdown format with all sections, organized by functional areas, with traceability and specific examples"
         )
         
         # Create crew
@@ -340,16 +484,37 @@ class CrewAIRequirementsGenerator:
         return output_files
     
     def _create_artifact_summary(self, artifact_context: Dict[str, Any]) -> str:
-        """Create a summary of available artifacts."""
+        """Create a detailed summary of available artifacts."""
         summary_parts = []
         
+        # Map artifact types to friendly names
+        type_names = {
+            'dao_calls': 'DAO Calls',
+            'ibatis_statements': 'iBATIS SQL Statements',
+            'jsp_forms': 'JSP Forms',
+            'backend_docs': 'Backend Documentation',
+            'gwt_modules': 'GWT Modules',
+            'gwt_uibinder': 'GWT UiBinder Components',
+            'gwt_client': 'GWT Client Activities/Places',
+            'js_artifacts': 'JavaScript Artifacts',
+            'db_tables': 'Database Tables'
+        }
+        
+        total_artifacts = 0
         for artifact_type, artifacts in artifact_context.items():
             if artifacts:
+                friendly_name = type_names.get(artifact_type, artifact_type)
+                count = len(artifacts)
+                total_artifacts += count
                 summary_parts.append(
-                    f"- {artifact_type}: {len(artifacts)} artifacts"
+                    f"- {friendly_name}: {count} artifacts"
                 )
         
-        return "\n".join(summary_parts) if summary_parts else "No artifacts found"
+        if summary_parts:
+            header = f"Available artifacts ({total_artifacts} total):"
+            return header + "\n" + "\n".join(summary_parts)
+        else:
+            return "No artifacts found in artifact context. Use Weaviate search tool to find artifacts."
     
     def _save_results(self, project: str, results: Dict[str, Any]) -> List[Path]:
         """Save crew outputs to files."""
