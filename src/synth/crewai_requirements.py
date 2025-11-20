@@ -346,7 +346,9 @@ def create_code_analyst_agent(llm: LLM, project: Optional[str] = None) -> Agent:
             'and modernizing them to NestJS + PostgreSQL. You excel at deep-dive analysis, identifying every component, '
             'mapping data flows, and documenting technical architecture in exhaustive detail. You NEVER provide generic '
             'or speculative information - you ALWAYS reference specific files, classes, methods, and SQL statements. '
-            'When Weaviate search returns no results, you use the read_source_file tool to read files directly. '
+            'CRITICAL: You MUST actually call the search_weaviate and read_source_file tools - do not just describe what you would do. '
+            'You make multiple tool calls to gather comprehensive information before writing your analysis. '
+            'When Weaviate search returns no results, you immediately use the read_source_file tool to read files directly. '
             'You organize findings by functional areas and map Java/Spring patterns to NestJS equivalents. '
             'Your analysis includes file paths, class names, method signatures, SQL statement IDs, and maps them to '
             'target NestJS services, controllers, modules, and PostgreSQL entities with TypeORM.'
@@ -372,8 +374,9 @@ def create_dependency_analyst_agent(llm: LLM, project: Optional[str] = None) -> 
             'and modernizing them to NestJS + Next.js. You excel at mapping complex dependency graphs, documenting build '
             'configurations, and identifying all integration points. You NEVER provide generic dependency lists - you '
             'ALWAYS include specific module names, endpoint paths, service interface names, API contracts, and version '
-            'information. When Weaviate search fails, you use read_source_file to examine pom.xml, package.json, and '
-            'configuration files directly. You map Java/Spring dependencies to NestJS modules and Next.js packages, '
+            'information. CRITICAL: You MUST actually call the search_weaviate and read_source_file tools - do not just describe what you would do. '
+            'You make multiple tool calls, starting with read_source_file to read pom.xml and configuration files directly. '
+            'You map Java/Spring dependencies to NestJS modules and Next.js packages, '
             'document internal dependencies, external services, build requirements, and integration patterns with complete '
             'technical detail including file paths and configuration locations.'
         ),
@@ -397,9 +400,10 @@ def create_ui_flow_analyst_agent(llm: LLM, project: Optional[str] = None) -> Age
             'You are a senior UX architect and frontend specialist with deep expertise in GWT, JSP, and modernizing them '
             'to Next.js + React. You excel at mapping complex user interfaces, documenting every form field, navigation '
             'pattern, and user interaction. You NEVER provide generic UI descriptions - you ALWAYS include specific form IDs, '
-            'form actions, place tokens, activity classes, component names, event handlers, and file paths. When Weaviate '
-            'search fails, you use read_source_file to read JSP, UiBinder, and JavaScript files directly. You map GWT '
-            'Activities/Places to Next.js pages/routes, JSP forms to React components, and document complete navigation flows, '
+            'form actions, place tokens, activity classes, component names, event handlers, and file paths. '
+            'CRITICAL: You MUST actually call the search_weaviate and read_source_file tools - do not just describe what you would do. '
+            'You make multiple tool calls to read JSP, UiBinder, Activity, Place, and JavaScript files directly. '
+            'You map GWT Activities/Places to Next.js pages/routes, JSP forms to React components, and document complete navigation flows, '
             'form validations, user roles, permissions, UI state management, and all user interaction patterns with '
             'exhaustive detail. You map GWT patterns to React hooks, Next.js App Router, and modern frontend patterns.'
         ),
@@ -485,8 +489,17 @@ class CrewAIRequirementsGenerator:
             description=(
                 f"Analyze the BACKEND architecture for project '{project}' and map to NestJS + PostgreSQL target. "
                 f"Context: {artifact_summary}\n\n"
-                "CRITICAL: If Weaviate search returns no results, use read_source_file tool to read files directly. "
-                "Try multiple search queries and file patterns. NEVER give up - always find the source code.\n\n"
+                "CRITICAL INSTRUCTIONS - YOU MUST ACTUALLY USE THE TOOLS:\n"
+                "1. You MUST call the search_weaviate tool MULTIPLE times with different queries\n"
+                "2. If search_weaviate returns no results, you MUST call read_source_file tool\n"
+                "3. You MUST make at least 5-10 tool calls to gather comprehensive information\n"
+                "4. DO NOT just describe what you would do - ACTUALLY CALL THE TOOLS\n"
+                f"5. Example tool calls for project '{project}':\n"
+                f"   - search_weaviate(query='dao', artifact_type='DaoCall', limit=10)\n"
+                f"   - search_weaviate(query='service', artifact_type='BackendDoc', limit=10)\n"
+                f"   - read_source_file(file_pattern='*Dao.java', project_name='{project}', file_type='java')\n"
+                f"   - read_source_file(file_pattern='*Service.java', project_name='{project}', file_type='java')\n"
+                "6. After gathering information from tools, THEN write your analysis\n\n"
                 "Your task is to provide DETAILED backend analysis organized by functional areas, mapping to NestJS:\n\n"
                 "## 1. Service Layer Analysis (Map to NestJS Services)\n"
                 "- Identify ALL service classes and their methods (search: '*Service.java', '*ServiceImpl.java')\n"
@@ -539,8 +552,13 @@ class CrewAIRequirementsGenerator:
         task2_deps = Task(
             description=(
                 f"Analyze dependencies and integration points for project '{project}' and map to NestJS/Next.js equivalents. "
-                "CRITICAL: If Weaviate search returns no results, use read_source_file to read pom.xml, package.json, "
-                "*.gwt.xml, and configuration files directly.\n\n"
+                f"CRITICAL INSTRUCTIONS - YOU MUST ACTUALLY USE THE TOOLS:\n"
+                f"1. You MUST call read_source_file to read pom.xml: read_source_file(file_pattern='pom.xml', project_name='{project}', file_type='xml')\n"
+                f"2. You MUST call read_source_file to read GWT module files: read_source_file(file_pattern='*.gwt.xml', project_name='{project}', file_type='xml')\n"
+                "3. You MUST call search_weaviate multiple times for different artifact types\n"
+                "4. You MUST make at least 5-10 tool calls to gather comprehensive information\n"
+                "5. DO NOT just describe what you would do - ACTUALLY CALL THE TOOLS\n"
+                "6. After gathering information from tools, THEN write your analysis\n\n"
                 "Your task is to provide DETAILED dependencies analysis mapping to target stack:\n\n"
                 "## 1. Build Dependencies (Map to package.json)\n"
                 "- Read pom.xml or build files (use read_source_file: 'pom.xml')\n"
@@ -606,8 +624,16 @@ class CrewAIRequirementsGenerator:
         task3_ui = Task(
             description=(
                 f"Analyze the FRONTEND architecture for project '{project}' and map to Next.js + React target. "
-                "CRITICAL: If Weaviate search returns no results, use read_source_file tool to read files directly. "
-                "Try multiple search queries: '*.jsp', '*Activity.java', '*Place.java', '*.ui.xml', '*.js'.\n\n"
+                f"CRITICAL INSTRUCTIONS - YOU MUST ACTUALLY USE THE TOOLS:\n"
+                f"1. You MUST call read_source_file multiple times:\n"
+                f"   - read_source_file(file_pattern='*.jsp', project_name='{project}', file_type='jsp')\n"
+                f"   - read_source_file(file_pattern='*Activity.java', project_name='{project}', file_type='java')\n"
+                f"   - read_source_file(file_pattern='*Place.java', project_name='{project}', file_type='java')\n"
+                f"   - read_source_file(file_pattern='*.ui.xml', project_name='{project}', file_type='xml')\n"
+                "2. You MUST call search_weaviate for JspForm, GwtActivityPlace, GwtUiBinder artifacts\n"
+                "3. You MUST make at least 5-10 tool calls to gather comprehensive information\n"
+                "4. DO NOT just describe what you would do - ACTUALLY CALL THE TOOLS\n"
+                "5. After gathering information from tools, THEN write your analysis\n\n"
                 "Your task is to provide DETAILED frontend analysis organized from UI down to details, mapping to Next.js + React:\n\n"
                 "## 1. Pages and Routes (Map to Next.js App Router)\n"
                 "- Map GWT Activities to Next.js pages (search: '*Activity.java')\n"
