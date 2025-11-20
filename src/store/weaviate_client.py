@@ -145,83 +145,83 @@ class WeaviateClient:
     def search_artifacts(self, class_name: str, query: str, project: Optional[str] = None, limit: int = 10) -> List[Dict[str, Any]]:
         """Semantic search over 'text' with optional project filter."""
         import json as _json
-        try:
-            # Include meta field in search results
-            builder = self._client.query.get(class_name, [
-                "project", "path", "text", "summary", "language", "meta",
-                "statementId", "statementType", "sqlContent",
-                "daoClass", "methodName", "formAction", "formMethod",
-                "tableName", "moduleName", "ownerType", "placeClass",
-                "activityClass", "style", "serviceInterface", "endpointPath",
-                "scriptPath"
-            ])
-            
-            # Build where clause if project filter is specified
-            where_clause = None
-            if project:
-                where_clause = {
-                    "path": ["project"],
-                    "operator": "Equal",
-                    "valueText": project,
-                }
-            
-            # Try vector search first, fall back to text search if vectors don't exist
+        
+        # Properties to retrieve
+        properties = [
+            "project", "path", "text", "summary", "language", "meta",
+            "statementId", "statementType", "sqlContent",
+            "daoClass", "methodName", "formAction", "formMethod",
+            "tableName", "moduleName", "ownerType", "placeClass",
+            "activityClass", "style", "serviceInterface", "endpointPath",
+            "scriptPath"
+        ]
+        
+        # Build where clause if project filter is specified
+        where_clause = None
+        if project:
+            where_clause = {
+                "path": ["project"],
+                "operator": "Equal",
+                "valueText": project,
+            }
+        
+        # Try BM25 first (most reliable), then vector search, then simple query
+        methods = [
+            ("bm25", lambda b: b.with_bm25(query=query)),
+            ("vector", lambda b: b.with_near_text({"concepts": [query]})),
+            ("simple", lambda b: b),  # No search, just filter
+        ]
+        
+        for method_name, search_method in methods:
             try:
+                builder = self._client.query.get(class_name, properties)
+                
+                # Apply where clause if specified
                 if where_clause:
                     builder = builder.with_where(where_clause)
-                builder = builder.with_near_text({"concepts": [query]}).with_limit(limit)
+                
+                # Apply search method
+                builder = search_method(builder)
+                
+                # Set limit
+                builder = builder.with_limit(limit)
+                
+                # Execute query
                 result = builder.do()
                 objects = result.get("data", {}).get("Get", {}).get(class_name, [])
-            except Exception as vector_error:
-                # If vector search fails, try bm25 text search
-                logger.warning(f"Vector search failed for {class_name}, trying bm25: {vector_error}")
-                try:
-                    builder = self._client.query.get(class_name, [
-                        "project", "path", "text", "summary", "language", "meta",
-                        "statementId", "statementType", "sqlContent",
-                        "daoClass", "methodName", "formAction", "formMethod",
-                        "tableName", "moduleName", "ownerType", "placeClass",
-                        "activityClass", "style", "serviceInterface", "endpointPath",
-                        "scriptPath"
-                    ])
-                    if where_clause:
-                        builder = builder.with_where(where_clause)
-                    builder = builder.with_bm25(query=query).with_limit(limit)
-                    result = builder.do()
-                    objects = result.get("data", {}).get("Get", {}).get(class_name, [])
-                except Exception as bm25_error:
-                    # Last resort: just get objects with where clause
-                    logger.warning(f"BM25 search also failed for {class_name}, trying simple query: {bm25_error}")
-                    builder = self._client.query.get(class_name, [
-                        "project", "path", "text", "summary", "language", "meta",
-                        "statementId", "statementType", "sqlContent",
-                        "daoClass", "methodName", "formAction", "formMethod",
-                        "tableName", "moduleName", "ownerType", "placeClass",
-                        "activityClass", "style", "serviceInterface", "endpointPath",
-                        "scriptPath"
-                    ])
-                    if where_clause:
-                        builder = builder.with_where(where_clause)
-                    builder = builder.with_limit(limit)
-                    result = builder.do()
-                    objects = result.get("data", {}).get("Get", {}).get(class_name, [])
-            
-            # normalize to list of dicts and parse meta JSON
-            normalized = []
-            for o in objects:
-                if isinstance(o, dict):
-                    # Parse meta JSON string back to dict if present
-                    if 'meta' in o and isinstance(o['meta'], str):
-                        try:
-                            o['meta'] = _json.loads(o['meta'])
-                        except (ValueError, TypeError):
-                            pass  # Keep as string if not valid JSON
-                    normalized.append(o)
-            return normalized
-        except Exception as e:
-            logger.error("Search failed for %s: %s", class_name, e)
-            import traceback
-            logger.debug(traceback.format_exc())
-            return []
+                
+                if objects:
+                    logger.debug(f"Search succeeded using {method_name} method for {class_name}")
+                    # normalize to list of dicts and parse meta JSON
+                    normalized = []
+                    for o in objects:
+                        if isinstance(o, dict):
+                            # Parse meta JSON string back to dict if present
+                            if 'meta' in o and isinstance(o['meta'], str):
+                                try:
+                                    o['meta'] = _json.loads(o['meta'])
+                                except (ValueError, TypeError):
+                                    pass  # Keep as string if not valid JSON
+                            normalized.append(o)
+                    return normalized
+                elif method_name == "simple":
+                    # If simple query returns nothing, there's no data matching the filter
+                    logger.debug(f"No objects found for {class_name} with project={project}")
+                    return []
+                    
+            except Exception as e:
+                logger.debug(f"Search method {method_name} failed for {class_name}: {e}")
+                if method_name == "simple":
+                    # Last method failed, log error and return empty
+                    logger.error(f"All search methods failed for {class_name}: {e}")
+                    import traceback
+                    logger.debug(traceback.format_exc())
+                    return []
+                # Try next method
+                continue
+        
+        # All methods failed
+        logger.error(f"All search methods failed for {class_name}")
+        return []
 
 
