@@ -155,15 +155,57 @@ class WeaviateClient:
                 "activityClass", "style", "serviceInterface", "endpointPath",
                 "scriptPath"
             ])
+            
+            # Build where clause if project filter is specified
+            where_clause = None
             if project:
-                builder = builder.with_where({
+                where_clause = {
                     "path": ["project"],
                     "operator": "Equal",
                     "valueText": project,
-                })
-            builder = builder.with_near_text({"concepts": [query]}).with_limit(limit)
-            result = builder.do()
-            objects = result.get("data", {}).get("Get", {}).get(class_name, [])
+                }
+            
+            # Try vector search first, fall back to text search if vectors don't exist
+            try:
+                if where_clause:
+                    builder = builder.with_where(where_clause)
+                builder = builder.with_near_text({"concepts": [query]}).with_limit(limit)
+                result = builder.do()
+                objects = result.get("data", {}).get("Get", {}).get(class_name, [])
+            except Exception as vector_error:
+                # If vector search fails, try bm25 text search
+                logger.warning(f"Vector search failed for {class_name}, trying bm25: {vector_error}")
+                try:
+                    builder = self._client.query.get(class_name, [
+                        "project", "path", "text", "summary", "language", "meta",
+                        "statementId", "statementType", "sqlContent",
+                        "daoClass", "methodName", "formAction", "formMethod",
+                        "tableName", "moduleName", "ownerType", "placeClass",
+                        "activityClass", "style", "serviceInterface", "endpointPath",
+                        "scriptPath"
+                    ])
+                    if where_clause:
+                        builder = builder.with_where(where_clause)
+                    builder = builder.with_bm25(query=query).with_limit(limit)
+                    result = builder.do()
+                    objects = result.get("data", {}).get("Get", {}).get(class_name, [])
+                except Exception as bm25_error:
+                    # Last resort: just get objects with where clause
+                    logger.warning(f"BM25 search also failed for {class_name}, trying simple query: {bm25_error}")
+                    builder = self._client.query.get(class_name, [
+                        "project", "path", "text", "summary", "language", "meta",
+                        "statementId", "statementType", "sqlContent",
+                        "daoClass", "methodName", "formAction", "formMethod",
+                        "tableName", "moduleName", "ownerType", "placeClass",
+                        "activityClass", "style", "serviceInterface", "endpointPath",
+                        "scriptPath"
+                    ])
+                    if where_clause:
+                        builder = builder.with_where(where_clause)
+                    builder = builder.with_limit(limit)
+                    result = builder.do()
+                    objects = result.get("data", {}).get("Get", {}).get(class_name, [])
+            
             # normalize to list of dicts and parse meta JSON
             normalized = []
             for o in objects:
@@ -178,6 +220,8 @@ class WeaviateClient:
             return normalized
         except Exception as e:
             logger.error("Search failed for %s: %s", class_name, e)
+            import traceback
+            logger.debug(traceback.format_exc())
             return []
 
 

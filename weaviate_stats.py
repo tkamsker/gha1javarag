@@ -66,12 +66,27 @@ def get_weaviate_stats():
                     total_count = 0
                 
                 # Get sample objects (limit to 10000 for better coverage)
-                res = client.query.get(
-                    class_name=class_name,
-                    properties=['project', 'path', 'text', 'summary', 'meta']
-                ).with_limit(10000).do()
-                
-                hits = res.get('data', {}).get('Get', {}).get(class_name, [])
+                # Try without vector search first (just get objects)
+                try:
+                    res = client.query.get(
+                        class_name=class_name,
+                        properties=['project', 'path', 'text', 'summary', 'meta']
+                    ).with_limit(10000).do()
+                    
+                    hits = res.get('data', {}).get('Get', {}).get(class_name, [])
+                except Exception as query_e:
+                    # If query fails, try with just project field
+                    console.print(f"[yellow]Warning: Query failed for {class_name}: {query_e}[/yellow]")
+                    try:
+                        res = client.query.get(
+                            class_name=class_name,
+                            properties=['project']
+                        ).with_limit(100).do()
+                        hits = res.get('data', {}).get('Get', {}).get(class_name, [])
+                        console.print(f"[dim]  Retrieved {len(hits)} objects with limited properties[/dim]")
+                    except Exception as e2:
+                        console.print(f"[red]  Failed to query {class_name}: {e2}[/red]")
+                        hits = []
                 
                 if hits:
                     class_stats = {

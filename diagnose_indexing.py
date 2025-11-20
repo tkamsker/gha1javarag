@@ -76,12 +76,17 @@ try:
             retrieved = client.data_object.get_by_id(result, class_name='DaoCall')
             if retrieved:
                 print(f"  ✓ Successfully retrieved test artifact")
-                print(f"    Project: {retrieved.get('project')}")
-                print(f"    Meta: {retrieved.get('meta', 'NOT FOUND')}")
+                props = retrieved.get('properties', {})
+                print(f"    Project: {props.get('project', 'NOT FOUND')}")
+                print(f"    Path: {props.get('path', 'NOT FOUND')}")
+                print(f"    Meta: {props.get('meta', 'NOT FOUND')}")
+                print(f"    All properties: {list(props.keys())}")
             else:
                 print(f"  ⚠ Could not retrieve test artifact")
         except Exception as e:
             print(f"  ⚠ Error retrieving test artifact: {e}")
+            import traceback
+            traceback.print_exc()
     else:
         print(f"  ✗ Failed to index test artifact (returned None)")
 except Exception as e:
