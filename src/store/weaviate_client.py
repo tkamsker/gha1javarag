@@ -62,17 +62,40 @@ class WeaviateClient:
         else:
             logger.info("Using Weaviate container's OLLAMA_API_ENDPOINT environment variable")
         
-        for class_name, properties in self._expected_classes().items():
+        for class_name, expected_properties in self._expected_classes().items():
             try:
                 if not self._client.schema.exists(class_name):
+                    # Create new class
                     cfg = {
                         "class": class_name,
                         "vectorizer": "text2vec-ollama",
                         "moduleConfig": module_config,
-                        "properties": [{"name": p, "dataType": ["text"]} for p in properties]
+                        "properties": [{"name": p, "dataType": ["text"]} for p in expected_properties]
                     }
                     self._client.schema.create_class(cfg)
                     logger.info("Created Weaviate class: %s", class_name)
+                else:
+                    # Check if schema needs updating (e.g., missing 'meta' field)
+                    try:
+                        existing_schema = self._client.schema.get(class_name)
+                        existing_props = {p.get('name') for p in existing_schema.get('properties', [])}
+                        expected_props = set(expected_properties)
+                        
+                        # Check if we need to add missing properties
+                        missing_props = expected_props - existing_props
+                        if missing_props:
+                            logger.info(f"Updating class {class_name}: adding missing properties: {missing_props}")
+                            for prop_name in missing_props:
+                                try:
+                                    self._client.schema.property.create(class_name, {
+                                        "name": prop_name,
+                                        "dataType": ["text"]
+                                    })
+                                    logger.info(f"Added property '{prop_name}' to class {class_name}")
+                                except Exception as prop_e:
+                                    logger.warning(f"Failed to add property '{prop_name}' to {class_name}: {prop_e}")
+                    except Exception as schema_check_e:
+                        logger.warning(f"Could not check schema for {class_name}: {schema_check_e}")
             except Exception as e:
                 logger.warning("Failed ensuring class %s: %s", class_name, e)
 

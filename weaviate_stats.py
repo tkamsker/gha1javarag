@@ -51,11 +51,25 @@ def get_weaviate_stats():
         
         for class_name in classes:
             try:
-                # Get all objects (limit to 1000 for performance)
+                # Check if class exists first
+                if not client.schema.exists(class_name):
+                    console.print(f"[dim]Class {class_name} does not exist, skipping...[/dim]")
+                    continue
+                
+                # Get all objects (limit to 10000 for better coverage)
+                # Use aggregate query to get total count first
+                try:
+                    agg_res = client.query.aggregate(class_name).with_meta_count().do()
+                    total_count = agg_res.get('data', {}).get('Aggregate', {}).get(class_name, [{}])[0].get('meta', {}).get('count', 0)
+                    console.print(f"[dim]Class {class_name}: {total_count} total objects[/dim]")
+                except:
+                    total_count = 0
+                
+                # Get sample objects (limit to 10000 for better coverage)
                 res = client.query.get(
                     class_name=class_name,
-                    properties=['project', 'path', 'text', 'summary']
-                ).with_limit(1000).do()
+                    properties=['project', 'path', 'text', 'summary', 'meta']
+                ).with_limit(10000).do()
                 
                 hits = res.get('data', {}).get('Get', {}).get(class_name, [])
                 

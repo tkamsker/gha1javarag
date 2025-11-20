@@ -311,14 +311,16 @@ def index(project: Optional[str], all_projects: bool):
                             }
                             
                             class_name = class_mapping.get(artifact_type, artifact_type)
-                            weaviate_client.index_artifact(class_name, artifact)
-                            total_indexed += 1
+                            result = weaviate_client.index_artifact(class_name, artifact)
+                            if result:
+                                total_indexed += 1
+                            else:
+                                logger.warning(f"Failed to index artifact: {artifact.get('path', 'unknown')}")
                             progress.advance(task)
                         except Exception as e:
-                            # Only log errors for non-vectorization issues to reduce noise
+                            # Log all errors for debugging
                             error_msg = str(e)
-                            if "vectorize target vector" not in error_msg and "connection to Ollama API failed" not in error_msg:
-                                logger.error(f"Failed to index {artifact_type} artifact: {e}")
+                            logger.error(f"Failed to index {artifact_type} artifact at {artifact.get('path', 'unknown')}: {error_msg}")
                             # Still count as processed to avoid infinite loops
                             progress.advance(task)
                     
