@@ -193,17 +193,27 @@ esac
 # Step 4: Start generation
 echo ""
 echo -e "${BLUE}Step 4: Starting requirements generation...${NC}"
-LOG_FILE="logprod_crewai_$(date +'%Y-%m-%d_%H-%M-%S').log"
+LOG_FILE="log_start_requirements_generationj_$(date +'%Y-%m-%d_%H-%M-%S').log"
 
 if [ "$MODE_NAME" == "all" ]; then
-    echo "  Running in background..."
+    echo "  Running in background with nohup..."
+    echo "  Log file: $LOG_FILE"
+    echo "  Command: $CMD"
+    nohup bash -c "$CMD" > "$LOG_FILE" 2>&1 &
+    PID=$!
+    echo -e "${GREEN}✓ Generation started (PID: $PID)${NC}"
+    echo "  Monitor with: tail -f $LOG_FILE"
+    echo "  Check status with: ps -p $PID"
+    echo "  To stop: kill $PID"
+elif [ "$MODE_NAME" == "top10" ]; then
+    echo "  Running sequentially for top 10 projects..."
     echo "  Log file: $LOG_FILE"
     nohup bash -c "$CMD" > "$LOG_FILE" 2>&1 &
     PID=$!
     echo -e "${GREEN}✓ Generation started (PID: $PID)${NC}"
     echo "  Monitor with: tail -f $LOG_FILE"
 else
-    echo "  Running sequentially..."
+    echo "  Running sequentially for specific projects..."
     echo "  Log file: $LOG_FILE"
     eval "$CMD" >> "$LOG_FILE" 2>&1
     EXIT_CODE=$?
@@ -221,16 +231,32 @@ echo "=========================================="
 echo -e "${GREEN}Requirements Generation Started!${NC}"
 echo "=========================================="
 echo ""
-echo "Monitor progress:"
-echo "  tail -f $LOG_FILE"
-echo ""
+if [ "$MODE_NAME" == "all" ] || [ "$MODE_NAME" == "top10" ]; then
+    echo "Process running in background (PID: $PID)"
+    echo ""
+    echo "Monitor progress:"
+    echo "  tail -f $LOG_FILE"
+    echo ""
+    echo "Check process status:"
+    echo "  ps -p $PID"
+    echo ""
+    echo "Stop the process:"
+    echo "  kill $PID"
+    echo ""
+else
+    echo "Process completed. Check log for details."
+    echo ""
+fi
 echo "Check for errors:"
 echo "  grep -i error $LOG_FILE"
 echo ""
 echo "Check output files:"
 echo "  ls -lh output/*_crewai_requirements.md"
 echo ""
-echo "Preview results:"
-echo "  head -100 output/*_crewai_requirements.md"
+echo "Count completed projects:"
+echo "  ls -1 output/*_crewai_requirements.md | wc -l"
+echo ""
+echo "Check for placeholders:"
+echo "  grep -l -i 'placeholder\\|unable to retrieve' output/*_crewai_requirements.md || echo 'No placeholders found'"
 echo ""
 
