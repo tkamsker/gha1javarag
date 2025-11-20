@@ -332,12 +332,21 @@ def index(project: Optional[str], all_projects: bool):
 
 @cli.command()
 @click.option('--query', '-q', required=True, help='Search query')
-@click.option('--project', '-p', default=None, help='Project name')
+@click.option('--project', '-p', default=None, help='Project name (ignored if --all is used)')
+@click.option('--all', '-a', 'search_all', is_flag=True, help='Search across all projects (ignores --project)')
 @click.option('--frontend', is_flag=True, help='Include frontend artifacts in search')
 @click.option('--limit', '-l', default=10, help='Maximum number of results')
-def search(query: str, project: Optional[str], frontend: bool, limit: int):
+def search(query: str, project: Optional[str], search_all: bool, frontend: bool, limit: int):
     """Search artifacts in Weaviate"""
-    console.print(f"[bold blue]Searching for: {query}[/bold blue]")
+    # If --all is used, ignore project filter
+    if search_all:
+        project = None
+        console.print(f"[bold blue]Searching for: {query}[/bold blue] [dim](all projects)[/dim]")
+    else:
+        if project:
+            console.print(f"[bold blue]Searching for: {query}[/bold blue] [dim](project: {project})[/dim]")
+        else:
+            console.print(f"[bold blue]Searching for: {query}[/bold blue] [dim](all projects - no filter)[/dim]")
     
     try:
         weaviate_client = WeaviateClient(ensure_schema=False)
@@ -350,24 +359,34 @@ def search(query: str, project: Optional[str], frontend: bool, limit: int):
         # Search each class
         all_results = []
         for class_name in search_classes:
-            results = weaviate_client.search_artifacts(class_name, query, project, limit)
+            # Pass None as project if --all is used or no project specified
+            search_project = None if search_all else project
+            results = weaviate_client.search_artifacts(class_name, query, search_project, limit)
             for result in results:
                 result['class'] = class_name
                 all_results.append(result)
         
         # Display results
         if all_results:
+            # Add project column if searching across all projects
             table = Table(title=f"Search Results for: {query}")
             table.add_column("Class", style="cyan")
+            if search_all or not project:
+                table.add_column("Project", style="magenta")
             table.add_column("Text", style="green")
             table.add_column("Path", style="yellow")
             
             for result in all_results[:limit]:
                 text = result.get('text', 'No text')[:100] + "..." if len(result.get('text', '')) > 100 else result.get('text', 'No text')
                 path = result.get('path', 'Unknown')
-                table.add_row(result.get('class', 'Unknown'), text, path)
+                row = [result.get('class', 'Unknown')]
+                if search_all or not project:
+                    row.append(result.get('project', 'Unknown'))
+                row.extend([text, path])
+                table.add_row(*row)
             
             console.print(table)
+            console.print(f"[dim]Found {len(all_results)} total results (showing {min(len(all_results), limit)})[/dim]")
         else:
             console.print("[yellow]No results found[/yellow]")
     
@@ -377,17 +396,30 @@ def search(query: str, project: Optional[str], frontend: bool, limit: int):
 
 @cli.command(name="backend-search")
 @click.option('--query', '-q', required=True, help='Search query (look in BackendDoc summary/text)')
-@click.option('--project', '-p', default=None, help='Project name')
+@click.option('--project', '-p', default=None, help='Project name (ignored if --all is used)')
+@click.option('--all', '-a', 'search_all', is_flag=True, help='Search across all projects (ignores --project)')
 @click.option('--limit', '-l', default=10, help='Maximum number of results')
-def backend_search(query: str, project: Optional[str], limit: int):
+def backend_search(query: str, project: Optional[str], search_all: bool, limit: int):
     """Search only BackendDoc with fallback matching on summary and text, printing path + snippet."""
-    console.print(f"[bold blue]BackendDoc search for: {query}[/bold blue]")
+    # If --all is used, ignore project filter
+    if search_all:
+        project = None
+        console.print(f"[bold blue]BackendDoc search for: {query}[/bold blue] [dim](all projects)[/dim]")
+    else:
+        if project:
+            console.print(f"[bold blue]BackendDoc search for: {query}[/bold blue] [dim](project: {project})[/dim]")
+        else:
+            console.print(f"[bold blue]BackendDoc search for: {query}[/bold blue] [dim](all projects - no filter)[/dim]")
+    
     try:
         weaviate_client = WeaviateClient(ensure_schema=False)
-        results = weaviate_client.search_artifacts('BackendDoc', query, project, limit)
+        search_project = None if search_all else project
+        results = weaviate_client.search_artifacts('BackendDoc', query, search_project, limit)
 
         if results:
             table = Table(title=f"BackendDoc Results for: {query}")
+            if search_all or not project:
+                table.add_column("Project", style="magenta")
             table.add_column("Path", style="yellow")
             table.add_column("Snippet", style="green")
 
@@ -396,9 +428,14 @@ def backend_search(query: str, project: Optional[str], limit: int):
                 # prefer summary, fallback to text
                 snippet = r.get('summary') or r.get('text') or ''
                 snippet = (snippet[:140] + '...') if len(snippet) > 140 else snippet
-                table.add_row(path, snippet)
+                
+                if search_all or not project:
+                    table.add_row(r.get('project', 'Unknown'), path, snippet)
+                else:
+                    table.add_row(path, snippet)
 
             console.print(table)
+            console.print(f"[dim]Found {len(results)} results (showing {min(len(results), limit)})[/dim]")
         else:
             console.print("[yellow]No BackendDoc results found[/yellow]")
 
