@@ -54,11 +54,11 @@ class WeaviateSearchTool(BaseTool):
         "Note: The tool automatically filters results by the current project context."
     )
     args_schema: type[BaseModel] = WeaviateSearchToolArgs
+    project: Optional[str] = None  # Store project as a Pydantic field
     
     def __init__(self, project: Optional[str] = None, **kwargs):
         """Initialize the tool with optional project name for filtering."""
-        super().__init__(**kwargs)
-        self.project = project
+        super().__init__(project=project, **kwargs)
     
     def _run(self, query: str, artifact_type: Union[str, List[str]] = "BackendDoc", limit: int = 5) -> str:
         """Search Weaviate for relevant artifacts.
@@ -216,12 +216,15 @@ class SourceFileReaderTool(BaseTool):
         "when the Weaviate index doesn't contain the artifacts you need."
     )
     args_schema: type[BaseModel] = SourceFileReaderToolArgs
+    project: Optional[str] = None  # Store project as a Pydantic field
     
     def __init__(self, project: Optional[str] = None, **kwargs):
         """Initialize the tool with optional project name."""
-        super().__init__(**kwargs)
-        self.project = project
-        self.java_source_dir = Path(settings.java_source_dir) if settings.is_java_source_valid() else None
+        super().__init__(project=project, **kwargs)
+        # Store java_source_dir as instance variable (not Pydantic field)
+        # since Path objects can cause issues with Pydantic serialization
+        object.__setattr__(self, '_java_source_dir', 
+                          Path(settings.java_source_dir) if settings.is_java_source_valid() else None)
     
     def _run(self, file_pattern: str, project_name: Optional[str] = None, max_files: int = 10, file_type: str = "java") -> str:
         """Read source files matching the pattern.
@@ -235,7 +238,10 @@ class SourceFileReaderTool(BaseTool):
         Returns:
             Formatted string with file contents
         """
-        if not self.java_source_dir or not self.java_source_dir.exists():
+        # Get java_source_dir from instance variable
+        java_source_dir = getattr(self, '_java_source_dir', None)
+        
+        if not java_source_dir or not java_source_dir.exists():
             return f"Error: JAVA_SOURCE_DIR not configured or does not exist: {settings.java_source_dir}"
         
         # Use provided project_name or fall back to instance project
@@ -245,13 +251,13 @@ class SourceFileReaderTool(BaseTool):
             # Build search path
             if target_project:
                 # Search in project-specific directory
-                search_path = self.java_source_dir / target_project
+                search_path = java_source_dir / target_project
                 if not search_path.exists():
                     # Try to find project directory
-                    search_path = self.java_source_dir
+                    search_path = java_source_dir
                     logger.info(f"Project directory {target_project} not found, searching in {search_path}")
             else:
-                search_path = self.java_source_dir
+                search_path = java_source_dir
             
             # Build full pattern
             if file_type == "java" and not file_pattern.endswith('.java'):
@@ -296,7 +302,7 @@ class SourceFileReaderTool(BaseTool):
             
             for i, file_path in enumerate(matches, 1):
                 try:
-                    rel_path = Path(file_path).relative_to(self.java_source_dir)
+                    rel_path = Path(file_path).relative_to(java_source_dir)
                     file_size = os.path.getsize(file_path)
                     
                     # Read file content (limit size to avoid overwhelming)
