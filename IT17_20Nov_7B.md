@@ -21,8 +21,10 @@ Completed improvements to reload data and enhance CrewAI requirements generation
 - Focus on area-specific organization
 
 ### 4. Reload script
-- Created `reload_all_data.sh` for automated reload
+- Created `reload_all_data.sh` for automated reload ( )
 - Clears Weaviate, fixes project names, re-indexes, verifies
+
+nohup ./reload_all_data.sh > "log_reload_all_data_$(date +'%Y-%m-%d_%H-%M-%S').log" 2>&1 &
 
 ## Step-by-step plan
 
