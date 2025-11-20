@@ -1,15 +1,37 @@
 #!/bin/bash
 # Start Requirements Generation Script
 # Generates detailed requirements for all projects using enhanced CrewAI
+#
+# Usage:
+#   ./start_requirements_generation.sh [MODE] [PROJECTS...]
+#
+# Parameters:
+#   MODE: 1 = All projects, 2 = Specific projects, 3 = Top 10 projects
+#   PROJECTS: (for MODE 2) Project name(s), space-separated
+#
+# Examples:
+#   ./start_requirements_generation.sh 1                    # All projects
+#   ./start_requirements_generation.sh 2 cuco-core PastExport  # Specific projects
+#   ./start_requirements_generation.sh 3                    # Top 10 projects
+#   nohup ./start_requirements_generation.sh 1 > start.log 2>&1 &  # Background with nohup
 
-set -e
+# Don't exit on error for nohup compatibility, but track errors
+set +e
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# Colors for output (only if terminal supports it)
+if [ -t 1 ]; then
+    RED='\033[0;31m'
+    GREEN='\033[0;32m'
+    YELLOW='\033[1;33m'
+    BLUE='\033[0;34m'
+    NC='\033[0m'
+else
+    RED=''
+    GREEN=''
+    YELLOW=''
+    BLUE=''
+    NC=''
+fi
 
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -29,6 +51,27 @@ echo "Requirements Generation Starter"
 echo "OS: $OS"
 echo "=========================================="
 echo ""
+
+# Parse command-line arguments
+MODE="${1:-}"
+shift  # Remove first argument
+
+# If no mode provided, use interactive mode
+if [ -z "$MODE" ]; then
+    echo -e "${BLUE}Step 3: Select generation mode${NC}"
+    echo "1. Generate for ALL projects (1-3 hours)"
+    echo "2. Generate for specific project(s)"
+    echo "3. Generate for top 10 projects"
+    echo ""
+    read -p "Enter choice (1-3): " MODE
+fi
+
+# Validate mode
+if [[ ! "$MODE" =~ ^[123]$ ]]; then
+    echo -e "${RED}Error: Invalid mode. Must be 1, 2, or 3${NC}"
+    echo "Usage: $0 [1|2|3] [PROJECTS...]"
+    exit 1
+fi
 
 # Check if virtual environment exists
 if [ -d "venv" ]; then
@@ -56,6 +99,8 @@ if command -v curl &> /dev/null; then
         echo "Please start Weaviate first"
         exit 1
     fi
+else
+    echo -e "${YELLOW}⚠ curl not found, skipping Weaviate check${NC}"
 fi
 
 # Step 2: Verify data is indexed
@@ -90,32 +135,41 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Step 3: Ask for generation mode
+# Step 3: Determine generation mode and build command
 echo ""
-echo -e "${BLUE}Step 3: Select generation mode${NC}"
-echo "1. Generate for ALL projects (1-3 hours)"
-echo "2. Generate for specific project(s)"
-echo "3. Generate for top 10 projects"
-echo ""
-read -p "Enter choice (1-3): " choice
+echo -e "${BLUE}Step 3: Generation mode: $MODE${NC}"
 
-case $choice in
+case $MODE in
     1)
-        MODE="all"
+        MODE_NAME="all"
         CMD="python main.py requirements --all-projects --use-crewai"
         echo -e "${GREEN}Selected: Generate for all projects${NC}"
         ;;
     2)
-        MODE="specific"
-        read -p "Enter project name(s), comma-separated: " projects
-        echo -e "${GREEN}Selected: Generate for: $projects${NC}"
+        MODE_NAME="specific"
+        if [ $# -eq 0 ]; then
+            # Interactive mode: ask for projects
+            read -p "Enter project name(s), comma or space-separated: " projects_input
+            # Handle both comma and space separated
+            PROJECTS=$(echo "$projects_input" | tr ',' ' ')
+        else
+            # Command-line mode: use remaining arguments
+            PROJECTS="$@"
+        fi
+        
+        if [ -z "$PROJECTS" ]; then
+            echo -e "${RED}Error: No projects specified${NC}"
+            exit 1
+        fi
+        
+        echo -e "${GREEN}Selected: Generate for: $PROJECTS${NC}"
         CMD=""
-        for proj in $(echo $projects | tr ',' ' '); do
+        for proj in $PROJECTS; do
             CMD="$CMD python main.py requirements --project '$proj' --use-crewai;"
         done
         ;;
     3)
-        MODE="top10"
+        MODE_NAME="top10"
         TOP_PROJECTS=(
             "cuco-core"
             "cuco-ui-app"
@@ -134,10 +188,6 @@ case $choice in
             CMD="$CMD python main.py requirements --project '$proj' --use-crewai;"
         done
         ;;
-    *)
-        echo -e "${RED}Invalid choice${NC}"
-        exit 1
-        ;;
 esac
 
 # Step 4: Start generation
@@ -145,17 +195,25 @@ echo ""
 echo -e "${BLUE}Step 4: Starting requirements generation...${NC}"
 LOG_FILE="logprod_crewai_$(date +'%Y-%m-%d_%H-%M-%S').log"
 
-if [ "$MODE" == "all" ]; then
+if [ "$MODE_NAME" == "all" ]; then
     echo "  Running in background..."
     echo "  Log file: $LOG_FILE"
-    nohup $CMD > "$LOG_FILE" 2>&1 &
+    nohup bash -c "$CMD" > "$LOG_FILE" 2>&1 &
     PID=$!
     echo -e "${GREEN}✓ Generation started (PID: $PID)${NC}"
+    echo "  Monitor with: tail -f $LOG_FILE"
 else
     echo "  Running sequentially..."
     echo "  Log file: $LOG_FILE"
-    eval $CMD > "$LOG_FILE" 2>&1
-    echo -e "${GREEN}✓ Generation completed${NC}"
+    eval "$CMD" >> "$LOG_FILE" 2>&1
+    EXIT_CODE=$?
+    if [ $EXIT_CODE -eq 0 ]; then
+        echo -e "${GREEN}✓ Generation completed${NC}"
+    else
+        echo -e "${RED}✗ Generation failed with exit code $EXIT_CODE${NC}"
+        echo "  Check log: $LOG_FILE"
+        exit $EXIT_CODE
+    fi
 fi
 
 echo ""
