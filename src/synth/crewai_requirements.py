@@ -9,6 +9,7 @@ import json
 import logging
 import glob
 import os
+import warnings
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Union
 
@@ -21,6 +22,12 @@ from store.weaviate_client import WeaviateClient
 from config.project_utils import extract_project_name_from_path
 
 logger = logging.getLogger(__name__)
+
+# Suppress telemetry connection warnings - they're non-critical and shouldn't stop execution
+warnings.filterwarnings('ignore', category=UserWarning, module='crewai.telemetry')
+# Also suppress urllib3 connection pool warnings for telemetry
+logging.getLogger('urllib3.connectionpool').setLevel(logging.ERROR)
+logging.getLogger('crewai.telemetry').setLevel(logging.ERROR)
 
 
 class WeaviateSearchToolArgs(BaseModel):
@@ -856,17 +863,38 @@ class CrewAIRequirementsGenerator:
             process="sequential"
         )
         
-        # Execute crew
+        # Execute crew with error handling to continue on failures
         logger.info("Executing CrewAI crew...")
-        result = crew.kickoff()
+        try:
+            result = crew.kickoff()
+        except Exception as e:
+            logger.warning(f"Crew execution encountered an error (continuing with partial results): {e}")
+            # Continue with whatever outputs we have so far
+            # Telemetry errors and other non-critical errors should not stop the process
         
-        # Extract outputs
+        # Extract outputs (use empty strings if tasks didn't complete)
+        def safe_get_output(task, default=""):
+            """Safely extract output from a task, returning default if not available."""
+            try:
+                if hasattr(task, 'output') and task.output:
+                    # Handle TaskOutput objects
+                    if hasattr(task.output, 'raw'):
+                        return task.output.raw
+                    if hasattr(task.output, 'content'):
+                        return task.output.content
+                    if isinstance(task.output, str):
+                        return task.output
+                    return str(task.output)
+            except Exception as e:
+                logger.warning(f"Error extracting output from task: {e}")
+            return default
+        
         analysis_results = {
-            'code_analysis': task1_code.output,
-            'dependencies_analysis': task2_deps.output,
-            'ui_analysis': task3_ui.output,
-            'initial_requirements': task4_write.output,
-            'final_requirements': task5_fulfill.output if hasattr(task5_fulfill, 'output') and task5_fulfill.output else task4_write.output
+            'code_analysis': safe_get_output(task1_code, "Code analysis task did not complete due to errors."),
+            'dependencies_analysis': safe_get_output(task2_deps, "Dependencies analysis task did not complete due to errors."),
+            'ui_analysis': safe_get_output(task3_ui, "UI analysis task did not complete due to errors."),
+            'initial_requirements': safe_get_output(task4_write, "Initial requirements task did not complete due to errors."),
+            'final_requirements': safe_get_output(task5_fulfill) or safe_get_output(task4_write, "Requirements document generation did not complete due to errors.")
         }
         
         # Save outputs

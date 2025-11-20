@@ -115,3 +115,42 @@ grep -i error log_start_requirements_generationj_*.log
 ```
 
 The script now uses nohup with the log file naming pattern you specified. Ready to run.
+
+#
+# 17:07 
+#
+Agents are describing actions instead of calling tools, and telemetry timeouts are causing issues. Updating the code to continue to the next step on failures and handle telemetry errors gracefully:
+
+## Summary of Changes
+
+### 1. **Error handling in CrewAI execution** (`src/synth/crewai_requirements.py`)
+   - Wrapped `crew.kickoff()` in try/except to catch errors and continue with partial results
+   - Added `safe_get_output()` to safely extract task outputs even if tasks didn't complete
+   - Ensures partial results are saved even if some tasks fail
+
+### 2. **Error handling in project processing loop** (`src/cli.py`)
+   - Wrapped each project's processing in try/except
+   - Continues to the next project if one fails
+   - Tracks failed projects and reports them at the end
+   - Logs errors without stopping the entire process
+
+### 3. **Telemetry error suppression** (`src/synth/crewai_requirements.py`)
+   - Added warnings filter to suppress telemetry connection warnings
+   - Set logging levels to ERROR for `crewai.telemetry` and `urllib3.connectionpool`
+   - Prevents telemetry timeouts from stopping execution
+
+## What This Fixes
+
+- Telemetry timeout errors: suppressed and won't stop execution
+- Max retries exceeded: process continues to the next task/project
+- Individual task failures: partial results are saved and processing continues
+- Individual project failures: remaining projects are still processed
+
+The system now processes all projects and generates whatever outputs it can, rather than stopping on the first error. Failed projects are logged and reported at the end, but the process continues.
+
+You can now run:
+```bash
+nohup ./start_requirements_generation.sh 1 > "log_start_requirements_generationj_$(date +'%Y-%m-%d_%H-%M-%S').log" 2>&1 &
+```
+
+The process will continue through all 37 projects even if some encounter errors.

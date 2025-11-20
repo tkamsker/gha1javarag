@@ -571,40 +571,63 @@ def requirements_cmd(project: Optional[str], all_projects: bool, use_crewai: boo
             console.print("[bold red]Error: Either --project or --all-projects must be specified[/bold red]")
             sys.exit(1)
 
-        # Generate requirements for each project
+        # Generate requirements for each project (continue on errors)
         total_files = 0
+        failed_projects = []
         for proj_name in sorted(projects):
             console.print(f"\n[bold cyan]Processing project: {proj_name}[/bold cyan]")
             
-            # Filter artifacts by project
-            project_artifacts: Dict[str, List[Dict]] = {}
-            for key, artifact_list in all_artifacts.items():
-                project_artifacts[key] = [
-                    art for art in artifact_list 
-                    if isinstance(art, dict) and art.get('project') == proj_name
-                ]
-                console.print(f"  {key}: {len(project_artifacts[key])} artifacts")
+            try:
+                # Filter artifacts by project
+                project_artifacts: Dict[str, List[Dict]] = {}
+                for key, artifact_list in all_artifacts.items():
+                    project_artifacts[key] = [
+                        art for art in artifact_list 
+                        if isinstance(art, dict) and art.get('project') == proj_name
+                    ]
+                    console.print(f"  {key}: {len(project_artifacts[key])} artifacts")
 
-            if use_crewai:
-                console.print(f"[bold cyan]Using CrewAI multi-agent approach for {proj_name}...[/bold cyan]")
-                try:
-                    from synth.crewai_requirements import generate_requirements_with_crewai  # type: ignore
-                except Exception as e:
-                    console.print("[bold yellow]CrewAI not available. Install crewai to enable this feature.[/bold yellow]")
-                    console.print(f"Details: {e}")
-                    sys.exit(1)
-                output_files = generate_requirements_with_crewai(proj_name, project_artifacts)
-                console.print(f"[bold green]CrewAI requirements generated for {proj_name}:[/bold green] {len(output_files)} files")
-                for file_path in output_files:
-                    console.print(f"  - {file_path}")
-                total_files += len(output_files)
-            else:
-                agent = RequirementsAgent()
-                index_path = agent.run(proj_name, project_artifacts)
-                console.print(f"[bold green]Requirements index created for {proj_name}:[/bold green] {index_path}")
-                total_files += 1
+                if use_crewai:
+                    console.print(f"[bold cyan]Using CrewAI multi-agent approach for {proj_name}...[/bold cyan]")
+                    try:
+                        from synth.crewai_requirements import generate_requirements_with_crewai  # type: ignore
+                    except Exception as e:
+                        console.print("[bold yellow]CrewAI not available. Install crewai to enable this feature.[/bold yellow]")
+                        console.print(f"Details: {e}")
+                        sys.exit(1)
+                    
+                    try:
+                        output_files = generate_requirements_with_crewai(proj_name, project_artifacts)
+                        console.print(f"[bold green]CrewAI requirements generated for {proj_name}:[/bold green] {len(output_files)} files")
+                        for file_path in output_files:
+                            console.print(f"  - {file_path}")
+                        total_files += len(output_files)
+                    except Exception as e:
+                        console.print(f"[bold yellow]⚠ Failed to generate requirements for {proj_name}: {e}[/bold yellow]")
+                        console.print(f"[yellow]Continuing with next project...[/yellow]")
+                        failed_projects.append(proj_name)
+                        logger.error(f"Failed to generate requirements for {proj_name}: {e}", exc_info=True)
+                else:
+                    try:
+                        agent = RequirementsAgent()
+                        index_path = agent.run(proj_name, project_artifacts)
+                        console.print(f"[bold green]Requirements index created for {proj_name}:[/bold green] {index_path}")
+                        total_files += 1
+                    except Exception as e:
+                        console.print(f"[bold yellow]⚠ Failed to generate requirements for {proj_name}: {e}[/bold yellow]")
+                        console.print(f"[yellow]Continuing with next project...[/yellow]")
+                        failed_projects.append(proj_name)
+                        logger.error(f"Failed to generate requirements for {proj_name}: {e}", exc_info=True)
+            except Exception as e:
+                console.print(f"[bold yellow]⚠ Error processing project {proj_name}: {e}[/bold yellow]")
+                console.print(f"[yellow]Continuing with next project...[/yellow]")
+                failed_projects.append(proj_name)
+                logger.error(f"Error processing project {proj_name}: {e}", exc_info=True)
 
         console.print(f"\n[bold green]✓ Requirements generation complete: {total_files} total files generated[/bold green]")
+        if failed_projects:
+            console.print(f"[bold yellow]⚠ Warning: {len(failed_projects)} project(s) failed: {', '.join(failed_projects)}[/bold yellow]")
+            console.print("[yellow]Check logs for details. Processing continued for remaining projects.[/yellow]")
     except Exception as e:
         console.print(f"[bold red]Requirements generation failed: {e}[/bold red]")
         import traceback
