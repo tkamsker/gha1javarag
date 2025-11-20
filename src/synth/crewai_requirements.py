@@ -415,19 +415,47 @@ def create_ui_flow_analyst_agent(llm: LLM, project: Optional[str] = None) -> Age
     )
 
 
+def create_placeholder_fulfillment_agent(llm: LLM, project: Optional[str] = None) -> Agent:
+    """Create Placeholder Fulfillment Agent that actively searches for missing information."""
+    weaviate_tool = WeaviateSearchTool(project=project)
+    source_reader_tool = SourceFileReaderTool(project=project)
+    
+    return Agent(
+        role='Placeholder Fulfillment Specialist',
+        goal='Identify ALL placeholders in requirements documents and actively search for missing information to replace them with specific, detailed content',
+        backstory=(
+            'You are a meticulous requirements analyst with expertise in finding missing information. Your job is to '
+            'review requirements documents, identify every placeholder, and actively search for the missing information. '
+            'You NEVER accept placeholders - you ALWAYS use the search_weaviate and read_source_file tools to find the '
+            'actual information. When you see placeholders like "needs to be identified", "Placeholder", or "TODO", '
+            'you immediately search for that information. You make multiple tool calls with different search strategies '
+            'until you find the information. You are persistent and thorough - you do not give up until you have found '
+            'specific details to replace every placeholder. You document your findings with file paths, class names, '
+            'and concrete examples.'
+        ),
+        llm=llm,
+        tools=[weaviate_tool, source_reader_tool],
+        verbose=True,
+        max_iter=30,  # More iterations to fulfill all placeholders
+        max_execution_time=3600  # 60 minutes to thoroughly fulfill placeholders
+    )
+
+
 def create_technical_writer_agent(llm: LLM) -> Agent:
     """Create Technical Writer agent."""
     return Agent(
         role='Technical Writer',
-        goal='Create PROFESSIONAL, COMPREHENSIVE requirements documents with detailed sections, traceability, and specific examples organized by functional areas',
+        goal='Create PROFESSIONAL, COMPREHENSIVE requirements documents with detailed sections, traceability, and specific examples organized by functional areas. NEVER use placeholders - always include specific information.',
         backstory=(
             'You are a senior technical writer and requirements engineer with 20+ years of experience creating '
             'enterprise software requirements documents. You excel at synthesizing complex technical analysis into '
             'clear, comprehensive, and actionable requirements. You NEVER create generic or vague requirements - '
-            'you ALWAYS include specific examples, file references, class names, and traceability links. You organize '
-            'requirements by functional areas, include acceptance criteria, maintain traceability matrices, and write '
-            'for both technical development teams and business stakeholders. Your documents are professional, complete, '
-            'and suitable for software development planning and implementation.'
+            'you ALWAYS include specific examples, file references, class names, and traceability links. You NEVER '
+            'use placeholders like "needs to be identified" or "Placeholder" - you always include actual information '
+            'or clearly state what information is missing and why. You organize requirements by functional areas, '
+            'include acceptance criteria, maintain traceability matrices, and write for both technical development '
+            'teams and business stakeholders. Your documents are professional, complete, and suitable for software '
+            'development planning and implementation.'
         ),
         llm=llm,
         verbose=True,
@@ -480,6 +508,7 @@ class CrewAIRequirementsGenerator:
         code_analyst = create_code_analyst_agent(self.llm, project=project)
         dependency_analyst = create_dependency_analyst_agent(self.llm, project=project)
         ui_analyst = create_ui_flow_analyst_agent(self.llm, project=project)
+        placeholder_fulfillment = create_placeholder_fulfillment_agent(self.llm, project=project)
         technical_writer = create_technical_writer_agent(self.llm)
         
         # Create tasks
@@ -772,16 +801,57 @@ class CrewAIRequirementsGenerator:
                 "- Be traceable - link every requirement to source code\n"
                 "- Be actionable - requirements must be implementable\n"
                 "- Map to target architecture - always show NestJS/Next.js equivalents\n\n"
-                "Produce a complete, professional requirements document suitable for development teams migrating to NestJS + PostgreSQL + Next.js + React."
+                "Produce a complete, professional requirements document suitable for development teams migrating to NestJS + PostgreSQL + Next.js + React. "
+                "CRITICAL: Do NOT use placeholders. If information is missing, clearly state what is missing and why, but do not use generic placeholders."
             ),
             agent=technical_writer,
-            expected_output="Complete, detailed requirements document structured from frontend to backend, mapping Java/GWT to NestJS/Next.js with specific examples, file paths, and migration mappings"
+            expected_output="Complete, detailed requirements document structured from frontend to backend, mapping Java/GWT to NestJS/Next.js with specific examples, file paths, and migration mappings. NO PLACEHOLDERS."
         )
         
-        # Create crew
+        # Task 5: Placeholder Fulfillment - Review and fill in any placeholders
+        task5_fulfill = Task(
+            description=(
+                f"Review the requirements document for project '{project}' and identify ALL placeholders. "
+                "Your task is to:\n\n"
+                "1. **Identify Placeholders:**\n"
+                "   - Search for words like 'Placeholder', 'needs to be identified', 'TODO', 'TBD', 'needs to be created'\n"
+                "   - Find any sections marked as incomplete or missing information\n"
+                "   - Identify any generic statements that lack specific details\n\n"
+                "2. **For Each Placeholder, Actively Search for Information:**\n"
+                "   - Use search_weaviate with multiple queries to find the missing information\n"
+                "   - Use read_source_file to read relevant source files directly\n"
+                "   - Try different search strategies and file patterns\n"
+                "   - Make at least 5-10 tool calls per placeholder to find the information\n\n"
+                "3. **Replace Placeholders with Specific Information:**\n"
+                "   - Replace 'Placeholder: needs to be identified' with actual findings\n"
+                "   - Include specific file paths, class names, method names\n"
+                "   - Provide concrete examples and code snippets\n"
+                "   - Document what was found and where it came from\n\n"
+                "4. **Common Placeholders to Look For:**\n"
+                "   - 'Placeholder: A full inventory of...' → Search for and list all items\n"
+                "   - 'Placeholder: A complete mapping of...' → Create the actual mapping\n"
+                "   - 'Placeholder: Migration scripts need...' → Document migration requirements\n"
+                "   - 'Placeholder: TypeORM entities need...' → List entities and their structure\n"
+                "   - 'Placeholder: External Service Integrations' → Find and document all integrations\n"
+                "   - 'Placeholder: API Contracts' → Document actual API contracts\n"
+                "   - Any section marked as 'needs to be identified' or 'needs to be created'\n\n"
+                "5. **If Information Cannot Be Found:**\n"
+                "   - Clearly state what was searched for and what tools were used\n"
+                "   - Explain why the information is not available\n"
+                "   - Provide recommendations for how to obtain the information\n"
+                "   - Do NOT leave generic placeholders\n\n"
+                "CRITICAL: You MUST actually call the tools. Make multiple search attempts with different queries. "
+                "Be persistent - try different artifact types, different file patterns, different search terms. "
+                "Your goal is to eliminate ALL placeholders from the document."
+            ),
+            agent=placeholder_fulfillment,
+            expected_output="Updated requirements document with ALL placeholders replaced by specific, detailed information. Document should have zero placeholders."
+        )
+        
+        # Create crew with placeholder fulfillment step
         crew = Crew(
-            agents=[code_analyst, dependency_analyst, ui_analyst, technical_writer],
-            tasks=[task1_code, task2_deps, task3_ui, task4_write],
+            agents=[code_analyst, dependency_analyst, ui_analyst, technical_writer, placeholder_fulfillment],
+            tasks=[task1_code, task2_deps, task3_ui, task4_write, task5_fulfill],
             verbose=True,
             process="sequential"
         )
@@ -795,7 +865,8 @@ class CrewAIRequirementsGenerator:
             'code_analysis': task1_code.output,
             'dependencies_analysis': task2_deps.output,
             'ui_analysis': task3_ui.output,
-            'final_requirements': task4_write.output
+            'initial_requirements': task4_write.output,
+            'final_requirements': task5_fulfill.output if hasattr(task5_fulfill, 'output') and task5_fulfill.output else task4_write.output
         }
         
         # Save outputs
