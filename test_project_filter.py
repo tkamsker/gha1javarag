@@ -40,8 +40,18 @@ try:
     hits = res.get('data', {}).get('Get', {}).get('DaoCall', [])
     print(f"  ✓ Found {len(hits)} objects")
     if hits:
-        for h in hits[:3]:
-            print(f"    - {h.get('project')}: {h.get('path', '')[:60]}")
+        for h in hits[:5]:
+            proj = h.get('project', 'NO_PROJECT')
+            path = h.get('path', '')[:60]
+            match = "✓" if proj == "cuco-core" else "✗"
+            print(f"    {match} {proj}: {path}")
+        
+        # Check if all match
+        all_match = all(h.get('project') == 'cuco-core' for h in hits)
+        if not all_match:
+            print(f"  ⚠ WARNING: Some results don't match project filter!")
+            wrong_projects = set(h.get('project') for h in hits if h.get('project') != 'cuco-core')
+            print(f"    Wrong projects found: {wrong_projects}")
 except Exception as e:
     print(f"  ✗ Error: {e}")
     import traceback

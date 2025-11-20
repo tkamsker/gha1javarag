@@ -157,6 +157,7 @@ class WeaviateClient:
         ]
         
         # Build where clause if project filter is specified
+        # Use proper Weaviate 3.x where clause syntax (valueText works for text fields)
         where_clause = None
         if project:
             where_clause = {
@@ -166,6 +167,8 @@ class WeaviateClient:
             }
         
         # Try BM25 first (most reliable), then vector search, then simple query
+        # Note: BM25 might not properly respect where clauses in some Weaviate versions
+        # So we validate results and filter out wrong projects
         methods = [
             ("bm25", lambda b: b.with_bm25(query=query)),
             ("vector", lambda b: b.with_near_text({"concepts": [query]})),
@@ -183,19 +186,29 @@ class WeaviateClient:
                 # Apply search method
                 builder = search_method(builder)
                 
-                # Set limit
-                builder = builder.with_limit(limit)
+                # Set limit - increase if we have project filter (BM25 might return wrong projects)
+                # We'll filter them out, so we need more results to get enough matching ones
+                search_limit = limit * 3 if (project and method_name == "bm25") else limit
+                builder = builder.with_limit(search_limit)
                 
                 # Execute query
                 result = builder.do()
                 objects = result.get("data", {}).get("Get", {}).get(class_name, [])
                 
                 if objects:
-                    logger.debug(f"Search succeeded using {method_name} method for {class_name}")
+                    logger.info(f"Search succeeded using {method_name} method for {class_name}, got {len(objects)} objects")
                     # normalize to list of dicts and parse meta JSON
                     normalized = []
+                    wrong_project_count = 0
                     for o in objects:
                         if isinstance(o, dict):
+                            # Validate project filter if specified (safety check)
+                            if project and o.get('project') != project:
+                                wrong_project_count += 1
+                                if wrong_project_count <= 3:  # Log first few
+                                    logger.warning(f"Object has project '{o.get('project')}' but filter is '{project}', skipping")
+                                continue
+                            
                             # Parse meta JSON string back to dict if present
                             if 'meta' in o and isinstance(o['meta'], str):
                                 try:
@@ -203,7 +216,17 @@ class WeaviateClient:
                                 except (ValueError, TypeError):
                                     pass  # Keep as string if not valid JSON
                             normalized.append(o)
-                    return normalized
+                    
+                    if wrong_project_count > 0:
+                        logger.warning(f"Filtered out {wrong_project_count} objects with wrong project for {class_name}")
+                    
+                    if normalized:
+                        logger.info(f"Returning {len(normalized)} normalized objects for {class_name} (filtered from {len(objects)})")
+                        return normalized
+                    else:
+                        logger.info(f"All {len(objects)} objects filtered out for {class_name} (wrong project), trying next method")
+                        # All objects were filtered out, try next method
+                        continue
                 elif method_name == "simple":
                     # If simple query returns nothing, there's no data matching the filter
                     logger.debug(f"No objects found for {class_name} with project={project}")

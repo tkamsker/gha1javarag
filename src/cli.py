@@ -363,10 +363,18 @@ def search(query: str, project: Optional[str], search_all: bool, frontend: bool,
         for class_name in search_classes:
             # Pass None as project if --all is used or no project specified
             search_project = None if search_all else project
-            results = weaviate_client.search_artifacts(class_name, query, search_project, limit)
-            for result in results:
-                result['class'] = class_name
-                all_results.append(result)
+            try:
+                results = weaviate_client.search_artifacts(class_name, query, search_project, limit)
+                if results:
+                    logger.info(f"Found {len(results)} results in {class_name}")
+                    for result in results:
+                        result['class'] = class_name
+                        all_results.append(result)
+                else:
+                    logger.debug(f"No results found in {class_name}")
+            except Exception as e:
+                logger.warning(f"Error searching {class_name}: {e}")
+                continue
         
         # Display results
         if all_results:
