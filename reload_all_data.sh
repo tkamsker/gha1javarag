@@ -73,7 +73,7 @@ try:
     wc = WeaviateClient(ensure_schema=False)
     classes = ['DaoCall', 'IbatisStatement', 'BackendDoc', 'JspForm', 
                'DbTable', 'GwtModule', 'GwtUiBinder', 'GwtActivityPlace',
-               'GwtEndpoint', 'JsArtifact']
+               'GwtEndpoint', 'JsArtifact', 'HtmlArtifact']
     
     print("Deleting all objects from classes...")
     for class_name in classes:

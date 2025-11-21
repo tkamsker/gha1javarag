@@ -38,7 +38,7 @@ class WeaviateSearchToolArgs(BaseModel):
         description=(
             "Artifact type(s) to search. Can be a single string or a list of strings. "
             "Available types: BackendDoc, DaoCall, JspForm, IbatisStatement, DbTable, "
-            "GwtModule, GwtUiBinder, GwtActivityPlace, JsArtifact"
+            "GwtModule, GwtUiBinder, GwtActivityPlace, JsArtifact, HtmlArtifact"
         )
     )
     limit: int = Field(default=5, description="Maximum number of results per artifact type")
@@ -54,7 +54,7 @@ class WeaviateSearchTool(BaseTool):
         "- query: Search query string\n"
         "- artifact_type: Single artifact type (string) OR list of artifact types (list). "
         "Available types: BackendDoc, DaoCall, JspForm, IbatisStatement, DbTable, "
-        "GwtModule, GwtUiBinder, GwtActivityPlace, JsArtifact\n"
+        "GwtModule, GwtUiBinder, GwtActivityPlace, JsArtifact, HtmlArtifact\n"
         "- limit: Maximum number of results per artifact type (default: 5)\n\n"
         "If artifact_type is a list, the tool will search each type and combine results. "
         "Example: artifact_type='BackendDoc' or artifact_type=['BackendDoc', 'DaoCall']\n\n"
@@ -91,7 +91,8 @@ class WeaviateSearchTool(BaseTool):
                 "GwtModule": "GwtModule",
                 "GwtUiBinder": "GwtUiBinder",
                 "GwtActivityPlace": "GwtActivityPlace",
-                "JsArtifact": "JsArtifact"
+                "JsArtifact": "JsArtifact",
+                "HtmlArtifact": "HtmlArtifact"
             }
             
             # Handle both string and list inputs
@@ -213,7 +214,7 @@ class SourceFileReaderTool(BaseTool):
         "- file_pattern: File pattern to search (e.g., '*Dao.java', '*Service.java', '*.jsp', '*.xml')\n"
         "- project_name: Optional project name to filter files by directory path\n"
         "- max_files: Maximum number of files to read (default: 10)\n"
-        "- file_type: File type filter: java, jsp, xml, js, sql (default: java)\n\n"
+        "- file_type: File type filter: java, jsp, xml, js, sql, html (default: java)\n\n"
         "Examples:\n"
         "- file_pattern='*Dao.java', project_name='cuco-core' - Find all DAO classes in cuco-core\n"
         "- file_pattern='*.jsp', project_name='cuco-ui-admin' - Find all JSP files in cuco-ui-admin\n"
@@ -277,6 +278,8 @@ class SourceFileReaderTool(BaseTool):
                 pattern = f"**/{file_pattern}.js"
             elif file_type == "sql" and not file_pattern.endswith('.sql'):
                 pattern = f"**/{file_pattern}.sql"
+            elif file_type == "html" and not (file_pattern.endswith('.html') or file_pattern.endswith('.htm')):
+                pattern = f"**/{file_pattern}.html"
             else:
                 pattern = f"**/{file_pattern}"
             
@@ -402,23 +405,60 @@ def create_ui_flow_analyst_agent(llm: LLM, project: Optional[str] = None) -> Age
     
     return Agent(
         role='Frontend Architecture Analyst',
-        goal='Provide EXTREMELY DETAILED frontend analysis mapping GWT/JSP to Next.js + React target architecture',
+        goal='Provide EXTREMELY DETAILED frontend analysis mapping GWT/JSP/HTML to Next.js + React target architecture',
         backstory=(
-            'You are a senior UX architect and frontend specialist with deep expertise in GWT, JSP, and modernizing them '
+            'You are a senior UX architect and frontend specialist with deep expertise in GWT, JSP, HTML, and modernizing them '
             'to Next.js + React. You excel at mapping complex user interfaces, documenting every form field, navigation '
             'pattern, and user interaction. You NEVER provide generic UI descriptions - you ALWAYS include specific form IDs, '
-            'form actions, place tokens, activity classes, component names, event handlers, and file paths. '
+            'form actions, place tokens, activity classes, component names, event handlers, HTML structure, GWT module references, '
+            'and file paths. '
             'CRITICAL: You MUST actually call the search_weaviate and read_source_file tools - do not just describe what you would do. '
-            'You make multiple tool calls to read JSP, UiBinder, Activity, Place, and JavaScript files directly. '
-            'You map GWT Activities/Places to Next.js pages/routes, JSP forms to React components, and document complete navigation flows, '
-            'form validations, user roles, permissions, UI state management, and all user interaction patterns with '
-            'exhaustive detail. You map GWT patterns to React hooks, Next.js App Router, and modern frontend patterns.'
+            'You make multiple tool calls to read HTML, JSP, UiBinder, Activity, Place, and JavaScript files directly. '
+            'You FOLLOW THROUGH all frontend files - when you find an HTML file, you trace its scripts, forms, and links. '
+            'When you find a GWT module reference, you find the corresponding Java files. When you find a form, you trace its action. '
+            'You map GWT Activities/Places to Next.js pages/routes, JSP forms to React components, HTML pages to Next.js pages, '
+            'and document complete navigation flows, form validations, user roles, permissions, UI state management, and all user '
+            'interaction patterns with exhaustive detail. You map GWT patterns to React hooks, Next.js App Router, and modern frontend patterns.'
         ),
         llm=llm,
         tools=[weaviate_tool, source_reader_tool],
         verbose=True,
-        max_iter=20,
-        max_execution_time=2400
+        max_iter=25,  # More iterations to follow through all files
+        max_execution_time=3000  # 50 minutes for thorough frontend analysis
+    )
+
+
+def create_frontend_trace_agent(llm: LLM, project: Optional[str] = None) -> Agent:
+    """Create Frontend Trace Agent that follows through all frontend files and ensures all logic is fetched."""
+    weaviate_tool = WeaviateSearchTool(project=project)
+    source_reader_tool = SourceFileReaderTool(project=project)
+    
+    return Agent(
+        role='Frontend Trace Specialist',
+        goal='Follow through ALL frontend files (HTML, JSP, GWT, JS) and ensure ALL frontend logic is discovered and documented',
+        backstory=(
+            'You are a meticulous frontend trace specialist with expertise in following file dependencies and tracing '
+            'frontend logic across HTML, JSP, GWT, JavaScript, and related files. Your job is to ensure NO frontend logic '
+            'is missed. You systematically trace through all frontend artifacts: '
+            '1. Start with HTML files - extract all script references, form actions, links, and GWT module references '
+            '2. For each script reference, find and read the JavaScript file '
+            '3. For each GWT module reference, find the corresponding .gwt.xml, EntryPoint, Activity, and Place files '
+            '4. For each form action, trace to the backend endpoint or handler '
+            '5. For each JSP file, extract all includes, imports, and form structures '
+            '6. For each UiBinder file, find the corresponding Java owner class '
+            '7. Follow all navigation links and place tokens to map complete user flows '
+            'CRITICAL: You MUST actually call the search_weaviate and read_source_file tools MULTIPLE times. '
+            'You start with broad searches (e.g., search_weaviate for HtmlArtifact, JspForm, GwtModule) and then '
+            'follow each reference you find. You read source files directly when Weaviate search doesn\'t find them. '
+            'You document EVERY file you trace, EVERY reference you follow, and EVERY piece of frontend logic you discover. '
+            'You create a complete map of all frontend files, their relationships, and all user interaction patterns. '
+            'You ensure that nothing is left as "unknown" or "placeholder" - you actively search until you find the information.'
+        ),
+        llm=llm,
+        tools=[weaviate_tool, source_reader_tool],
+        verbose=True,
+        max_iter=30,  # Many iterations to trace all files
+        max_execution_time=3600  # 60 minutes for thorough tracing
     )
 
 
@@ -514,6 +554,7 @@ class CrewAIRequirementsGenerator:
         # Create agents with project context for proper Weaviate filtering
         code_analyst = create_code_analyst_agent(self.llm, project=project)
         dependency_analyst = create_dependency_analyst_agent(self.llm, project=project)
+        frontend_trace = create_frontend_trace_agent(self.llm, project=project)
         ui_analyst = create_ui_flow_analyst_agent(self.llm, project=project)
         placeholder_fulfillment = create_placeholder_fulfillment_agent(self.llm, project=project)
         technical_writer = create_technical_writer_agent(self.llm)
@@ -657,9 +698,79 @@ class CrewAIRequirementsGenerator:
             expected_output="Detailed markdown document mapping all dependencies from Java/GWT to NestJS/Next.js with specific package names, versions, and migration notes"
         )
         
+        task3_trace = Task(
+            description=(
+                f"Trace through ALL frontend files for project '{project}' and ensure ALL frontend logic is discovered. "
+                f"CRITICAL INSTRUCTIONS - YOU MUST ACTUALLY USE THE TOOLS:\n"
+                f"1. Start by searching for ALL HTML files: search_weaviate(query='html', artifact_type='HtmlArtifact', limit=50)\n"
+                f"2. For each HTML file found, read it: read_source_file(file_pattern='*.html', project_name='{project}', file_type='html')\n"
+                f"3. Extract all script references, form actions, links, and GWT module references from HTML files\n"
+                f"4. For each script reference, find and read the JavaScript file\n"
+                f"5. For each GWT module reference, find the corresponding .gwt.xml, EntryPoint, Activity, and Place files\n"
+                f"6. Search for ALL JSP files: search_weaviate(query='jsp', artifact_type='JspForm', limit=50)\n"
+                f"7. Read JSP files: read_source_file(file_pattern='*.jsp', project_name='{project}', file_type='jsp')\n"
+                f"8. Search for ALL GWT modules: search_weaviate(query='gwt', artifact_type=['GwtModule', 'GwtUiBinder', 'GwtActivityPlace'], limit=50)\n"
+                f"9. For each UiBinder file, find the corresponding Java owner class\n"
+                f"10. For each Activity/Place, trace navigation flows and form actions\n"
+                f"11. Search for ALL JavaScript files: search_weaviate(query='javascript', artifact_type='JsArtifact', limit=50)\n"
+                f"12. Read JavaScript files: read_source_file(file_pattern='*.js', project_name='{project}', file_type='js')\n"
+                f"13. Follow all form actions to backend endpoints\n"
+                f"14. Document EVERY file you trace, EVERY reference you follow, and EVERY piece of frontend logic\n\n"
+                f"Your task is to create a COMPLETE MAP of all frontend files and their relationships:\n\n"
+                f"## 1. HTML Files Inventory\n"
+                f"- List ALL HTML/HTM files found\n"
+                f"- For each HTML file, document:\n"
+                f"  - Script references (external and inline)\n"
+                f"  - Form actions and methods\n"
+                f"  - Links and navigation\n"
+                f"  - GWT module references\n"
+                f"  - Meta tags and other metadata\n\n"
+                f"## 2. JavaScript Files Inventory\n"
+                f"- List ALL JavaScript files referenced or found\n"
+                f"- For each JS file, document:\n"
+                f"  - Functions and classes defined\n"
+                f"  - API calls and endpoints\n"
+                f"  - Event handlers\n"
+                f"  - Dependencies on other files\n\n"
+                f"## 3. GWT Files Inventory\n"
+                f"- List ALL GWT modules (.gwt.xml files)\n"
+                f"- List ALL EntryPoint classes\n"
+                f"- List ALL Activity classes\n"
+                f"- List ALL Place classes\n"
+                f"- List ALL UiBinder files (.ui.xml)\n"
+                f"- For each, document:\n"
+                f"  - Dependencies and relationships\n"
+                f"  - Navigation flows\n"
+                f"  - Form handlers\n"
+                f"  - RPC endpoints\n\n"
+                f"## 4. JSP Files Inventory\n"
+                f"- List ALL JSP files found\n"
+                f"- For each JSP file, document:\n"
+                f"  - Forms and form actions\n"
+                f"  - Includes and imports\n"
+                f"  - Script references\n"
+                f"  - Backend dependencies\n\n"
+                f"## 5. File Relationships Map\n"
+                f"- Document how HTML files reference JavaScript files\n"
+                f"- Document how HTML files reference GWT modules\n"
+                f"- Document how GWT Activities/Places navigate to each other\n"
+                f"- Document how forms submit to backend endpoints\n"
+                f"- Document complete user flows from HTML → JS → GWT → Backend\n\n"
+                f"## 6. Missing Files Report\n"
+                f"- List any referenced files that could not be found\n"
+                f"- Document search attempts made\n"
+                f"- Provide recommendations for finding missing files\n\n"
+                f"CRITICAL: Make at least 20-30 tool calls to trace through all files. "
+                f"Follow every reference you find. Document everything. Leave nothing as 'unknown'."
+            ),
+            agent=frontend_trace,
+            expected_output="Complete inventory and trace map of ALL frontend files (HTML, JSP, GWT, JS) with their relationships, references, and all discovered frontend logic"
+        )
+        
         task3_ui = Task(
             description=(
                 f"Analyze the FRONTEND architecture for project '{project}' and map to Next.js + React target. "
+                f"Use the frontend trace results from the Frontend Trace Specialist as your starting point. "
                 f"CRITICAL INSTRUCTIONS - YOU MUST ACTUALLY USE THE TOOLS:\n"
                 f"1. You MUST call read_source_file multiple times:\n"
                 f"   - read_source_file(file_pattern='*.jsp', project_name='{project}', file_type='jsp')\n"
@@ -857,8 +968,8 @@ class CrewAIRequirementsGenerator:
         
         # Create crew with placeholder fulfillment step
         crew = Crew(
-            agents=[code_analyst, dependency_analyst, ui_analyst, technical_writer, placeholder_fulfillment],
-            tasks=[task1_code, task2_deps, task3_ui, task4_write, task5_fulfill],
+            agents=[code_analyst, dependency_analyst, frontend_trace, ui_analyst, technical_writer, placeholder_fulfillment],
+            tasks=[task1_code, task2_deps, task3_trace, task3_ui, task4_write, task5_fulfill],
             verbose=True,
             process="sequential"
         )
@@ -892,6 +1003,7 @@ class CrewAIRequirementsGenerator:
         analysis_results = {
             'code_analysis': safe_get_output(task1_code, "Code analysis task did not complete due to errors."),
             'dependencies_analysis': safe_get_output(task2_deps, "Dependencies analysis task did not complete due to errors."),
+            'frontend_trace': safe_get_output(task3_trace, "Frontend trace task did not complete due to errors."),
             'ui_analysis': safe_get_output(task3_ui, "UI analysis task did not complete due to errors."),
             'initial_requirements': safe_get_output(task4_write, "Initial requirements task did not complete due to errors."),
             'final_requirements': safe_get_output(task5_fulfill) or safe_get_output(task4_write, "Requirements document generation did not complete due to errors.")

@@ -24,7 +24,8 @@ class FileDiscovery:
             'gwt': set(),
             'js': set(),
             'xml': set(),
-            'sql': set()
+            'sql': set(),
+            'html': set()
         }
     
     def discover_all_files(self, project_name: str = None) -> Dict[str, Set[str]]:
@@ -52,6 +53,9 @@ class FileDiscovery:
         
         # Discover SQL files
         self._discover_sql_files()
+        
+        # Discover HTML/HTM files
+        self._discover_html_files()
         
         # Log discovery results
         total_files = sum(len(files) for files in self.discovered_files.values())
@@ -147,6 +151,21 @@ class FileDiscovery:
                                                  file_path.endswith('.dml')):
                     self.discovered_files['sql'].add(file_path)
     
+    def _discover_html_files(self):
+        """Discover HTML/HTM files, especially GWT-related ones."""
+        html_patterns = [
+            "**/*.html",
+            "**/*.htm"
+        ]
+        ignore_dirs = {"target", "build", "node_modules", ".git", ".idea", ".gradle", "dist", "out"}
+        for pattern in html_patterns:
+            pattern_path = self.java_source_path / pattern
+            for file_path in glob.glob(str(pattern_path), recursive=True):
+                if any(f"/{d}/" in file_path for d in ignore_dirs):
+                    continue
+                if os.path.isfile(file_path) and (file_path.endswith('.html') or file_path.endswith('.htm')):
+                    self.discovered_files['html'].add(file_path)
+    
     def get_files_by_type(self, file_type: str) -> List[str]:
         """Get files of a specific type."""
         return list(self.discovered_files.get(file_type, set()))
@@ -166,7 +185,8 @@ class FileDiscovery:
             'gwt': set(),
             'js': set(),
             'xml': set(),
-            'sql': set()
+            'sql': set(),
+            'html': set()
         }
         
         for file_type, files in self.discovered_files.items():

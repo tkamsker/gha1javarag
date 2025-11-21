@@ -110,6 +110,7 @@ class WeaviateClient:
             "GwtActivityPlace": ["project", "path", "text", "placeClass", "activityClass", "meta"],
             "GwtEndpoint": ["project", "path", "text", "style", "serviceInterface", "endpointPath", "meta"],
             "JsArtifact": ["project", "path", "text", "scriptPath", "meta"],
+            "HtmlArtifact": ["project", "path", "text", "title", "isGwt", "meta"],
             "BackendDoc": ["project", "path", "text", "summary", "language", "meta"],
         }
 
@@ -123,7 +124,7 @@ class WeaviateClient:
                     "daoClass", "methodName", "formAction", "formMethod",
                     "tableName", "moduleName", "ownerType", "placeClass",
                     "activityClass", "style", "serviceInterface", "endpointPath",
-                    "scriptPath"]:
+                    "scriptPath", "title", "isGwt"]:
             if key in artifact:
                 data[key] = artifact[key]
         
@@ -153,7 +154,7 @@ class WeaviateClient:
             "daoClass", "methodName", "formAction", "formMethod",
             "tableName", "moduleName", "ownerType", "placeClass",
             "activityClass", "style", "serviceInterface", "endpointPath",
-            "scriptPath"
+            "scriptPath", "title", "isGwt"
         ]
         
         # Build where clause if project filter is specified

@@ -16,6 +16,7 @@ from extract.gwt_modules import GwtModuleExtractor
 from extract.gwt_client import GwtClientExtractor
 from extract.gwt_uibinder import GwtUiBinderExtractor
 from extract.js_static import JavaScriptExtractor
+from extract.html_static import HtmlExtractor
 from extract.ibatis_xml import IbatisXmlExtractor
 from extract.java_calls import JavaCallsExtractor
 from extract.jsp_forms import JspFormsExtractor
@@ -98,7 +99,8 @@ def extract(project: Optional[str], include_frontend: bool):
             'gwt_modules': GwtModuleExtractor(),
             'gwt_activities_places': GwtClientExtractor(),
             'gwt_uibinder': GwtUiBinderExtractor(),
-            'js_artifacts': JavaScriptExtractor()
+            'js_artifacts': JavaScriptExtractor(),
+            'html_artifacts': HtmlExtractor()
         })
     
     # Extract artifacts
@@ -176,6 +178,15 @@ def extract(project: Optional[str], include_frontend: bool):
                     list(discovered_files['js'])
                 )
             progress.update(task8, description="JavaScript artifacts extracted")
+            
+            task9 = progress.add_task("Extracting HTML/HTM artifacts...", total=None)
+            if 'html' in discovered_files:
+                all_artifacts['html_artifacts'] = extractors['html_artifacts'].extract_html_artifacts(
+                    list(discovered_files['html'])
+                )
+                # Save artifacts
+                extractors['html_artifacts']._save_artifacts(all_artifacts['html_artifacts'])
+            progress.update(task9, description="HTML/HTM artifacts extracted")
     
     # Display results
     table = Table(title="Extraction Results")
@@ -216,6 +227,7 @@ def index(project: Optional[str], all_projects: bool):
             'gwt_uibinder': ['all_uibinder.json', 'all_artifacts.json'],
             'gwt_client': ['all_artifacts.json'],
             'js_artifacts': ['all_js_artifacts.json', 'all_artifacts.json'],
+            'html_artifacts': ['all_html_artifacts.json', 'all_artifacts.json'],
             'backend_docs': ['all_backend_docs.json']
         }
         import json as _json
@@ -307,6 +319,7 @@ def index(project: Optional[str], all_projects: bool):
                                 'gwt_uibinder': 'GwtUiBinder',
                                 'gwt_client': 'GwtActivityPlace',  # Map client artifacts to ActivityPlace
                                 'js_artifacts': 'JsArtifact',
+                                'html_artifacts': 'HtmlArtifact',
                                 'backend_docs': 'BackendDoc'
                             }
                             
@@ -356,7 +369,7 @@ def search(query: str, project: Optional[str], search_all: bool, frontend: bool,
         # Define search classes
         search_classes = ['IbatisStatement', 'DaoCall', 'JspForm', 'DbTable', 'BackendDoc']
         if frontend:
-            search_classes.extend(['GwtModule', 'GwtUiBinder', 'GwtActivityPlace', 'GwtEndpoint', 'JsArtifact'])
+            search_classes.extend(['GwtModule', 'GwtUiBinder', 'GwtActivityPlace', 'GwtEndpoint', 'JsArtifact', 'HtmlArtifact'])
         
         # Search each class
         all_results = []
@@ -477,8 +490,8 @@ def prd(project: Optional[str], frontend: bool):
         
         if frontend:
             for artifact_type in ['gwt_modules', 'gwt_activities_places', 'gwt_uibinder', 
-                                 'gwt_endpoints', 'js_artifacts']:
-                for fname in ["all_artifacts.json", "all_modules.json", "all_uibinder.json", "all_js_artifacts.json"]:
+                                 'gwt_endpoints', 'js_artifacts', 'html_artifacts']:
+                for fname in ["all_artifacts.json", "all_modules.json", "all_uibinder.json", "all_js_artifacts.json", "all_html_artifacts.json"]:
                     artifact_file = build_dir / artifact_type / fname
                     if artifact_file.exists():
                         with artifact_file.open('r', encoding='utf-8') as f:
