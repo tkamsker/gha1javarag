@@ -123,6 +123,7 @@ def all(ctx, project, include_frontend, frontend):
     """Run the complete pipeline (discover, extract, index, prd)."""
     logger.info(f"Running complete pipeline for project: {project}")
     click.echo(f"Running complete pipeline for project: {project}")
+    click.echo(f"DEBUG: 'all' command received project={project}, include_frontend={include_frontend}, frontend={frontend}")
     
     # Discover
     ctx.invoke(discover, project=project)
