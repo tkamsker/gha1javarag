@@ -1,18 +1,14 @@
-# GEMINI Code Analysis and PRD Generator
-
-This project is a Python-based pipeline that analyzes Java/JSP/GWT/JavaScript codebases, extracts structured information, and generates high-quality Product Requirements Documents (PRDs) and requirements from the code itself.
-
-## Quickstart Guide
+# Quickstart Guide: GEMINI Code Analysis and PRD Generator
 
 This guide provides the steps to set up and run the GEMINI pipeline.
 
-### 1. Prerequisites
+## 1. Prerequisites
 
 - Python 3.8+
 - Docker
 - Ollama
 
-### 2. Installation
+## 2. Installation
 
 1.  **Install Python dependencies:**
 
@@ -46,10 +42,11 @@ This guide provides the steps to set up and run the GEMINI pipeline.
     ollama pull llama2
     ```
 
-### 3. Configuration
+## 3. Configuration
 
 - Create a `.env` file in the root of the project.
 - Add the following environment variable to point to your Java source code:
+- example /Users/thomaskamsker/Documents/Atom/vron.one/playground/java/cuco-ui-admin
 
   ```
   JAVA_SOURCE_DIR=/path/to/your/java/project
@@ -57,17 +54,17 @@ This guide provides the steps to set up and run the GEMINI pipeline.
 
 - You can also configure the Weaviate host and other settings in `config/settings.py`.
 
-### 4. Running the Pipeline
+## 4. Running the Pipeline
 
 The main entry point for the application is `main.py`.
 
-#### Run the complete pipeline:
+### Run the complete pipeline:
 
 ```bash
 python main.py all --project <project_name> --include-frontend
 ```
 
-#### Run individual stages:
+### Run individual stages:
 
 - **Discover files:**
   ```bash
@@ -94,7 +91,7 @@ python main.py all --project <project_name> --include-frontend
   python main.py prd --project <project_name> --frontend
   ```
 
-### 5. Output
+## 5. Output
 
 - Generated PRDs will be located in the `output/prd/` directory.
 - These PRDs can be used as input for `speckit` commands like `/speckit.specify` and `/speckit.tasks`.

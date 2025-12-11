@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GEMINI CLI Contracts",
+  "description": "Defines the CLI commands for the GEMINI Code Analysis and PRD Generator.",
+  "type": "object",
+  "properties": {
+    "commands": {
+      "type": "object",
+      "properties": {
+        "all": {
+          "type": "object",
+          "description": "Run the complete pipeline.",
+          "properties": {
+            "project": {
+              "type": "string",
+              "description": "The name of the project to analyze."
+            },
+            "include-frontend": {
+              "type": "boolean",
+              "description": "Include frontend artifacts in the analysis."
+            }
+          },
+          "required": ["project"]
+        },
+        "discover": {
+          "type": "object",
+          "description": "Discover files in the source directory.",
+          "properties": {
+            "project": {
+              "type": "string",
+              "description": "The name of the project to analyze."
+            }
+          },
+          "required": ["project"]
+        },
+        "extract": {
+          "type": "object",
+          "description": "Extract artifacts from discovered files.",
+          "properties": {
+            "project": {
+              "type": "string",
+              "description": "The name of the project to analyze."
+            },
+            "include-frontend": {
+              "type": "boolean",
+              "description": "Include frontend artifacts in the analysis."
+            }
+          },
+          "required": ["project"]
+        },
+        "index": {
+          "type": "object",
+          "description": "Index artifacts into Weaviate.",
+          "properties": {
+            "project": {
+              "type": "string",
+              "description": "The name of the project to analyze."
+            }
+          },
+          "required": ["project"]
+        },
+        "search": {
+          "type": "object",
+          "description": "Search for artifacts using natural language.",
+          "properties": {
+            "project": {
+              "type": "string",
+              "description": "The name of the project to analyze."
+            },
+            "query": {
+              "type": "string",
+              "description": "The natural language query."
+            }
+          },
+          "required": ["project", "query"]
+        },
+        "prd": {
+          "type": "object",
+          "description": "Generate a Product Requirements Document (PRD).",
+          "properties": {
+            "project": {
+              "type": "string",
+              "description": "The name of the project to analyze."
+            },
+            "frontend": {
+              "type": "boolean",
+              "description": "Generate PRD for frontend artifacts only."
+            },
+            "include-frontend": {
+              "type": "boolean",
+              "description": "Include frontend artifacts in the generated PRD."
+            }
+          },
+          "required": ["project"]
+        }
+      }
+    }
+  }
+}

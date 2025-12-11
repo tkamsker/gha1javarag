@@ -1,0 +1,6 @@
+click
+weaviate-client
+ollama
+pytest
+python-dotenv
+huggingface-hub
