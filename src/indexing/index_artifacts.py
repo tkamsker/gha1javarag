@@ -4,6 +4,7 @@ from src.common.models import CodeArtifact
 import logging
 import os
 import weaviate.classes as wvc
+import uuid # Re-add uuid import
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,9 @@ def index_artifacts(project_name: str, artifacts: List[CodeArtifact], client: we
                 "content_for_embedding": artifact.content_for_embedding,
             }
             try:
-                batch.add_object(properties=data_object, uuid=artifact.artifact_id)
+                # Generate a deterministic UUID from the artifact's ID string
+                # Weaviate expects a UUID string for the uuid parameter
+                batch.add_object(properties=data_object, uuid=str(uuid.uuid5(uuid.NAMESPACE_DNS, artifact.artifact_id)))
             except Exception as e:
                 logger.error(f"Error indexing artifact {artifact.artifact_id}: {e}")
     logger.info(f"Indexed {len(artifacts)} artifacts for project {project_name}.")

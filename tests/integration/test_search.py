@@ -63,3 +63,4 @@ def weaviate_client_with_data():
     yield client
     if client.collections.exists("CodeArtifact"):
         client.collections.delete("CodeArtifact")
+    client.close()

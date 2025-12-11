@@ -40,3 +40,4 @@ def weaviate_client():
     # Clean up after tests
     if client.collections.exists(collection_name):
         client.collections.delete(collection_name)
+    client.close()

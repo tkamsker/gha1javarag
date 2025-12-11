@@ -75,6 +75,7 @@ def index(project):
     index_artifacts(project, artifacts, client)
     logger.info(f"Indexed {len(artifacts)} artifacts into Weaviate for project {project}.")
     click.echo(f"Indexed {len(artifacts)} artifacts into Weaviate for project {project}.")
+    client.close()
 
 @cli.command()
 @click.option('--project', required=True, help='The name of the project to analyze.')
@@ -88,6 +89,7 @@ def search(project, query):
     click.echo(f"Found {len(results)} relevant artifacts for query: '{query}'")
     for artifact in results:
         click.echo(f"- ID: {artifact.id}, Type: {artifact.artifact_type}, Path: {artifact.file_path}")
+    client.close()
 
 @cli.command()
 @click.option('--project', required=True, help='The name of the project to analyze.')
@@ -116,22 +118,23 @@ def prd(project, frontend, include_frontend):
 @click.option('--project', required=True, help='The name of the project to analyze.')
 @click.option('--include-frontend', is_flag=True, help='Include frontend artifacts in the analysis.')
 @click.option('--frontend', is_flag=True, help='Generate PRD for frontend artifacts only.')
-def all(project, include_frontend, frontend):
+@click.pass_context
+def all(ctx, project, include_frontend, frontend):
     """Run the complete pipeline (discover, extract, index, prd)."""
     logger.info(f"Running complete pipeline for project: {project}")
     click.echo(f"Running complete pipeline for project: {project}")
     
     # Discover
-    discover(project)
+    ctx.invoke(discover, project=project)
 
     # Extract
-    extract(project, include_frontend)
+    ctx.invoke(extract, project=project, include_frontend=include_frontend)
 
     # Index
-    index(project)
+    ctx.invoke(index, project=project)
 
     # PRD Generation
-    prd(project, frontend, include_frontend)
+    ctx.invoke(prd, project=project, frontend=frontend, include_frontend=include_frontend)
 
     logger.info(f"Complete pipeline finished for project: {project}")
     click.echo(f"Complete pipeline finished for project: {project}")

@@ -33,11 +33,10 @@
 
 **Purpose**: Core infrastructure for the CLI application.
 
-- [ ] T006 Run `start_weaviate_simple.sh` to start the Weaviate Docker container.
-- [x] T007 Create `src/common/models.py` for data models from `data-model.md`
-- [x] T008 Create `src/main.py` with a basic Click group structure.
-- [x] T009 Implement basic logging configuration in `src/common/logging.py`
-- [x] T010 Create `tests/unit/test_main.py` to test basic CLI invocation.
+- [x] T006 Create `src/common/models.py` for data models from `data-model.md`
+- [x] T007 Create `src/main.py` with a basic Click group structure.
+- [x] T008 Implement basic logging configuration in `src/common/logging.py`
+- [x] T009 Create `tests/unit/test_main.py` to test basic CLI invocation.
 
 **Checkpoint**: Foundation ready - CLI can be run and shows help.
 
@@ -51,13 +50,13 @@
 
 ### Tests for User Story 1 ⚠️
 
-- [x] T011 [P] [US1] Create `tests/unit/test_discovery.py` to test file discovery logic.
+- [x] T010 [P] [US1] Create `tests/unit/test_discovery.py` to test file discovery logic.
 
 ### Implementation for User Story 1
 
-- [x] T012 [US1] Create `src/discovery/` directory with `__init__.py`.
-- [x] T013 [US1] Implement file discovery logic in `src/discovery/discover_files.py`.
-- [x] T014 [US1] Add the `discover` command to `src/main.py` and call the discovery logic.
+- [x] T011 [US1] Create `src/discovery/` directory with `__init__.py`.
+- [x] T012 [US1] Implement file discovery logic in `src/discovery/discover_files.py`.
+- [x] T013 [US1] Add the `discover` command to `src/main.py` and call the discovery logic.
 
 **Checkpoint**: `discover` command is functional and independently testable.
 
@@ -71,13 +70,13 @@
 
 ### Tests for User Story 2 ⚠️
 
-- [x] T015 [P] [US2] Create `tests/unit/test_extraction.py` for parsing different file types.
+- [x] T014 [P] [US2] Create `tests/unit/test_extraction.py` for parsing different file types.
 
 ### Implementation for User Story 2
 
-- [x] T016 [US2] Create `src/extraction/` directory with `__init__.py`.
-- [x] T017 [US2] Implement artifact extraction logic in `src/extraction/extract_artifacts.py`.
-- [x] T018 [US2] Add the `extract` command to `src/main.py` and call the extraction logic.
+- [x] T015 [US2] Create `src/extraction/` directory with `__init__.py`.
+- [x] T016 [US2] Implement artifact extraction logic in `src/extraction/extract_artifacts.py`.
+- [x] T017 [US2] Add the `extract` command to `src/main.py` and call the extraction logic.
 
 **Checkpoint**: `extract` command is functional and independently testable.
 
@@ -91,13 +90,13 @@
 
 ### Tests for User Story 3 ⚠️
 
-- [x] T019 [P] [US3] Create `tests/integration/test_indexing.py` to test Weaviate integration.
+- [x] T018 [P] [US3] Create `tests/integration/test_indexing.py` to test Weaviate integration.
 
 ### Implementation for User Story 3
 
-- [x] T020 [US3] Create `src/indexing/` directory with `__init__.py`.
-- [x] T021 [US3] Implement Weaviate client and indexing logic in `src/indexing/index_artifacts.py`.
-- [x] T022 [US3] Add the `index` command to `src/main.py` and call the indexing logic.
+- [x] T019 [US3] Create `src/indexing/` directory with `__init__.py`.
+- [x] T020 [US3] Implement Weaviate client and indexing logic in `src/indexing/index_artifacts.py`.
+- [x] T021 [US3] Add the `index` command to `src/main.py` and call the indexing logic.
 
 **Checkpoint**: `index` command is functional and independently testable.
 
@@ -111,13 +110,13 @@
 
 ### Tests for User Story 4 ⚠️
 
-- [x] T023 [P] [US4] Create `tests/integration/test_search.py` to test search functionality.
+- [x] T022 [P] [US4] Create `tests/integration/test_search.py` to test search functionality.
 
 ### Implementation for User Story 4
 
-- [x] T024 [US4] Create `src/search/` directory with `__init__.py`.
-- [x] T025 [US4] Implement search logic in `src/search/search_artifacts.py`.
-- [x] T026 [US4] Add the `search` command to `src/main.py` and call the search logic.
+- [x] T023 [US4] Create `src/search/` directory with `__init__.py`.
+- [x] T024 [US4] Implement search logic in `src/search/search_artifacts.py`.
+- [x] T025 [US4] Add the `search` command to `src/main.py` and call the search logic.
 
 **Checkpoint**: `search` command is functional and independently testable.
 
@@ -131,13 +130,13 @@
 
 ### Tests for User Story 5 ⚠️
 
-- [x] T027 [P] [US5] Create `tests/unit/test_prd_generation.py` to test markdown generation.
+- [x] T026 [P] [US5] Create `tests/unit/test_prd_generation.py` to test markdown generation.
 
 ### Implementation for User Story 5
 
-- [x] T028 [US5] Create `src/prd/` directory with `__init__.py`.
-- [x] T029 [US5] Implement PRD generation logic using Ollama in `src/prd/generate_prd.py`.
-- [x] T030 [US5] Add the `prd` command to `src/main.py` and call the generation logic.
+- [x] T027 [US5] Create `src/prd/` directory with `__init__.py`.
+- [x] T028 [US5] Implement PRD generation logic using Ollama in `src/prd/generate_prd.py`.
+- [x] T029 [US5] Add the `prd` command to `src/main.py` and call the generation logic.
 
 **Checkpoint**: `prd` command is functional and independently testable.
 
@@ -151,16 +150,16 @@
 
 ### Implementation for User Story 6
 
-- [x] T031 [US6] Implement the `all` command in `src/main.py` to orchestrate the calls to discover, extract, index, and prd.
+- [x] T030 [US6] Implement the `all` command in `src/main.py` to orchestrate the calls to discover, extract, index, and prd.
 
 ---
 
 ## Phase 9: Polish & Cross-Cutting Concerns
 
-- [x] T032 [P] Add comprehensive CLI help text for all commands and options in `src/main.py`.
-- [x] T033 [P] Enhance logging with more detailed progress indicators.
-- [x] T034 Review and add comments to complex code sections.
-- [x] T035 Create a `README.md` with full usage instructions, based on `quickstart.md`.
+- [x] T031 [P] Add comprehensive CLI help text for all commands and options in `src/main.py`.
+- [x] T032 [P] Enhance logging with more detailed progress indicators.
+- [x] T033 Review and add comments to complex code sections.
+- [x] T034 Create a `README.md` with full usage instructions, based on `quickstart.md`.
 - [x] T035 Run `pytest` to ensure all tests pass.
 
 ---
