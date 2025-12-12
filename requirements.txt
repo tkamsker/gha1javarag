@@ -1,6 +1,29 @@
-click
-weaviate-client
+# Java Codebase Indexer Pipeline - Dependencies
+# Python 3.8+ required
+
+# CLI Framework
+click>=8.0.0
+
+# Vector Database
+weaviate-client>=4.0.0
+
+# HTTP Client for Ollama
+httpx>=0.24.0
+
+# Configuration Management
+python-dotenv>=1.0.0
+
+# XML/POM Parsing
+lxml>=4.9.0
+
+# Project Locking
+filelock>=3.12.0
+
+# Testing Framework
+pytest>=7.4.0
+pytest-mock>=3.11.0
+pytest-cov>=4.1.0
+
+# Legacy dependencies (from existing project)
 ollama
-pytest
-python-dotenv
 huggingface-hub

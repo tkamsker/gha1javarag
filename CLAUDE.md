@@ -247,3 +247,9 @@ Note: The `run.sh` script expects `src/main.py` but the src directory may be emp
 - Code is in `archive/` directory
 - Project structure is being reorganized
 
+
+## Active Technologies
+- Python 3.8+ (minimum version for type hints and modern async support) (001-java-codebase-indexer)
+
+## Recent Changes
+- 001-java-codebase-indexer: Added Python 3.8+ (minimum version for type hints and modern async support)

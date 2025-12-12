@@ -1,31 +1,68 @@
 #!/bin/bash
+# ==============================================================================
+# Java Codebase Indexer - Full Pipeline Runner
+# ==============================================================================
+# Usage: ./run.sh [project-name]
+# Runs the complete pipeline: discover -> extract -> index -> status
 
-# Ensure the script is run from the project root
-if [ ! -f "src/main.py" ]; then
-    echo "Error: 'src/main.py' not found. Please run this script from the project root."
+set -e  # Exit on error
+
+# Colors for output
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+info() { echo -e "${BLUE}[INFO]${NC} $1"; }
+ok() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+
+# Check if virtual environment exists
+VENV_DIR=".venv"
+if [ ! -d "$VENV_DIR" ]; then
+    echo "Virtual environment not found. Run ./step1.sh first."
     exit 1
 fi
 
-# Set PYTHONPATH to include the current directory so Python can find 'src'
-export PYTHONPATH=$(pwd):$PYTHONPATH
+# Activate virtual environment
+source $VENV_DIR/bin/activate
 
-# Determine project name
-PROJECT_NAME="test" # Default project name
-if [ -n "$1" ]; then # If a parameter is provided
-    PROJECT_NAME="$1"
+# Determine project filter (optional)
+PROJECT_FILTER=""
+if [ -n "$1" ]; then
+    PROJECT_FILTER="--project $1"
+    info "Running pipeline for project: $1"
+else
+    info "Running pipeline for all projects"
 fi
 
-# Activate virtual environment if it exists (optional, but good practice)
-# if [ -d ".venv" ]; then
-#     echo "Activating virtual environment..."
-#     source .venv/bin/activate
-# fi
+echo "=============================================="
+echo "Java Codebase Indexer - Full Pipeline"
+echo "=============================================="
+echo ""
 
-# Run the main application
-echo "Running GEMINI pipeline for project: $PROJECT_NAME..."
-python src/main.py all --project "$PROJECT_NAME" --include-frontend
+# Step 1: Discover
+info "Step 1: Discovering Maven projects..."
+codeindex discover $PROJECT_FILTER
+ok "Discovery complete"
+echo ""
 
-# Deactivate virtual environment (if activated)
-# if [ -d ".venv" ]; then
-#     deactivate
-# fi
+# Step 2: Extract (placeholder - will be implemented in Phase 4)
+info "Step 2: Extracting semantic understanding..."
+echo "  (To be implemented in Phase 4)"
+# codeindex extract $PROJECT_FILTER
+echo ""
+
+# Step 3: Index (placeholder - will be implemented in Phase 5)
+info "Step 3: Indexing to Weaviate..."
+echo "  (To be implemented in Phase 5)"
+# codeindex index $PROJECT_FILTER
+echo ""
+
+# Step 4: Status
+info "Step 4: Checking status..."
+codeindex status $PROJECT_FILTER
+ok "Pipeline complete"
+echo ""
+
+echo "=============================================="
+ok "Full pipeline finished!"
+echo "=============================================="

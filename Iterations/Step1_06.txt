@@ -1,0 +1,103 @@
+I've successfully generated comprehensive, actionable tasks for the Java Codebase Indexer Pipeline organized by user story for independent implementation and testing.
+
+  Generated Tasks File
+
+  Location: specs/001-java-codebase-indexer/tasks.md
+
+  Task Statistics
+
+  Total Tasks: 129
+
+  Breakdown by Phase:
+  - Phase 1 (Setup): 18 tasks - Project structure, dependencies, existing scripts integration
+  - Phase 2 (Foundational): 14 tasks - Core infrastructure (config, logging, models, Weaviate schema, CLI framework)
+  - Phase 3 (US1: Discover): 15 tasks - Maven project discovery and file classification
+  - Phase 4 (US2: Extract): 24 tasks - AI-powered semantic extraction with Ollama
+  - Phase 5 (US3: Index): 20 tasks - Weaviate indexing and semantic search
+  - Phase 6 (US4: Status): 5 tasks - Observability and status reporting
+  - Phase 7 (Integration & E2E): 7 tasks - End-to-end testing
+  - Phase 8 (Polish): 26 tasks - Documentation, optimization, production readiness
+
+  Parallel Opportunities: 62 tasks marked [P] can run in parallel within their phase
+
+  Test Coverage: 22 test tasks ensuring >80% coverage per constitution requirement
+
+  Key Features
+
+  1. Existing Scripts Integration
+
+  - ✅ T014: Verified docker-weaviate.sh for macOS (docker-compose.macos.yml) and Linux (docker-compose.ubuntu.yml)
+  - ✅ T015: Updated run.sh compatibility with new structure
+  - ✅ T016: Updated weaviate_stats.sh for new schema
+  - ✅ T102-T104: Integration tests with existing scripts
+
+  2. User Story Organization
+
+  Each user story is independently implementable and testable:
+  - US1 (P1): Discover - Foundation, provides immediate value
+  - US2 (P2): Extract - AI-powered semantic understanding
+  - US3 (P3): Index - Search capability
+  - US4 (P4): Status - Observability
+
+  3. Format Compliance
+
+  All 129 tasks follow strict format:
+  - [ ] [TaskID] [P?] [Story?] Description with file path
+
+  Examples:
+  - - [ ] T001 Create project structure per implementation plan
+  - - [ ] T038 [P] [US1] Implement Maven POM parser in src/codeindex/services/maven.py
+  - - [ ] T056 [P] [US2] Implement Ollama HTTP client in src/codeindex/services/ollama_client.py
+
+  4. Dependencies Visualization
+
+  Setup → Foundational → ┬─ US1 (Discover) ────┐
+                         ├─ US2 (Extract) ─────┤
+                         └────────────────────→ US3 (Index) → US4 (Status)
+
+  - US1 and US2 can start in parallel after Phase 2
+  - US3 requires both US1 and US2 complete
+  - US4 requires US3 complete
+
+  5. MVP Scope
+
+  Minimal Viable Product: Phase 1 + Phase 2 + Phase 3 (US1: Discover)
+  - Delivers: Working discover command
+  - Value: Understand codebase structure immediately
+  - Time: ~2-3 days
+  - Independently testable and usable
+
+  Incremental Delivery Plan
+
+  1. Iteration 1 (MVP): Discover command (~2-3 days)
+  2. Iteration 2: Extract command (~3-4 days)
+  3. Iteration 3: Index + Search commands (~2-3 days)
+  4. Iteration 4: Status + Testing + Polish (~2-3 days)
+
+  Constitutional Compliance
+
+  All tasks align with project constitution:
+  - ✅ Type hints enforced (T128)
+  - ✅ >80% test coverage for critical components (T126)
+  - ✅ Docstrings for all public functions (T105)
+  - ✅ Error handling with actionable messages (T114)
+  - ✅ Progress indicators every 10 seconds (T116)
+  - ✅ Performance requirements validated (T110-T113)
+
+  Docker Configuration Preservation
+
+  Per your requirements:
+  - ✅ T014: Explicitly verifies docker-weaviate.sh works for both OSX (dev) and Linux (prod)
+  - ✅ T125: Maintains existing Docker Compose files (docker-compose.macos.yml, docker-compose.ubuntu.yml)
+  - ✅ No changes to working Docker configuration
+
+  Next Steps
+
+  1. Review tasks.md: Ensure all tasks are clear and actionable
+  2. Start with MVP: Begin Phase 1 → Phase 2 → Phase 3 for immediate value
+  3. Use parallel execution: Tasks marked [P] can be done simultaneously
+  4. Track progress: Check off tasks as completed
+  5. Test incrementally: Each phase has checkpoints for validation
+
+  The tasks are immediately executable - each task is specific enough that an LLM can complete it without additional context. All file paths are explicit, dependencies are clear, and the organization enables independent user story
+  development.

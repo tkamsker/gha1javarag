@@ -1,5 +1,5 @@
 # GEMINI Code Analysis and PRD Generator
-
+# JAVA_SOURCE_DIR=/Users/thomaskamsker/Documents/Atom/vron.one/playground/java/cuco-ui-admin
 This project is a Python-based pipeline that analyzes Java/JSP/GWT/JavaScript codebases, extracts structured information, and generates high-quality Product Requirements Documents (PRDs) and requirements from the code itself.
 
 # Prompt : perplexit 

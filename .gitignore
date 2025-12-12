@@ -1,6 +1,7 @@
 # Vendor directories
 vendor/
 venv/
+.venv/
 node_modules/
 __pycache__/
 *.pyc
@@ -10,13 +11,21 @@ __pycache__/
 build/
 dist/
 *.egg-info/
+.eggs/
 
 # Environment files
+.env
 .env.*
 *.env
 .env.local
 .env.*.local
-# Note: .env is NOT ignored (keep it in git)
+
+# Pytest and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+*.cover
 
 # IDE specific files
 .idea/
