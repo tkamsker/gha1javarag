@@ -1,0 +1,61 @@
+Questions Asked & Answered: 5 of 5 (maximum reached)
+  Updated Spec: /Users/thomaskamsker/Documents/Atom/vron.one/playground/Iteration17/gha1javarag/specs/001-java-codebase-indexer/spec.md
+
+  Sections Updated
+
+  1. Clarifications - New section created with Session 2025-12-12 containing all 5 Q&A pairs
+  2. Edge Cases - Added 3 new edge cases (concurrent operations, empty discovery, empty status)
+  3. Functional Requirements - Added 5 new requirements (FR-024 through FR-027, plus updated FR-011 and FR-021)
+  4. Key Entities - Updated Project entity description for version handling
+  5. Non-Functional Considerations - Added data persistence note under Reliability
+
+  Questions Resolved
+
+  1. ✅ Data Lifecycle - Indexed data persists indefinitely until explicitly reset
+  2. ✅ Concurrent Operations - Per-project locking (different projects can run concurrently, same project is locked)
+  3. ✅ Multiple Versions - Each version treated as separate project with unique ID
+  4. ✅ AI Rate Limiting - Configurable rate limit with default of 10 concurrent requests
+  5. ✅ Empty State UX - Informative messages with clear explanations and next steps
+
+  Coverage Summary
+
+  | Category                      | Status     | Notes                                                                                                  |
+  |-------------------------------|------------|--------------------------------------------------------------------------------------------------------|
+  | Functional Scope & Behavior   | ✅ Clear    | Core goals, success criteria, and out-of-scope well defined                                            |
+  | Domain & Data Model           | ✅ Resolved | Was Partial - data lifecycle now clarified, version handling specified                                 |
+  | Interaction & UX Flow         | ✅ Resolved | Was Partial - empty state scenarios now addressed                                                      |
+  | Non-Functional Quality        | ✅ Clear    | Performance, reliability, observability well specified                                                 |
+  | Integration & Dependencies    | ✅ Resolved | Was Partial - rate limiting and concurrent access now specified                                        |
+  | Edge Cases & Failure Handling | ✅ Resolved | Was Partial - added concurrent operations, empty states; rate limiting indirectly addresses throttling |
+  | Constraints & Tradeoffs       | ✅ Clear    | Local-only, single workstation constraints documented                                                  |
+  | Terminology & Consistency     | ✅ Clear    | Consistent terminology throughout                                                                      |
+  | Completion Signals            | ✅ Clear    | Measurable acceptance criteria defined                                                                 |
+  | Misc / Placeholders           | ✅ Clear    | No TODOs or vague language                                                                             |
+
+  Specification Quality Improvements
+
+  Before Clarification:
+  - 23 functional requirements
+  - 7 edge cases
+  - Some ambiguity in data lifecycle, concurrency, and empty states
+
+  After Clarification:
+  - 27 functional requirements (+4 new: FR-024, FR-025, FR-026, FR-027)
+  - 10 edge cases (+3 new scenarios)
+  - All critical ambiguities resolved
+  - Comprehensive coverage across all taxonomy categories
+
+  Next Steps
+
+  Recommended: Proceed to /speckit.plan
+
+  The specification is now comprehensive and unambiguous with all critical clarifications resolved. Ready for technical planning phase.
+
+  Alternative: If you want to review the updated spec before planning, you can read it at:
+  specs/001-java-codebase-indexer/spec.md
+
+  All clarifications have been:
+  - ✅ Documented in the Clarifications section
+  - ✅ Integrated into relevant requirements and edge cases
+  - ✅ Validated for consistency across the spec
+  - ✅ Saved to disk
