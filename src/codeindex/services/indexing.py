@@ -259,8 +259,11 @@ class IndexingService:
         if 'id' not in data:
             data['id'] = uuid5(NAMESPACE_OID, project_id)
 
+        # Remove 'files' field which is inventory-specific and not part of Project model
+        project_data = {k: v for k, v in data.items() if k != 'files'}
+
         # Use from_dict if available, otherwise construct directly
-        return Project.from_dict(data)
+        return Project.from_dict(project_data)
 
     def get_status(self) -> Dict[str, Any]:
         """

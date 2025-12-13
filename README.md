@@ -13,3 +13,16 @@ specify init . --ai claude
 /speckit.constitution Create principles focused on code quality, testing standards, user experience consistency, and performance requirements
 
 /speckit.specify Build an application that can help me organize my photos in separate photo albums. Albums are grouped by date and can be re-organized by dragging and dropping on the main page. Albums are never in other nested albums. Within each album, photos are previewed in a tile-like interface.
+
+# Step 2
+.venv/bin/python -m pytest --version)
+  ⎿  pytest 9.0.2
+
+.venv/bin/python -m pytest tests/unit/ -v --tb=short 2>&1 | head -100
+
+.venv/bin/pip show weaviate-client | grep Version
+
+.venv/bin/python -m codeindex --help
+
+Test 
+codeindex discover --source-dir /Users/thomaskamsker/Documents/Atom/vron.one/playground/java/cuco-ui-admin

@@ -40,13 +40,23 @@ Each artifact includes: canonical ID, source path, language/framework type, and 
 
 ```bash
 # Create Python virtual environment
-./setup_venv.sh
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Install package in development mode
+pip install -e .
 
 # Set required environment variable in .env
 JAVA_SOURCE_DIR=/path/to/java/source/root
 
 # Start Ollama (required before Weaviate)
 ollama serve
+
+# Pull the required model
+ollama pull gemma3:12b
 
 # Start Weaviate with OS auto-detection
 ./docker-weaviate.sh start
@@ -62,17 +72,29 @@ ollama serve
 ### Pipeline Execution
 
 ```bash
-# Run full pipeline for a project (with frontend extraction)
-./run.sh <project-name>
-# Default project name is "test" if not specified
+# Run CLI commands using Python module
+python -m codeindex discover --source-dir /path/to/java/source
+python -m codeindex extract
+python -m codeindex index
+python -m codeindex search "database access"
+python -m codeindex status
 
-# Or run via Python with explicit stages
-export PYTHONPATH=$(pwd):$PYTHONPATH
-python src/main.py discover --project myproject
-python src/main.py extract --project myproject --include-frontend
-python src/main.py index --project myproject
-python src/main.py search --project myproject --query "database access"
-python src/main.py prd --project myproject --frontend
+# Or use installed command (after pip install -e .)
+codeindex discover --source-dir /path/to/java/source
+codeindex extract
+codeindex index
+codeindex search "database access"
+codeindex status
+
+# Project-specific operations
+codeindex discover --project myproject
+codeindex extract --project myproject
+codeindex index --project myproject --reset
+codeindex search "user authentication" --project myproject
+
+# Legacy: Run full pipeline for a project (with frontend extraction)
+# ./run.sh <project-name>
+# Note: run.sh may need updates to work with new CLI structure
 ```
 
 ### Weaviate Management
@@ -135,14 +157,18 @@ specify init . --ai claude
 All configuration is centralized but follows this priority:
 1. CLI arguments (highest)
 2. Environment variables
-3. `.env` file (version-controlled, overridden by `.env.local` patterns)
-4. `config/settings.py` defaults (lowest)
+3. `.env` file (gitignored, copy from `.env.example`)
+4. Defaults in `src/codeindex/utils/config.py` (lowest)
 
 Critical environment variables:
 - `JAVA_SOURCE_DIR` - Root of source tree to analyze (required)
-- `LOG_LEVEL` - Logging verbosity
-- Weaviate host configuration
-- Ollama model parameters
+- `WEAVIATE_URL` - Weaviate endpoint (default: http://localhost:8080)
+- `OLLAMA_URL` - Ollama endpoint (default: http://localhost:11434)
+- `OLLAMA_MODEL_NAME` - Model to use (default: gemma3:12b)
+- `MAX_CONCURRENT_AI_CALLS` - Concurrent Ollama requests (default: 10)
+- `BATCH_SIZE` - Weaviate batch size (default: 50)
+- `LOG_LEVEL` - Logging verbosity (DEBUG/INFO/WARNING/ERROR)
+- `OUTPUT_DIR` - Directory for intermediate files (default: ./data)
 
 ### OS-Specific Behavior
 
@@ -155,12 +181,23 @@ Weaviate uses `network_mode: host` to access local Ollama at `127.0.0.1:11434` (
 
 ### Project Structure Notes
 
-- **src/** - Main source directory (currently empty, code may be at root level or archived)
+- **src/codeindex/** - Main CLI application package
+  - **cli/** - Command implementations (discover, extract, index, search, status)
+  - **models/** - Data models (Project, CodeArtifact, DiscoveryInventory, ExtractionResult)
+  - **services/** - Business logic (discovery, extraction, indexing, Maven parsing, Weaviate operations, Ollama client)
+  - **parsers/** - Language-specific parsers (Java, JSP, XML, SQL)
+  - **schemas/** - Weaviate schema definitions
+  - **utils/** - Utilities (config, logging, retry, progress, locking)
 - **tests/** - Unit and integration tests
+  - **fixtures/** - Test data (sample Java/JSP/XML files, POMs)
+  - **unit/** - Unit tests for parsers, services, models
+  - **integration/** - Integration tests with Weaviate and Ollama
+  - **e2e/** - End-to-end pipeline tests
 - **archive/** - Old/deprecated code
 - **data/** - Runtime data directory (gitignored)
 - **output/** - Generated PRDs and artifacts (gitignored)
 - **specs/** - Spec Kit feature specifications
+  - **001-java-codebase-indexer/** - Current feature spec, plan, tasks, data model, contracts, quickstart
 - **weaviate-data/** - Persistent vector database storage (gitignored)
 - **.claude/** - Claude Code slash commands
 - **.specify/** - Spec Kit templates and memory

@@ -120,19 +120,9 @@ main.add_command(index_command, name='index')
 from .cli.search import search_command
 main.add_command(search_command, name='search')
 
-
-# ==============================================================================
-# Placeholder Commands (will be implemented in future phases)
-# ==============================================================================
-
-
-@main.command()
-@click.pass_context
-def status(ctx):
-    """Show indexing status and statistics."""
-    logger = get_logger(__name__)
-    logger.info("Status command - to be implemented in Phase 6")
-    click.echo("Status command placeholder")
+# Import and register status command (Phase 6)
+from .cli.status import status_command
+main.add_command(status_command, name='status')
 
 
 # ==============================================================================

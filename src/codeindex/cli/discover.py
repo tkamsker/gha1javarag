@@ -162,8 +162,8 @@ def discover_command(
             if inventory.projects:
                 click.echo("\nProjects:")
                 for proj in inventory.projects:
-                    artifact_id = proj.get('artifact_id', 'unknown')
-                    version = proj.get('version', '')
+                    artifact_id = proj.get('artifact_id') or 'unknown'
+                    version = proj.get('version') or 'unknown'
                     file_count = proj.get('file_count', 0)
                     click.echo(f"  • {artifact_id:30s} v{version:15s} ({file_count} files)")
 

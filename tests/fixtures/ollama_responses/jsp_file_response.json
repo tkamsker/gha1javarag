@@ -1,0 +1,6 @@
+{
+  "model": "gemma3:12b",
+  "created_at": "2025-12-13T00:00:00Z",
+  "response": "{\"summary\": \"A JSP view template for a user registration form. Contains form fields for username, email, and password with validation attributes. Uses JSTL tags for conditional rendering and includes custom tag libraries for UI components.\", \"classification\": \"jsp_view\", \"entities\": [\"userForm\", \"username\", \"email\", \"password\", \"submitButton\"], \"tags\": {\"layer\": [\"frontend\"], \"domain\": [\"user\", \"registration\"], \"frameworks\": [\"JSP\", \"JSTL\"], \"concerns\": [\"ui_flow\", \"validation\"]}, \"confidence\": 0.92}",
+  "done": true
+}

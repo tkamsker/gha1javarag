@@ -348,6 +348,9 @@ class DiscoveryService:
         total_files = 0
         files_by_type: Dict[str, int] = defaultdict(int)
 
+        # Collect project data with file lists
+        projects_with_files = []
+
         for project in projects:
             project_path = Path(project.path)
 
@@ -355,16 +358,30 @@ class DiscoveryService:
                 self.logger.warning(f"Project path does not exist: {project_path}")
                 continue
 
-            # Scan files in project
+            # Scan files in project and collect file list
             file_count = 0
+            file_list = []
+
             for file_path, artifact_type in self.scan_and_classify(project_path):
                 file_count += 1
                 files_by_type[artifact_type.value] += 1
+
+                # Add file entry to project file list
+                file_list.append({
+                    'path': str(file_path),
+                    'type': artifact_type.name,  # Use enum name (e.g., JAVA_SOURCE)
+                    'relative_path': str(file_path.relative_to(project_path)) if file_path.is_relative_to(project_path) else str(file_path)
+                })
 
             project.file_count = file_count
             total_files += file_count
 
             self.logger.debug(f"Project {project.artifact_id}: {file_count} files")
+
+            # Add project with file list
+            project_dict = project.to_dict()
+            project_dict['files'] = file_list
+            projects_with_files.append(project_dict)
 
         # Calculate duration
         duration = time.time() - start_time
@@ -373,7 +390,7 @@ class DiscoveryService:
         inventory = DiscoveryInventory(
             scan_timestamp=scan_timestamp,
             root_directory=str(root_directory),
-            projects=[p.to_dict() for p in projects],
+            projects=projects_with_files,
             total_files=total_files,
             files_by_type=dict(files_by_type),
             scan_duration_seconds=duration
