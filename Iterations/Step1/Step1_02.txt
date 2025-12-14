@@ -1,0 +1,43 @@
+ Now I have a good understanding of the codebase. Let me create a comprehensive CLAUDE.md file based on what I've learned.
+
+⏺ Write(CLAUDE.md)
+  ⎿  Wrote 250 lines to CLAUDE.md                                                                                                                                                                                         
+     # CLAUDE.md
+     This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+     ## Project Overview
+     GEMINI Code Analysis and PRD Generator - A Python-based pipeline that analyzes Java/JSP/GWT/JavaScript codebases, extracts structured information, indexes artifacts in Weaviate vector database, and generates
+     Product Requirements Documents (PRDs) using AI (Ollama/GEMINI).
+     The project integrates with GitHub Spec Kit for spec-driven development workflows.
+     … +240 lines (ctrl+o to expand)
+
+⏺ I've created a comprehensive CLAUDE.md file for this repository. The file includes:
+
+  What I Included:
+
+  1. Project Overview - Clear description of the GEMINI code analysis pipeline and its integration with Spec Kit
+  2. Architecture - Documented the 5-core pipeline stages (discover, extract, index, search, prd) and the artifact type system
+  3. Common Commands organized by category:
+    - Environment setup (venv, .env, services)
+    - Pipeline execution (both convenience script and direct Python)
+    - Weaviate management (Docker operations)
+    - Testing (pytest commands)
+    - Spec Kit integration (slash commands)
+  4. Development Notes:
+    - Configuration hierarchy and critical environment variables
+    - OS-specific behavior (macOS vs Ubuntu)
+    - Project structure with directory explanations
+    - Key scripts and their purposes
+    - Multi-project support capabilities
+  5. Integration with Spec Kit - How to use generated PRDs in the Spec Kit workflow
+  6. Troubleshooting - Common issues and diagnostic commands
+
+  Key Insights from Analysis:
+
+  - The project is a sophisticated pipeline connecting Java codebase analysis → Weaviate vector DB → LLM-based PRD generation → Spec Kit integration
+  - It's OS-aware with different Docker Compose files for macOS/Ubuntu
+  - Uses Ollama for local LLM inference and Weaviate for semantic search
+  - The weaviate_stats.py utility is particularly useful for diagnostics
+  - Spec Kit integration is fully set up with slash commands in .claude/ directory
+  - The src directory appears to be empty, which I noted in the troubleshooting section
+
+  The CLAUDE.md focuses on practical information that would help future Claude instances understand the architecture and execute common tasks efficiently.

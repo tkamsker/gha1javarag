@@ -1,13 +1,29 @@
-openai>=1.0.0
-python-dotenv>=0.19.0
-chromadb>=0.4.0
-numpy==1.24.3
-pyyaml>=6.0.0
-pathlib==1.0.1
-typing-extensions==4.9.0
-aiohttp==3.9.3
-markdown==3.5.2
-beautifulsoup4==4.12.3
-python-dotenv==1.0.1
-openai==1.12.0
-anthropic>=0.18.0 
+# Java Codebase Indexer Pipeline - Dependencies
+# Python 3.8+ required
+
+# CLI Framework
+click>=8.0.0
+
+# Vector Database (v3 API - code uses v3 client methods)
+weaviate-client>=3.0.0,<4.0.0
+
+# HTTP Client for Ollama
+httpx>=0.24.0
+
+# Configuration Management
+python-dotenv>=1.0.0
+
+# XML/POM Parsing
+lxml>=4.9.0
+
+# Project Locking
+filelock>=3.12.0
+
+# Testing Framework
+pytest>=7.4.0
+pytest-mock>=3.11.0
+pytest-cov>=4.1.0
+
+# Legacy dependencies (from existing project)
+ollama
+huggingface-hub

@@ -1,0 +1,36 @@
+Phase 5 Testing Results
+
+  ✅ Successfully Tested:
+
+  1. Weaviate Connection & Health Check - Working
+  2. Schema Creation - Project and CodeArtifact classes created
+  3. Artifact Indexing - Successfully indexed 1 artifact to Weaviate
+    - File: SampleClass.java
+    - Type: java_source
+    - Project: com.example:test-project:1.0.0-SNAPSHOT
+    - Summary: java_source: SampleClass.java
+  4. Index CLI Command - Working with options for inventory, extraction files, batch size
+  5. Search CLI Command - Infrastructure working (semantic search requires vectorization)
+
+  ⚠️ Known Issues:
+
+  1. Vectorization - Disabled for testing due to Ollama connection issue from Docker container
+    - Weaviate container tries to connect to localhost:11434 instead of host.docker.internal:11434
+    - This prevents semantic search with near_text queries
+    - Fix: Needs Docker networking configuration adjustment
+  2. Project Indexing - Fails due to vectorization issue (artifacts work fine)
+
+  📊 Test Commands Used:
+
+  # Indexing
+  codeindex index --inventory /tmp/test-inventory.jsonl --extraction /tmp/test-extract.jsonl
+
+  # Verification
+  curl http://localhost:8080/v1/graphql  # Verified 1 artifact indexed
+
+  # Search (infrastructure works, needs vectorization for semantic search)
+  codeindex search "Java class"
+
+  Phase 5 core functionality is working! The indexing pipeline successfully loads data, connects to Weaviate, and stores artifacts. Semantic search infrastructure is in place but needs vectorization enabled.
+
+  Would you like me to proceed with Phase 6 (Status command) or should we address the vectorization issue first?

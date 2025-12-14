@@ -1,0 +1,6 @@
+{
+  "model": "gemma3:12b",
+  "created_at": "2025-12-13T00:00:00Z",
+  "response": "{\"summary\": \"A sample Java class demonstrating basic object-oriented programming with getter/setter methods and a greeting function. Contains private fields for name and count, with methods to increment the counter and generate personalized greetings.\", \"classification\": \"java_source\", \"entities\": [\"SampleClass\", \"greet(String)\", \"increment()\", \"getCount()\", \"name\", \"count\"], \"tags\": {\"layer\": [\"backend\"], \"domain\": [\"sample\", \"demo\"], \"frameworks\": [\"Java\"], \"concerns\": [\"business_rule\"]}, \"confidence\": 0.95}",
+  "done": true
+}
