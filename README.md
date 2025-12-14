@@ -26,3 +26,6 @@ specify init . --ai claude
 
 Test 
 codeindex discover --source-dir /Users/thomaskamsker/Documents/Atom/vron.one/playground/java/cuco-ui-admin
+
+
+# Phase 2 generating prd 
