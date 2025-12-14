@@ -213,13 +213,14 @@ class ExtractionService:
 
             elif artifact_type in (
                 ArtifactType.XML_CONFIG,
-                ArtifactType.SPRING_CONFIG,
-                ArtifactType.MYBATIS_MAPPER,
-                ArtifactType.WEB_XML
+                ArtifactType.IBATIS_MAPPING,
+                ArtifactType.ORM_MAPPING,
+                ArtifactType.GWT_MODULE,
+                ArtifactType.GWT_UI_BINDER
             ):
                 return self.xml_parser.parse_file(file_path)
 
-            elif artifact_type in (ArtifactType.SQL_SCRIPT, ArtifactType.SQL_MIGRATION):
+            elif artifact_type in (ArtifactType.SQL_SCHEMA, ArtifactType.SQL_QUERY):
                 return self.sql_parser.parse_file(file_path)
 
             else:
@@ -251,6 +252,10 @@ class ExtractionService:
         Returns:
             Dictionary with semantic data
         """
+        # Skip semantic extraction for binary file types (images, fonts, etc.)
+        if artifact_type == ArtifactType.STATIC_ASSET:
+            return self._create_fallback_semantic(file_path, artifact_type)
+
         try:
             # Read file content
             content = file_path.read_text(encoding='utf-8')

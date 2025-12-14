@@ -70,7 +70,7 @@ def search_command(
         codeindex search "user validation" --project com.example:myapp:1.0.0
 
         # Filter by artifact type
-        codeindex search "database queries" --type JAVA_SOURCE --type SQL_SCRIPT
+        codeindex search "database queries" --type JAVA_SOURCE --type SQL_SCHEMA
 
         # Limit results
         codeindex search "Spring controllers" --limit 5

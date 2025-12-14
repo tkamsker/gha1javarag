@@ -363,6 +363,10 @@ class DiscoveryService:
             file_list = []
 
             for file_path, artifact_type in self.scan_and_classify(project_path):
+                # Skip binary static assets (images, videos, etc.) - not useful for code analysis
+                if artifact_type == ArtifactType.STATIC_ASSET:
+                    continue
+
                 file_count += 1
                 files_by_type[artifact_type.value] += 1
 

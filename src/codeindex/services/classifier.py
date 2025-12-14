@@ -358,11 +358,28 @@ def get_artifact_type(path: Path) -> ArtifactType:
     # Additional types - map to existing enum values
     suffix = path.suffix.lower()
 
-    # Static assets (CSS, images, fonts)
+    # Static assets (CSS, images, fonts, videos, etc.)
     if suffix == '.css':
         return ArtifactType.STATIC_ASSET
 
-    if suffix in ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico']:
+    # Image files
+    if suffix in ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.bmp', '.webp', '.tiff', '.tif', '.pspimage', '.psd', '.ai', '.sketch']:
+        return ArtifactType.STATIC_ASSET
+
+    # Video and audio files
+    if suffix in ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.flv', '.mp3', '.wav', '.ogg', '.m4a']:
+        return ArtifactType.STATIC_ASSET
+
+    # Font files
+    if suffix in ['.ttf', '.otf', '.woff', '.woff2', '.eot']:
+        return ArtifactType.STATIC_ASSET
+
+    # Binary and compiled files
+    if suffix in ['.class', '.jar', '.war', '.ear', '.zip', '.tar', '.gz', '.7z', '.rar']:
+        return ArtifactType.STATIC_ASSET
+
+    # Office documents
+    if suffix in ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx']:
         return ArtifactType.STATIC_ASSET
 
     # Configuration and data files

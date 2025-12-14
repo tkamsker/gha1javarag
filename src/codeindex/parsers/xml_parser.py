@@ -30,6 +30,12 @@ class XMLParser:
     def __init__(self):
         """Initialize XML parser."""
         self.logger = logging.getLogger(__name__)
+        # Create a parser that can handle HTML entities and recover from errors
+        self.parser = etree.XMLParser(
+            recover=True,  # Recover from errors
+            no_network=True,  # Don't access network for DTDs
+            resolve_entities=False  # Don't resolve external entities (security)
+        )
 
     def parse_file(self, file_path: Path) -> Dict[str, Any]:
         """
@@ -49,8 +55,8 @@ class XMLParser:
             raise FileNotFoundError(f"XML file not found: {file_path}")
 
         try:
-            # Parse XML with lxml
-            tree = etree.parse(str(file_path))
+            # Parse XML with lxml using custom parser that handles HTML entities
+            tree = etree.parse(str(file_path), self.parser)
             return self.parse_tree(tree)
 
         except etree.XMLSyntaxError as e:
