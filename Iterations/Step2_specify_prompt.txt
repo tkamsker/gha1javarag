@@ -1,0 +1,23 @@
+/speckit.specify lets implement next phase is target to genertae prd documents. make it reuseable revisit the .env JAVA_SOURCE_DIR if necessary. make an step by step bottum up concept where you revisit dao and sql objects to generate an
+  database structure and document all bussiness rules from backend then find all services and if necessary revisit the source files to find details and make heavvy use of LLM and write proper prompts to find all details. Fetch info from
+  Weaviate where is necessary. structure the documents hierachical and make an idex file for reuse. Then start at the frontend layer fetch from index.html or htm or jsp and step dwon each form and document it finding all objects you alerady
+  discovered. dig into all GWT and javascript files to also understand the logic in frontends to be able to replicate it in new solution. make also an index files for forntend. and in general keep track of all files you have visited to avoid
+  losing track
+
+  # 1
+   I'll help you create a specification for the next phase of PRD document generation. Let me start by analyzing the feature description and creating a new feature branch.
+
+  Analysis of Feature Description
+
+  The user wants to implement a comprehensive PRD (Product Requirements Document) generation system that:
+  - Analyzes database structure from DAO/SQL objects
+  - Documents business rules from backend
+  - Analyzes services and their details using LLM
+  - Analyzes frontend (HTML, JSP, GWT, JavaScript)
+  - Creates hierarchical documentation with index files
+  - Tracks visited files to avoid duplication
+  - Fetches information from Weaviate where needed
+
+  Short name: prd-document-generation
+
+  Let me check for existing branches and create the new feature:

@@ -91,19 +91,39 @@ OUTPUT_DIR=./data
 Scan your Java codebase to find all Maven projects:
 
 ```bash
+# Using command or module syntax
+codeindex discover --source-dir /path/to/java/source --output ./output/discovery-inventory.jsonl
+
+# Or with Python module
 python -m codeindex discover --source-dir /path/to/java/source
 ```
 
 Expected output:
 ```
-Scanning directory: /path/to/java/source
-Found 3 Maven projects:
-  - com.example:my-app:1.0.0 (2,450 files)
-  - com.example:my-lib:1.0.0 (1,200 files)
-  - com.example:my-web:2.0.0 (3,100 files)
+Discovering Maven projects in /path/to/java/source...
 
-Total: 6,750 files discovered in 12.5 seconds
-Inventory saved to: ./data/inventory.jsonl
+============================================================
+Discovery Results
+============================================================
+Root directory: /path/to/java/source
+Scan timestamp: 2025-12-13 18:00:00
+Duration: 0.15s
+
+Projects found: 3
+Total files: 6,750
+
+Files by type:
+  java_source         :   4,200
+  xml_config          :   1,100
+  static_asset        :   1,200
+  jsp_view            :     250
+
+Projects:
+  • my-app                       v1.0.0           (2,450 files)
+  • my-lib                       v1.0.0           (1,200 files)
+  • my-web                       v2.0.0           (3,100 files)
+
+✓ Inventory saved to: ./output/discovery-inventory.jsonl
 ```
 
 **What this does**:
@@ -123,22 +143,36 @@ Inventory saved to: ./data/inventory.jsonl
 Use AI to understand what each file does:
 
 ```bash
-python -m codeindex extract
+# Extract using the inventory
+codeindex extract --inventory ./output/discovery-inventory.jsonl --output ./output/extraction-results.jsonl
+
+# Or use default paths
+codeindex extract
 ```
 
 Expected output:
 ```
-Extracting files from inventory: ./data/inventory.jsonl
-Processing project: com.example:my-app:1.0.0 (2,450 files)
+Loading inventory from ./output/discovery-inventory.jsonl...
+Found 6,750 files to extract
+Processing batch 1 (10 files)...
+Processing batch 2 (10 files)...
+...
+  Progress: 6,750/6,750 files
 
-Progress: [████████████████████] 2,450/2,450 files (100%)
-Elapsed: 00:08:15 | ETA: 00:00:00 | Rate: 50.2 files/min
+============================================================
+Extraction Summary
+============================================================
+Total files: 6,750
 
-Summary:
-  - Files processed: 2,450
-  - AI calls: 2,438
-  - Errors: 5 (see logs)
-  - Duration: 8 minutes 15 seconds
+Files by type:
+  java_source         :   4,200
+  xml_config          :   1,100
+  static_asset        :   1,200
+  jsp_view            :     250
+
+Frameworks detected: Spring, GWT, Hibernate, Maven, MyBatis, JUnit
+
+✓ Results saved to: ./output/extraction-results.jsonl
 ```
 
 **What this does**:
@@ -159,23 +193,33 @@ Summary:
 Store artifacts in vector database for semantic search:
 
 ```bash
-python -m codeindex index
+# Index with inventory and extraction results
+codeindex index --inventory ./output/discovery-inventory.jsonl --extraction ./output/extraction-results.jsonl
+
+# Add --create-schema flag if first time
+codeindex index --inventory ./output/discovery-inventory.jsonl --extraction ./output/extraction-results.jsonl --create-schema
 ```
 
 Expected output:
 ```
-Connecting to Weaviate at http://localhost:8080...
-Schema validated. Classes: Project, CodeArtifact
+Checking Weaviate at http://localhost:8080...
+✓ Weaviate is available
 
-Indexing project: com.example:my-app:1.0.0
+Indexing from:
+  Inventory:  ./output/discovery-inventory.jsonl
+  Extraction: ./output/extraction-results.jsonl
+  Batch size: 50
 
-Progress: [████████████████████] 2,438/2,438 artifacts (100%)
-Elapsed: 00:02:30 | Rate: 975 artifacts/min
 
-Summary:
-  - Project records: 1 (created)
-  - Artifact records: 2,438 (created)
-  - Duration: 2 minutes 30 seconds
+============================================================
+Indexing Summary
+============================================================
+Projects indexed:   3
+Artifacts indexed:  6,750
+Artifacts errors:   0
+Total files:        6,750
+
+✓ Indexing complete
 ```
 
 **What this does**:
@@ -474,4 +518,4 @@ After completing the quickstart:
 - Data model: `specs/001-java-codebase-indexer/data-model.md`
 - Weaviate schema: `specs/001-java-codebase-indexer/contracts/weaviate-schema.yaml`
 - Project CLAUDE.md: Repository root (implementation guidance)
-- Constitution: `.specify/memory/constitution.md` (development standards)
+

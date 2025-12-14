@@ -45,16 +45,30 @@ codeindex discover $PROJECT_FILTER
 ok "Discovery complete"
 echo ""
 
-# Step 2: Extract (placeholder - will be implemented in Phase 4)
+# Step 2: Extract
 info "Step 2: Extracting semantic understanding..."
-echo "  (To be implemented in Phase 4)"
-# codeindex extract $PROJECT_FILTER
+INVENTORY_FILE="./output/discovery-inventory.jsonl"
+EXTRACTION_FILE="./output/extraction-results.jsonl"
+
+if [ ! -f "$INVENTORY_FILE" ]; then
+    echo "ERROR: Discovery inventory not found at $INVENTORY_FILE"
+    echo "Run discover command first or check --output path"
+    exit 1
+fi
+
+codeindex extract --inventory "$INVENTORY_FILE" --output "$EXTRACTION_FILE" $PROJECT_FILTER
+ok "Extraction complete"
 echo ""
 
-# Step 3: Index (placeholder - will be implemented in Phase 5)
+# Step 3: Index
 info "Step 3: Indexing to Weaviate..."
-echo "  (To be implemented in Phase 5)"
-# codeindex index $PROJECT_FILTER
+if [ ! -f "$EXTRACTION_FILE" ]; then
+    echo "ERROR: Extraction results not found at $EXTRACTION_FILE"
+    exit 1
+fi
+
+codeindex index --inventory "$INVENTORY_FILE" --extraction "$EXTRACTION_FILE" $PROJECT_FILTER
+ok "Indexing complete"
 echo ""
 
 # Step 4: Status
