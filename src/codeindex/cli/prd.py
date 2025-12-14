@@ -908,7 +908,7 @@ def _generate_database_prd(entities: list, rules: list) -> str:
             lines.append(f"- **Primary Key**: {', '.join([f'`{pk}`' for pk in entity.primary_key]) if entity.primary_key else 'None'}")
             lines.append(f"- **Column Count**: {len(entity.columns)}")
             if entity.estimated_row_count:
-                lines.append(f"- **Estimated Rows**: {entity.estimated_row_count:,}")
+                lines.append(f"- **Estimated Rows**: {entity.estimated_row_count}")
             lines.append("")
 
             # Columns table
@@ -920,11 +920,14 @@ def _generate_database_prd(entities: list, rules: list) -> str:
                 rows = []
                 for col in entity.columns:
                     constraints = []
-                    if col.is_primary_key:
+                    # Check if column is primary key
+                    if col.name in entity.primary_key:
                         constraints.append("PK")
-                    if col.is_foreign_key:
+                    # Check if column is foreign key
+                    if any(fk.column_name == col.name for fk in entity.foreign_keys):
                         constraints.append("FK")
-                    if col.unique:
+                    # Check if column has unique index
+                    if any(idx.unique and col.name in idx.columns for idx in entity.indexes):
                         constraints.append("UNIQUE")
 
                     rows.append([
@@ -943,9 +946,13 @@ def _generate_database_prd(entities: list, rules: list) -> str:
                 lines.append("**Foreign Keys:**")
                 lines.append("")
                 for fk in entity.foreign_keys:
-                    fk_cols = ", ".join([f"`{col}`" for col in fk.columns])
-                    ref_cols = ", ".join([f"`{col}`" for col in fk.referenced_columns])
-                    lines.append(f"- `{fk.name}`: {fk_cols} → `{fk.referenced_table}`({ref_cols})")
+                    on_actions = []
+                    if fk.on_delete:
+                        on_actions.append(f"ON DELETE {fk.on_delete}")
+                    if fk.on_update:
+                        on_actions.append(f"ON UPDATE {fk.on_update}")
+                    actions_str = f" ({', '.join(on_actions)})" if on_actions else ""
+                    lines.append(f"- `{fk.column_name}` → `{fk.referenced_table}`.`{fk.referenced_column}`{actions_str}")
                 lines.append("")
 
             # Indexes
@@ -978,24 +985,35 @@ def _generate_database_prd(entities: list, rules: list) -> str:
     relationships = []
     for entity in entities:
         for fk in entity.foreign_keys:
+            # Generate a descriptive name for the foreign key
+            fk_name = f"fk_{entity.name}_{fk.column_name}"
             relationships.append({
                 'from': entity.name,
                 'to': fk.referenced_table,
-                'columns': fk.columns,
-                'ref_columns': fk.referenced_columns,
-                'name': fk.name
+                'column': fk.column_name,
+                'ref_column': fk.referenced_column,
+                'name': fk_name,
+                'on_delete': fk.on_delete,
+                'on_update': fk.on_update
             })
 
     if relationships:
-        headers = ["From Table", "To Table", "Foreign Key", "Columns", "Referenced Columns"]
+        headers = ["From Table", "Foreign Key Column", "To Table", "Referenced Column", "Actions"]
         rows = []
         for rel in sorted(relationships, key=lambda r: (r['from'], r['to'])):
+            actions = []
+            if rel.get('on_delete'):
+                actions.append(f"DELETE: {rel['on_delete']}")
+            if rel.get('on_update'):
+                actions.append(f"UPDATE: {rel['on_update']}")
+            actions_str = ", ".join(actions) if actions else "-"
+
             rows.append([
                 f"`{rel['from']}`",
+                f"`{rel['column']}`",
                 f"`{rel['to']}`",
-                f"`{rel['name']}`",
-                ", ".join([f"`{c}`" for c in rel['columns']]),
-                ", ".join([f"`{c}`" for c in rel['ref_columns']])
+                f"`{rel['ref_column']}`",
+                actions_str
             ])
         lines.append(MarkdownBuilder.format_table(headers, rows))
     else:
@@ -1161,14 +1179,14 @@ def _generate_service_prd(services: list, endpoints: list) -> str:
                 lines.append("")
 
                 for op in service.operations:
-                    params_str = ", ".join([f"{p.name}: {p.data_type}" for p in op.parameters])
+                    params_str = ", ".join([f"{p.name}: {p.type}" for p in op.parameters])
                     lines.append(f"- **`{op.name}({params_str})`**")
                     if op.description:
                         lines.append(f"  - {op.description}")
                     if op.return_type:
                         lines.append(f"  - Returns: `{op.return_type}`")
-                    if op.exceptions_thrown:
-                        lines.append(f"  - Throws: {', '.join([f'`{e}`' for e in op.exceptions_thrown])}")
+                    if op.throws:
+                        lines.append(f"  - Throws: {', '.join([f'`{e}`' for e in op.throws])}")
                     if op.annotations:
                         lines.append(f"  - Annotations: {', '.join([f'@{a}' for a in op.annotations])}")
                 lines.append("")
@@ -1178,8 +1196,9 @@ def _generate_service_prd(services: list, endpoints: list) -> str:
                 lines.append("**Dependencies:**")
                 lines.append("")
                 for dep in service.dependencies:
+                    injection = f" [{dep.injection_method}]" if dep.injection_method else ""
                     dep_type = f" ({dep.dependency_type})" if dep.dependency_type else ""
-                    lines.append(f"- `{dep.name}`{dep_type}")
+                    lines.append(f"- `{dep.target_service}`{injection}{dep_type}")
                 lines.append("")
 
             # Data Dependencies
@@ -1324,7 +1343,7 @@ def _generate_service_prd(services: list, endpoints: list) -> str:
         for dep in service.dependencies:
             all_dependencies.append({
                 'from': service.class_name,
-                'to': dep.name,
+                'to': dep.target_service,
                 'type': dep.dependency_type or 'reference'
             })
 
@@ -1353,11 +1372,10 @@ def _generate_service_prd(services: list, endpoints: list) -> str:
             lines.append(f"#### {service.class_name}")
             lines.append("")
             for op in service.operations:
-                if op.visibility == 'public':  # Only show public operations
-                    params_str = ", ".join([f"{p.name}: {p.data_type}" for p in op.parameters])
-                    lines.append(f"- **`{op.name}({params_str})`**")
-                    if op.description:
-                        lines.append(f"  - {op.description}")
+                params_str = ", ".join([f"{p.name}: {p.type}" for p in op.parameters])
+                lines.append(f"- **`{op.name}({params_str})`**")
+                if op.description:
+                    lines.append(f"  - {op.description}")
             lines.append("")
 
     return "\n".join(lines)
@@ -1498,9 +1516,7 @@ def _generate_frontend_prd(forms: list, components: list) -> str:
                 lines.append("**Security Considerations:**")
                 lines.append("")
                 for pattern in form.security_patterns:
-                    lines.append(f"- **{pattern.pattern_type}**: {pattern.description}")
-                    if pattern.recommendation:
-                        lines.append(f"  - *Recommendation*: {pattern.recommendation}")
+                    lines.append(f"- {pattern}")
                 lines.append("")
 
             # Source file
