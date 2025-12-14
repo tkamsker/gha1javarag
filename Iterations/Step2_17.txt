@@ -1,0 +1,14 @@
+git add run.sh && git commit -m "feat: add smart project name detection to run.sh
+
+   Implement intelligent project name determination:
+   1. Use provided argument if given
+   2. Auto-detect from pom.xml directory name
+   3. Generate timestamp YYYY_MMM_DD_HHMM if no pom.xml
+
+   Also improve .env JAVA_SOURCE_DIR handling to match step2.sh behavior.
+
+   Usage examples:
+   - ./run.sh myapp                    # Uses JAVA_SOURCE_DIR from .env
+   - ./run.sh myapp /path/to/source    # Explicit source dir
+   - ./run.sh                          # Auto-detect everything"
+   Commit run.sh changes
