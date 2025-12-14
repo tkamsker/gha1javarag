@@ -102,7 +102,7 @@ def test_visit_log_loads_existing_log(temp_output_dir, temp_test_file):
     entry1 = create_visit_entry(
         file_path=str(temp_test_file),
         status=VisitStatus.SUCCESS,
-        content_hash="abc123",
+        content_hash="a" * 64,  # Valid SHA-256 hash (64 hex chars)
         layer=AnalysisLayer.DATABASE,
         extracted_entities=["User"]
     )
@@ -127,14 +127,14 @@ def test_visit_log_deduplicates_entries(temp_output_dir, temp_test_file):
     entry1 = create_visit_entry(
         file_path=str(temp_test_file),
         status=VisitStatus.SUCCESS,
-        content_hash="hash1",
+        content_hash="a" * 64,  # Valid SHA-256 hash
         layer=AnalysisLayer.DATABASE
     )
 
     entry2 = create_visit_entry(
         file_path=str(temp_test_file),
         status=VisitStatus.SUCCESS,
-        content_hash="hash2",
+        content_hash="b" * 64,  # Valid SHA-256 hash
         layer=AnalysisLayer.DATABASE
     )
 
@@ -149,7 +149,7 @@ def test_visit_log_deduplicates_entries(temp_output_dir, temp_test_file):
 
     # Should have only one entry with latest hash
     assert len(log.entries) == 1
-    assert log.entries[str(temp_test_file)].content_hash == "hash2"
+    assert log.entries[str(temp_test_file)].content_hash == "b" * 64
 
 
 # ==============================================================================
@@ -158,10 +158,11 @@ def test_visit_log_deduplicates_entries(temp_output_dir, temp_test_file):
 
 def test_append_entry(visit_log, temp_test_file):
     """Test appending visit entry."""
+    test_hash = "a" * 64  # Valid SHA-256 hash
     entry = create_visit_entry(
         file_path=str(temp_test_file),
         status=VisitStatus.SUCCESS,
-        content_hash="abc123",
+        content_hash=test_hash,
         layer=AnalysisLayer.DATABASE,
         extracted_entities=["User", "Account"]
     )
@@ -179,7 +180,7 @@ def test_append_entry(visit_log, temp_test_file):
         assert len(lines) == 1
         loaded_entry = json.loads(lines[0])
         assert loaded_entry["file_path"] == str(temp_test_file)
-        assert loaded_entry["content_hash"] == "abc123"
+        assert loaded_entry["content_hash"] == test_hash
         assert len(loaded_entry["extracted_entities"]) == 2
 
 
@@ -191,14 +192,14 @@ def test_append_multiple_entries(visit_log, tmp_path):
     entry1 = create_visit_entry(
         file_path=str(file1),
         status=VisitStatus.SUCCESS,
-        content_hash="hash1",
+        content_hash="a" * 64,
         layer=AnalysisLayer.DATABASE
     )
 
     entry2 = create_visit_entry(
         file_path=str(file2),
         status=VisitStatus.SUCCESS,
-        content_hash="hash2",
+        content_hash="b" * 64,
         layer=AnalysisLayer.SERVICE
     )
 
@@ -219,7 +220,7 @@ def test_append_multiple_entries(visit_log, tmp_path):
 
 def test_check_file_visited_success(visit_log, temp_test_file):
     """Test checking if file has been visited."""
-    content_hash = "abc123"
+    content_hash = "a" * 64
 
     entry = create_visit_entry(
         file_path=str(temp_test_file),
@@ -238,18 +239,18 @@ def test_check_file_visited_different_hash(visit_log, temp_test_file):
     entry = create_visit_entry(
         file_path=str(temp_test_file),
         status=VisitStatus.SUCCESS,
-        content_hash="hash1",
+        content_hash="a" * 64,
         layer=AnalysisLayer.DATABASE
     )
     visit_log.append_entry(entry)
 
     # Different hash should return False
-    assert visit_log.check_file_visited(str(temp_test_file), "hash2") is False
+    assert visit_log.check_file_visited(str(temp_test_file), "b" * 64) is False
 
 
 def test_check_file_visited_failed_status(visit_log, temp_test_file):
     """Test that failed status returns False."""
-    content_hash = "abc123"
+    content_hash = "a" * 64
 
     entry = create_visit_entry(
         file_path=str(temp_test_file),
@@ -266,7 +267,7 @@ def test_check_file_visited_failed_status(visit_log, temp_test_file):
 
 def test_check_file_visited_layer_filter(visit_log, temp_test_file):
     """Test layer filtering in check_file_visited."""
-    content_hash = "abc123"
+    content_hash = "a" * 64
 
     entry = create_visit_entry(
         file_path=str(temp_test_file),
@@ -298,10 +299,11 @@ def test_check_file_not_visited(visit_log, temp_test_file):
 
 def test_get_visit_status(visit_log, temp_test_file):
     """Test getting visit status for a file."""
+    test_hash = "a" * 64
     entry = create_visit_entry(
         file_path=str(temp_test_file),
         status=VisitStatus.SUCCESS,
-        content_hash="abc123",
+        content_hash=test_hash,
         layer=AnalysisLayer.DATABASE
     )
     visit_log.append_entry(entry)
@@ -311,7 +313,7 @@ def test_get_visit_status(visit_log, temp_test_file):
     assert result is not None
     assert result.file_path == str(temp_test_file)
     assert result.status == VisitStatus.SUCCESS
-    assert result.content_hash == "abc123"
+    assert result.content_hash == test_hash
 
 
 def test_get_visit_status_not_found(visit_log, temp_test_file):
@@ -332,14 +334,14 @@ def test_get_all_entries(visit_log, tmp_path):
     entry1 = create_visit_entry(
         file_path=str(file1),
         status=VisitStatus.SUCCESS,
-        content_hash="hash1",
+        content_hash="a" * 64,
         layer=AnalysisLayer.DATABASE
     )
 
     entry2 = create_visit_entry(
         file_path=str(file2),
         status=VisitStatus.SUCCESS,
-        content_hash="hash2",
+        content_hash="b" * 64,
         layer=AnalysisLayer.SERVICE
     )
 
@@ -358,14 +360,14 @@ def test_get_all_entries_layer_filter(visit_log, tmp_path):
     entry1 = create_visit_entry(
         file_path=str(file1),
         status=VisitStatus.SUCCESS,
-        content_hash="hash1",
+        content_hash="a" * 64,
         layer=AnalysisLayer.DATABASE
     )
 
     entry2 = create_visit_entry(
         file_path=str(file2),
         status=VisitStatus.SUCCESS,
-        content_hash="hash2",
+        content_hash="b" * 64,
         layer=AnalysisLayer.SERVICE
     )
 
@@ -386,14 +388,14 @@ def test_get_all_entries_status_filter(visit_log, tmp_path):
     entry1 = create_visit_entry(
         file_path=str(file1),
         status=VisitStatus.SUCCESS,
-        content_hash="hash1",
+        content_hash="a" * 64,
         layer=AnalysisLayer.DATABASE
     )
 
     entry2 = create_visit_entry(
         file_path=str(file2),
         status=VisitStatus.FAILED,
-        content_hash="hash2",
+        content_hash="b" * 64,
         layer=AnalysisLayer.SERVICE,
         error_message="Timeout"
     )
@@ -420,14 +422,14 @@ def test_get_stats(visit_log, tmp_path):
     entry1 = create_visit_entry(
         file_path=str(file1),
         status=VisitStatus.SUCCESS,
-        content_hash="hash1",
+        content_hash="a" * 64,
         layer=AnalysisLayer.DATABASE
     )
 
     entry2 = create_visit_entry(
         file_path=str(file2),
         status=VisitStatus.FAILED,
-        content_hash="hash2",
+        content_hash="b" * 64,
         layer=AnalysisLayer.SERVICE,
         error_message="Error"
     )
@@ -435,7 +437,7 @@ def test_get_stats(visit_log, tmp_path):
     entry3 = create_visit_entry(
         file_path=str(file3),
         status=VisitStatus.SKIPPED,
-        content_hash="hash3",
+        content_hash="c" * 64,
         layer=AnalysisLayer.FRONTEND
     )
 
@@ -462,14 +464,14 @@ def test_get_visited_files(visit_log, tmp_path):
     entry1 = create_visit_entry(
         file_path=str(file1),
         status=VisitStatus.SUCCESS,
-        content_hash="hash1",
+        content_hash="a" * 64,
         layer=AnalysisLayer.DATABASE
     )
 
     entry2 = create_visit_entry(
         file_path=str(file2),
         status=VisitStatus.SUCCESS,
-        content_hash="hash2",
+        content_hash="b" * 64,
         layer=AnalysisLayer.SERVICE
     )
 
@@ -492,7 +494,7 @@ def test_clear(visit_log, temp_test_file):
     entry = create_visit_entry(
         file_path=str(temp_test_file),
         status=VisitStatus.SUCCESS,
-        content_hash="abc123",
+        content_hash="a" * 64,
         layer=AnalysisLayer.DATABASE
     )
     visit_log.append_entry(entry)
@@ -513,10 +515,11 @@ def test_clear(visit_log, temp_test_file):
 
 def test_create_visit_entry():
     """Test create_visit_entry convenience function."""
+    test_hash = "a" * 64
     entry = create_visit_entry(
         file_path="/path/to/file.java",
         status=VisitStatus.SUCCESS,
-        content_hash="abc123",
+        content_hash=test_hash,
         layer=AnalysisLayer.DATABASE,
         analysis_type="dao_extraction",
         duration_seconds=2.5,
@@ -525,7 +528,7 @@ def test_create_visit_entry():
 
     assert entry.file_path == "/path/to/file.java"
     assert entry.status == VisitStatus.SUCCESS
-    assert entry.content_hash == "abc123"
+    assert entry.content_hash == test_hash
     assert entry.layer == AnalysisLayer.DATABASE
     assert entry.analysis_type == "dao_extraction"
     assert entry.duration_seconds == 2.5
@@ -535,6 +538,7 @@ def test_create_visit_entry():
 
 def test_backward_compatibility_functions(temp_output_dir, temp_test_file):
     """Test backward compatibility convenience functions."""
+    test_hash = "a" * 64
     # Load log
     log = load_visit_log(temp_output_dir)
     assert log is not None
@@ -545,18 +549,18 @@ def test_backward_compatibility_functions(temp_output_dir, temp_test_file):
         file_path=str(temp_test_file),
         timestamp=datetime.now(),
         status=VisitStatus.SUCCESS,
-        content_hash="abc123",
+        content_hash=test_hash,
         layer=AnalysisLayer.DATABASE,
         entities=["User"]
     )
 
     # Check visited
-    assert check_file_visited(log, str(temp_test_file), "abc123") is True
+    assert check_file_visited(log, str(temp_test_file), test_hash) is True
 
     # Get status
     status = get_visit_status(log, str(temp_test_file))
     assert status is not None
-    assert status.content_hash == "abc123"
+    assert status.content_hash == test_hash
 
 
 if __name__ == "__main__":
