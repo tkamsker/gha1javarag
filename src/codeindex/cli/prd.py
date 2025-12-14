@@ -15,6 +15,11 @@ from codeindex.utils.logging import get_logger
 from codeindex.utils.config import get_config
 from codeindex.services.weaviate_store import WeaviateStore
 from codeindex.services.ollama_client import OllamaClient
+from codeindex.services.db_analyzer import DatabaseAnalyzer
+from codeindex.services.service_analyzer import ServiceAnalyzer
+from codeindex.services.frontend_analyzer import FrontendAnalyzer
+from codeindex.services.markdown_builder import MarkdownBuilder
+from codeindex.models.prd import AnalysisLayer
 from codeindex.schemas import check_weaviate_health
 
 logger = get_logger(__name__)
@@ -281,16 +286,105 @@ def prd_command(
             domain_filter
         )
 
-    # TODO: Implement PRD generation pipeline
-    # This is Phase 2 skeleton - actual implementation in Phase 3-5
-    if not quiet:
-        click.echo("\n[INFO] PRD generation command skeleton initialized successfully")
-        click.echo("[INFO] Full implementation pending (Phase 3-5: US1-US4)")
-        click.echo(f"[INFO] Layer: {layer}")
-        click.echo(f"[INFO] Output directory: {output_dir}")
+    # Initialize Ollama client
+    try:
+        ollama_client = OllamaClient(
+            base_url=config.ollama_base_url,
+            model_name=config.ollama_model_name,
+            timeout=llm_timeout
+        )
+    except Exception as e:
+        if not quiet:
+            click.echo(f"Error: Failed to initialize Ollama client - {e}", err=True)
+        logger.error(f"Ollama client initialization failed: {e}")
+        ctx.exit(EXIT_OLLAMA_CONNECTION_ERROR)
 
-    logger.info(f"PRD command invoked: layer={layer}, project={project}, output_dir={output_dir}")
-    ctx.exit(EXIT_SUCCESS)
+    # Track analysis results
+    analysis_results = {
+        "database": None,
+        "services": None,
+        "frontend": None,
+        "success": True,
+        "partial_failures": []
+    }
+
+    # Start PRD generation
+    if not quiet:
+        click.echo("\n" + "="*60)
+        click.echo("Starting PRD Generation")
+        click.echo("="*60)
+
+    # Analyze database layer
+    if layer in ['database', 'full'] and not skip_database:
+        result = _analyze_database_layer(
+            config=config,
+            ollama_client=ollama_client,
+            output_dir=output_dir,
+            source_dir=source_dir or config.java_source_dir,
+            parallel=parallel,
+            llm_timeout=llm_timeout,
+            llm_retries=llm_retries,
+            force_refresh=force_refresh,
+            quiet=quiet
+        )
+        analysis_results["database"] = result
+        if not result.get("success", False):
+            analysis_results["partial_failures"].append("database")
+
+    # Analyze service layer
+    if layer in ['services', 'full'] and not skip_services:
+        result = _analyze_service_layer(
+            config=config,
+            ollama_client=ollama_client,
+            output_dir=output_dir,
+            source_dir=source_dir or config.java_source_dir,
+            parallel=parallel,
+            llm_timeout=llm_timeout,
+            llm_retries=llm_retries,
+            force_refresh=force_refresh,
+            quiet=quiet
+        )
+        analysis_results["services"] = result
+        if not result.get("success", False):
+            analysis_results["partial_failures"].append("services")
+
+    # Analyze frontend layer
+    if layer in ['frontend', 'full'] and not skip_frontend:
+        result = _analyze_frontend_layer(
+            config=config,
+            ollama_client=ollama_client,
+            output_dir=output_dir,
+            source_dir=source_dir or config.java_source_dir,
+            parallel=parallel,
+            llm_timeout=llm_timeout,
+            llm_retries=llm_retries,
+            force_refresh=force_refresh,
+            quiet=quiet
+        )
+        analysis_results["frontend"] = result
+        if not result.get("success", False):
+            analysis_results["partial_failures"].append("frontend")
+
+    # Generate final PRD documents
+    if layer == 'full':
+        if not quiet:
+            click.echo("\n[INFO] Generating master PRD document...")
+        # TODO: Implement master PRD generation (Phase 4-5)
+
+    # Print final summary
+    if not quiet:
+        click.echo("\n" + "="*60)
+        click.echo("PRD Generation Complete")
+        click.echo("="*60)
+        _print_final_summary(analysis_results, output_dir)
+
+    logger.info(f"PRD generation complete: layer={layer}, output_dir={output_dir}")
+
+    # Determine exit code
+    if analysis_results["partial_failures"]:
+        ctx.exit(EXIT_PARTIAL_SUCCESS)
+    else:
+        ctx.exit(EXIT_SUCCESS)
 
 
 def _validate_arguments(
@@ -469,3 +563,389 @@ def _print_configuration(
     click.echo(f"LLM Retries:   {llm_retries}")
     click.echo("="*60)
     click.echo()
+
+
+def _analyze_database_layer(
+    config,
+    ollama_client: OllamaClient,
+    output_dir: Path,
+    source_dir: Path,
+    parallel: int,
+    llm_timeout: int,
+    llm_retries: int,
+    force_refresh: bool,
+    quiet: bool
+) -> dict:
+    """
+    Analyze database layer.
+
+    Args:
+        config: Configuration object
+        ollama_client: Ollama client
+        output_dir: Output directory
+        source_dir: Source directory
+        parallel: Parallel workers
+        llm_timeout: LLM timeout
+        llm_retries: LLM retries
+        force_refresh: Force refresh
+        quiet: Quiet mode
+
+    Returns:
+        Analysis result dict
+    """
+    if not quiet:
+        click.echo("\n[INFO] Analyzing database layer...")
+
+    try:
+        analyzer = DatabaseAnalyzer(
+            ollama_client=ollama_client,
+            output_dir=output_dir,
+            source_dir=source_dir,
+            max_workers=parallel,
+            llm_timeout=llm_timeout,
+            max_retries=llm_retries,
+            force_refresh=force_refresh
+        )
+
+        # Run analysis
+        result = analyzer.analyze_database_layer()
+
+        # Generate index.md
+        if not quiet:
+            click.echo("[INFO] Generating database index...")
+
+        index_content = MarkdownBuilder.build_index_markdown(
+            entities=analyzer.extracted_entities,
+            layer=AnalysisLayer.DATABASE,
+            project=None
+        )
+
+        index_file = output_dir / "database" / "index.md"
+        index_file.parent.mkdir(parents=True, exist_ok=True)
+        index_file.write_text(index_content, encoding="utf-8")
+
+        # Generate database PRD
+        if not quiet:
+            click.echo("[INFO] Generating database PRD...")
+
+        prd_content = _generate_database_prd(analyzer.extracted_entities, analyzer.extracted_rules)
+        prd_file = output_dir / "prd" / "database_prd.md"
+        prd_file.parent.mkdir(parents=True, exist_ok=True)
+        prd_file.write_text(prd_content, encoding="utf-8")
+
+        if not quiet:
+            click.echo(f"[INFO] Database analysis complete: {result['entities']} entities, {result['rules']} rules")
+
+        return {
+            "success": True,
+            "entities": result.get("entities", 0),
+            "rules": result.get("rules", 0),
+            "analyzed": result.get("analyzed", 0),
+            "skipped": result.get("skipped", 0),
+            "failed": result.get("failed", 0)
+        }
+
+    except Exception as e:
+        logger.error(f"Database layer analysis failed: {e}", exc_info=True)
+        if not quiet:
+            click.echo(f"[ERROR] Database layer analysis failed: {e}", err=True)
+
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
+def _analyze_service_layer(
+    config,
+    ollama_client: OllamaClient,
+    output_dir: Path,
+    source_dir: Path,
+    parallel: int,
+    llm_timeout: int,
+    llm_retries: int,
+    force_refresh: bool,
+    quiet: bool
+) -> dict:
+    """
+    Analyze service layer.
+
+    Args:
+        config: Configuration object
+        ollama_client: Ollama client
+        output_dir: Output directory
+        source_dir: Source directory
+        parallel: Parallel workers
+        llm_timeout: LLM timeout
+        llm_retries: LLM retries
+        force_refresh: Force refresh
+        quiet: Quiet mode
+
+    Returns:
+        Analysis result dict
+    """
+    if not quiet:
+        click.echo("\n[INFO] Analyzing service layer...")
+
+    try:
+        analyzer = ServiceAnalyzer(
+            ollama_client=ollama_client,
+            output_dir=output_dir,
+            source_dir=source_dir,
+            max_workers=parallel,
+            llm_timeout=llm_timeout,
+            max_retries=llm_retries,
+            force_refresh=force_refresh
+        )
+
+        # Run analysis
+        result = analyzer.analyze_service_layer()
+
+        # Generate index.md
+        if not quiet:
+            click.echo("[INFO] Generating service index...")
+
+        index_content = MarkdownBuilder.build_index_markdown(
+            entities=analyzer.extracted_services,
+            layer=AnalysisLayer.SERVICE,
+            project=None
+        )
+
+        index_file = output_dir / "services" / "index.md"
+        index_file.parent.mkdir(parents=True, exist_ok=True)
+        index_file.write_text(index_content, encoding="utf-8")
+
+        # Generate service PRD
+        if not quiet:
+            click.echo("[INFO] Generating service PRD...")
+
+        prd_content = _generate_service_prd(analyzer.extracted_services, analyzer.extracted_endpoints)
+        prd_file = output_dir / "prd" / "service_prd.md"
+        prd_file.parent.mkdir(parents=True, exist_ok=True)
+        prd_file.write_text(prd_content, encoding="utf-8")
+
+        if not quiet:
+            click.echo(f"[INFO] Service analysis complete: {result['services']} services, {result['endpoints']} endpoints")
+
+        return {
+            "success": True,
+            "services": result.get("services", 0),
+            "endpoints": result.get("endpoints", 0),
+            "analyzed": result.get("analyzed", 0),
+            "skipped": result.get("skipped", 0),
+            "failed": result.get("failed", 0)
+        }
+
+    except Exception as e:
+        logger.error(f"Service layer analysis failed: {e}", exc_info=True)
+        if not quiet:
+            click.echo(f"[ERROR] Service layer analysis failed: {e}", err=True)
+
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
+def _analyze_frontend_layer(
+    config,
+    ollama_client: OllamaClient,
+    output_dir: Path,
+    source_dir: Path,
+    parallel: int,
+    llm_timeout: int,
+    llm_retries: int,
+    force_refresh: bool,
+    quiet: bool
+) -> dict:
+    """
+    Analyze frontend layer.
+
+    Args:
+        config: Configuration object
+        ollama_client: Ollama client
+        output_dir: Output directory
+        source_dir: Source directory
+        parallel: Parallel workers
+        llm_timeout: LLM timeout
+        llm_retries: LLM retries
+        force_refresh: Force refresh
+        quiet: Quiet mode
+
+    Returns:
+        Analysis result dict
+    """
+    if not quiet:
+        click.echo("\n[INFO] Analyzing frontend layer...")
+
+    try:
+        analyzer = FrontendAnalyzer(
+            ollama_client=ollama_client,
+            output_dir=output_dir,
+            source_dir=source_dir,
+            max_workers=parallel,
+            llm_timeout=llm_timeout,
+            max_retries=llm_retries,
+            force_refresh=force_refresh
+        )
+
+        # Run analysis
+        result = analyzer.analyze_frontend_layer()
+
+        # Generate index.md
+        if not quiet:
+            click.echo("[INFO] Generating frontend index...")
+
+        index_content = MarkdownBuilder.build_index_markdown(
+            entities=analyzer.extracted_forms,
+            layer=AnalysisLayer.FRONTEND,
+            project=None
+        )
+
+        index_file = output_dir / "frontend" / "index.md"
+        index_file.parent.mkdir(parents=True, exist_ok=True)
+        index_file.write_text(index_content, encoding="utf-8")
+
+        # Generate frontend PRD
+        if not quiet:
+            click.echo("[INFO] Generating frontend PRD...")
+
+        prd_content = _generate_frontend_prd(analyzer.extracted_forms, analyzer.extracted_components)
+        prd_file = output_dir / "prd" / "frontend_prd.md"
+        prd_file.parent.mkdir(parents=True, exist_ok=True)
+        prd_file.write_text(prd_content, encoding="utf-8")
+
+        if not quiet:
+            click.echo(f"[INFO] Frontend analysis complete: {result['forms']} forms, {result['components']} components")
+
+        return {
+            "success": True,
+            "forms": result.get("forms", 0),
+            "components": result.get("components", 0),
+            "analyzed": result.get("analyzed", 0),
+            "skipped": result.get("skipped", 0),
+            "failed": result.get("failed", 0)
+        }
+
+    except Exception as e:
+        logger.error(f"Frontend layer analysis failed: {e}", exc_info=True)
+        if not quiet:
+            click.echo(f"[ERROR] Frontend layer analysis failed: {e}", err=True)
+
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
+def _generate_database_prd(entities: list, rules: list) -> str:
+    """Generate database PRD markdown."""
+    lines = []
+    lines.append("# Database Schema Documentation\n")
+    lines.append("*Generated by PRD Generator*\n")
+    lines.append("## Overview\n")
+    lines.append(f"This document describes the database schema with {len(entities)} entities and {len(rules)} business rules.\n")
+    lines.append("## Entity Catalog\n")
+
+    for entity in entities:
+        lines.append(f"### {entity.name}\n")
+        if entity.description:
+            lines.append(f"{entity.description}\n")
+        lines.append(f"- **Source**: `{entity.source_files[0] if entity.source_files else 'N/A'}`")
+        lines.append(f"- **Columns**: {len(entity.columns)}")
+        if entity.primary_key:
+            lines.append(f"- **Primary Key**: {', '.join(entity.primary_key)}")
+        lines.append("")
+
+    lines.append("## Business Rules\n")
+    for rule in rules:
+        lines.append(f"### {rule.name}\n")
+        lines.append(f"- **Type**: {rule.rule_type.value if rule.rule_type else 'N/A'}")
+        lines.append(f"- **Layer**: {rule.layer.value if rule.layer else 'N/A'}")
+        if rule.description:
+            lines.append(f"- **Description**: {rule.description}")
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def _generate_service_prd(services: list, endpoints: list) -> str:
+    """Generate service PRD markdown."""
+    lines = []
+    lines.append("# Backend Services Documentation\n")
+    lines.append("*Generated by PRD Generator*\n")
+    lines.append("## Overview\n")
+    lines.append(f"This document describes {len(services)} services with {len(endpoints)} API endpoints.\n")
+    lines.append("## Service Catalog\n")
+
+    for service in services:
+        lines.append(f"### {service.class_name}\n")
+        if service.description:
+            lines.append(f"{service.description}\n")
+        lines.append(f"- **Package**: `{service.package}`")
+        lines.append(f"- **Type**: {service.service_type.value if service.service_type else 'N/A'}")
+        lines.append(f"- **Operations**: {len(service.operations)}")
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def _generate_frontend_prd(forms: list, components: list) -> str:
+    """Generate frontend PRD markdown."""
+    lines = []
+    lines.append("# Frontend Documentation\n")
+    lines.append("*Generated by PRD Generator*\n")
+    lines.append("## Overview\n")
+    lines.append(f"This document describes {len(forms)} forms and {len(components)} UI components.\n")
+    lines.append("## Form Catalog\n")
+
+    for form in forms:
+        lines.append(f"### {form.name}\n")
+        if form.description:
+            lines.append(f"{form.description}\n")
+        lines.append(f"- **Type**: {form.form_type.value if form.form_type else 'N/A'}")
+        lines.append(f"- **Fields**: {len(form.fields)}")
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def _print_final_summary(results: dict, output_dir: Path):
+    """Print final summary of PRD generation."""
+    click.echo("\nSummary:")
+    click.echo("-" * 60)
+
+    # Database
+    if results["database"]:
+        db = results["database"]
+        if db.get("success"):
+            click.echo(f"Database:  {db['entities']} entities, {db['rules']} rules")
+            click.echo(f"           ({db['analyzed']} analyzed, {db['skipped']} skipped, {db['failed']} failed)")
+        else:
+            click.echo(f"Database:  FAILED - {db.get('error', 'Unknown error')}")
+
+    # Services
+    if results["services"]:
+        svc = results["services"]
+        if svc.get("success"):
+            click.echo(f"Services:  {svc['services']} services, {svc['endpoints']} endpoints")
+            click.echo(f"           ({svc['analyzed']} analyzed, {svc['skipped']} skipped, {svc['failed']} failed)")
+        else:
+            click.echo(f"Services:  FAILED - {svc.get('error', 'Unknown error')}")
+
+    # Frontend
+    if results["frontend"]:
+        fe = results["frontend"]
+        if fe.get("success"):
+            click.echo(f"Frontend:  {fe['forms']} forms, {fe['components']} components")
+            click.echo(f"           ({fe['analyzed']} analyzed, {fe['skipped']} skipped, {fe['failed']} failed)")
+        else:
+            click.echo(f"Frontend:  FAILED - {fe.get('error', 'Unknown error')}")
+
+    click.echo("-" * 60)
+    click.echo(f"\nOutput directory: {output_dir}")
+    click.echo(f"  - database/: Entity definitions and index")
+    click.echo(f"  - services/: Service definitions and endpoints")
+    click.echo(f"  - frontend/: Forms and UI components")
+    click.echo(f"  - business_rules/: Business rule definitions")
+    click.echo(f"  - prd/: Generated PRD markdown documents")
