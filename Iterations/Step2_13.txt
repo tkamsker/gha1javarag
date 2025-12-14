@@ -1,0 +1,285 @@
+The gh CLI is not authenticated. I'll provide you with the PR details for manual creation on GitHub.
+
+  Create Pull Request Manually
+
+  GitHub URL: https://github.com/tkamsker/gha1javarag/compare/main...002-prd-document-generation
+
+  PR Title:
+  feat: Enhanced PRD Generation (Feature 002)
+
+  PR Description:
+
+  ## Feature 002: Enhanced PRD Generation
+
+  This PR implements comprehensive Product Requirements Document (PRD) generation from indexed Java codebase artifacts, with multi-layer analysis and master PRD synthesis.
+
+  ---
+
+  ## Summary
+
+  Implemented a complete PRD generation pipeline that:
+  - Analyzes database schema from JPA entities and iBATIS SQL
+  - Documents backend services and API endpoints
+  - Catalogs frontend forms and UI components (JSP, GWT)
+  - Extracts business rules across all layers using LLM
+  - Generates comprehensive master PRD synthesizing all layers
+
+  ---
+
+  ## User Stories Completed
+
+  ### ✅ User Story 1: Database Schema Documentation
+  - Implemented `DatabaseAnalyzer` service with LLM-powered extraction
+  - Extracts entities from JPA annotations and iBATIS mappings
+  - Identifies business rules at database layer
+  - Generates comprehensive database_prd.md with:
+    - Entity catalog with columns, types, constraints
+    - Relationship diagrams (foreign keys)
+    - Indexes and performance considerations
+    - Business rules by severity
+
+  ### ✅ User Story 2: Backend Service Documentation  
+  - Implemented `ServiceAnalyzer` for backend layer analysis
+  - Extracts service classes, methods, and dependencies
+  - Documents API endpoints (REST/SOAP) with parameters
+  - Identifies transactional boundaries and patterns
+  - Generates service_prd.md with:
+    - Service catalog with operations
+    - API endpoint documentation
+    - Service dependencies and injection patterns
+    - Data flow analysis
+
+  ### ✅ User Story 3: Frontend Component Documentation
+  - Implemented `FrontendAnalyzer` for UI layer analysis
+  - Extracts forms from JSP and GWT components
+  - Documents form fields with validation rules
+  - Maps forms to backend endpoints and services
+  - Generates frontend_prd.md with:
+    - Form catalog with field specifications
+    - UI component documentation
+    - Navigation flows
+    - Form-to-backend mappings
+
+  ### ✅ User Story 4: Master PRD Synthesis
+  - Implemented `PRDGenerator` orchestrator service
+  - Synthesizes all layer analyses into master document
+  - Detects technology stack from artifacts
+  - Generates executive summary with statistics
+  - Creates cross-layer integration mappings
+  - Produces master_prd.md with:
+    - Executive summary
+    - System architecture overview
+    - Layer summaries with links to detailed docs
+    - Cross-layer flow diagrams
+    - Comprehensive business rules catalog
+
+  ---
+
+  ## Key Technical Components
+
+  ### 1. Analyzer Services
+
+  **DatabaseAnalyzer** (`src/codeindex/services/db_analyzer.py`)
+  - Discovers JPA entities, iBATIS XML, Liquibase migrations
+  - Uses Ollama LLM to understand schema semantics
+  - Extracts business rules from constraints and annotations
+  - Outputs structured JSON artifacts
+
+  **ServiceAnalyzer** (`src/codeindex/services/service_analyzer.py`)
+  - Discovers Spring services, controllers, repositories
+  - Extracts API endpoints with full specifications
+  - Analyzes service dependencies and injection
+  - Identifies transactional patterns
+
+  **FrontendAnalyzer** (`src/codeindex/services/frontend_analyzer.py`)
+  - Discovers JSP forms, GWT modules, JavaScript
+  - Extracts form fields with validation patterns
+  - Maps form submissions to backend endpoints
+  - Analyzes UI component hierarchies
+
+  ### 2. Supporting Services
+
+  **VisitLog** (`src/codeindex/services/visit_log.py`)
+  - Incremental processing with content hash tracking
+  - JSONL format for efficient append-only writes
+  - Enables `--force-refresh` to skip unchanged files
+
+  **MarkdownBuilder** (`src/codeindex/services/markdown_builder.py`)
+  - Generates professional PRD markdown documents
+  - Table-driven entity catalogs
+  - Cross-references and internal links
+  - Mermaid diagram support (optional)
+
+  **PRDGenerator** (`src/codeindex/services/prd_generator.py`)
+  - Master PRD orchestrator
+  - Loads artifacts from all layers
+  - Technology and domain detection
+  - Cross-layer mapping generation
+
+  ### 3. Data Models
+
+  **Enhanced PRD Models** (`src/codeindex/models/prd.py`)
+  - `DatabaseEntity`: Table/entity definitions
+  - `BusinessRule`: Rule specifications with severity
+  - `ServiceDefinition`: Service class documentation
+  - `APIEndpoint`: REST/SOAP endpoint specs
+  - `FormDefinition`: UI form specifications
+  - `UIComponent`: Frontend component docs
+
+  ### 4. CLI Command
+
+  **PRD Command** (`src/codeindex/cli/prd.py`)
+  - Layer selection: `database`, `services`, `frontend`, `full`
+  - Project filtering support
+  - Parallel LLM processing (default: 10 workers)
+  - Force refresh option
+  - Comprehensive error handling and progress reporting
+
+  ---
+
+  ## Usage Examples
+
+  ```bash
+  # Generate full PRD for a project (all layers + master PRD)
+  codeindex prd full --project myapp --output-dir ./docs/prd
+
+  # Analyze only database layer
+  codeindex prd database --project myapp
+
+  # Analyze with custom LLM settings
+  codeindex prd services --llm-timeout 180 --parallel 20
+
+  # Force refresh all files (ignore visit log)
+  codeindex prd --force-refresh --project myapp
+
+  # Generate specific domain only
+  codeindex prd --domain-filter authentication --project myapp
+
+  ---
+  Testing
+
+  Integration Testing with Real Codebase
+
+  Tested with cuco-ui-admin project (1,617 indexed artifacts):
+
+  Database Layer:
+  - ✅ Entity extraction and analysis
+  - ✅ Business rule identification
+  - ✅ database_prd.md generation
+
+  Service Layer:
+  - ✅ Service class extraction
+  - ✅ API endpoint documentation
+  - ✅ service_prd.md generation
+
+  Frontend Layer:
+  - ✅ Form extraction (31 files analyzed)
+  - ✅ Component documentation
+  - ✅ frontend_prd.md generation
+
+  Master PRD:
+  - ✅ Artifact loading from all layers
+  - ✅ Technology stack detection
+  - ✅ Cross-layer mapping generation
+  - ✅ master_prd.md synthesis (2.5K)
+
+  Unit Testing
+
+  Created test_enhanced_prd.py with comprehensive test coverage:
+  - Database PRD generation with sample entities
+  - Service PRD generation with sample services
+  - Frontend PRD generation with sample forms
+  - All tests passing with proper markdown structure
+
+  ---
+  Bug Fixes During Integration
+
+  1. Config Property Immutability (099837b)
+    - Fixed: Config properties are read-only, cannot be set from CLI
+    - Solution: Pass CLI parameters directly to functions
+  2. OllamaClient Parameter Names (099837b)
+    - Fixed: Incorrect parameter names (model_name → model)
+    - Solution: Updated to match actual constructor signature
+  3. ServiceAnalyzer Memory Pattern (099837b)
+    - Fixed: ServiceAnalyzer doesn't store extracted_services in memory
+    - Solution: Load services/endpoints from JSON output files
+  4. FrontendAnalyzer Memory Pattern (2f195d7)
+    - Fixed: FrontendAnalyzer doesn't store extracted_forms in memory
+    - Solution: Load forms/components from JSON output files
+  5. Model Attribute References (ac25caa)
+    - Fixed: Incorrect attribute access patterns in PRD generation
+    - Solution: Updated to use correct model field names
+
+  ---
+  Output Structure
+
+  output/<project>/
+  ├── master_prd.md                    # Master PRD (all layers synthesized)
+  ├── prd/
+  │   ├── database_prd.md              # Database layer documentation
+  │   ├── service_prd.md               # Service layer documentation
+  │   └── frontend_prd.md              # Frontend layer documentation
+  ├── database/
+  │   ├── entities/                    # Individual entity JSON files
+  │   └── index.md                     # Database entity index
+  ├── services/
+  │   ├── definitions/                 # Individual service JSON files
+  │   ├── endpoints/                   # Individual endpoint JSON files
+  │   └── index.md                     # Service index
+  ├── frontend/
+  │   ├── forms/                       # Individual form JSON files
+  │   ├── components/                  # Individual component JSON files
+  │   └── index.md                     # Frontend index
+  ├── business_rules/
+  │   └── rules_by_layer.json         # Business rules catalog
+  └── .visit_log.jsonl                # Incremental processing log
+
+  ---
+  Commits
+
+  - d673ac2 feat: implement User Story 4 - Master PRD Synthesis
+  - 2f195d7 fix: frontend analyzer - load forms/components from JSON files
+  - 099837b fix: PRD command integration testing bugs
+  - ac25caa fix: correct model attribute references in PRD generation
+  - 51e5b16 feat: enhance PRD generation with comprehensive documentation
+  - 12ccdcb fix: remove PRDSection import (not yet implemented)
+  - 0d473fe feat: wire all layer analyzers into PRD CLI command
+  - 6b9309b feat: implement CLI command skeleton for PRD generation
+  - f2fad34 feat: implement MarkdownBuilder service and fix VisitLog tests
+  - 35e128c feat: implement frontend analyzer with form extraction
+  - ca43ff8 feat: implement service layer analyzer with API endpoint extraction
+  - 5ad1551 feat: implement database analyzer service with LLM extraction
+
+  ---
+  Dependencies
+
+  - Ollama: LLM for semantic code understanding (gemma3:12b model)
+  - Weaviate: Vector database for artifact storage
+  - Python 3.8+: Async support and type hints
+
+  ---
+  Future Enhancements
+
+  Potential follow-up work (not in this PR):
+  - HTML export with CSS styling
+  - Mermaid diagram generation for ERDs
+  - PDF export support
+  - GitHub wiki integration
+  - Incremental PRD updates (diff generation)
+
+  ---
+  🤖 Generated with https://claude.com/claude-code
+
+  Co-Authored-By: Claude Sonnet 4.5 noreply@anthropic.com
+
+  ---
+
+  ## Summary
+
+  Feature 002 is complete with all 4 user stories implemented:
+  - ✅ Database Schema Documentation
+  - ✅ Backend Service Documentation
+  - ✅ Frontend Component Documentation
+  - ✅ Master PRD Synthesis
+
+  All commits have been pushed to `002-prd-document-generation` branch. You can now create the pull request manually using the URL and description above.

@@ -32,3 +32,6 @@ codeindex discover --source-dir /Users/thomaskamsker/Documents/Atom/vron.one/pla
 
 test 
 Bash(python -m codeindex prd database --source-dir tests/fixtures/prd --output-dir /tmp/prd-test --help)
+
+# gh was installed 
+gh pr merge 1 --merge --delete-branch
