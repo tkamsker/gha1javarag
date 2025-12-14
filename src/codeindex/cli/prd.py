@@ -20,6 +20,7 @@ from codeindex.services.db_analyzer import DatabaseAnalyzer
 from codeindex.services.service_analyzer import ServiceAnalyzer
 from codeindex.services.frontend_analyzer import FrontendAnalyzer
 from codeindex.services.markdown_builder import MarkdownBuilder
+from codeindex.services.prd_generator import PRDGenerator
 from codeindex.models.prd import AnalysisLayer, ServiceDefinition, APIEndpoint, FormDefinition, UIComponent
 from codeindex.schemas import check_weaviate_health
 
@@ -365,7 +366,33 @@ def prd_command(
     if layer == 'full':
         if not quiet:
             click.echo("\n[INFO] Generating master PRD document...")
-        # TODO: Implement master PRD generation (Phase 4-5)
+
+        try:
+            # Initialize PRD Generator
+            prd_generator = PRDGenerator(
+                output_dir=output_dir,
+                ollama_client=ollama_client,
+                project_name=project
+            )
+
+            # Generate master PRD
+            master_prd_content = prd_generator.generate_master_prd()
+
+            # Write master PRD to file
+            master_prd_file = output_dir / "master_prd.md"
+            master_prd_file.write_text(master_prd_content, encoding="utf-8")
+
+            if not quiet:
+                click.echo(f"[SUCCESS] Master PRD generated: {master_prd_file}")
+
+            logger.info(f"Master PRD generated successfully: {master_prd_file}")
+
+        except Exception as e:
+            if not quiet:
+                click.echo(f"[ERROR] Failed to generate master PRD: {e}", err=True)
+            logger.error(f"Master PRD generation failed: {e}", exc_info=True)
+            analysis_results["partial_failures"].append("master_prd")
+            analysis_results["success"] = False
 
     # Print final summary
     if not quiet:
