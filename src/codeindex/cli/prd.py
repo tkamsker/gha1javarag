@@ -6,6 +6,7 @@ Documents from indexed codebase artifacts.
 """
 
 import logging
+import json
 from pathlib import Path
 from typing import Optional
 
@@ -19,7 +20,7 @@ from codeindex.services.db_analyzer import DatabaseAnalyzer
 from codeindex.services.service_analyzer import ServiceAnalyzer
 from codeindex.services.frontend_analyzer import FrontendAnalyzer
 from codeindex.services.markdown_builder import MarkdownBuilder
-from codeindex.models.prd import AnalysisLayer
+from codeindex.models.prd import AnalysisLayer, ServiceDefinition, APIEndpoint, FormDefinition, UIComponent
 from codeindex.schemas import check_weaviate_health
 
 logger = get_logger(__name__)
@@ -233,13 +234,8 @@ def prd_command(
     cli_context = ctx.obj
     config = cli_context.config
 
-    # Override config with CLI options
-    if source_dir:
-        config.java_source_dir = source_dir
-    if llm_model:
-        config.ollama_model_name = llm_model
-    if parallel:
-        config.max_concurrent_ai_calls = parallel
+    # Note: CLI options are used directly in function calls below
+    # Config properties are read-only and cannot be overridden
 
     # Enable verbose logging if requested
     if verbose:
@@ -290,8 +286,8 @@ def prd_command(
     try:
         ollama_client = OllamaClient(
             base_url=config.ollama_base_url,
-            model_name=config.ollama_model_name,
-            timeout=llm_timeout
+            model=llm_model or config.ollama_model_name,
+            max_retries=llm_retries
         )
     except Exception as e:
         if not quiet:
@@ -701,12 +697,38 @@ def _analyze_service_layer(
         # Run analysis
         result = analyzer.analyze_service_layer()
 
+        # Load extracted services and endpoints from output files
+        services = []
+        endpoints = []
+
+        # Load services from JSON files
+        services_dir = output_dir / "services" / "definitions"
+        if services_dir.exists():
+            for service_file in services_dir.glob("*.json"):
+                try:
+                    with open(service_file, "r", encoding="utf-8") as f:
+                        service_data = json.load(f)
+                        services.append(ServiceDefinition.from_dict(service_data))
+                except Exception as e:
+                    logger.warning(f"Failed to load service from {service_file}: {e}")
+
+        # Load endpoints from JSON files
+        endpoints_dir = output_dir / "services" / "endpoints"
+        if endpoints_dir.exists():
+            for endpoint_file in endpoints_dir.glob("*.json"):
+                try:
+                    with open(endpoint_file, "r", encoding="utf-8") as f:
+                        endpoint_data = json.load(f)
+                        endpoints.append(APIEndpoint.from_dict(endpoint_data))
+                except Exception as e:
+                    logger.warning(f"Failed to load endpoint from {endpoint_file}: {e}")
+
         # Generate index.md
         if not quiet:
             click.echo("[INFO] Generating service index...")
 
         index_content = MarkdownBuilder.build_index_markdown(
-            entities=analyzer.extracted_services,
+            entities=services,
             layer=AnalysisLayer.SERVICE,
             project=None
         )
@@ -719,18 +741,18 @@ def _analyze_service_layer(
         if not quiet:
             click.echo("[INFO] Generating service PRD...")
 
-        prd_content = _generate_service_prd(analyzer.extracted_services, analyzer.extracted_endpoints)
+        prd_content = _generate_service_prd(services, endpoints)
         prd_file = output_dir / "prd" / "service_prd.md"
         prd_file.parent.mkdir(parents=True, exist_ok=True)
         prd_file.write_text(prd_content, encoding="utf-8")
 
         if not quiet:
-            click.echo(f"[INFO] Service analysis complete: {result['services']} services, {result['endpoints']} endpoints")
+            click.echo(f"[INFO] Service analysis complete: {result.get('services_extracted', 0)} services, {result.get('endpoints_found', 0)} endpoints")
 
         return {
             "success": True,
-            "services": result.get("services", 0),
-            "endpoints": result.get("endpoints", 0),
+            "services": result.get("services_extracted", 0),
+            "endpoints": result.get("endpoints_found", 0),
             "analyzed": result.get("analyzed", 0),
             "skipped": result.get("skipped", 0),
             "failed": result.get("failed", 0)
