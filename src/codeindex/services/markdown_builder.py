@@ -16,7 +16,6 @@ from codeindex.models.prd import (
     NavigationFlow,
     BusinessRule,
     APIEndpoint,
-    PRDSection,
     AnalysisLayer,
 )
 
@@ -430,36 +429,19 @@ class MarkdownBuilder:
         return "\n".join(lines)
 
     @staticmethod
-    def build_prd_section(section: PRDSection) -> str:
+    def build_prd_section(section: Any) -> str:
         """
         Build markdown for a PRD section.
 
         Args:
-            section: PRDSection to render
+            section: PRDSection to render (PRDSection model not yet implemented)
 
         Returns:
             Markdown string
         """
-        lines = []
-
-        # Header (level based on section.level)
-        header_prefix = "#" * section.level
-        lines.append(f"{header_prefix} {section.title}\n")
-
-        # Content
-        lines.append(section.content)
-        lines.append("")
-
-        # Cross-references
-        if section.cross_references:
-            lines.append("### Related Items\n")
-            for ref in section.cross_references:
-                lines.append(f"- [{ref.target_name}]({ref.target_path})")
-                if ref.relationship:
-                    lines.append(f"  - *{ref.relationship}*")
-            lines.append("")
-
-        return "\n".join(lines)
+        # TODO: Implement PRDSection model and complete this method
+        # For now, return empty string
+        return ""
 
     @staticmethod
     def format_table(headers: List[str], rows: List[List[str]]) -> str:
@@ -582,6 +564,6 @@ def build_index_markdown(
     return MarkdownBuilder.build_index_markdown(entities, layer, project)
 
 
-def build_prd_section(section: PRDSection) -> str:
+def build_prd_section(section: Any) -> str:
     """Build markdown for PRD section."""
     return MarkdownBuilder.build_prd_section(section)

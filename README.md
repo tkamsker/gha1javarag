@@ -29,3 +29,6 @@ codeindex discover --source-dir /Users/thomaskamsker/Documents/Atom/vron.one/pla
 
 
 # Phase 2 generating prd 
+
+test 
+Bash(python -m codeindex prd database --source-dir tests/fixtures/prd --output-dir /tmp/prd-test --help)
