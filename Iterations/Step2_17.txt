@@ -12,3 +12,34 @@ git add run.sh && git commit -m "feat: add smart project name detection to run.s
    - ./run.sh myapp /path/to/source    # Explicit source dir
    - ./run.sh                          # Auto-detect everything"
    Commit run.sh changes
+
+# ----
+ The scripts have been successfully updated and committed. Here's what was completed:
+
+  Committed Changes:
+  - Updated run.sh with smart project name detection (commit 326d716)
+  - Pushed to main branch
+
+  Smart Project Name Detection:
+  Both run.sh and step2.sh now automatically determine project names:
+  1. Uses provided argument if specified
+  2. Auto-detects from pom.xml directory name
+  3. Generates timestamp format YYYY_MMM_DD_HHMM as fallback
+
+  Usage Examples:
+  # Auto-detect everything
+  ./run.sh
+
+  # Use JAVA_SOURCE_DIR from .env with custom project name
+  ./run.sh myapp
+
+  # Explicit source directory
+  ./run.sh myapp /path/to/source
+
+  Both scripts now consistently:
+  - Load JAVA_SOURCE_DIR from .env
+  - Support flexible argument patterns
+  - Provide clear error messages
+  - Include comprehensive help text
+
+  The full pipeline is ready for use with the enhanced automation features you requested.
