@@ -292,6 +292,11 @@ class ServiceAnalyzer:
         Returns:
             Service type string
         """
+        # GWT RPC Servlet (FR-002)
+        if ("Servlet" in file_name and
+            ("RemoteServiceServlet" in file_content or "RemoteService" in file_content)):
+            return "GWT RPC Servlet"
+
         # REST Controller
         if "@RestController" in file_content or "@RequestMapping" in file_content:
             return "REST Controller"
@@ -337,6 +342,8 @@ class ServiceAnalyzer:
             "**/*Dao.java",
             "**/*Client.java",
             "**/*Facade.java",
+            "**/*Servlet.java",       # GWT RPC servlets
+            "**/*ServletImpl.java",   # GWT RPC servlet implementations
             "**/*Manager.java",
         ]
 

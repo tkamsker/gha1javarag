@@ -1,0 +1,116 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+             xmlns:g="urn:import:com.google.gwt.user.client.ui">
+
+    <ui:style>
+        .formPanel {
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .fieldLabel {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .requiredField {
+            color: red;
+        }
+    </ui:style>
+
+    <g:HTMLPanel>
+        <h2>Flash Information Editor</h2>
+
+        <div class="{style.formPanel}">
+            <!-- Text input fields -->
+            <table>
+                <tr>
+                    <td class="{style.fieldLabel}">
+                        <g:Label ui:field="titleLabel">Title:&nbsp;<span class="{style.requiredField}">*</span></g:Label>
+                    </td>
+                    <td>
+                        <g:TextBox ui:field="titleTextBox" width="300px"/>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="{style.fieldLabel}">
+                        <g:Label ui:field="descriptionLabel">Description:</g:Label>
+                    </td>
+                    <td>
+                        <g:TextArea ui:field="descriptionTextArea" visibleLines="5" width="400px"/>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="{style.fieldLabel}">
+                        <g:Label ui:field="categoryLabel">Category:&nbsp;<span class="{style.requiredField}">*</span></g:Label>
+                    </td>
+                    <td>
+                        <g:ListBox ui:field="categoryListBox">
+                            <g:item value="NEWS">News</g:item>
+                            <g:item value="ALERT">Alert</g:item>
+                            <g:item value="INFO">Information</g:item>
+                            <g:item value="WARNING">Warning</g:item>
+                        </g:ListBox>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="{style.fieldLabel}">
+                        <g:Label ui:field="priorityLabel">Priority:</g:Label>
+                    </td>
+                    <td>
+                        <g:ListBox ui:field="priorityListBox">
+                            <g:item value="LOW">Low</g:item>
+                            <g:item value="MEDIUM">Medium</g:item>
+                            <g:item value="HIGH">High</g:item>
+                            <g:item value="CRITICAL">Critical</g:item>
+                        </g:ListBox>
+                    </td>
+                </tr>
+
+                <!-- Checkbox fields -->
+                <tr>
+                    <td colspan="2">
+                        <g:CheckBox ui:field="activeCheckBox">
+                            Active&nbsp;(visible to users)
+                        </g:CheckBox>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td colspan="2">
+                        <g:CheckBox ui:field="notifyCheckBox">
+                            Send notification email
+                        </g:CheckBox>
+                    </td>
+                </tr>
+
+                <!-- Date picker -->
+                <tr>
+                    <td class="{style.fieldLabel}">
+                        <g:Label ui:field="expirationLabel">Expiration Date:</g:Label>
+                    </td>
+                    <td>
+                        <g:DateBox ui:field="expirationDateBox" format="yyyy-MM-dd"/>
+                    </td>
+                </tr>
+
+                <!-- Additional text field without explicit label -->
+                <tr>
+                    <td>Author:</td>
+                    <td>
+                        <g:TextBox ui:field="authorTextBox" width="200px"/>
+                    </td>
+                </tr>
+
+                <!-- Action buttons -->
+                <tr>
+                    <td colspan="2" align="right">
+                        <g:Button ui:field="saveButton">Save</g:Button>
+                        <g:Button ui:field="cancelButton">Cancel</g:Button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </g:HTMLPanel>
+</ui:UiBinder>
