@@ -3,11 +3,20 @@
 # Java Codebase Indexer - Full Pipeline Runner (Updated)
 # ==============================================================================
 # Usage: ./run.sh [project-name] [source-dir]
-# Runs the complete pipeline: discover -> extract -> index -> status
+#
+# Project name determination (in priority order):
+#   1. If provided as first argument, use it
+#   2. If source-dir contains pom.xml, use directory name
+#   3. Otherwise use timestamp: YYYY_MMM_DD_HHMM
+#
+# Source directory determination:
+#   1. If provided as second argument, use it
+#   2. Otherwise use JAVA_SOURCE_DIR from .env
 #
 # Examples:
-#   ./run.sh myapp /path/to/source
-#   ./run.sh myapp  # Uses JAVA_SOURCE_DIR from .env
+#   ./run.sh myapp                    # Uses JAVA_SOURCE_DIR from .env
+#   ./run.sh myapp /path/to/source    # Explicit source dir
+#   ./run.sh                          # Auto-detect everything
 
 set -e  # Exit on error
 
@@ -37,37 +46,55 @@ fi
 # Activate virtual environment
 source $VENV_DIR/bin/activate
 
-# Check if .env exists
+# Load .env for JAVA_SOURCE_DIR
 if [ ! -f ".env" ]; then
-    warn ".env file not found. Using defaults."
+    warn ".env file not found. JAVA_SOURCE_DIR must be provided as argument."
 else
-    # Load .env for JAVA_SOURCE_DIR
+    # Load .env
     export $(grep -v '^#' .env | xargs)
 fi
 
 # ==============================================================================
-# Parse Arguments
+# Parse Arguments and Determine Project Name
 # ==============================================================================
 
-PROJECT_NAME="${1:-}"
-SOURCE_DIR="${2:-$JAVA_SOURCE_DIR}"
-
-if [ -z "$PROJECT_NAME" ]; then
-    err "Project name is required!"
-    echo "Usage: ./run.sh [project-name] [source-dir]"
-    echo "Example: ./run.sh myapp /path/to/source"
-    exit 1
-fi
-
-if [ -z "$SOURCE_DIR" ]; then
+# Get source directory (argument or from .env)
+if [ -n "$2" ]; then
+    SOURCE_DIR="$2"
+elif [ -n "$JAVA_SOURCE_DIR" ]; then
+    SOURCE_DIR="$JAVA_SOURCE_DIR"
+else
     err "Source directory not specified!"
     echo "Either provide it as second argument or set JAVA_SOURCE_DIR in .env"
+    echo "Usage: ./run.sh [project-name] [source-dir]"
     exit 1
 fi
 
+# Verify source directory exists
 if [ ! -d "$SOURCE_DIR" ]; then
     err "Source directory does not exist: $SOURCE_DIR"
     exit 1
+fi
+
+# Determine project name
+if [ -n "$1" ]; then
+    # Project name provided as argument
+    PROJECT_NAME="$1"
+    info "Using provided project name: $PROJECT_NAME"
+else
+    # Auto-detect project name
+    info "No project name provided, auto-detecting..."
+
+    # Check if source directory contains pom.xml
+    if [ -f "$SOURCE_DIR/pom.xml" ]; then
+        # Use directory name as project name
+        PROJECT_NAME=$(basename "$SOURCE_DIR")
+        ok "Found pom.xml, using directory name: $PROJECT_NAME"
+    else
+        # Use timestamp as project name
+        PROJECT_NAME=$(date +"%Y_%b_%d_%H%M" | tr '[:upper:]' '[:lower:]')
+        warn "No pom.xml found, using timestamp: $PROJECT_NAME"
+    fi
 fi
 
 # ==============================================================================
@@ -128,8 +155,8 @@ echo "  1. Search your codebase:"
 echo "     codeindex search \"your query\" --project $PROJECT_NAME"
 echo ""
 echo "  2. Generate PRD documentation:"
+echo "     ./step2.sh $PROJECT_NAME"
+echo "     # or with explicit source:"
 echo "     ./step2.sh $PROJECT_NAME \"$SOURCE_DIR\""
-echo "     or"
-echo "     codeindex prd full --project $PROJECT_NAME --source-dir \"$SOURCE_DIR\""
 echo ""
 echo "=============================================="
