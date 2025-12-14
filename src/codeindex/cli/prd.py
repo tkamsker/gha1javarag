@@ -814,12 +814,38 @@ def _analyze_frontend_layer(
         # Run analysis
         result = analyzer.analyze_frontend_layer()
 
+        # Load extracted forms and components from output files
+        forms = []
+        components = []
+
+        # Load forms from JSON files
+        forms_dir = output_dir / "frontend" / "forms"
+        if forms_dir.exists():
+            for form_file in forms_dir.glob("*.json"):
+                try:
+                    with open(form_file, "r", encoding="utf-8") as f:
+                        form_data = json.load(f)
+                        forms.append(FormDefinition.from_dict(form_data))
+                except Exception as e:
+                    logger.warning(f"Failed to load form from {form_file}: {e}")
+
+        # Load components from JSON files
+        components_dir = output_dir / "frontend" / "components"
+        if components_dir.exists():
+            for component_file in components_dir.glob("*.json"):
+                try:
+                    with open(component_file, "r", encoding="utf-8") as f:
+                        component_data = json.load(f)
+                        components.append(UIComponent.from_dict(component_data))
+                except Exception as e:
+                    logger.warning(f"Failed to load component from {component_file}: {e}")
+
         # Generate index.md
         if not quiet:
             click.echo("[INFO] Generating frontend index...")
 
         index_content = MarkdownBuilder.build_index_markdown(
-            entities=analyzer.extracted_forms,
+            entities=forms,
             layer=AnalysisLayer.FRONTEND,
             project=None
         )
@@ -832,18 +858,18 @@ def _analyze_frontend_layer(
         if not quiet:
             click.echo("[INFO] Generating frontend PRD...")
 
-        prd_content = _generate_frontend_prd(analyzer.extracted_forms, analyzer.extracted_components)
+        prd_content = _generate_frontend_prd(forms, components)
         prd_file = output_dir / "prd" / "frontend_prd.md"
         prd_file.parent.mkdir(parents=True, exist_ok=True)
         prd_file.write_text(prd_content, encoding="utf-8")
 
         if not quiet:
-            click.echo(f"[INFO] Frontend analysis complete: {result['forms']} forms, {result['components']} components")
+            click.echo(f"[INFO] Frontend analysis complete: {result.get('forms_extracted', 0)} forms, {result.get('components_found', 0)} components")
 
         return {
             "success": True,
-            "forms": result.get("forms", 0),
-            "components": result.get("components", 0),
+            "forms": result.get("forms_extracted", 0),
+            "components": result.get("components_found", 0),
             "analyzed": result.get("analyzed", 0),
             "skipped": result.get("skipped", 0),
             "failed": result.get("failed", 0)
