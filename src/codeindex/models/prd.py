@@ -73,6 +73,27 @@ class VisitStatus(str, Enum):
     IN_PROGRESS = "in_progress"
 
 
+class ServiceType(str, Enum):
+    """Service type classification."""
+    BUSINESS_SERVICE = "business_service"
+    DAO_SERVICE = "dao_service"
+    INTEGRATION_SERVICE = "integration_service"
+    CONTROLLER = "controller"
+    REST_CONTROLLER = "rest_controller"
+    UTILITY_SERVICE = "utility_service"
+
+
+class HTTPMethod(str, Enum):
+    """HTTP method enum."""
+    GET = "GET"
+    POST = "POST"
+    PUT = "PUT"
+    DELETE = "DELETE"
+    PATCH = "PATCH"
+    HEAD = "HEAD"
+    OPTIONS = "OPTIONS"
+
+
 # ==============================================================================
 # Nested Data Types
 # ==============================================================================
@@ -193,6 +214,204 @@ class CodeSnippet:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "CodeSnippet":
         """Create from dictionary."""
+        return cls(**data)
+
+
+@dataclass
+class Parameter:
+    """Method parameter definition."""
+    name: str
+    type: str
+    description: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "name": self.name,
+            "type": self.type,
+            "description": self.description,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Parameter":
+        """Create from dictionary."""
+        return cls(**data)
+
+
+@dataclass
+class ServiceOperation:
+    """Service operation/method definition."""
+    name: str
+    signature: str
+    return_type: str
+    parameters: List[Parameter] = field(default_factory=list)
+    description: Optional[str] = None
+    throws: List[str] = field(default_factory=list)
+    annotations: List[str] = field(default_factory=list)
+    line_number: Optional[int] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "name": self.name,
+            "signature": self.signature,
+            "return_type": self.return_type,
+            "parameters": [p.to_dict() for p in self.parameters],
+            "description": self.description,
+            "throws": self.throws,
+            "annotations": self.annotations,
+            "line_number": self.line_number,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ServiceOperation":
+        """Create from dictionary."""
+        if "parameters" in data:
+            data["parameters"] = [Parameter.from_dict(p) for p in data["parameters"]]
+        return cls(**data)
+
+
+@dataclass
+class ServiceDependency:
+    """Service dependency/injection definition."""
+    target_service: str
+    dependency_type: str  # injection, reference, static
+    injection_method: Optional[str] = None  # constructor, field, setter
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "target_service": self.target_service,
+            "dependency_type": self.dependency_type,
+            "injection_method": self.injection_method,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ServiceDependency":
+        """Create from dictionary."""
+        return cls(**data)
+
+
+@dataclass
+class TransactionInfo:
+    """Transaction boundary information."""
+    method_name: str
+    transaction_type: str  # REQUIRED, REQUIRES_NEW, SUPPORTS, etc.
+    propagation: Optional[str] = None
+    isolation_level: Optional[str] = None
+    read_only: Optional[bool] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "method_name": self.method_name,
+            "transaction_type": self.transaction_type,
+            "propagation": self.propagation,
+            "isolation_level": self.isolation_level,
+            "read_only": self.read_only,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "TransactionInfo":
+        """Create from dictionary."""
+        return cls(**data)
+
+
+@dataclass
+class EndpointParameter:
+    """API endpoint parameter definition."""
+    name: str
+    location: str  # path, query, header, body
+    type: str
+    required: bool
+    description: Optional[str] = None
+    default_value: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "name": self.name,
+            "location": self.location,
+            "type": self.type,
+            "required": self.required,
+            "description": self.description,
+            "default_value": self.default_value,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "EndpointParameter":
+        """Create from dictionary."""
+        return cls(**data)
+
+
+@dataclass
+class StatusCode:
+    """HTTP status code definition."""
+    code: int
+    description: str
+    response_type: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "code": self.code,
+            "description": self.description,
+            "response_type": self.response_type,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "StatusCode":
+        """Create from dictionary."""
+        return cls(**data)
+
+
+@dataclass
+class RequestFormat:
+    """API request format definition."""
+    content_type: str
+    schema_description: Optional[str] = None
+    parameters: List[EndpointParameter] = field(default_factory=list)
+    example: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "content_type": self.content_type,
+            "schema_description": self.schema_description,
+            "parameters": [p.to_dict() for p in self.parameters],
+            "example": self.example,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "RequestFormat":
+        """Create from dictionary."""
+        if "parameters" in data:
+            data["parameters"] = [EndpointParameter.from_dict(p) for p in data["parameters"]]
+        return cls(**data)
+
+
+@dataclass
+class ResponseFormat:
+    """API response format definition."""
+    content_type: str
+    status_codes: List[StatusCode]
+    schema_description: Optional[str] = None
+    example: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "content_type": self.content_type,
+            "status_codes": [sc.to_dict() for sc in self.status_codes],
+            "schema_description": self.schema_description,
+            "example": self.example,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ResponseFormat":
+        """Create from dictionary."""
+        if "status_codes" in data:
+            data["status_codes"] = [StatusCode.from_dict(sc) for sc in data["status_codes"]]
         return cls(**data)
 
 
@@ -369,6 +588,170 @@ class BusinessRule:
             data["rule_type"] = RuleType(data["rule_type"])
         if "severity" in data and isinstance(data["severity"], str):
             data["severity"] = RuleSeverity(data["severity"])
+
+        # Convert datetime
+        if "created_at" in data and isinstance(data["created_at"], str):
+            data["created_at"] = datetime.fromisoformat(data["created_at"])
+
+        return cls(**data)
+
+
+@dataclass
+class ServiceDefinition:
+    """
+    Backend service class definition.
+
+    Represents a service class with its operations, dependencies, and exposed endpoints.
+    """
+    # Identifiers
+    id: str  # Unique identifier (qualified class name)
+    class_name: str  # Simple class name
+    qualified_name: str  # Fully qualified class name
+    package: str  # Java package
+    source_file: str  # Path to service class file
+    service_type: ServiceType  # Type of service
+    operations: List[ServiceOperation]  # Public methods/operations
+    created_at: datetime  # When service was analyzed
+
+    # Optional fields
+    description: Optional[str] = None  # LLM-generated description
+    dependencies: List[ServiceDependency] = field(default_factory=list)
+    data_dependencies: List[str] = field(default_factory=list)  # DatabaseEntity IDs
+    endpoints: List[str] = field(default_factory=list)  # APIEndpoint IDs
+    business_rules: List[str] = field(default_factory=list)  # BusinessRule IDs
+    transaction_boundaries: List[TransactionInfo] = field(default_factory=list)
+    frameworks: List[str] = field(default_factory=list)  # Spring, EJB, etc.
+    domain: Optional[str] = None  # Business domain
+
+    def __post_init__(self):
+        """Validate after initialization."""
+        if not self.id:
+            raise ValueError("id is required")
+        if not self.class_name:
+            raise ValueError("class_name is required")
+        if not self.qualified_name:
+            raise ValueError("qualified_name is required")
+        if not self.source_file:
+            raise ValueError("source_file is required")
+        if not self.operations:
+            raise ValueError("operations is required (at least one)")
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "id": self.id,
+            "class_name": self.class_name,
+            "qualified_name": self.qualified_name,
+            "package": self.package,
+            "source_file": self.source_file,
+            "service_type": self.service_type.value,
+            "description": self.description,
+            "operations": [op.to_dict() for op in self.operations],
+            "dependencies": [dep.to_dict() for dep in self.dependencies],
+            "data_dependencies": self.data_dependencies,
+            "endpoints": self.endpoints,
+            "business_rules": self.business_rules,
+            "transaction_boundaries": [tb.to_dict() for tb in self.transaction_boundaries],
+            "frameworks": self.frameworks,
+            "domain": self.domain,
+            "created_at": self.created_at.isoformat(),
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ServiceDefinition":
+        """Create from dictionary."""
+        # Convert nested objects
+        if "operations" in data:
+            data["operations"] = [ServiceOperation.from_dict(op) for op in data["operations"]]
+        if "dependencies" in data:
+            data["dependencies"] = [ServiceDependency.from_dict(dep) for dep in data["dependencies"]]
+        if "transaction_boundaries" in data:
+            data["transaction_boundaries"] = [TransactionInfo.from_dict(tb) for tb in data["transaction_boundaries"]]
+
+        # Convert enums
+        if "service_type" in data and isinstance(data["service_type"], str):
+            data["service_type"] = ServiceType(data["service_type"])
+
+        # Convert datetime
+        if "created_at" in data and isinstance(data["created_at"], str):
+            data["created_at"] = datetime.fromisoformat(data["created_at"])
+
+        return cls(**data)
+
+
+@dataclass
+class APIEndpoint:
+    """
+    REST or SOAP endpoint definition.
+
+    Represents an API endpoint exposed by a backend service.
+    """
+    # Identifiers
+    id: str  # Unique identifier (method:path)
+    http_method: HTTPMethod  # HTTP method
+    path: str  # URL path or pattern
+    service_id: str  # ServiceDefinition ID implementing this endpoint
+    operation_name: str  # Service method handling this endpoint
+    source_file: str  # File where endpoint is defined
+    created_at: datetime  # When endpoint was analyzed
+
+    # Optional fields
+    description: Optional[str] = None  # LLM-generated description
+    request_format: Optional[RequestFormat] = None
+    response_format: Optional[ResponseFormat] = None
+    authentication_required: bool = True
+    authorization_roles: List[str] = field(default_factory=list)
+    rate_limited: bool = False
+    deprecated: bool = False
+    produces: List[str] = field(default_factory=list)  # Media types produced
+    consumes: List[str] = field(default_factory=list)  # Media types consumed
+
+    def __post_init__(self):
+        """Validate after initialization."""
+        if not self.id:
+            raise ValueError("id is required")
+        if not self.path:
+            raise ValueError("path is required")
+        if not self.service_id:
+            raise ValueError("service_id is required")
+        if not self.operation_name:
+            raise ValueError("operation_name is required")
+        if not self.source_file:
+            raise ValueError("source_file is required")
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "id": self.id,
+            "http_method": self.http_method.value,
+            "path": self.path,
+            "service_id": self.service_id,
+            "operation_name": self.operation_name,
+            "source_file": self.source_file,
+            "description": self.description,
+            "request_format": self.request_format.to_dict() if self.request_format else None,
+            "response_format": self.response_format.to_dict() if self.response_format else None,
+            "authentication_required": self.authentication_required,
+            "authorization_roles": self.authorization_roles,
+            "rate_limited": self.rate_limited,
+            "deprecated": self.deprecated,
+            "produces": self.produces,
+            "consumes": self.consumes,
+            "created_at": self.created_at.isoformat(),
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "APIEndpoint":
+        """Create from dictionary."""
+        # Convert nested objects
+        if "request_format" in data and data["request_format"]:
+            data["request_format"] = RequestFormat.from_dict(data["request_format"])
+        if "response_format" in data and data["response_format"]:
+            data["response_format"] = ResponseFormat.from_dict(data["response_format"])
+
+        # Convert enums
+        if "http_method" in data and isinstance(data["http_method"], str):
+            data["http_method"] = HTTPMethod(data["http_method"])
 
         # Convert datetime
         if "created_at" in data and isinstance(data["created_at"], str):
