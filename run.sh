@@ -101,40 +101,45 @@ fi
 # Pipeline Execution
 # ==============================================================================
 
+# Define file paths for pipeline artifacts
+DISCOVERY_FILE="data/discovery-${PROJECT_NAME}.jsonl"
+EXTRACTION_FILE="data/extraction-${PROJECT_NAME}.jsonl"
+
 echo ""
 echo "=============================================="
 echo "Java Codebase Indexer - Full Pipeline"
 echo "=============================================="
 echo "Project:    $PROJECT_NAME"
 echo "Source:     $SOURCE_DIR"
+echo "Artifacts:  data/"
 echo "=============================================="
 echo ""
 
 # Step 1: Discover
 info "Step 1: Discovering source files..."
-echo "Command: codeindex discover --source-dir \"$SOURCE_DIR\" --project \"$PROJECT_NAME\""
-codeindex discover --source-dir "$SOURCE_DIR" --project "$PROJECT_NAME"
+echo "Command: codeindex discover --source-dir \"$SOURCE_DIR\" --project \"$PROJECT_NAME\" --output \"$DISCOVERY_FILE\""
+codeindex discover --source-dir "$SOURCE_DIR" --project "$PROJECT_NAME" --output "$DISCOVERY_FILE"
 ok "Discovery complete"
 echo ""
 
 # Step 2: Extract
 info "Step 2: Extracting semantic information with AI..."
-echo "Command: codeindex extract --project \"$PROJECT_NAME\""
-codeindex extract --project "$PROJECT_NAME"
+echo "Command: codeindex extract --inventory \"$DISCOVERY_FILE\" --output \"$EXTRACTION_FILE\""
+codeindex extract --inventory "$DISCOVERY_FILE" --output "$EXTRACTION_FILE"
 ok "Extraction complete"
 echo ""
 
 # Step 3: Index
 info "Step 3: Indexing artifacts in Weaviate..."
-echo "Command: codeindex index --project \"$PROJECT_NAME\""
-codeindex index --project "$PROJECT_NAME"
+echo "Command: codeindex index --inventory \"$DISCOVERY_FILE\" --extraction \"$EXTRACTION_FILE\" --create-schema"
+codeindex index --inventory "$DISCOVERY_FILE" --extraction "$EXTRACTION_FILE" --create-schema
 ok "Indexing complete"
 echo ""
 
 # Step 4: Status
 info "Step 4: Checking indexing status..."
-echo "Command: codeindex status --project \"$PROJECT_NAME\""
-codeindex status --project "$PROJECT_NAME"
+echo "Command: codeindex status"
+codeindex status
 ok "Status check complete"
 echo ""
 
@@ -147,16 +152,21 @@ ok "Full Pipeline Complete!"
 echo "=============================================="
 echo ""
 echo "Pipeline Results:"
-echo "  Project: $PROJECT_NAME"
-echo "  Source:  $SOURCE_DIR"
+echo "  Project:    $PROJECT_NAME"
+echo "  Source:     $SOURCE_DIR"
+echo "  Discovery:  $DISCOVERY_FILE"
+echo "  Extraction: $EXTRACTION_FILE"
 echo ""
 echo "Next steps:"
 echo "  1. Search your codebase:"
-echo "     codeindex search \"your query\" --project $PROJECT_NAME"
+echo "     codeindex search \"your query\""
 echo ""
 echo "  2. Generate PRD documentation:"
 echo "     ./step2.sh $PROJECT_NAME"
 echo "     # or with explicit source:"
 echo "     ./step2.sh $PROJECT_NAME \"$SOURCE_DIR\""
+echo ""
+echo "  3. View indexing status:"
+echo "     codeindex status"
 echo ""
 echo "=============================================="
