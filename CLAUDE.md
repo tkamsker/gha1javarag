@@ -313,6 +313,8 @@ Note: The `run.sh` script expects `src/main.py` but the src directory may be emp
 ## Active Technologies
 - Python 3.8+ (minimum version for type hints and modern async support) (001-java-codebase-indexer)
 - Python 3.8+ (minimum version for type hints and async support, consistent with Feature 001) (002-prd-document-generation)
+- Python 3.8+ (existing codebase requirement) (001-gwt-prd-support)
+- Weaviate vector database (existing - adds GWT-specific metadata fields) (001-gwt-prd-support)
 
 ## Recent Changes
 - 001-java-codebase-indexer: Added Python 3.8+ (minimum version for type hints and modern async support)
