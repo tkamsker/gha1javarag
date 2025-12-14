@@ -68,6 +68,42 @@ class GwtUiBinderParser:
         except Exception:
             return False
 
+    def analyze(self, file_path: Path, content: str, semantic_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Analyze UiBinder XML template and extract GWT metadata.
+
+        This is the main entry point called by the GWT analyzer registry.
+        Wraps the parse() method and adds GWT-specific metadata.
+
+        Args:
+            file_path: Path to .ui.xml file
+            content: XML content
+            semantic_data: Optional AI-generated semantic data (not used for UiBinder)
+
+        Returns:
+            Dictionary with GWT UiBinder metadata including form fields
+        """
+        from codeindex.utils.gwt_patterns import GwtRole
+
+        # Use the parse method to extract fields
+        parse_result = self.parse(file_path, content)
+
+        # Add GWT-specific metadata
+        result = {
+            'gwt_role': GwtRole.UI_BINDER.value,
+            'template_name': parse_result['template_name'],
+            'template_path': parse_result['template_path'],
+            'form_fields': parse_result['form_fields'],
+            'field_count': parse_result['field_count'],
+            'warnings': parse_result.get('warnings', [])
+        }
+
+        # Include error if present
+        if 'error' in parse_result:
+            result['error'] = parse_result['error']
+
+        return result
+
     def parse(self, file_path: Path, content: str) -> Dict[str, Any]:
         """
         Parse UiBinder XML template and extract form fields.
