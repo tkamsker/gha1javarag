@@ -3,11 +3,20 @@
 # Step 2: PRD Generation from Indexed Codebase
 # ==============================================================================
 # Usage: ./step2.sh [project-name] [source-dir] [output-dir]
-# Generates comprehensive Product Requirements Documents from indexed code
+#
+# Project name determination (in priority order):
+#   1. If provided as first argument, use it
+#   2. If source-dir contains pom.xml, use directory name
+#   3. Otherwise use timestamp: YYYY_MMM_DD_HHMM
+#
+# Source directory determination:
+#   1. If provided as second argument, use it
+#   2. Otherwise use JAVA_SOURCE_DIR from .env
 #
 # Examples:
-#   ./step2.sh myapp /path/to/source ./docs/myapp-prd
-#   ./step2.sh myapp  # Uses JAVA_SOURCE_DIR from .env and default output
+#   ./step2.sh myapp                    # Uses JAVA_SOURCE_DIR from .env
+#   ./step2.sh myapp /path/to/source    # Explicit source dir
+#   ./step2.sh                          # Auto-detect project name from source dir
 #
 # Prerequisites:
 #   - Run ./step1.sh first (setup virtual environment)
@@ -44,42 +53,62 @@ fi
 # Activate virtual environment
 source $VENV_DIR/bin/activate
 
-# Check if .env exists
+# Load .env for JAVA_SOURCE_DIR
 if [ ! -f ".env" ]; then
-    warn ".env file not found. Using defaults."
+    warn ".env file not found. JAVA_SOURCE_DIR must be provided as argument."
 else
-    # Load .env for JAVA_SOURCE_DIR
+    # Load .env
     export $(grep -v '^#' .env | xargs)
 fi
 
 # ==============================================================================
-# Parse Arguments
+# Parse Arguments and Determine Project Name
 # ==============================================================================
 
-PROJECT_NAME="${1:-}"
-SOURCE_DIR="${2:-$JAVA_SOURCE_DIR}"
-OUTPUT_DIR="${3:-./output/${PROJECT_NAME}-prd}"
-
-if [ -z "$PROJECT_NAME" ]; then
-    err "Project name is required!"
-    echo "Usage: ./step2.sh [project-name] [source-dir] [output-dir]"
-    echo "Example: ./step2.sh myapp /path/to/source ./docs/prd"
-    exit 1
-fi
-
-if [ -z "$SOURCE_DIR" ]; then
+# Get source directory (argument or from .env)
+if [ -n "$2" ]; then
+    SOURCE_DIR="$2"
+elif [ -n "$JAVA_SOURCE_DIR" ]; then
+    SOURCE_DIR="$JAVA_SOURCE_DIR"
+else
     err "Source directory not specified!"
     echo "Either provide it as second argument or set JAVA_SOURCE_DIR in .env"
+    echo "Usage: ./step2.sh [project-name] [source-dir] [output-dir]"
     exit 1
 fi
 
+# Verify source directory exists
 if [ ! -d "$SOURCE_DIR" ]; then
     err "Source directory does not exist: $SOURCE_DIR"
     exit 1
 fi
 
+# Determine project name
+if [ -n "$1" ]; then
+    # Project name provided as argument
+    PROJECT_NAME="$1"
+    info "Using provided project name: $PROJECT_NAME"
+else
+    # Auto-detect project name
+    info "No project name provided, auto-detecting..."
+
+    # Check if source directory contains pom.xml
+    if [ -f "$SOURCE_DIR/pom.xml" ]; then
+        # Use directory name as project name
+        PROJECT_NAME=$(basename "$SOURCE_DIR")
+        ok "Found pom.xml, using directory name: $PROJECT_NAME"
+    else
+        # Use timestamp as project name
+        PROJECT_NAME=$(date +"%Y_%b_%d_%H%M" | tr '[:upper:]' '[:lower:]')
+        warn "No pom.xml found, using timestamp: $PROJECT_NAME"
+    fi
+fi
+
+# Determine output directory
+OUTPUT_DIR="${3:-./output/${PROJECT_NAME}-prd}"
+
 # ==============================================================================
-# Service Health Check
+# Summary of Configuration
 # ==============================================================================
 
 echo ""
@@ -91,6 +120,10 @@ echo "Source:     $SOURCE_DIR"
 echo "Output:     $OUTPUT_DIR"
 echo "=============================================="
 echo ""
+
+# ==============================================================================
+# Service Health Check
+# ==============================================================================
 
 section "Checking service health..."
 
@@ -119,7 +152,10 @@ info "Checking if project is indexed..."
 STATUS_OUTPUT=$(codeindex status --project "$PROJECT_NAME" 2>&1 || echo "ERROR")
 if echo "$STATUS_OUTPUT" | grep -q "Artifacts: 0" || echo "$STATUS_OUTPUT" | grep -q "ERROR"; then
     err "Project '$PROJECT_NAME' has no indexed artifacts!"
-    echo "Run the indexing pipeline first: ./run.sh $PROJECT_NAME \"$SOURCE_DIR\""
+    echo ""
+    echo "Run the indexing pipeline first:"
+    echo "  ./run.sh $PROJECT_NAME \"$SOURCE_DIR\""
+    echo ""
     exit 1
 fi
 

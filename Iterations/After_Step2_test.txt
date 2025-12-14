@@ -1,0 +1,8 @@
+ ./docker-weaviate.sh status 2>&1 | head -20
+
+
+ chmod +x run.sh step2.sh && ls -la *.sh | grep -E "(run.sh|step1.sh|step2.sh
+
+ ./step2.sh cuco-ui-admin /Users/thomaskamsker/Documents/Atom/vron.one/playground/java/cuco-ui-admin/src/main/java ./output/cuco-prd-demo
+
+ cat ./output/cuco-prd-demo/master_prd.md
