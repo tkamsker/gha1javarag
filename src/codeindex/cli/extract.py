@@ -341,3 +341,13 @@ def _print_extraction_summary(results, inventory):
 
     if frameworks:
         click.echo(f"\nFrameworks detected: {', '.join(sorted(frameworks))}")
+
+    # T093: Count DTOs classified
+    dto_count = 0
+    for result in results:
+        if result.semantic_data and result.semantic_data.get('is_dto'):
+            dto_count += 1
+
+    if dto_count > 0:
+        click.echo(f"\nDTOs classified: {dto_count}")
+        logger.info(f"Classified {dto_count} Data Transfer Objects")

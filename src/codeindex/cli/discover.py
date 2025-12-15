@@ -187,11 +187,27 @@ def discover_command(
 
             if inventory.projects:
                 click.echo("\nProjects:")
+                total_deps_resolved = 0
+                total_deps_not_found = 0
                 for proj in inventory.projects:
                     artifact_id = proj.get('artifact_id') or 'unknown'
                     version = proj.get('version') or 'unknown'
                     file_count = proj.get('file_count', 0)
                     click.echo(f"  • {artifact_id:30s} v{version:15s} ({file_count} files)")
+
+                    # T093: Track dependency resolution metrics
+                    if 'dependency_resolution' in proj and proj['dependency_resolution']:
+                        dep_res = proj['dependency_resolution']
+                        total_deps_resolved += dep_res.get('resolved', 0)
+                        total_deps_not_found += dep_res.get('not_found', 0)
+
+                # T093: Log dependency resolution metrics
+                if dependency_depth > 0 and total_deps_resolved > 0:
+                    click.echo(f"\nDependency Resolution:")
+                    click.echo(f"  Resolved: {total_deps_resolved}")
+                    if total_deps_not_found > 0:
+                        click.echo(f"  Not found: {total_deps_not_found}")
+                    logger.info(f"Resolved {total_deps_resolved} dependencies, {total_deps_not_found} not found")
 
         # Save to file if not dry-run
         if not dry_run:
