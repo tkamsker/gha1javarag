@@ -764,6 +764,8 @@ Note: The `run.sh` script expects `src/main.py` but the src directory may be emp
 - Python 3.8+ (minimum version for type hints and async support, consistent with Feature 001) (002-prd-document-generation)
 - Python 3.8+ (existing codebase requirement) (001-gwt-prd-support)
 - Weaviate vector database (existing - adds GWT-specific metadata fields) (001-gwt-prd-support)
+- Python 3.8+ (minimum for type hints and async support, consistent with Feature 001) (004-maven-dependency-resolution)
+- Weaviate vector database (existing) - extended with DtoArtifact schema (004-maven-dependency-resolution)
 
 ## Recent Changes
 - 001-java-codebase-indexer: Added Python 3.8+ (minimum version for type hints and modern async support)

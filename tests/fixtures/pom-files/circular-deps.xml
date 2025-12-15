@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example.circular</groupId>
+    <artifactId>circular-project-a</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>Circular Dependency Test Project A</name>
+    <description>Project with circular dependency for testing</description>
+
+    <dependencies>
+        <!-- This creates a circular dependency: A -> B -> C -> A -->
+        <dependency>
+            <groupId>com.example.circular</groupId>
+            <artifactId>circular-project-b</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <!-- Direct dependency -->
+        <dependency>
+            <groupId>at.a1ta.cuco</groupId>
+            <artifactId>cuco-common</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+    </dependencies>
+</project>

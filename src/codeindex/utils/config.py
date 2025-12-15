@@ -33,6 +33,16 @@ class Config:
         path_str = os.getenv("JAVA_SOURCE_DIR")
         return Path(path_str) if path_str else None
 
+    @property
+    def project_subdirectory(self) -> Optional[str]:
+        """Project subdirectory within JAVA_SOURCE_DIR for scoped analysis."""
+        return os.getenv("PROJECT_SUBDIRECTORY") or None
+
+    @property
+    def dependency_depth(self) -> int:
+        """Maximum dependency depth to resolve (0=no dependencies, 1=direct only, 2+=transitive)."""
+        return int(os.getenv("DEPENDENCY_DEPTH", "1"))
+
     # Weaviate Configuration
 
     @property
@@ -148,6 +158,8 @@ class Config:
         """Convert configuration to dictionary for debugging."""
         return {
             "java_source_dir": str(self.java_source_dir) if self.java_source_dir else None,
+            "project_subdirectory": self.project_subdirectory,
+            "dependency_depth": self.dependency_depth,
             "weaviate_url": self.weaviate_url,
             "weaviate_batch_size": self.weaviate_batch_size,
             "ollama_base_url": self.ollama_base_url,

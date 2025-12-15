@@ -44,6 +44,12 @@ logger = get_logger(__name__)
     is_flag=True,
     help='Suppress progress output'
 )
+@click.option(
+    '--dependency-depth',
+    type=int,
+    default=1,
+    help='Maximum depth for Maven dependency resolution (default: 1)'
+)
 @click.pass_context
 def discover_command(
     ctx,
@@ -51,7 +57,8 @@ def discover_command(
     output: Optional[Path],
     project: Optional[str],
     dry_run: bool,
-    quiet: bool
+    quiet: bool,
+    dependency_depth: int
 ):
     """
     Discover Maven projects and create file inventory.
@@ -102,13 +109,15 @@ def discover_command(
     logger.info(f"Discovering Maven projects in {source_dir}")
 
     # Create discovery service
-    service = DiscoveryService(config=config)
+    service = DiscoveryService(config=config, dependency_depth=dependency_depth)
 
 
     try:
         # Show progress message
         if not quiet and output_format == 'text':
             click.echo(f"Discovering Maven projects in {source_dir}...")
+            if dependency_depth > 0:
+                click.echo(f"Dependency resolution depth: {dependency_depth}")
 
         # Generate discovery inventory
         if project:

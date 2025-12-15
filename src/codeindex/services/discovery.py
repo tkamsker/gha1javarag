@@ -17,6 +17,7 @@ from codeindex.models.inventory import DiscoveryInventory
 from codeindex.models import ArtifactType
 from codeindex.services.maven import MavenParser, POMParseError
 from codeindex.services.classifier import FileClassifier
+from codeindex.services.dependency_resolver import resolve_dependencies
 
 logger = logging.getLogger(__name__)
 
@@ -256,14 +257,16 @@ class DiscoveryService:
     Orchestrates project discovery, file scanning, and inventory generation.
     """
 
-    def __init__(self, config: Optional[Any] = None):
+    def __init__(self, config: Optional[Any] = None, dependency_depth: int = 1):
         """
         Initialize discovery service.
 
         Args:
             config: Optional configuration object
+            dependency_depth: Maximum depth for Maven dependency resolution (default: 1)
         """
         self.config = config
+        self.dependency_depth = dependency_depth
         self.logger = logging.getLogger(__name__)
         self.classifier = FileClassifier()
         self.maven_parser = MavenParser()
@@ -362,6 +365,42 @@ class DiscoveryService:
             file_count = 0
             file_list = []
 
+            # Resolve dependencies if enabled (Feature 004)
+            dependency_graph = None
+            resolved_dependency_paths = []
+            if self.dependency_depth > 0:
+                pom_path = project_path / "pom.xml"
+                if pom_path.exists():
+                    try:
+                        self.logger.info(f"Resolving dependencies for {project.artifact_id}")
+                        dependency_graph = resolve_dependencies(
+                            root_pom=pom_path,
+                            base_dir=root_directory,
+                            max_depth=self.dependency_depth,
+                            project_name=project.artifact_id
+                        )
+
+                        # Log dependency resolution statistics (T034)
+                        self.logger.info(
+                            f"Dependency resolution complete for '{project.artifact_id}': "
+                            f"Total={dependency_graph.total_dependencies}, "
+                            f"Resolved={dependency_graph.resolved_count}, "
+                            f"Not found={dependency_graph.not_found_count}, "
+                            f"Circular={dependency_graph.circular_count}, "
+                            f"Max depth={dependency_graph.max_depth}"
+                        )
+
+                        # Collect resolved dependency paths for file scanning (T035)
+                        resolved_deps = dependency_graph.get_resolved_dependencies()
+                        for dep in resolved_deps:
+                            if dep.resolved_path:
+                                resolved_dependency_paths.append(dep.resolved_path)
+                                self.logger.debug(f"  └─ Resolved: {dep.artifact_id} -> {dep.resolved_path}")
+
+                    except Exception as e:
+                        self.logger.warning(f"Dependency resolution failed for {project.artifact_id}: {e}")
+
+            # Scan files in project directory
             for file_path, artifact_type in self.scan_and_classify(project_path):
                 # Skip binary static assets (images, videos, etc.) - not useful for code analysis
                 if artifact_type == ArtifactType.STATIC_ASSET:
@@ -377,14 +416,44 @@ class DiscoveryService:
                     'relative_path': str(file_path.relative_to(project_path)) if file_path.is_relative_to(project_path) else str(file_path)
                 })
 
+            # Scan files in resolved dependency directories (T035)
+            for dep_path in resolved_dependency_paths:
+                self.logger.debug(f"Scanning dependency: {dep_path}")
+                for file_path, artifact_type in self.scan_and_classify(dep_path):
+                    # Skip binary static assets
+                    if artifact_type == ArtifactType.STATIC_ASSET:
+                        continue
+
+                    file_count += 1
+                    files_by_type[artifact_type.value] += 1
+
+                    # Add file entry with dependency marker
+                    file_list.append({
+                        'path': str(file_path),
+                        'type': artifact_type.name,
+                        'relative_path': str(file_path.relative_to(dep_path)) if file_path.is_relative_to(dep_path) else str(file_path),
+                        'is_dependency': True,
+                        'dependency_path': str(dep_path)
+                    })
+
             project.file_count = file_count
             total_files += file_count
 
             self.logger.debug(f"Project {project.artifact_id}: {file_count} files")
 
-            # Add project with file list
+            # Add project with file list and dependency info
             project_dict = project.to_dict()
             project_dict['files'] = file_list
+            if dependency_graph:
+                project_dict['dependency_resolution'] = {
+                    'total': dependency_graph.total_dependencies,
+                    'resolved': dependency_graph.resolved_count,
+                    'not_found': dependency_graph.not_found_count,
+                    'circular': dependency_graph.circular_count,
+                    'max_depth': dependency_graph.max_depth,
+                    'success_rate': dependency_graph.success_rate,
+                    'resolution_duration': dependency_graph.resolution_duration
+                }
             projects_with_files.append(project_dict)
 
         # Calculate duration

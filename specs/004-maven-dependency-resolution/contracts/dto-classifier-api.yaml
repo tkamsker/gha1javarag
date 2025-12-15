@@ -1,0 +1,484 @@
+openapi: 3.0.3
+info:
+  title: DTO Classifier API
+  description: |
+    Internal API contract for Data Transfer Object (DTO) pattern recognition
+    and classification. This contract defines the function signatures and
+    behavior for the DTO classification and extraction services.
+  version: 1.0.0
+  contact:
+    name: Feature 004 - Maven Dependency Resolution
+
+paths: {}  # Internal Python API, not HTTP endpoints
+
+components:
+  schemas:
+    DtoField:
+      type: object
+      description: Individual field within a DTO
+      required:
+        - name
+        - field_type
+        - modifiers
+      properties:
+        name:
+          type: string
+          description: Field name
+          example: "userId"
+        field_type:
+          type: string
+          description: Java type (simple or generic)
+          example: "Long"
+        modifiers:
+          type: array
+          items:
+            type: string
+            enum: [private, protected, public, static, final, transient]
+          description: Field modifiers
+          example: ["private", "final"]
+        validation_annotations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationAnnotation'
+          description: JSR-303 validation annotations
+        is_nested_dto:
+          type: boolean
+          default: false
+          description: True if field_type is another DTO class
+
+    ValidationAnnotation:
+      type: object
+      description: JSR-303 validation annotation
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Annotation name without @ prefix
+          example: "NotNull"
+        parameters:
+          type: object
+          additionalProperties:
+            type: string
+          description: Annotation parameters
+          example: {"min": "1", "max": "100"}
+
+    DtoArtifact:
+      type: object
+      description: Data Transfer Object artifact
+      required:
+        - artifact_id
+        - class_name
+        - package_name
+        - source_path
+        - project
+        - fields
+      properties:
+        artifact_id:
+          type: string
+          description: Canonical ID (project:path:classname)
+          example: "cuco-ui-admin:com/example/dto/UserDTO.java:UserDTO"
+        class_name:
+          type: string
+          description: Simple class name
+          example: "UserDTO"
+        package_name:
+          type: string
+          description: Fully qualified package
+          example: "com.example.dto"
+        source_path:
+          type: string
+          format: path
+          description: Relative path to source file
+          example: "com/example/dto/UserDTO.java"
+        project:
+          type: string
+          description: Project name
+          example: "cuco-ui-admin"
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/DtoField'
+          description: Field definitions
+        classification_confidence:
+          type: integer
+          minimum: 0
+          maximum: 100
+          default: 0
+          description: Classification confidence score
+        classification_signals:
+          type: array
+          items:
+            type: string
+          description: Reasons for DTO classification
+          example: ["naming_pattern_match:*DTO", "package_location:.dto."]
+        validation_rules:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/ValidationAnnotation'
+          description: Field name to validation annotations mapping
+        serialization_markers:
+          type: array
+          items:
+            type: string
+            enum: [Serializable, IsSerializable, Serializable_annotation]
+          description: Serialization interface/annotation markers
+        nested_dtos:
+          type: array
+          items:
+            type: string
+          description: Class names of nested DTO fields
+          example: ["AddressDTO", "ContactDTO"]
+        inner_classes:
+          type: array
+          items:
+            type: string
+          description: Inner class names
+          example: ["Builder", "Status"]
+        is_shared:
+          type: boolean
+          default: false
+          description: Located in .shared package (GWT)
+        language:
+          type: string
+          enum: [java]
+          default: java
+        framework:
+          type: string
+          nullable: true
+          enum: [GWT, Spring, JAX-RS, Jersey, null]
+          description: Detected framework
+        content_summary:
+          type: string
+          nullable: true
+          description: AI-generated summary of DTO purpose
+
+    ClassificationResult:
+      type: object
+      description: Result of DTO classification
+      required:
+        - is_dto
+        - confidence
+        - signals
+      properties:
+        is_dto:
+          type: boolean
+          description: Whether class is classified as DTO
+        confidence:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Classification confidence (0-100)
+        signals:
+          type: array
+          items:
+            type: string
+          description: Classification signals detected
+          example:
+            - "naming_pattern_match:*DTO"
+            - "serialization_marker:Serializable"
+            - "package_location:.dto."
+        rejection_reason:
+          type: string
+          nullable: true
+          description: Reason for non-DTO classification
+          example: "entity_annotation_present:@Entity"
+
+# API Functions (Python signatures documented as pseudo-OpenAPI)
+
+x-functions:
+  classify_dto:
+    operationId: classify_dto
+    summary: Classify Java class as DTO or not
+    description: |
+      Multi-phase classification algorithm to determine if a Java class is a DTO.
+
+      Classification Phases:
+      1. Naming Pattern Match (HIGH confidence +80 points)
+         - *DTO.java, *Request.java, *Response.java, *Command.java, *Query.java, *Event.java
+      2. Entity Exclusion (BLOCKER)
+         - Check for @Entity, @Table, @Document, @Embeddable annotations
+         - If present → NOT DTO (entity takes precedence)
+      3. Structural Analysis (MEDIUM confidence +30 points)
+         - Calculate field-to-business-logic-method ratio
+         - Ratio > 3.0 → likely DTO
+      4. Serialization Markers (+10 points each)
+         - Implements Serializable or IsSerializable
+      5. Package Location (+15 points)
+         - Located in .dto., .shared., .model., .transfer., .command., .query., .event. packages
+      6. Threshold Decision
+         - Confidence >= 70 → DTO
+         - Confidence < 70 → NOT DTO
+
+      Performance: O(n) where n = lines in Java file
+      Memory: O(1) - streams file, doesn't load entire AST
+
+    parameters:
+      - name: java_source
+        in: python
+        required: true
+        schema:
+          type: string
+        description: Java source code as string
+      - name: file_path
+        in: python
+        required: true
+        schema:
+          type: string
+          format: path
+        description: Source file path (for package/class name extraction)
+      - name: class_name
+        in: python
+        required: true
+        schema:
+          type: string
+        description: Simple class name
+
+    returns:
+      description: Classification result
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ClassificationResult'
+
+    example: |
+      from services.classifier import classify_dto
+
+      result = classify_dto(
+          java_source="""
+          package com.example.dto;
+          import java.io.Serializable;
+          import javax.validation.constraints.NotNull;
+
+          public class UserDTO implements Serializable {
+              @NotNull
+              private Long userId;
+              private String email;
+              // getters/setters...
+          }
+          """,
+          file_path=Path("com/example/dto/UserDTO.java"),
+          class_name="UserDTO"
+      )
+
+      # Returns:
+      # ClassificationResult(
+      #   is_dto=True,
+      #   confidence=95,
+      #   signals=[
+      #     "naming_pattern_match:*DTO",
+      #     "serialization_marker:Serializable",
+      #     "package_location:.dto.",
+      #     "validation_annotations_present:@NotNull"
+      #   ]
+      # )
+
+  extract_dto_metadata:
+    operationId: extract_dto_metadata
+    summary: Extract DTO structure and metadata
+    description: |
+      Parses Java class to extract DTO-specific metadata:
+      - Field definitions (name, type, modifiers)
+      - JSR-303 validation annotations per field
+      - Serialization markers (Serializable, IsSerializable)
+      - Nested DTO relationships
+      - Inner class definitions
+
+      Uses regex-based parsing for performance (not full Java AST).
+      Sufficient for well-formatted enterprise Java code.
+
+      Performance: O(n) where n = lines in file
+      Memory: O(m) where m = number of fields
+
+    parameters:
+      - name: java_source
+        in: python
+        required: true
+        schema:
+          type: string
+        description: Java source code
+      - name: class_name
+        in: python
+        required: true
+        schema:
+          type: string
+        description: Simple class name
+      - name: package_name
+        in: python
+        required: true
+        schema:
+          type: string
+        description: Fully qualified package name
+
+    returns:
+      description: DTO metadata
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fields:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DtoField'
+              validation_rules:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ValidationAnnotation'
+              serialization_markers:
+                type: array
+                items:
+                  type: string
+              nested_dtos:
+                type: array
+                items:
+                  type: string
+              inner_classes:
+                type: array
+                items:
+                  type: string
+
+    example: |
+      from parsers.java_parser import extract_dto_metadata
+
+      metadata = extract_dto_metadata(
+          java_source=source_code,
+          class_name="UserDTO",
+          package_name="com.example.dto"
+      )
+
+      # Returns:
+      # {
+      #   "fields": [
+      #     DtoField(name="userId", field_type="Long", modifiers=["private"],
+      #              validation_annotations=[{"name": "NotNull"}])
+      #   ],
+      #   "validation_rules": {"userId": [{"name": "NotNull", "parameters": {}}]},
+      #   "serialization_markers": ["Serializable"],
+      #   "nested_dtos": [],
+      #   "inner_classes": []
+      # }
+
+  extract_validation_annotations:
+    operationId: extract_validation_annotations
+    summary: Extract JSR-303 validation annotations from field
+    description: |
+      Parses Java field declaration to extract JSR-303 validation annotations.
+
+      Supported annotations:
+      - @NotNull, @NotEmpty, @NotBlank
+      - @Size(min=, max=), @Length(min=, max=)
+      - @Min, @Max, @DecimalMin, @DecimalMax
+      - @Pattern(regexp=), @Email
+      - @Past, @Future, @Valid
+
+      Uses regex-based extraction:
+      1. Locate field declaration
+      2. Extract annotations preceding field
+      3. Parse annotation parameters
+
+      Handles:
+      - Multi-line annotations
+      - Annotation chaining: @NotNull @Size(min=1, max=100)
+      - Parameter quoting: regexp="[A-Z]+"
+
+      Performance: O(n) where n = field declaration lines
+      Memory: O(k) where k = number of annotations on field
+
+    parameters:
+      - name: java_source
+        in: python
+        required: true
+        schema:
+          type: string
+        description: Java source code
+      - name: field_name
+        in: python
+        required: true
+        schema:
+          type: string
+        description: Field name to extract annotations for
+
+    returns:
+      description: List of validation annotations
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/ValidationAnnotation'
+
+    example: |
+      from parsers.java_parser import extract_validation_annotations
+
+      annotations = extract_validation_annotations(
+          java_source="""
+          @NotNull
+          @Size(min=5, max=100)
+          @Pattern(regexp="[A-Za-z0-9]+")
+          private String username;
+          """,
+          field_name="username"
+      )
+
+      # Returns:
+      # [
+      #   {"name": "NotNull", "parameters": {}},
+      #   {"name": "Size", "parameters": {"min": "5", "max": "100"}},
+      #   {"name": "Pattern", "parameters": {"regexp": "[A-Za-z0-9]+"}}
+      # ]
+
+  identify_nested_dtos:
+    operationId: identify_nested_dtos
+    summary: Identify nested DTO relationships
+    description: |
+      Analyzes DTO field types to identify nested DTO references.
+
+      Algorithm:
+      1. For each field in DTO, check field_type
+      2. If field_type matches DTO naming pattern (*DTO, *Request, *Response, etc.)
+         → Mark as nested DTO
+      3. If field_type is generic (List<UserDTO>, Map<String, AddressDTO>)
+         → Extract generic type parameter and check if DTO
+      4. Return list of nested DTO class names
+
+      Used for:
+      - Documenting DTO composition relationships
+      - Generating nested object documentation in PRDs
+      - Identifying shared DTOs in GWT
+
+      Performance: O(n) where n = number of fields
+      Memory: O(m) where m = unique nested DTO types
+
+    parameters:
+      - name: fields
+        in: python
+        required: true
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/DtoField'
+        description: List of DTO fields
+
+    returns:
+      description: List of nested DTO class names
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              type: string
+
+    example: |
+      from services.classifier import identify_nested_dtos
+
+      nested = identify_nested_dtos(fields=[
+          DtoField(name="user", field_type="UserDTO", modifiers=["private"]),
+          DtoField(name="addresses", field_type="List<AddressDTO>", modifiers=["private"])
+      ])
+
+      # Returns: ["UserDTO", "AddressDTO"]

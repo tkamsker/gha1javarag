@@ -1,0 +1,366 @@
+openapi: 3.0.3
+info:
+  title: Maven Parser API
+  description: |
+    Internal API contract for Maven POM XML parsing and dependency resolution.
+    This contract defines the function signatures and behavior for the maven_parser
+    and dependency_resolver services.
+  version: 1.0.0
+  contact:
+    name: Feature 004 - Maven Dependency Resolution
+
+paths: {}  # Internal Python API, not HTTP endpoints
+
+components:
+  schemas:
+    MavenDependency:
+      type: object
+      description: Maven dependency extracted from pom.xml
+      required:
+        - group_id
+        - artifact_id
+      properties:
+        group_id:
+          type: string
+          description: Maven groupId (e.g., "at.a1ta.cuco")
+          example: "at.a1ta.cuco"
+        artifact_id:
+          type: string
+          description: Maven artifactId (e.g., "cuco-cct-core")
+          example: "cuco-cct-core"
+        version:
+          type: string
+          nullable: true
+          description: Version string or property reference
+          example: "1.0.0"
+        scope:
+          type: string
+          enum: [compile, test, provided, runtime, system]
+          default: compile
+          description: Dependency scope
+        resolved_path:
+          type: string
+          format: path
+          nullable: true
+          description: Absolute path to resolved artifact directory
+          example: "/workspace/cuco-cct-core"
+        resolution_status:
+          type: string
+          enum: [pending, resolved, not_found, circular]
+          default: pending
+          description: Resolution state
+        declared_in:
+          type: string
+          format: path
+          nullable: true
+          description: Path to pom.xml declaring this dependency
+          example: "/workspace/cuco-ui-admin/pom.xml"
+        depth:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Dependency depth (0=direct, 1+=transitive)
+
+    DependencyNode:
+      type: object
+      description: Node in dependency graph tree
+      required:
+        - dependency
+        - children
+      properties:
+        dependency:
+          $ref: '#/components/schemas/MavenDependency'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyNode'
+          description: Direct dependencies of this artifact
+        parent:
+          $ref: '#/components/schemas/DependencyNode'
+          nullable: true
+          description: Parent node (null for root)
+
+    DependencyGraph:
+      type: object
+      description: Complete dependency resolution graph
+      required:
+        - project_name
+        - root_pom
+        - root_node
+      properties:
+        project_name:
+          type: string
+          description: Project name
+          example: "cuco-ui-admin"
+        root_pom:
+          type: string
+          format: path
+          description: Path to root pom.xml
+          example: "/workspace/cuco-ui-admin/pom.xml"
+        root_node:
+          $ref: '#/components/schemas/DependencyNode'
+        total_dependencies:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Total dependencies discovered
+        resolved_count:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Successfully resolved
+        not_found_count:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Not found in JAVA_SOURCE_DIR
+        circular_count:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Circular dependencies detected
+        max_depth:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Maximum depth in tree
+        resolution_errors:
+          type: array
+          items:
+            type: string
+          description: Error messages during resolution
+        circular_paths:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+          description: Detected circular dependency paths
+          example: [["cuco-core", "cuco-utils", "cuco-core"]]
+
+    ParseError:
+      type: object
+      description: Error during POM parsing
+      required:
+        - error_type
+        - message
+      properties:
+        error_type:
+          type: string
+          enum: [file_not_found, xml_parse_error, invalid_structure]
+          description: Type of parsing error
+        message:
+          type: string
+          description: Human-readable error message
+        file_path:
+          type: string
+          format: path
+          nullable: true
+          description: Path to problematic pom.xml
+        line_number:
+          type: integer
+          nullable: true
+          description: Line number for XML parse errors
+
+# API Functions (Python signatures documented as pseudo-OpenAPI)
+
+x-functions:
+  parse_pom:
+    operationId: parse_pom
+    summary: Parse Maven pom.xml file
+    description: |
+      Parses a pom.xml file and extracts dependency declarations.
+      Returns list of MavenDependency objects with group_id and artifact_id populated.
+      Does NOT resolve paths or validate artifact existence.
+
+      Behavior:
+      - Parses XML using xml.etree.ElementTree
+      - Extracts <dependencies><dependency> elements
+      - Handles Maven namespace http://maven.apache.org/POM/4.0.0
+      - Ignores properties and parent POM resolution (out of scope)
+      - Logs warning for malformed XML but doesn't crash
+
+      Performance: O(n) where n = number of <dependency> elements
+      Memory: Loads entire XML into memory (typical pom.xml <100KB)
+
+    parameters:
+      - name: pom_path
+        in: python
+        required: true
+        schema:
+          type: string
+          format: path
+        description: Absolute path to pom.xml file
+      - name: depth
+        in: python
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+        description: Current dependency depth (for recursive resolution)
+
+    returns:
+      description: List of MavenDependency objects
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/MavenDependency'
+
+    errors:
+      - $ref: '#/components/schemas/ParseError'
+        condition: File not found or XML parse error
+
+    example: |
+      from services.maven_parser import parse_pom
+
+      dependencies = parse_pom(
+          pom_path=Path("/workspace/cuco-ui-admin/pom.xml"),
+          depth=0
+      )
+
+      # Returns:
+      # [
+      #   MavenDependency(
+      #     group_id="at.a1ta.cuco",
+      #     artifact_id="cuco-cct-core",
+      #     version="1.0.0",
+      #     scope="compile",
+      #     depth=0
+      #   ),
+      #   ...
+      # ]
+
+  resolve_dependencies:
+    operationId: resolve_dependencies
+    summary: Resolve dependency graph with circular detection
+    description: |
+      Recursively resolves Maven dependencies starting from root pom.xml.
+      Builds complete dependency graph with circular dependency detection.
+
+      Algorithm:
+      1. Parse root pom.xml to get direct dependencies
+      2. For each dependency:
+         a. Check if already visited (circular detection)
+         b. Resolve artifact path: base_dir / artifact_id
+         c. Update resolution_status (resolved, not_found, circular)
+         d. If resolved and depth < max_depth, recurse into dependency's pom.xml
+      3. Return DependencyGraph with complete tree
+
+      Behavior:
+      - Uses visited set to detect cycles
+      - Logs warnings for not_found and circular dependencies
+      - Continues processing on errors (per FR-009)
+      - Respects dependency_depth limit from configuration
+
+      Performance: O(n * m) where n = dependencies, m = avg depth
+      Memory: O(n) for visited set and graph structure
+
+    parameters:
+      - name: root_pom
+        in: python
+        required: true
+        schema:
+          type: string
+          format: path
+        description: Path to root pom.xml
+      - name: base_dir
+        in: python
+        required: true
+        schema:
+          type: string
+          format: path
+        description: Base directory for artifact resolution (JAVA_SOURCE_DIR)
+      - name: max_depth
+        in: python
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 1
+        description: Maximum dependency depth to resolve
+      - name: project_name
+        in: python
+        required: false
+        schema:
+          type: string
+        description: Project name for graph metadata
+
+    returns:
+      description: Complete dependency graph
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DependencyGraph'
+
+    errors:
+      - $ref: '#/components/schemas/ParseError'
+        condition: Root pom.xml not found or invalid
+
+    example: |
+      from services.dependency_resolver import resolve_dependencies
+
+      graph = resolve_dependencies(
+          root_pom=Path("/workspace/cuco-ui-admin/pom.xml"),
+          base_dir=Path("/workspace"),
+          max_depth=2,
+          project_name="cuco-ui-admin"
+      )
+
+      # Returns:
+      # DependencyGraph(
+      #   project_name="cuco-ui-admin",
+      #   total_dependencies=15,
+      #   resolved_count=14,
+      #   not_found_count=1,
+      #   circular_count=0,
+      #   max_depth=2,
+      #   circular_paths=[]
+      # )
+
+  resolve_artifact_path:
+    operationId: resolve_artifact_path
+    summary: Resolve Maven artifact to directory path
+    description: |
+      Maps Maven artifactId to filesystem path under base directory.
+      Uses simple concatenation: base_dir / artifact_id
+
+      Does NOT use groupId in path resolution (per Assumption 1 from spec).
+      Logs warning if directory not found but doesn't raise exception.
+
+    parameters:
+      - name: artifact_id
+        in: python
+        required: true
+        schema:
+          type: string
+        description: Maven artifactId
+      - name: base_dir
+        in: python
+        required: true
+        schema:
+          type: string
+          format: path
+        description: Base directory (JAVA_SOURCE_DIR or JAVA_SOURCE_DIR/project)
+
+    returns:
+      description: Resolved path or None if not found
+      content:
+        application/json:
+          schema:
+            type: string
+            format: path
+            nullable: true
+
+    example: |
+      from utils.path_resolver import resolve_artifact_path
+
+      path = resolve_artifact_path(
+          artifact_id="cuco-cct-core",
+          base_dir=Path("/workspace")
+      )
+
+      # Returns: Path("/workspace/cuco-cct-core")
+      # Or: None if directory doesn't exist (logs warning)

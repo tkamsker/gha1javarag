@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example.multimodule</groupId>
+    <artifactId>multi-module-parent</artifactId>
+    <version>2.0.0</version>
+    <packaging>pom</packaging>
+
+    <name>Multi-Module Parent</name>
+    <description>Multi-module project with multiple dependencies</description>
+
+    <dependencies>
+        <!-- Core dependency -->
+        <dependency>
+            <groupId>at.a1ta.cuco</groupId>
+            <artifactId>cuco-cct-core</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <!-- Utils dependency -->
+        <dependency>
+            <groupId>at.a1ta.cuco</groupId>
+            <artifactId>cuco-utils</artifactId>
+            <version>1.5.2</version>
+        </dependency>
+
+        <!-- Common dependency -->
+        <dependency>
+            <groupId>at.a1ta.cuco</groupId>
+            <artifactId>cuco-common</artifactId>
+            <version>2.1.0</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- Test dependency (different scope) -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
