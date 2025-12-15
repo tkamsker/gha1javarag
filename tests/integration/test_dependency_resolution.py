@@ -187,7 +187,7 @@ public class CoreClass {
         )
         if project_depth_0:
             # Should have no dependency_resolution metadata (or total=0)
-            if 'dependency_resolution' in project_depth_0:
+            if 'dependency_resolution' in project_depth_0 and project_depth_0['dependency_resolution'] is not None:
                 assert project_depth_0['dependency_resolution']['total'] == 0
 
         # With depth=1, dependency resolution should occur

@@ -550,7 +550,7 @@ class TestValidationAnnotationExtraction:
         """Test extraction of @NotNull annotation."""
         from src.codeindex.parsers.java_parser import extract_validation_annotations
 
-        fixture_path = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture_path = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
 
         annotations = extract_validation_annotations(fixture_path)
 
@@ -567,7 +567,7 @@ class TestValidationAnnotationExtraction:
         """Test extraction of @Size annotation with parameters."""
         from src.codeindex.parsers.java_parser import extract_validation_annotations
 
-        fixture_path = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture_path = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
 
         annotations = extract_validation_annotations(fixture_path)
 
@@ -587,7 +587,7 @@ class TestValidationAnnotationExtraction:
         """Test extraction of @Pattern annotation with regexp."""
         from src.codeindex.parsers.java_parser import extract_validation_annotations
 
-        fixture_path = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture_path = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
 
         annotations = extract_validation_annotations(fixture_path)
 
@@ -604,7 +604,7 @@ class TestValidationAnnotationExtraction:
         """Test extraction of @Email annotation."""
         from src.codeindex.parsers.java_parser import extract_validation_annotations
 
-        fixture_path = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture_path = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
 
         annotations = extract_validation_annotations(fixture_path)
 
@@ -616,7 +616,7 @@ class TestValidationAnnotationExtraction:
         """Test extraction of @Valid annotation for nested DTOs."""
         from src.codeindex.parsers.java_parser import extract_validation_annotations
 
-        fixture_path = Path("tests/fixtures/dto-classes/nested-dto.java")
+        fixture_path = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/nested-dto.java")
 
         annotations = extract_validation_annotations(fixture_path)
 
@@ -628,7 +628,7 @@ class TestValidationAnnotationExtraction:
         """Test extraction of @Min and @Max annotations."""
         from src.codeindex.parsers.java_parser import extract_validation_annotations
 
-        fixture_path = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture_path = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
 
         annotations = extract_validation_annotations(fixture_path)
 
@@ -644,7 +644,7 @@ class TestValidationAnnotationExtraction:
         """Test extraction of @NotEmpty annotation."""
         from src.codeindex.parsers.java_parser import extract_validation_annotations
 
-        fixture_path = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture_path = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
 
         annotations = extract_validation_annotations(fixture_path)
 
@@ -673,7 +673,7 @@ class TestValidationAnnotationExtraction:
         """Test that annotation parameters are correctly parsed."""
         from src.codeindex.parsers.java_parser import extract_validation_annotations
 
-        fixture_path = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture_path = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
 
         annotations = extract_validation_annotations(fixture_path)
 

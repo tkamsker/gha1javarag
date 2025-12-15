@@ -11,7 +11,7 @@ class TestDtoNamingPattern:
 
     def test_dto_suffix_classified_as_dto(self):
         """Test that classes ending with 'DTO' are classified as DTOs."""
-        fixture = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
 
         result = classify_dto(fixture)
 
@@ -25,14 +25,14 @@ class TestDtoNamingPattern:
         """Test that classes ending with 'Dto' (lowercase) are classified."""
         # This would need a fixture with lowercase, but testing the logic
         # For now, using standard fixture
-        fixture = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
         result = classify_dto(fixture)
         assert result.is_dto is True
 
     def test_non_dto_naming_not_classified(self):
         """Test that classes without DTO naming pattern score 0 for naming."""
         # Using entity fixture which doesn't have DTO in name
-        fixture = Path("tests/fixtures/dto-classes/entity-vs-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/entity-vs-dto.java")
 
         result = classify_dto(fixture)
 
@@ -46,7 +46,7 @@ class TestEntityExclusion:
 
     def test_entity_annotation_prevents_dto_classification(self):
         """Test that classes with @Entity are NOT classified as DTOs."""
-        fixture = Path("tests/fixtures/dto-classes/entity-vs-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/entity-vs-dto.java")
 
         result = classify_dto(fixture)
 
@@ -58,7 +58,7 @@ class TestEntityExclusion:
     def test_table_annotation_prevents_dto_classification(self):
         """Test that classes with @Table are NOT classified as DTOs."""
         # entity-vs-dto.java has @Table annotation
-        fixture = Path("tests/fixtures/dto-classes/entity-vs-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/entity-vs-dto.java")
 
         result = classify_dto(fixture)
 
@@ -66,7 +66,7 @@ class TestEntityExclusion:
 
     def test_dto_without_entity_markers_allowed(self):
         """Test that DTOs without entity markers can be classified."""
-        fixture = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
 
         result = classify_dto(fixture)
 
@@ -79,7 +79,7 @@ class TestStructuralAnalysis:
 
     def test_high_field_to_method_ratio_increases_score(self):
         """Test that DTOs with many fields and few methods score higher."""
-        fixture = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
 
         result = classify_dto(fixture)
 
@@ -93,7 +93,7 @@ class TestStructuralAnalysis:
         """Test that classes with many methods relative to fields score lower."""
         # This would require a fixture with heavy logic
         # For now, verify that structural analysis is performed
-        fixture = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
         result = classify_dto(fixture)
         assert hasattr(result, 'structural_score')
 
@@ -101,7 +101,7 @@ class TestStructuralAnalysis:
         """Test that classes with no fields cannot be DTOs."""
         # Would need a fixture with no fields
         # For now, verify field count is tracked
-        fixture = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
         result = classify_dto(fixture)
         assert result.field_count > 0
 
@@ -111,7 +111,7 @@ class TestSerializationMarkers:
 
     def test_serializable_interface_detected(self):
         """Test that Serializable implementation is detected."""
-        fixture = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
 
         result = classify_dto(fixture)
 
@@ -122,7 +122,7 @@ class TestSerializationMarkers:
     def test_jackson_annotations_detected(self):
         """Test that Jackson annotations are detected as serialization markers."""
         # standard-dto.java may have Jackson annotations
-        fixture = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
         result = classify_dto(fixture)
         # Should detect serialization patterns
         assert hasattr(result, 'serialization_markers_found')
@@ -131,7 +131,7 @@ class TestSerializationMarkers:
         """Test that lack of serialization markers affects score."""
         # Would need a fixture without serialization
         # For now, verify the attribute exists
-        fixture = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
         result = classify_dto(fixture)
         assert hasattr(result, 'serialization_score')
 
@@ -142,7 +142,7 @@ class TestPackageLocationHeuristics:
     def test_dto_package_increases_score(self):
         """Test that DTOs in *.dto.* packages score higher."""
         # standard-dto.java should have appropriate package
-        fixture = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
 
         result = classify_dto(fixture)
 
@@ -153,14 +153,14 @@ class TestPackageLocationHeuristics:
     def test_model_package_increases_score(self):
         """Test that DTOs in *.model.* packages score higher."""
         # Would need specific fixture
-        fixture = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
         result = classify_dto(fixture)
         assert hasattr(result, 'package_score')
 
     def test_non_dto_package_has_lower_score(self):
         """Test that DTOs not in typical packages have reduced package score."""
         # entity-vs-dto.java is in entity package
-        fixture = Path("tests/fixtures/dto-classes/entity-vs-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/entity-vs-dto.java")
         result = classify_dto(fixture)
         # Package score should be lower for entity package
         assert hasattr(result, 'package_score')
@@ -171,7 +171,7 @@ class TestNestedDtoIdentification:
 
     def test_nested_dto_fields_identified(self):
         """Test that nested DTO fields are identified."""
-        fixture = Path("tests/fixtures/dto-classes/nested-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/nested-dto.java")
 
         result = classify_dto(fixture)
 
@@ -183,7 +183,7 @@ class TestNestedDtoIdentification:
 
     def test_nested_dto_names_extracted(self):
         """Test that nested DTO type names are extracted."""
-        fixture = Path("tests/fixtures/dto-classes/nested-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/nested-dto.java")
 
         result = classify_dto(fixture)
 
@@ -195,7 +195,7 @@ class TestNestedDtoIdentification:
 
     def test_inner_class_dtos_identified(self):
         """Test that inner class DTOs are identified."""
-        fixture = Path("tests/fixtures/dto-classes/nested-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/nested-dto.java")
 
         result = classify_dto(fixture)
 
@@ -204,7 +204,7 @@ class TestNestedDtoIdentification:
 
     def test_standard_dto_without_nested_types(self):
         """Test that simple DTOs report no nested DTOs."""
-        fixture = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
 
         result = classify_dto(fixture)
 
@@ -218,7 +218,7 @@ class TestThresholdDecision:
 
     def test_high_confidence_classified_as_dto(self):
         """Test that confidence >= 70 results in DTO classification."""
-        fixture = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
 
         result = classify_dto(fixture)
 
@@ -227,7 +227,7 @@ class TestThresholdDecision:
 
     def test_low_confidence_not_classified_as_dto(self):
         """Test that confidence < 70 results in NOT DTO."""
-        fixture = Path("tests/fixtures/dto-classes/entity-vs-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/entity-vs-dto.java")
 
         result = classify_dto(fixture)
 
@@ -237,7 +237,7 @@ class TestThresholdDecision:
 
     def test_confidence_calculation_includes_all_phases(self):
         """Test that confidence score includes all classification phases."""
-        fixture = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
 
         result = classify_dto(fixture)
 
@@ -258,7 +258,7 @@ class TestClassificationResult:
 
     def test_classification_result_has_all_required_fields(self):
         """Test that ClassificationResult includes all required metadata."""
-        fixture = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
 
         result = classify_dto(fixture)
 
@@ -278,7 +278,7 @@ class TestClassificationResult:
 
     def test_classification_result_types_correct(self):
         """Test that ClassificationResult field types are correct."""
-        fixture = Path("tests/fixtures/dto-classes/standard-dto.java")
+        fixture = Path("tests/fixtures/dto-classes/src/main/java/com/example/dto/standard-dto.java")
 
         result = classify_dto(fixture)
 

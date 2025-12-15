@@ -75,12 +75,12 @@ class TestMavenDependency:
             assert dep.resolution_status == status
 
     def test_negative_depth(self):
-        """Test that negative depth raises ValueError."""
-        with pytest.raises(ValueError, match="Depth must be >= 0"):
+        """Test that depth < -1 raises ValueError."""
+        with pytest.raises(ValueError, match="Depth must be >= -1"):
             MavenDependency(
                 group_id="com.example",
                 artifact_id="test",
-                depth=-1
+                depth=-2
             )
 
     def test_coordinates_with_version(self):
