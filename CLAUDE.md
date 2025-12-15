@@ -573,6 +573,55 @@ pytest tests/unit/test_diagram_generator.py tests/unit/test_mermaid_renderer.py 
 # Expected results:
 # - test_diagram_generator.py: 26 tests, 88% coverage
 # - test_mermaid_renderer.py: 30 tests, 91% coverage
+
+# Verify mmdc works with generated diagrams
+mmdc -i output/gwt-validation/diagrams/component/architecture.mmd -o /tmp/test.svg
+mmdc -i output/gwt-validation/diagrams/gwt/mvp-overview.mmd -o /tmp/test.png
+```
+
+#### Diagram Troubleshooting
+
+**Problem: "UnknownDiagramError: No diagram type detected" from mmdc**
+
+This was fixed in commit 54cb593. The .mmd files now contain pure Mermaid syntax (starting with `graph TB`) instead of markdown-wrapped code fences.
+
+```bash
+# Verify .mmd file format (should start with "graph TB", NOT "```mermaid")
+head -n 1 output/gwt-validation/diagrams/component/architecture.mmd
+# Expected: graph TB
+
+# If you see ```mermaid, regenerate diagrams with latest code
+codeindex diagram all --output ./output/gwt-validation
+
+# Verify mmdc works
+mmdc -i output/gwt-validation/diagrams/component/architecture.mmd -o /tmp/test.svg
+ls -lh /tmp/test.svg  # Should show ~28KB SVG file
+```
+
+**Problem: Diagram missing components**
+
+```bash
+# Check extraction file has artifacts
+grep -c "gwt_role" output/gwt-validation/extraction-results.jsonl
+
+# Verify components are in frontend output
+ls -la output/gwt-validation/frontend/components/*.json
+
+# Regenerate with verbose logging
+codeindex diagram all --output ./output/gwt-validation -v
+```
+
+**Problem: Diagram too large or cluttered**
+
+```bash
+# Use minimal style
+codeindex diagram component --style minimal
+
+# Reduce depth
+codeindex diagram component --depth 2
+
+# Filter by project
+codeindex diagram component --project myapp
 ```
 
 ## Development Notes
@@ -718,3 +767,8 @@ Note: The `run.sh` script expects `src/main.py` but the src directory may be emp
 
 ## Recent Changes
 - 001-java-codebase-indexer: Added Python 3.8+ (minimum version for type hints and modern async support)
+- 003-architecture-diagram-generation: Added auto-generated Mermaid diagrams for component and GWT MVP architecture
+  - Commit 54cb593: Fixed .mmd format to use pure Mermaid syntax (removed markdown code fences) for mermaid-cli compatibility
+  - Commit abe0e46: Added comprehensive documentation to main README
+  - All 56 diagram tests passing with 88-91% coverage
+  - Verified mmdc (mermaid-cli) successfully converts .mmd files to SVG/PNG
