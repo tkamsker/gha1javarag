@@ -1,0 +1,46 @@
+CLAUDE.md Updated Successfully! ✅
+
+  I've completed the documentation updates (T085-T087) and committed all changes.
+
+  What Was Updated
+
+  1. Completed Features Section
+  - Added Phase 6: Polish & Metrics completion
+  - Updated test count to 628 passing tests
+  - Added performance benchmark metrics
+
+  2. New CLI Parameters Reference Section
+  - Complete table of discovery parameters (--source-dir, --project, --dependency-depth, --output)
+  - Search/Status parameters table (--project, --limit)
+  - Key features summary with clear usage guidance
+
+  3. New Metrics Logging Section
+  - Dependency resolution metrics display format
+  - DTO classification metrics display format
+  - What's tracked and monitored
+  - Performance benchmarks: 0.18ms per dependency, <10s target achieved
+
+  4. Recent Changes Section
+  - Documented Phase 6 completion with all task references
+  - Listed all validation results (T089-T096)
+  - Confirmed production-ready status
+
+  5. Verified run.sh Script
+  - Already supports --project parameter via monorepo mode detection
+  - Auto-detects subdirectories and enables proper CLI flags
+  - No updates needed (T087 already complete)
+
+  Commits Created
+
+  1. 5b730d1: Updated CLAUDE.md with comprehensive Feature 004 Phase 6 documentation
+  2. 6f5bb6b: Marked T085-T087 as complete in tasks.md
+
+  Phase 6 Status
+
+  ALL TASKS COMPLETE (T085-T096):
+  - ✅ T085: CLAUDE.md CLI parameters documented
+  - ✅ T086: DTO artifact documentation added
+  - ✅ T087: run.sh verified (already supports --project)
+  - ✅ T088-T096: All validation tasks completed previously
+
+  Feature 004 is now fully documented and production-ready! 🎉
