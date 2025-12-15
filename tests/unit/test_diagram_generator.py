@@ -313,8 +313,8 @@ def test_generate_component_diagram(diagram_generator, sample_prd_components):
 
     # Check content
     content = output_file.read_text()
-    assert '```mermaid' in content
     assert 'graph TB' in content
+    assert content.startswith('graph TB')
     assert 'UserPresenter' in content or 'UserService' in content
 
 
@@ -331,7 +331,8 @@ def test_generate_component_diagram_no_components(diagram_generator):
     assert output_file is not None
     assert output_file.exists()
     content = output_file.read_text()
-    assert '```mermaid' in content
+    assert 'graph TB' in content
+    assert content.startswith('graph TB')
 
 
 def test_generate_component_diagram_unsupported_format(diagram_generator, sample_prd_components):
@@ -376,8 +377,8 @@ def test_generate_gwt_mvp_diagram(diagram_generator, sample_extraction_file):
 
     # Check content
     content = output_file.read_text()
-    assert '```mermaid' in content
     assert 'graph TB' in content
+    assert content.startswith('graph TB')
     assert 'AdminPresenter' in content or 'Presenters' in content
 
 
@@ -397,7 +398,8 @@ def test_generate_gwt_mvp_diagram_no_artifacts(diagram_generator, tmp_path):
     assert output_file is not None
     assert output_file.exists()
     content = output_file.read_text()
-    assert '```mermaid' in content
+    assert 'graph TB' in content
+    assert content.startswith('graph TB')
 
 
 def test_generate_gwt_mvp_diagram_unsupported_format(diagram_generator, sample_extraction_file):
@@ -564,8 +566,8 @@ def test_full_workflow(diagram_generator, sample_prd_components, sample_extracti
         assert file_path.exists()
         assert file_path.suffix == '.mmd'
         content = file_path.read_text()
-        assert '```mermaid' in content
-        assert '```' in content
+        assert 'graph TB' in content
+        assert content.startswith('graph TB')
 
 
 def test_directory_structure_created_correctly(temp_output_dir):

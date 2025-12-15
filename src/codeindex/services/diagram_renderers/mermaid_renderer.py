@@ -73,7 +73,6 @@ class MermaidRenderer:
         lines = []
 
         # Header
-        lines.append("```mermaid")
         lines.append("graph TB")
         lines.append("")
 
@@ -149,8 +148,6 @@ class MermaidRenderer:
         lines.append("    class Backend backend")
         lines.append("    class Data data")
 
-        lines.append("```")
-
         return "\n".join(lines)
 
     def render_gwt_mvp_diagram(
@@ -173,7 +170,6 @@ class MermaidRenderer:
         lines = []
 
         # Header
-        lines.append("```mermaid")
         lines.append("graph TB")
         lines.append("")
 
@@ -256,8 +252,6 @@ class MermaidRenderer:
         lines.append("    classDef presenter fill:#e1f5ff,stroke:#01579b,stroke-width:2px")
         lines.append("    classDef view fill:#fff9e1,stroke:#f57f17,stroke-width:2px")
         lines.append("    classDef rpc fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px")
-
-        lines.append("```")
 
         return "\n".join(lines)
 

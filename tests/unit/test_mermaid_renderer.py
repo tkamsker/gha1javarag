@@ -210,9 +210,8 @@ def test_render_component_diagram_basic(renderer, sample_components):
     )
 
     # Check structure
-    assert '```mermaid' in result
     assert 'graph TB' in result
-    assert '```' in result.split('```mermaid')[1]
+    assert result.startswith('graph TB')
 
     # Check layers
     assert 'Frontend Layer' in result
@@ -249,8 +248,8 @@ def test_render_component_diagram_empty_components(renderer):
     )
 
     # Should still have basic structure
-    assert '```mermaid' in result
     assert 'graph TB' in result
+    assert result.startswith('graph TB')
     # Should have Data Layer at minimum
     assert 'Data Layer' in result
 
@@ -280,8 +279,8 @@ def test_render_gwt_mvp_diagram_basic(renderer, sample_gwt_artifacts):
     )
 
     # Check structure
-    assert '```mermaid' in result
     assert 'graph TB' in result
+    assert result.startswith('graph TB')
 
     # Check subgraphs
     assert 'GWT Presenters' in result
@@ -328,8 +327,8 @@ def test_render_gwt_mvp_diagram_empty(renderer):
     )
 
     # Should still have basic structure
-    assert '```mermaid' in result
     assert 'graph TB' in result
+    assert result.startswith('graph TB')
 
 
 def test_render_gwt_mvp_diagram_with_rpc_services(renderer):
