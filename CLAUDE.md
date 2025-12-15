@@ -20,13 +20,15 @@ The project integrates with GitHub Spec Kit for spec-driven development workflow
 - ✅ **Phase 5**: US3 Index - Weaviate vector database integration
 - ✅ **Phase 6**: US4 Status - Health monitoring and statistics
 - ✅ **Phase 7**: E2E Testing - Full pipeline integration tests
+- ✅ **GWT Support**: Complete GWT extraction and PRD generation (84.9% coverage)
 
 ### Test Results
 
-- **Unit Tests**: 105/105 passing
-- **Coverage**: 33% overall (94% in critical modules: classifier, discovery, maven parser)
+- **Unit Tests**: 441 passing (including 14 GWT-specific tests)
+- **Coverage**: 46% overall (70% frontend_analyzer, 94% in critical modules: classifier, discovery, maven parser)
 - **E2E Tests**: Full pipeline verified working
 - **Production Test**: Successfully indexed 539-file codebase (cuco-ui-admin)
+- **GWT Tests**: 14 comprehensive unit tests for GWT artifact loading and conversion
 
 ### Known Limitations
 
@@ -271,16 +273,49 @@ The system recognizes these GWT patterns:
 - RemoteServiceServlet inheritance
 - Method parameters and return types
 
+#### GWT PRD Generation
+
+**NEW**: Generate comprehensive PRDs from GWT metadata with 84.9% coverage.
+
+```bash
+# Generate frontend PRD with GWT components
+codeindex prd frontend --output-dir ./output/gwt-validation
+
+# The PRD will include:
+# - 40 Presenters with event handlers and RPC calls
+# - 30 Views with UI field bindings
+# - 32 UiBinder forms with field details
+# - Complete GWT Application Components section
+# - GWT Presenters and Views tables with details
+
+# Check PRD output
+cat output/gwt-validation/prd/frontend_prd.md
+
+# Verify coverage
+python3 validate_t083.py
+# Expected: >80% coverage (currently 84.9%)
+```
+
+**PRD Content for GWT**:
+- **GWT Presenters Section**: Table of all presenters with event handler counts, RPC call counts, and navigation targets
+- **Presenter Details**: Up to 10 presenters with full event handlers, RPC service calls, and navigation targets
+- **GWT Views Section**: Table of all views with UI field counts and source files
+- **View Details**: Up to 10 views with complete UI field bindings
+
 #### GWT Validation Testing
 
 ```bash
 # Run GWT-specific tests
+pytest tests/unit/test_gwt_frontend_methods.py -v
 pytest tests/integration/test_gwt_prd_generation.py -v
 pytest tests/integration/test_gwt_weaviate_simple.py -v
 pytest tests/unit/test_classifier.py::TestGwtClassification -v
 
-# Check test coverage (38 GWT tests total)
+# Check test coverage (52 GWT tests total)
 pytest tests/ -k gwt -v --tb=short
+
+# Run T083 PRD coverage validation
+python3 validate_t083.py
 ```
 
 #### GWT Troubleshooting
@@ -321,6 +356,53 @@ grep -E "IsSerializable|implements Serializable" path/to/DTO.java
 
 # Verify presenter has view reference
 grep -A10 "class.*Presenter" path/to/Presenter.java | grep -i "display\|view"
+```
+
+**Problem: GWT components not in PRD**
+```bash
+# Verify extraction file exists and has GWT artifacts
+ls -lh output/gwt-validation/extraction-results.jsonl
+grep -c "gwt_role.*presenter" output/gwt-validation/extraction-results.jsonl
+
+# Check if frontend analyzer processed GWT artifacts
+grep "Processed.*GWT components" prd_generation.log
+
+# Verify output files exist
+ls -la output/gwt-validation/frontend/components/*.json
+ls -la output/gwt-validation/frontend/forms/*.json
+
+# Test GWT artifact loading manually
+python3 -c "
+from pathlib import Path
+from codeindex.services.frontend_analyzer import FrontendAnalyzer
+from codeindex.services.ollama_client import OllamaClient
+
+analyzer = FrontendAnalyzer(
+    ollama_client=OllamaClient(),
+    source_dir=Path('.'),
+    output_dir=Path('./output/gwt-validation')
+)
+
+counts = analyzer.process_gwt_artifacts(
+    Path('./output/gwt-validation/extraction-results.jsonl')
+)
+print(f'Processed: {counts}')
+"
+```
+
+**Problem: Low GWT PRD coverage (<80%)**
+```bash
+# Run coverage validation
+python3 validate_t083.py
+
+# Check what's documented vs extracted
+grep -c "gwt_role" output/gwt-validation/extraction-results.jsonl
+wc -l output/gwt-validation/frontend/components/*.json
+
+# Common causes:
+# 1. UiBinder without form fields (skipped correctly)
+# 2. View files without UI fields
+# 3. extraction-results.jsonl missing summary line
 ```
 
 ## Development Notes
