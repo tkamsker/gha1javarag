@@ -1,0 +1,1 @@
+python -m codeindex diagram gwt --extraction-file output/gwt-validation/extraction-results.jsonl --output output/gwt-validation --format mermaid

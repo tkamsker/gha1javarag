@@ -79,6 +79,7 @@ def main(ctx, config: Optional[Path], log_level: Optional[str], format: str, ver
     - search: Semantic search over indexed code
     - status: View indexing statistics
     - prd: Generate Product Requirements Documents from indexed code
+    - diagram: Generate architecture diagrams from analyzed artifacts
     """
     # Setup logging
     logger = setup_logging(level=log_level, verbose=verbose)
@@ -128,6 +129,10 @@ main.add_command(status_command, name='status')
 # Import and register prd command (Feature 002)
 from .cli.prd import prd_command
 main.add_command(prd_command, name='prd')
+
+# Import and register diagram command
+from .cli.diagram import diagram
+main.add_command(diagram, name='diagram')
 
 
 # ==============================================================================
