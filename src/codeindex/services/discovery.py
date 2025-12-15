@@ -327,14 +327,18 @@ class DiscoveryService:
     def generate_inventory(
         self,
         root_directory: Path,
-        progress_callback: Optional[Callable] = None
+        progress_callback: Optional[Callable] = None,
+        dependency_base_dir: Optional[Path] = None
     ) -> DiscoveryInventory:
         """
         Generate discovery inventory for a directory tree.
 
         Args:
-            root_directory: Root directory to analyze
+            root_directory: Root directory to analyze (effective directory for discovery)
             progress_callback: Optional progress callback
+            dependency_base_dir: Base directory for dependency resolution (defaults to root_directory).
+                                For monorepo project-scoped analysis, this should be the monorepo root,
+                                while root_directory is the project subdirectory.
 
         Returns:
             DiscoveryInventory object
@@ -342,7 +346,13 @@ class DiscoveryService:
         start_time = time.time()
         scan_timestamp = datetime.now()
 
+        # T078: Use separate base directory for dependency resolution (monorepo support)
+        if dependency_base_dir is None:
+            dependency_base_dir = root_directory
+
         self.logger.info(f"Generating discovery inventory for {root_directory}")
+        if dependency_base_dir != root_directory:
+            self.logger.info(f"  Dependency base directory: {dependency_base_dir}")
 
         # Discover projects
         projects = list(self.discover_projects(root_directory, progress_callback))
@@ -373,9 +383,10 @@ class DiscoveryService:
                 if pom_path.exists():
                     try:
                         self.logger.info(f"Resolving dependencies for {project.artifact_id}")
+                        # T078: Use dependency_base_dir for monorepo support
                         dependency_graph = resolve_dependencies(
                             root_pom=pom_path,
-                            base_dir=root_directory,
+                            base_dir=dependency_base_dir,
                             max_depth=self.dependency_depth,
                             project_name=project.artifact_id
                         )

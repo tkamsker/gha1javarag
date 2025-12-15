@@ -189,10 +189,10 @@ public class SharedClass {
 
     def test_project_scoped_discovery_with_dependencies(self, monorepo_structure):
         """
-        Test project-scoped discovery with dependency resolution (T070).
+        Test project-scoped discovery with dependency resolution (T070, T078).
 
         When project has dependencies and dependency_depth > 0, should resolve
-        dependencies relative to effective_base_dir.
+        dependencies relative to monorepo root, not project subdirectory.
         """
         # Arrange - Modify project-a to depend on shared
         project_a_pom = monorepo_structure / "project-a" / "pom.xml"
@@ -216,23 +216,35 @@ public class SharedClass {
         )
         service = DiscoveryService(dependency_depth=1)
 
-        # Act
-        inventory = service.generate_inventory(config.effective_base_dir)
+        # Act - T078: Pass monorepo root as dependency_base_dir
+        inventory = service.generate_inventory(
+            root_directory=config.effective_base_dir,
+            dependency_base_dir=monorepo_structure  # Monorepo root for dependency resolution
+        )
 
         # Assert
         project = inventory.projects[0]
 
         # Check dependency resolution metadata
-        if 'dependency_resolution' in project:
-            dep_resolution = project['dependency_resolution']
+        assert 'dependency_resolution' in project
+        dep_resolution = project['dependency_resolution']
 
-            # Should have attempted to resolve dependencies
-            assert dep_resolution['total'] >= 1
+        # T078: Should successfully resolve dependency from monorepo root
+        assert dep_resolution['total'] == 1, "Should have 1 dependency (shared)"
+        assert dep_resolution['resolved'] == 1, "Should resolve shared from monorepo root"
+        assert dep_resolution['not_found'] == 0, "Should find all dependencies"
 
-            # Files may include dependency files if resolved
-            # (depends on path resolver finding shared project)
-            all_files = project['files']
-            assert len(all_files) > 0
+        # Should include files from both project-a and shared
+        all_files = project['files']
+        file_paths = [f['path'] for f in all_files]
+
+        # Should have ClassA.java from project-a
+        assert any('ClassA.java' in path for path in file_paths), \
+            "Should include files from project-a"
+
+        # Should have SharedClass.java from shared dependency
+        assert any('SharedClass.java' in path for path in file_paths), \
+            "Should include files from shared dependency (T078 fix)"
 
     def test_project_scoped_paths_are_absolute(self, monorepo_structure):
         """

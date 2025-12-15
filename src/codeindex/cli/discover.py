@@ -146,7 +146,11 @@ def discover_command(
                 click.echo(f"Dependency resolution depth: {dependency_depth}")
 
         # Generate discovery inventory from effective directory
-        inventory = service.generate_inventory(effective_dir)
+        # T078: Pass source_dir as dependency_base_dir for monorepo support
+        inventory = service.generate_inventory(
+            root_directory=effective_dir,
+            dependency_base_dir=source_dir if project else None
+        )
 
         # Output results
         if output_format == 'json':
