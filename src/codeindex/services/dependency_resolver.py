@@ -13,7 +13,7 @@ import logging
 from ..models.maven_dependency import MavenDependency
 from ..models.dependency_graph import DependencyGraph, DependencyNode
 from .maven_parser import parse_pom
-from ..utils.path_resolver import resolve_artifact_path
+from ..utils.path_resolver import resolve_artifact_path, resolve_artifact_path_with_siblings
 
 log = logging.getLogger(__name__)
 
@@ -22,7 +22,9 @@ def resolve_dependencies(
     root_pom: Path,
     base_dir: Path,
     max_depth: int = 1,
-    project_name: Optional[str] = None
+    project_name: Optional[str] = None,
+    workspace_root: Optional[Path] = None,
+    search_siblings: bool = True
 ) -> DependencyGraph:
     """
     Resolve dependency graph with circular detection.
@@ -34,16 +36,21 @@ def resolve_dependencies(
     1. Parse root pom.xml to get direct dependencies
     2. For each dependency:
        a. Check if already visited (circular detection)
-       b. Resolve artifact path: base_dir / artifact_id
+       b. Resolve artifact path using multi-level search:
+          - First: base_dir / artifact_id (monorepo pattern)
+          - Then: workspace_root / artifact_id (sibling pattern)
+          - Finally: parent levels (multi-level pattern)
        c. Update resolution_status (resolved, not_found, circular)
        d. If resolved and depth < max_depth, recurse into dependency's pom.xml
     3. Return DependencyGraph with complete tree
 
     Args:
         root_pom: Path to root pom.xml
-        base_dir: Base directory for artifact resolution (JAVA_SOURCE_DIR)
+        base_dir: Base directory for artifact resolution (project directory)
         max_depth: Maximum dependency depth to resolve (default: 1)
         project_name: Project name for graph metadata
+        workspace_root: Workspace root directory for sibling search (default: None, auto-detect)
+        search_siblings: Enable sibling directory search (default: True)
 
     Returns:
         Complete dependency graph with statistics
@@ -54,16 +61,23 @@ def resolve_dependencies(
     Example:
         >>> from pathlib import Path
         >>> graph = resolve_dependencies(
-        ...     root_pom=Path("/workspace/project/pom.xml"),
-        ...     base_dir=Path("/workspace"),
-        ...     max_depth=2,
-        ...     project_name="my-project"
+        ...     root_pom=Path("/workspace/cuco-ui-admin/pom.xml"),
+        ...     base_dir=Path("/workspace/cuco-ui-admin"),
+        ...     max_depth=1,
+        ...     project_name="cuco-ui-admin",
+        ...     workspace_root=Path("/workspace"),
+        ...     search_siblings=True
         ... )
         >>> print(f"Resolved {graph.resolved_count} dependencies")
         Resolved 14 dependencies
     """
     if not root_pom.exists():
         raise FileNotFoundError(f"Root pom.xml not found: {root_pom}")
+
+    # Auto-detect workspace root if not provided (use parent of base_dir)
+    if workspace_root is None and search_siblings:
+        workspace_root = base_dir.parent
+        log.debug(f"Auto-detected workspace root: {workspace_root}")
 
     # Initialize timing
     start_time = datetime.now()
@@ -106,7 +120,9 @@ def resolve_dependencies(
             visited=visited.copy(),  # Copy for each branch
             path=[],
             circular_paths=circular_paths,
-            resolution_errors=resolution_errors
+            resolution_errors=resolution_errors,
+            workspace_root=workspace_root,
+            search_siblings=search_siblings
         )
         if child_node:
             root_node.add_child(child_node)
@@ -143,7 +159,9 @@ def _resolve_dependency_recursive(
     visited: Set[str],
     path: List[str],
     circular_paths: List[List[str]],
-    resolution_errors: List[str]
+    resolution_errors: List[str],
+    workspace_root: Optional[Path] = None,
+    search_siblings: bool = True
 ) -> Optional[DependencyNode]:
     """
     Recursively resolve a single dependency.
@@ -156,6 +174,8 @@ def _resolve_dependency_recursive(
         path: Current dependency path (for circular detection reporting)
         circular_paths: List to collect detected circular paths
         resolution_errors: List to collect error messages
+        workspace_root: Workspace root for sibling search (optional)
+        search_siblings: Enable sibling directory search (default: True)
 
     Returns:
         DependencyNode with resolved children, or None on failure
@@ -174,12 +194,23 @@ def _resolve_dependency_recursive(
     # Add to visited set
     visited.add(artifact_id)
 
-    # Resolve artifact path (FR-002)
-    resolved_path = resolve_artifact_path(
-        artifact_id=artifact_id,
-        base_dir=base_dir,
-        group_id=dependency.group_id
-    )
+    # Resolve artifact path with multi-level search (FR-002)
+    if search_siblings and workspace_root:
+        # Use enhanced sibling search
+        resolved_path = resolve_artifact_path_with_siblings(
+            artifact_id=artifact_id,
+            base_dir=workspace_root,
+            group_id=dependency.group_id,
+            search_levels=3,
+            validate_pom=True
+        )
+    else:
+        # Fallback to classic subdirectory search (backwards compatibility)
+        resolved_path = resolve_artifact_path(
+            artifact_id=artifact_id,
+            base_dir=base_dir,
+            group_id=dependency.group_id
+        )
 
     if resolved_path:
         # Successfully resolved
@@ -209,7 +240,9 @@ def _resolve_dependency_recursive(
                             visited=visited.copy(),  # Copy for each child branch
                             path=path + [artifact_id],
                             circular_paths=circular_paths,
-                            resolution_errors=resolution_errors
+                            resolution_errors=resolution_errors,
+                            workspace_root=workspace_root,
+                            search_siblings=search_siblings
                         )
                         if child_node:
                             node.add_child(child_node)

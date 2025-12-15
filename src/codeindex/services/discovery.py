@@ -305,6 +305,48 @@ class DiscoveryService:
         """
         yield from scan_directory(directory, max_depth=max_depth)
 
+    def _detect_workspace_root(self, project_dir: Path) -> Optional[Path]:
+        """
+        Detect workspace root directory containing multiple Maven projects.
+
+        Strategy:
+        1. Check if parent directory contains multiple sibling directories with pom.xml
+        2. If yes, return parent as workspace root
+        3. Otherwise, return parent directory (default behavior)
+
+        Args:
+            project_dir: Current project directory
+
+        Returns:
+            Detected workspace root directory, or parent directory
+        """
+        parent_dir = project_dir.parent
+
+        # Check if parent exists
+        if not parent_dir.exists() or parent_dir == project_dir:
+            self.logger.debug(f"No workspace root detected (at filesystem root)")
+            return parent_dir
+
+        # Count sibling directories with pom.xml
+        sibling_projects = 0
+        try:
+            for item in parent_dir.iterdir():
+                if item.is_dir() and item != project_dir:
+                    pom_path = item / "pom.xml"
+                    if pom_path.exists():
+                        sibling_projects += 1
+        except (OSError, PermissionError) as e:
+            self.logger.debug(f"Error scanning parent directory {parent_dir}: {e}")
+            return parent_dir
+
+        # If we found sibling projects, parent is the workspace root
+        if sibling_projects > 0:
+            self.logger.info(f"Detected workspace root: {parent_dir} ({sibling_projects} sibling projects)")
+            return parent_dir
+        else:
+            self.logger.debug(f"No sibling projects detected, using parent as workspace root: {parent_dir}")
+            return parent_dir
+
     def scan_and_classify(
         self,
         directory: Path,
@@ -328,7 +370,9 @@ class DiscoveryService:
         self,
         root_directory: Path,
         progress_callback: Optional[Callable] = None,
-        dependency_base_dir: Optional[Path] = None
+        dependency_base_dir: Optional[Path] = None,
+        workspace_root: Optional[Path] = None,
+        search_siblings: bool = True
     ) -> DiscoveryInventory:
         """
         Generate discovery inventory for a directory tree.
@@ -339,6 +383,9 @@ class DiscoveryService:
             dependency_base_dir: Base directory for dependency resolution (defaults to root_directory).
                                 For monorepo project-scoped analysis, this should be the monorepo root,
                                 while root_directory is the project subdirectory.
+            workspace_root: Workspace root directory for sibling dependency search (Feature 005).
+                           If None, auto-detects by checking parent directory.
+            search_siblings: Enable sibling directory search for dependencies (default: True)
 
         Returns:
             DiscoveryInventory object
@@ -350,9 +397,15 @@ class DiscoveryService:
         if dependency_base_dir is None:
             dependency_base_dir = root_directory
 
+        # Feature 005: Auto-detect workspace root for sibling dependency search
+        if workspace_root is None and search_siblings:
+            workspace_root = self._detect_workspace_root(root_directory)
+
         self.logger.info(f"Generating discovery inventory for {root_directory}")
         if dependency_base_dir != root_directory:
             self.logger.info(f"  Dependency base directory: {dependency_base_dir}")
+        if workspace_root and workspace_root != root_directory:
+            self.logger.info(f"  Workspace root (sibling search): {workspace_root}")
 
         # Discover projects
         projects = list(self.discover_projects(root_directory, progress_callback))
@@ -384,11 +437,14 @@ class DiscoveryService:
                     try:
                         self.logger.info(f"Resolving dependencies for {project.artifact_id}")
                         # T078: Use dependency_base_dir for monorepo support
+                        # Feature 005: Pass workspace_root for sibling dependency search
                         dependency_graph = resolve_dependencies(
                             root_pom=pom_path,
                             base_dir=dependency_base_dir,
                             max_depth=self.dependency_depth,
-                            project_name=project.artifact_id
+                            project_name=project.artifact_id,
+                            workspace_root=workspace_root,
+                            search_siblings=search_siblings
                         )
 
                         # Log dependency resolution statistics (T034)
