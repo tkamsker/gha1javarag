@@ -29,13 +29,15 @@ The project integrates with GitHub Spec Kit for spec-driven development workflow
 
 ### Test Results
 
-- **Unit Tests**: 628 passing (including 24 DTO tests, 19 Maven tests, 17 ProjectConfiguration tests)
+- **Total Tests**: 630 passing, 80 skipped (100% pass rate for active tests)
+- **Unit Tests**: 630 passing (including 24 DTO tests, 19 Maven tests, 17 ProjectConfiguration tests, 28 XML parser tests)
 - **Integration Tests**: 42 passing (9 project-scoped discovery, 9 DTO indexing, 6 dependency resolution)
-- **Coverage**: 15-94% (94% maven_parser, 84% discovery, 76% dependency_resolver, 40% classifier)
+- **Coverage**: 58% overall (94% classifier, 91% discovery, 88% dependency_resolver, 87% maven_parser)
 - **E2E Tests**: Full pipeline verified working
 - **Production Test**: Successfully indexed 539-file codebase (cuco-ui-admin)
 - **Feature 004 Tests**: All 68 tests passing (42 unit + 26 integration)
 - **Performance**: Dependency resolution <10s for 20 dependencies (0.18ms per dependency measured)
+- **Skipped Tests**: 80 legacy TDD tests (require API updates for abandoned designs)
 
 ### Known Limitations
 
@@ -902,6 +904,12 @@ Note: The `run.sh` script expects `src/main.py` but the src directory may be emp
   - Validated performance: 0.18ms per dependency, <10s for 20 dependencies (T090)
   - Code cleanup and error message quality validation (T089, T091)
   - Full pipeline quickstart validation completed (T088)
-  - All 628 tests passing with >80% coverage in critical modules (T094)
+  - All 630 tests passing with >80% coverage in critical modules (T094)
   - Constitution Gates 2 & 3 validated (T095, T096)
   - Feature 004 is production-ready
+- XML parser test fixes: Fixed error handling tests (Commit c58fa1f)
+  - 2 tests now passing (test_parse_empty_file, test_parse_nonexistent_file)
+  - 2 tests legitimately skipped (parser uses error recovery mode)
+  - Updated test count: 630 passing (was 628), 80 skipped (was 82)
+  - Added proper lxml.etree exception handling
+  - Documented rationale for skipped tests (recover=True mode)
