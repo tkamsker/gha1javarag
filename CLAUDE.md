@@ -21,14 +21,16 @@ The project integrates with GitHub Spec Kit for spec-driven development workflow
 - ✅ **Phase 6**: US4 Status - Health monitoring and statistics
 - ✅ **Phase 7**: E2E Testing - Full pipeline integration tests
 - ✅ **GWT Support**: Complete GWT extraction and PRD generation (84.9% coverage)
+- ✅ **Diagram Generation**: Auto-generate architecture diagrams in Mermaid format (88-91% test coverage)
 
 ### Test Results
 
-- **Unit Tests**: 441 passing (including 14 GWT-specific tests)
-- **Coverage**: 46% overall (70% frontend_analyzer, 94% in critical modules: classifier, discovery, maven parser)
+- **Unit Tests**: 497 passing (including 14 GWT-specific tests, 56 diagram tests)
+- **Coverage**: 46% overall (91% mermaid_renderer, 88% diagram_generator, 70% frontend_analyzer, 94% in critical modules)
 - **E2E Tests**: Full pipeline verified working
 - **Production Test**: Successfully indexed 539-file codebase (cuco-ui-admin)
 - **GWT Tests**: 14 comprehensive unit tests for GWT artifact loading and conversion
+- **Diagram Tests**: 56 comprehensive tests (30 renderer + 26 generator)
 
 ### Known Limitations
 
@@ -40,13 +42,14 @@ The project integrates with GitHub Spec Kit for spec-driven development workflow
 
 ### Core Pipeline Stages
 
-The system operates through five main CLI stages (implemented as subcommands):
+The system operates through six main CLI stages (implemented as subcommands):
 
 1. **discover** - Recursively scans `JAVA_SOURCE_DIR` for source files (.java, .jsp, .js, .xml, config files)
 2. **extract** - Parses discovered files into structured artifacts (services, DAOs, endpoints, forms, GWT modules, DB schemas, iBATIS statements)
 3. **index** - Generates vector embeddings and stores artifacts in Weaviate with project/type partitioning
 4. **search** - Natural language semantic search over indexed artifacts
 5. **prd** - Generates PRDs and requirements documents using Ollama LLM from indexed artifacts
+6. **diagram** - Auto-generates architecture diagrams (component, GWT MVP) in Mermaid format from analyzed artifacts
 
 ### Key Artifact Types
 
@@ -403,6 +406,173 @@ wc -l output/gwt-validation/frontend/components/*.json
 # 1. UiBinder without form fields (skipped correctly)
 # 2. View files without UI fields
 # 3. extraction-results.jsonl missing summary line
+```
+
+### Architecture Diagram Generation
+
+**NEW**: Auto-generate visual architecture diagrams from analyzed codebase artifacts in Mermaid format (GitHub/GitLab compatible).
+
+#### Diagram Types
+
+**Component Architecture Diagram**:
+- Frontend Layer: Presenters, Views, Forms
+- Backend Layer: Services, DAOs
+- Data Layer: Database
+- Shows dependencies and data flow
+
+**GWT MVP Diagram**:
+- GWT Presenters with event handlers and RPC calls
+- GWT Views with UI fields
+- Presenter-View bindings
+- RPC Service connections
+
+#### Generate Diagrams
+
+```bash
+# Generate component architecture diagram
+codeindex diagram component --output ./output/gwt-validation --format mermaid
+
+# Generate GWT MVP architecture diagram
+codeindex diagram gwt \
+  --extraction-file ./output/gwt-validation/extraction-results.jsonl \
+  --output ./output/gwt-validation \
+  --format mermaid
+
+# Generate all available diagrams
+codeindex diagram all \
+  --extraction-file ./output/gwt-validation/extraction-results.jsonl \
+  --output ./output/gwt-validation \
+  --format mermaid
+
+# Open diagram in browser (Mermaid Live Editor)
+codeindex diagram component --output ./output/gwt-validation --open
+```
+
+#### Diagram Options
+
+```bash
+--project TEXT          Project name filter (optional)
+--output PATH           Output directory (default: ./output)
+--format TEXT           Output format: mermaid|plantuml|d2|dot (default: mermaid)
+--style TEXT            Diagram style: default|detailed|minimal (default: default)
+--depth INTEGER         Dependency depth to include (default: 3)
+--open                  Open generated diagram in browser/viewer
+```
+
+#### Generated Output Structure
+
+```
+output/gwt-validation/diagrams/
+├── component/
+│   └── architecture.mmd          # Component architecture diagram
+├── gwt/
+│   └── mvp-overview.mmd          # GWT MVP architecture diagram
+└── README.md                      # Viewing instructions
+```
+
+#### Viewing Diagrams
+
+**In GitHub/GitLab**:
+- Mermaid diagrams render automatically in markdown files
+- Simply include in your documentation with:
+  ```markdown
+  ```mermaid
+  graph TB
+      A[Presenter] --> B[View]
+  ```
+  ```
+
+**In VS Code**:
+- Install "Markdown Preview Mermaid Support" extension
+- Preview diagrams directly in editor
+
+**Online**:
+- Paste diagram content at [Mermaid Live Editor](https://mermaid.live)
+- Use `--open` flag to open automatically
+
+**CLI Tool**:
+```bash
+# Install mermaid-cli
+npm install -g @mermaid-js/mermaid-cli
+
+# Convert to SVG
+mmdc -i output/gwt-validation/diagrams/component/architecture.mmd -o architecture.svg
+
+# Convert to PNG
+mmdc -i output/gwt-validation/diagrams/gwt/mvp-overview.mmd -o mvp-overview.png
+```
+
+#### Diagram Features
+
+**Smart Name Extraction**:
+- Extracts correct component names from multiple sources (id, file_path, entities)
+- Handles missing or incorrect names gracefully
+- Sanitizes special characters for Mermaid syntax
+
+**Automatic Connections**:
+- Presenter-View bindings based on naming conventions
+- Service-DAO relationships
+- DAO-Database connections
+- RPC service calls from presenters
+
+**Diagram Limits**:
+- Limits to 10-15 components per category to prevent overwhelming diagrams
+- Shows most important components first
+- Focuses on high-level architecture overview
+
+#### Example Diagram Output
+
+**Component Diagram**:
+```mermaid
+graph TB
+    subgraph Frontend["Frontend Layer"]
+        UserPresenter[UserPresenter]
+        UserView[UserView]
+    end
+    subgraph Backend["Backend Layer"]
+        UserService[UserService]
+        UserDAO[UserDAO]
+    end
+    subgraph Data["Data Layer"]
+        DB[(Database)]
+    end
+
+    UserPresenter -->|Display| UserView
+    UserPresenter -->|RPC| UserService
+    UserService --> UserDAO
+    UserDAO --> DB
+```
+
+**GWT MVP Diagram**:
+```mermaid
+graph TB
+    subgraph Presenters["GWT Presenters"]
+        AdminPresenter["AdminPresenter"]
+    end
+    subgraph Views["GWT Views"]
+        AdminView["AdminView"]
+    end
+    subgraph RPCServices["RPC Services"]
+        AdminService["AdminService"]
+    end
+
+    AdminPresenter -->|binds| AdminView
+    AdminPresenter -->|getData| AdminService
+```
+
+#### Testing Diagram Generation
+
+```bash
+# Run diagram generator tests
+pytest tests/unit/test_diagram_generator.py -v
+pytest tests/unit/test_mermaid_renderer.py -v
+
+# Run all diagram tests (56 tests)
+pytest tests/unit/test_diagram_generator.py tests/unit/test_mermaid_renderer.py -v
+
+# Expected results:
+# - test_diagram_generator.py: 26 tests, 88% coverage
+# - test_mermaid_renderer.py: 30 tests, 91% coverage
 ```
 
 ## Development Notes
