@@ -18,6 +18,7 @@ from codeindex.parsers import (
     SQLParser,
 )
 from codeindex.services.ollama_client import OllamaClient, create_ollama_client
+from codeindex.services.gwt_analyzer_registry import get_gwt_analyzer_registry
 from codeindex.utils.config import Config, get_config
 
 logger = logging.getLogger(__name__)
@@ -260,6 +261,19 @@ class ExtractionService:
             # Read file content
             content = file_path.read_text(encoding='utf-8')
 
+            # Check if GWT analyzer can handle this file
+            gwt_registry = get_gwt_analyzer_registry()
+            gwt_metadata = None
+
+            if gwt_registry.can_analyze(file_path, artifact_type):
+                self.logger.debug(f"Routing {file_path.name} to GWT analyzer")
+                gwt_metadata = gwt_registry.analyze(
+                    file_path,
+                    artifact_type,
+                    content,
+                    semantic_data=None  # GWT analyzer runs first, before Ollama
+                )
+
             # Call Ollama for semantic extraction
             semantic_data = self.ollama_client.extract_semantics(
                 str(file_path),
@@ -267,6 +281,11 @@ class ExtractionService:
                 artifact_type,
                 pom_context
             )
+
+            # Merge GWT metadata with Ollama semantic data
+            if gwt_metadata:
+                self.logger.debug(f"Merging GWT metadata for {file_path.name}")
+                semantic_data.update(gwt_metadata)
 
             return semantic_data
 

@@ -13,6 +13,7 @@ from typing import List, Dict, Any, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from uuid import uuid4
 
+from codeindex.parsers.uibinder_parser import GwtUiBinderParser
 from codeindex.models.prd import (
     FormDefinition,
     FormField,
@@ -143,6 +144,9 @@ class FrontendAnalyzer:
         self.visit_log = self._load_visit_log()
         self.logger = logging.getLogger(__name__)
 
+        # Initialize GWT parsers
+        self.uibinder_parser = GwtUiBinderParser()
+
     def _load_visit_log(self) -> Dict[str, FileVisitEntry]:
         """Load visit log from JSON Lines file."""
         visit_log = {}
@@ -252,6 +256,67 @@ class FrontendAnalyzer:
         else:
             return "Unknown"
 
+    def _convert_uibinder_to_llm_format(
+        self,
+        uibinder_result: Dict[str, Any],
+        file_path: Path
+    ) -> Dict[str, Any]:
+        """
+        Convert GWT UiBinder parser output to LLM-compatible format.
+
+        Args:
+            uibinder_result: Output from GwtUiBinderParser.parse()
+            file_path: Path to UiBinder file
+
+        Returns:
+            Dictionary in LLM extraction format
+        """
+        # Map widget types to form field types
+        widget_type_mapping = {
+            'TextBox': 'text',
+            'PasswordTextBox': 'password',
+            'TextArea': 'textarea',
+            'IntegerBox': 'number',
+            'DoubleBox': 'number',
+            'ListBox': 'select',
+            'CheckBox': 'checkbox',
+            'RadioButton': 'radio',
+            'DateBox': 'date',
+            'Button': 'button',
+            'SubmitButton': 'submit',
+            'ResetButton': 'button',
+        }
+
+        # Convert form fields
+        fields = []
+        for field_data in uibinder_result.get('form_fields', []):
+            widget_type = field_data.get('widget_type', 'text')
+            field_type = widget_type_mapping.get(widget_type, 'text')
+
+            field = {
+                'name': field_data.get('field_name', ''),
+                'type': field_type,
+                'label': field_data.get('label', ''),
+                'required': '*' in field_data.get('label', '') or 'required' in field_data.get('attributes', {}),
+                'validation': []
+            }
+
+            # Add options for select/listbox
+            if 'options' in field_data:
+                field['options'] = [opt['label'] for opt in field_data['options']]
+
+            fields.append(field)
+
+        return {
+            'form_name': uibinder_result.get('template_name', file_path.stem),
+            'form_type': 'edit',
+            'fields': fields,
+            'actions': [f['name'] for f in uibinder_result.get('form_fields', [])
+                       if f.get('widget_type') in ['Button', 'SubmitButton']],
+            'validation_rules': [],
+            'data_bindings': []
+        }
+
     @retry(max_attempts=3, base_delay=1.0, exponential_base=2.0)
     def _extract_form_with_llm(
         self,
@@ -268,7 +333,6 @@ class FrontendAnalyzer:
 
         response = self.ollama_client.call_ollama(
             prompt=prompt,
-            timeout=self.llm_timeout,
         )
 
         if not response or "response" not in response:
@@ -320,12 +384,27 @@ class FrontendAnalyzer:
                 self.logger.info(f"No form found in {file_path.name}, skipping")
                 return {"status": "skipped", "reason": "no_form"}
 
-            # Extract form using LLM
-            llm_result = self._extract_form_with_llm(
-                file_path=file_path,
-                file_content=file_content,
-                file_type=file_type,
-            )
+            # Fast path: Use GWT UiBinder parser for .ui.xml files
+            llm_result = None
+            if file_type == "GWT UiBinder" and self.uibinder_parser.can_analyze(file_path):
+                self.logger.info(f"Using GWT UiBinder parser for {file_path.name}")
+                try:
+                    uibinder_result = self.uibinder_parser.parse(file_path, file_content)
+
+                    # Convert UiBinder result to LLM-compatible format
+                    llm_result = self._convert_uibinder_to_llm_format(uibinder_result, file_path)
+                    self.logger.info(f"GWT UiBinder parser extracted {len(llm_result.get('fields', []))} fields")
+                except Exception as e:
+                    self.logger.warning(f"GWT UiBinder parser failed, falling back to LLM: {e}")
+                    llm_result = None
+
+            # Fallback: Extract form using LLM if parser didn't work
+            if not llm_result:
+                llm_result = self._extract_form_with_llm(
+                    file_path=file_path,
+                    file_content=file_content,
+                    file_type=file_type,
+                )
 
             if not llm_result:
                 return {"status": "failed", "error": "No LLM result"}

@@ -314,6 +314,23 @@ def is_gwt_module(path: Path) -> bool:
     return '.gwt.xml' in path.name.lower()
 
 
+def is_gwt_ui_binder(path: Path) -> bool:
+    """
+    Check if file is a GWT UiBinder XML template.
+
+    Args:
+        path: File path to check
+
+    Returns:
+        True if GWT UiBinder template file
+    """
+    if path.suffix.lower() != '.xml':
+        return False
+
+    # UiBinder templates end with .ui.xml
+    return '.ui.xml' in path.name.lower()
+
+
 def get_artifact_type(path: Path) -> ArtifactType:
     """
     Determine artifact type for a file.
@@ -333,6 +350,9 @@ def get_artifact_type(path: Path) -> ArtifactType:
 
     if is_gwt_module(path):
         return ArtifactType.GWT_MODULE
+
+    if is_gwt_ui_binder(path):
+        return ArtifactType.GWT_UI_BINDER
 
     if is_jsp_file(path):
         return ArtifactType.JSP_VIEW

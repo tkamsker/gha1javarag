@@ -175,6 +175,154 @@ specify init . --ai claude
 /speckit.taskstoissues # Convert tasks to GitHub issues
 ```
 
+### GWT Application Analysis
+
+**Full support for Google Web Toolkit (GWT) applications** with specialized analyzers.
+
+#### GWT Discovery
+
+```bash
+# Discover GWT application
+codeindex discover --source-dir /path/to/gwt-app --project myapp
+
+# Check GWT artifact detection
+grep "gwt_" output/discovery-inventory.jsonl
+
+# Expected artifact types:
+# - gwt_ui_binder: *.ui.xml templates
+# - gwt_module: *.gwt.xml descriptors
+# - java_source: Presenters, Views, DTOs, Servlets
+```
+
+#### GWT Extraction
+
+```bash
+# Extract with GWT analyzers (includes AI semantic analysis)
+codeindex extract --inventory output/discovery-inventory.jsonl \
+  --output output/extraction-results.jsonl
+
+# Faster extraction without AI (structural analysis only)
+codeindex extract --skip-ai --inventory output/discovery-inventory.jsonl
+
+# Monitor extraction progress
+tail -f output/extraction-results.jsonl | jq '.gwt_role'
+```
+
+#### GWT-Specific Searches
+
+```bash
+# Find presenters
+codeindex search "presenter" --project myapp
+
+# Find form fields
+codeindex search "form validation" --project myapp
+
+# Find RPC services
+codeindex search "remote service" --project myapp
+
+# Find navigation targets
+codeindex search "navigation" --project myapp
+```
+
+#### GWT Artifact Types Detected
+
+The system recognizes these GWT patterns:
+
+| Pattern | Type | Analyzer |
+|---------|------|----------|
+| `*Presenter.java` | Presenter | GwtPresenterAnalyzer |
+| `*View.java` | View | GwtViewAnalyzer |
+| `*DTO.java` (in shared) | DTO | GwtModelAnalyzer |
+| `*ServletImpl.java` | RPC Servlet | GwtRpcAnalyzer |
+| `*.ui.xml` | UiBinder | GwtUiBinderParser |
+| `*.gwt.xml` | GWT Module | XML Parser |
+
+#### GWT Metadata Extracted
+
+**Presenter Analysis**:
+- View interface binding (Display pattern, separate interface, naming convention)
+- Event handlers (ClickHandler, ChangeHandler, etc.) with widget getters
+- Navigation targets (Place/Activity navigation)
+- RPC service calls with method names
+- Confidence scores for MVP pattern detection
+
+**View Analysis**:
+- Component type (Composite, Widget, Panel, PopupPanel)
+- @UiField widgets with types
+- UiBinder template path
+- Event handler registrations
+
+**DTO Analysis**:
+- Field definitions with types
+- Validation rules (@NotNull, @Size, @Pattern, @Email, etc.)
+- Serialization markers (IsSerializable, Serializable)
+- Nested DTO references
+- Inner class definitions
+
+**UiBinder Template Analysis**:
+- Form field widgets (TextBox, ListBox, CheckBox, etc.)
+- Field labels (via heuristics: Display interface, naming, layout)
+- ListBox options
+- UI structure
+
+**RPC Servlet Analysis**:
+- Service method signatures
+- Async interface name
+- RemoteServiceServlet inheritance
+- Method parameters and return types
+
+#### GWT Validation Testing
+
+```bash
+# Run GWT-specific tests
+pytest tests/integration/test_gwt_prd_generation.py -v
+pytest tests/integration/test_gwt_weaviate_simple.py -v
+pytest tests/unit/test_classifier.py::TestGwtClassification -v
+
+# Check test coverage (38 GWT tests total)
+pytest tests/ -k gwt -v --tb=short
+```
+
+#### GWT Troubleshooting
+
+**Problem: UiBinder files not analyzed**
+```bash
+# Check if files were discovered
+grep "gwt_ui_binder" output/discovery-inventory.jsonl
+
+# Check extraction log for errors
+grep -A5 "ui.xml" output/extraction-results.jsonl
+grep "ERROR.*UiBinder" extraction.log
+
+# Verify namespace in XML
+grep "urn:ui:com.google.gwt.uibinder" path/to/file.ui.xml
+```
+
+**Problem: DTOs not recognized**
+```bash
+# Check if DTO is in shared package
+ls -la src/main/java/*/shared/*DTO.java
+
+# Or check for serialization markers
+grep -E "IsSerializable|implements Serializable" path/to/DTO.java
+
+# DTOs need either:
+# 1. Be in .shared. package, OR
+# 2. Have serialization markers in content
+```
+
+**Problem: Presenter-View binding not detected**
+```bash
+# Check MVP pattern in code
+# Expected patterns:
+# 1. Inner Display interface (90% confidence)
+# 2. Separate view interface (85% confidence)
+# 3. Naming convention: FooPresenter + FooView (70% confidence)
+
+# Verify presenter has view reference
+grep -A10 "class.*Presenter" path/to/Presenter.java | grep -i "display\|view"
+```
+
 ## Development Notes
 
 ### Configuration
@@ -313,6 +461,8 @@ Note: The `run.sh` script expects `src/main.py` but the src directory may be emp
 ## Active Technologies
 - Python 3.8+ (minimum version for type hints and modern async support) (001-java-codebase-indexer)
 - Python 3.8+ (minimum version for type hints and async support, consistent with Feature 001) (002-prd-document-generation)
+- Python 3.8+ (existing codebase requirement) (001-gwt-prd-support)
+- Weaviate vector database (existing - adds GWT-specific metadata fields) (001-gwt-prd-support)
 
 ## Recent Changes
 - 001-java-codebase-indexer: Added Python 3.8+ (minimum version for type hints and modern async support)

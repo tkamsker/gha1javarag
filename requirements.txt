@@ -16,6 +16,9 @@ python-dotenv>=1.0.0
 # XML/POM Parsing
 lxml>=4.9.0
 
+# Java AST Parsing (for GWT RPC method extraction)
+javalang==0.13.0
+
 # Project Locking
 filelock>=3.12.0
 

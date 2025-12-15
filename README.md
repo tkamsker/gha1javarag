@@ -217,6 +217,130 @@ Generates comprehensive documentation with:
 - Comprehensive business rules catalog
 - Links to detailed layer-specific documentation
 
+## GWT (Google Web Toolkit) Support
+
+**Full GWT application analysis** with specialized analyzers for GWT patterns and MVP architecture.
+
+### GWT Features
+
+The tool provides deep analysis of GWT applications with:
+
+- ✅ **MVP Pattern Recognition**: Automatic detection of Presenter-View-Model patterns
+- ✅ **RPC Servlet Analysis**: Extract service methods, async interfaces, and client-server contracts
+- ✅ **UiBinder Template Parsing**: Extract form fields, widgets, and UI structure from XML templates
+- ✅ **DTO Analysis**: Document shared data transfer objects with serialization patterns
+- ✅ **View Component Analysis**: Catalog UI components, widgets, and event handlers
+- ✅ **Navigation Flow Mapping**: Track application flow and presenter navigation
+- ✅ **GWT Module Detection**: Identify and document GWT module configurations
+
+### GWT Artifact Types
+
+The system recognizes and analyzes these GWT-specific artifacts:
+
+| Type | Pattern | Analysis |
+|------|---------|----------|
+| **Presenter** | `*Presenter.java` | View binding, event handlers, navigation logic, RPC calls |
+| **View** | `*View.java` | Component type, UI fields, UiBinder integration |
+| **UiBinder** | `*.ui.xml` | Form fields, widgets, labels, validation |
+| **DTO** | `*DTO.java` in shared | Fields, serialization, nested DTOs, inner classes |
+| **RPC Servlet** | `*ServletImpl.java` | Service methods, async interface, error handling |
+| **GWT Module** | `*.gwt.xml` | Entry points, source paths, dependencies |
+
+### GWT Analysis Example
+
+```bash
+# Discover GWT application
+codeindex discover --source-dir /path/to/gwt-app --project myapp
+
+# Extract with GWT analyzers
+codeindex extract --project myapp
+
+# Index GWT artifacts
+codeindex index --project myapp
+
+# Search GWT components
+codeindex search "user authentication presenter" --project myapp
+codeindex search "form validation" --project myapp
+```
+
+### GWT PRD Output
+
+When analyzing GWT applications, PRDs include:
+
+**Presenter Analysis**:
+- View interface bindings with confidence scores
+- Event handlers (click, change, etc.) and their actions
+- Navigation targets and application flow
+- RPC service calls with parameters
+- MVP binding patterns (Display interface, separate interface, naming convention)
+
+**View Analysis**:
+- Component type (Composite, Widget, Panel, PopupPanel)
+- UI fields with widget types
+- UiBinder template paths
+- Event registrations
+
+**DTO Analysis**:
+- Field definitions with types
+- Validation rules (@NotNull, @Size, @Pattern, etc.)
+- Serialization markers (GWT IsSerializable, Java Serializable)
+- Nested DTO references
+- Inner class definitions
+
+**RPC Servlet Analysis**:
+- Service method signatures
+- Async interface patterns
+- Parameter and return types
+- Service inheritance hierarchy
+
+### GWT Testing
+
+The GWT support includes comprehensive test coverage:
+
+- **38 Integration Tests**: Presenter, View, DTO, Servlet, UiBinder analysis
+- **Real-world Validation**: Tested on 183-file production GWT codebase
+- **Pattern Recognition**: 19 classifier tests for GWT file patterns
+- **Weaviate Compatibility**: JSON serialization validation
+
+### GWT Best Practices
+
+**For optimal GWT analysis**:
+
+1. **Standard Package Structure**: Use `client`, `server`, `shared` packages
+2. **Naming Conventions**: Follow `*Presenter`, `*View`, `*DTO` patterns
+3. **UiBinder Templates**: Co-locate `.ui.xml` with view classes
+4. **Serialization**: Use GWT `IsSerializable` or Java `Serializable`
+5. **MVP Binding**: Use Display interfaces or clear naming conventions
+
+### GWT Troubleshooting
+
+**Issue: GWT files not detected**
+```bash
+# Verify file patterns
+find /path/to/source -name "*Presenter.java" -o -name "*.ui.xml"
+
+# Check discovery results
+grep "gwt_" output/discovery-inventory.jsonl
+```
+
+**Issue: UiBinder extraction fails**
+```bash
+# Validate XML structure
+xmllint --noout path/to/file.ui.xml
+
+# Check for GWT namespaces
+grep "urn:ui:com.google.gwt.uibinder" path/to/file.ui.xml
+```
+
+**Issue: DTO not recognized as shared**
+```bash
+# Verify serialization markers
+grep -E "IsSerializable|implements Serializable" path/to/DTO.java
+
+# Check package structure
+# Should contain .shared. or have serialization markers
+```
+
 ## Integration with Spec Kit
 
 Generated PRDs are designed for use with [GitHub Spec Kit](https://github.com/github/spec-kit):

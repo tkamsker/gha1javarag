@@ -429,3 +429,199 @@ class TestClassifyFileFunction:
         method_result = classifier.classify(path)
 
         assert func_result == method_result
+
+
+# Test GWT Pattern Classification (T079)
+class TestGwtPatternClassification:
+    """Test classification of GWT-specific file patterns."""
+
+    def test_classify_rpc_servlet(self, classifier):
+        """Test classification of GWT RPC servlet."""
+        path = Path("src/main/java/com/example/server/FlashInfoServletImpl.java")
+        result = classifier.classify(path)
+
+        # RPC servlets should be classified as JAVA_SOURCE
+        # The GWT analyzer will handle the specific role
+        assert result == ArtifactType.JAVA_SOURCE
+
+    def test_classify_gwt_service_interface(self, classifier):
+        """Test classification of GWT service interface."""
+        path = Path("src/main/java/com/example/client/FlashInfoService.java")
+        result = classifier.classify(path)
+
+        assert result == ArtifactType.JAVA_SOURCE
+
+    def test_classify_gwt_async_interface(self, classifier):
+        """Test classification of GWT async service interface."""
+        path = Path("src/main/java/com/example/client/FlashInfoServiceAsync.java")
+        result = classifier.classify(path)
+
+        assert result == ArtifactType.JAVA_SOURCE
+
+    def test_classify_uibinder_xml(self, classifier):
+        """Test classification of UiBinder XML template."""
+        path = Path("src/main/java/com/example/client/FlashInfoEditView.ui.xml")
+        result = classifier.classify(path)
+
+        # UiBinder templates should be classified as GWT_UI_BINDER
+        assert result == ArtifactType.GWT_UI_BINDER
+
+    def test_classify_gwt_presenter(self, classifier):
+        """Test classification of GWT MVP presenter."""
+        path = Path("src/main/java/com/example/client/FlashAdministrationPresenter.java")
+        result = classifier.classify(path)
+
+        assert result == ArtifactType.JAVA_SOURCE
+
+    def test_classify_gwt_view(self, classifier):
+        """Test classification of GWT MVP view."""
+        path = Path("src/main/java/com/example/client/FlashAdministrationView.java")
+        result = classifier.classify(path)
+
+        assert result == ArtifactType.JAVA_SOURCE
+
+    def test_classify_shared_dto(self, classifier):
+        """Test classification of shared DTO."""
+        path = Path("src/main/java/com/example/shared/FlashInfoDTO.java")
+        result = classifier.classify(path)
+
+        assert result == ArtifactType.JAVA_SOURCE
+
+    def test_classify_gwt_module_xml(self, classifier):
+        """Test classification of GWT module descriptor."""
+        path = Path("src/main/java/com/example/Application.gwt.xml")
+        result = classifier.classify(path)
+
+        assert result == ArtifactType.GWT_MODULE
+
+    def test_classify_gwt_client_code(self, classifier):
+        """Test classification of GWT client-side code."""
+        path = Path("src/main/java/com/example/client/UserListActivity.java")
+        result = classifier.classify(path)
+
+        assert result == ArtifactType.JAVA_SOURCE
+
+    def test_classify_gwt_place(self, classifier):
+        """Test classification of GWT Place class."""
+        path = Path("src/main/java/com/example/client/place/DashboardPlace.java")
+        result = classifier.classify(path)
+
+        assert result == ArtifactType.JAVA_SOURCE
+
+
+class TestGwtFilePatternRecognition:
+    """Test GWT-specific file pattern recognition."""
+
+    def test_recognize_servlet_impl_pattern(self, classifier):
+        """Test recognition of *ServletImpl.java pattern."""
+        paths = [
+            Path("src/main/java/UserServletImpl.java"),
+            Path("src/main/java/FlashInfoServletImpl.java"),
+            Path("src/main/java/AdminServletImpl.java"),
+        ]
+
+        for path in paths:
+            result = classifier.classify(path)
+            assert result == ArtifactType.JAVA_SOURCE
+
+    def test_recognize_presenter_pattern(self, classifier):
+        """Test recognition of *Presenter.java pattern."""
+        paths = [
+            Path("src/main/java/UserPresenter.java"),
+            Path("src/main/java/DashboardPresenter.java"),
+            Path("src/main/java/admin/FlashPresenter.java"),
+        ]
+
+        for path in paths:
+            result = classifier.classify(path)
+            assert result == ArtifactType.JAVA_SOURCE
+
+    def test_recognize_view_pattern(self, classifier):
+        """Test recognition of *View.java pattern."""
+        paths = [
+            Path("src/main/java/UserView.java"),
+            Path("src/main/java/DashboardView.java"),
+            Path("src/main/java/client/FlashView.java"),
+        ]
+
+        for path in paths:
+            result = classifier.classify(path)
+            assert result == ArtifactType.JAVA_SOURCE
+
+    def test_recognize_dto_pattern(self, classifier):
+        """Test recognition of *DTO.java pattern."""
+        paths = [
+            Path("src/main/java/shared/UserDTO.java"),
+            Path("src/main/java/shared/FlashInfoDTO.java"),
+            Path("src/main/java/com/example/shared/PermissionDTO.java"),
+        ]
+
+        for path in paths:
+            result = classifier.classify(path)
+            assert result == ArtifactType.JAVA_SOURCE
+
+    def test_recognize_ui_xml_pattern(self, classifier):
+        """Test recognition of *.ui.xml pattern."""
+        paths = [
+            Path("src/main/java/client/UserView.ui.xml"),
+            Path("src/main/java/client/FlashEditView.ui.xml"),
+            Path("src/main/java/admin/DashboardView.ui.xml"),
+        ]
+
+        for path in paths:
+            result = classifier.classify(path)
+            assert result == ArtifactType.GWT_UI_BINDER
+
+    def test_recognize_gwt_xml_pattern(self, classifier):
+        """Test recognition of *.gwt.xml pattern."""
+        paths = [
+            Path("src/main/java/Application.gwt.xml"),
+            Path("src/main/java/com/example/App.gwt.xml"),
+            Path("src/main/resources/Module.gwt.xml"),
+        ]
+
+        for path in paths:
+            result = classifier.classify(path)
+            assert result == ArtifactType.GWT_MODULE
+
+
+class TestGwtPackageStructure:
+    """Test classification within typical GWT package structures."""
+
+    def test_classify_client_package_files(self, classifier):
+        """Test files in typical GWT client package."""
+        paths = [
+            Path("src/main/java/com/example/client/UserPresenter.java"),
+            Path("src/main/java/com/example/client/UserView.java"),
+            Path("src/main/java/com/example/client/UserView.ui.xml"),
+            Path("src/main/java/com/example/client/FlashInfoService.java"),
+            Path("src/main/java/com/example/client/FlashInfoServiceAsync.java"),
+        ]
+
+        for path in paths:
+            result = classifier.classify(path)
+            assert result in [ArtifactType.JAVA_SOURCE, ArtifactType.GWT_UI_BINDER]
+
+    def test_classify_server_package_files(self, classifier):
+        """Test files in typical GWT server package."""
+        paths = [
+            Path("src/main/java/com/example/server/FlashInfoServletImpl.java"),
+            Path("src/main/java/com/example/server/UserServletImpl.java"),
+            Path("src/main/java/com/example/server/AdminServlet.java"),
+        ]
+
+        for path in paths:
+            result = classifier.classify(path)
+            assert result == ArtifactType.JAVA_SOURCE
+
+    def test_classify_shared_package_files(self, classifier):
+        """Test files in typical GWT shared package."""
+        paths = [
+            Path("src/main/java/com/example/shared/UserDTO.java"),
+            Path("src/main/java/com/example/shared/FlashInfoDTO.java"),
+            Path("src/main/java/com/example/shared/PermissionDTO.java"),
+        ]
+
+        for path in paths:
+            result = classifier.classify(path)
+            assert result == ArtifactType.JAVA_SOURCE

@@ -1308,7 +1308,65 @@ def _generate_service_prd(services: list, endpoints: list) -> str:
             lines.append("---")
             lines.append("")
 
-    # API Endpoints
+    # GWT RPC Endpoints (if any GWT servlets present)
+    gwt_servlets = [s for s in services if s.service_type and 'GWT' in s.service_type.value]
+    if gwt_servlets:
+        lines.append("## GWT RPC Endpoints")
+        lines.append("")
+        lines.append("GWT Remote Procedure Call endpoints for client-server communication.")
+        lines.append("")
+
+        for servlet in sorted(gwt_servlets, key=lambda s: s.class_name):
+            lines.append(f"### {servlet.class_name}")
+            lines.append("")
+
+            if servlet.description:
+                lines.append(servlet.description)
+                lines.append("")
+
+            lines.append(f"**Service Interface**: `{servlet.package}.{servlet.class_name.replace('Impl', '')}`")
+            lines.append("")
+
+            if servlet.operations:
+                lines.append("**RPC Methods:**")
+                lines.append("")
+
+                for op in servlet.operations:
+                    # Build parameter list
+                    params_list = []
+                    for p in op.parameters:
+                        param_str = f"{p.type} {p.name}"
+                        params_list.append(param_str)
+                    params_str = ", ".join(params_list)
+
+                    # Method signature
+                    lines.append(f"#### `{op.return_type} {op.name}({params_str})`")
+                    lines.append("")
+
+                    if op.description:
+                        lines.append(f"**Description**: {op.description}")
+                        lines.append("")
+
+                    if op.parameters:
+                        lines.append("**Parameters:**")
+                        lines.append("")
+                        for p in op.parameters:
+                            param_desc = f" - {p.description}" if p.description else ""
+                            lines.append(f"- `{p.name}`: `{p.type}`{param_desc}")
+                        lines.append("")
+
+                    if op.return_type and op.return_type != 'void':
+                        lines.append(f"**Returns**: `{op.return_type}`")
+                        lines.append("")
+
+                    if op.throws:
+                        lines.append(f"**Throws**: {', '.join([f'`{e}`' for e in op.throws])}")
+                        lines.append("")
+
+                    lines.append("---")
+                    lines.append("")
+
+    # API Endpoints (REST/HTTP)
     lines.append("## API Endpoints")
     lines.append("")
 
