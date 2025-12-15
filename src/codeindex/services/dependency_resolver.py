@@ -74,10 +74,11 @@ def resolve_dependencies(
     if not root_pom.exists():
         raise FileNotFoundError(f"Root pom.xml not found: {root_pom}")
 
-    # Auto-detect workspace root if not provided (use parent of base_dir)
+    # Set workspace root for sibling search
+    # If not provided, use base_dir itself (caller's responsibility to pass correct directory)
     if workspace_root is None and search_siblings:
-        workspace_root = base_dir.parent
-        log.debug(f"Auto-detected workspace root: {workspace_root}")
+        workspace_root = base_dir
+        log.debug(f"Using base_dir as workspace root: {workspace_root}")
 
     # Initialize timing
     start_time = datetime.now()
