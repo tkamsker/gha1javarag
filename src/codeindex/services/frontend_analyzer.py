@@ -586,3 +586,304 @@ class FrontendAnalyzer:
             "failed": failed,
             "no_forms": no_forms,
         }
+
+    def load_gwt_artifacts_from_extraction(
+        self,
+        extraction_file: Path,
+        project_id: Optional[str] = None
+    ) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Load GWT artifacts from extraction results file.
+
+        Args:
+            extraction_file: Path to extraction-results.jsonl
+            project_id: Optional project filter
+
+        Returns:
+            Dictionary with lists of artifacts by role:
+            {
+                'presenters': [...],
+                'views': [...],
+                'ui_binders': [...],
+                'rpc_servlets': [...],
+                'shared_dtos': [...]
+            }
+        """
+        self.logger.info(f"Loading GWT artifacts from {extraction_file}")
+
+        gwt_artifacts = {
+            'presenters': [],
+            'views': [],
+            'ui_binders': [],
+            'rpc_servlets': [],
+            'shared_dtos': []
+        }
+
+        if not extraction_file.exists():
+            self.logger.warning(f"Extraction file not found: {extraction_file}")
+            return gwt_artifacts
+
+        try:
+            with open(extraction_file, 'r', encoding='utf-8') as f:
+                for line_num, line in enumerate(f, 1):
+                    line = line.strip()
+                    if not line:
+                        continue
+
+                    # Skip summary line
+                    if line_num == 1:
+                        continue
+
+                    try:
+                        artifact = json.loads(line)
+
+                        # Filter by project if specified
+                        if project_id:
+                            # Handle project ID with or without hash suffix
+                            artifact_project = artifact.get('project_id', '')
+                            if not (artifact_project == project_id or
+                                   artifact_project.startswith(f"{project_id}:")):
+                                continue
+
+                        # Check if artifact has GWT metadata
+                        semantic_data = artifact.get('semantic_data', {})
+                        gwt_role = semantic_data.get('gwt_role')
+
+                        if gwt_role == 'presenter':
+                            gwt_artifacts['presenters'].append(artifact)
+                        elif gwt_role == 'view':
+                            gwt_artifacts['views'].append(artifact)
+                        elif gwt_role == 'ui_binder':
+                            gwt_artifacts['ui_binders'].append(artifact)
+                        elif gwt_role == 'rpc_servlet':
+                            gwt_artifacts['rpc_servlets'].append(artifact)
+                        elif gwt_role == 'shared_dto':
+                            gwt_artifacts['shared_dtos'].append(artifact)
+
+                    except json.JSONDecodeError as e:
+                        self.logger.warning(f"Invalid JSON at line {line_num}: {e}")
+                        continue
+                    except Exception as e:
+                        self.logger.warning(f"Error processing line {line_num}: {e}")
+                        continue
+
+            total = sum(len(v) for v in gwt_artifacts.values())
+            self.logger.info(f"Loaded {total} GWT artifacts: "
+                           f"{len(gwt_artifacts['presenters'])} presenters, "
+                           f"{len(gwt_artifacts['views'])} views, "
+                           f"{len(gwt_artifacts['ui_binders'])} UiBinders, "
+                           f"{len(gwt_artifacts['rpc_servlets'])} RPC servlets, "
+                           f"{len(gwt_artifacts['shared_dtos'])} DTOs")
+
+            return gwt_artifacts
+
+        except Exception as e:
+            self.logger.error(f"Failed to load GWT artifacts: {e}", exc_info=True)
+            return gwt_artifacts
+
+    def convert_gwt_presenter_to_component(self, artifact: Dict[str, Any]) -> UIComponent:
+        """Convert GWT Presenter artifact to UIComponent."""
+        semantic = artifact.get('semantic_data', {})
+        file_path = artifact.get('file_path', '')
+
+        # Extract event handlers
+        events = []
+        for handler_data in semantic.get('event_handlers', []):
+            if isinstance(handler_data, dict):
+                event = Event(
+                    name=handler_data.get('name', ''),
+                    type=handler_data.get('trigger', 'click'),  # Fixed: use 'type' not 'trigger'
+                    handler=handler_data.get('handler', ''),
+                    description=handler_data.get('description', '')
+                )
+                events.append(event)
+
+        # Extract data bindings from RPC calls
+        data_bindings = []
+        for rpc in semantic.get('rpc_calls', []):
+            if isinstance(rpc, dict):
+                binding = DataBinding(
+                    field_name=rpc.get('method', ''),  # Fixed: use 'field_name' not 'source'
+                    data_source=rpc.get('service', ''),  # Fixed: use 'data_source' not 'target'
+                    binding_type='rpc_call'
+                )
+                data_bindings.append(binding)
+
+        # Extract navigation targets
+        navigation_targets = []
+        for nav in semantic.get('navigation_logic', []):
+            if isinstance(nav, dict):
+                navigation_targets.append(nav.get('target', ''))
+
+        component_id = f"gwt_presenter_{Path(file_path).stem}"
+
+        return UIComponent(
+            id=component_id,
+            name=semantic.get('presenter_name', Path(file_path).stem),
+            source_file=file_path,  # Fixed: use 'source_file' not 'file_path'
+            component_type=ComponentType.GWT_PRESENTER,
+            created_at=datetime.now(),  # Fixed: add required created_at
+            description=semantic.get('summary', ''),
+            events_handled=events,  # Fixed: use 'events_handled' not 'events'
+            data_bindings=data_bindings,
+            navigation_targets=navigation_targets
+            # Note: metadata removed as it's not a valid parameter
+        )
+
+    def convert_gwt_view_to_component(self, artifact: Dict[str, Any]) -> UIComponent:
+        """Convert GWT View artifact to UIComponent."""
+        semantic = artifact.get('semantic_data', {})
+        file_path = artifact.get('file_path', '')
+
+        # Extract UI fields as data bindings
+        data_bindings = []
+        for field in semantic.get('ui_fields', []):
+            if isinstance(field, dict):
+                binding = DataBinding(
+                    field_name=field.get('field_name', ''),  # Fixed: use 'field_name' not 'source'
+                    data_source=field.get('widget_type', ''),  # Fixed: use 'data_source' not 'target'
+                    binding_type='ui_field'
+                )
+                data_bindings.append(binding)
+
+        component_id = f"gwt_view_{Path(file_path).stem}"
+
+        return UIComponent(
+            id=component_id,
+            name=semantic.get('view_name', Path(file_path).stem),
+            source_file=file_path,  # Fixed: use 'source_file' not 'file_path'
+            component_type=ComponentType.GWT_VIEW,
+            created_at=datetime.now(),  # Fixed: add required created_at
+            description=semantic.get('summary', ''),
+            data_bindings=data_bindings
+            # Note: metadata removed as it's not a valid parameter
+        )
+
+    def convert_gwt_uibinder_to_form(self, artifact: Dict[str, Any]) -> FormDefinition:
+        """Convert GWT UiBinder artifact to FormDefinition."""
+        semantic = artifact.get('semantic_data', {})
+        file_path = artifact.get('file_path', '')
+
+        # Widget type to form field type mapping
+        widget_type_map = {
+            'TextBox': 'text',
+            'PasswordTextBox': 'password',
+            'TextArea': 'textarea',
+            'IntegerBox': 'number',
+            'DoubleBox': 'number',
+            'ListBox': 'select',
+            'CheckBox': 'checkbox',
+            'RadioButton': 'radio',
+            'DateBox': 'date',
+            'Button': 'button',
+            'SubmitButton': 'submit'
+        }
+
+        # Convert form fields
+        fields = []
+        for field_data in semantic.get('form_fields', []):
+            if isinstance(field_data, dict):
+                widget_type = field_data.get('widget_type', 'TextBox')
+                field_type = widget_type_map.get(widget_type, 'text')
+
+                field = FormField(
+                    name=field_data.get('field_name', ''),
+                    type=field_type,
+                    label=field_data.get('label', ''),
+                    required='*' in field_data.get('label', ''),
+                    validation_pattern=None,
+                    default_value=field_data.get('default_value')
+                )
+                fields.append(field)
+
+        # Skip UiBinders without form fields (they're templates, not forms)
+        if not fields:
+            return None
+
+        form_id = f"gwt_form_{Path(file_path).stem}"
+
+        return FormDefinition(
+            id=form_id,
+            name=semantic.get('template_name', Path(file_path).stem),
+            source_file=file_path,
+            form_type=FormType.GWT_FORM,
+            fields=fields,
+            created_at=datetime.now(),  # Fixed: add required created_at
+            description=semantic.get('summary', ''),
+            submission_endpoint=None,  # UiBinder templates don't specify endpoints
+            submission_method=None,
+            bound_entities=[]
+        )
+
+    def process_gwt_artifacts(
+        self,
+        extraction_file: Path,
+        project_id: Optional[str] = None
+    ) -> Dict[str, int]:
+        """
+        Load and process GWT artifacts from extraction file.
+
+        Args:
+            extraction_file: Path to extraction-results.jsonl
+            project_id: Optional project filter
+
+        Returns:
+            Dictionary with counts of processed artifacts
+        """
+        self.logger.info("Processing GWT artifacts for PRD generation...")
+
+        # Load GWT artifacts
+        gwt_artifacts = self.load_gwt_artifacts_from_extraction(extraction_file, project_id)
+
+        counts = {
+            'presenters': 0,
+            'views': 0,
+            'ui_binders': 0,
+            'total_components': 0,
+            'total_forms': 0
+        }
+
+        # Process presenters
+        for artifact in gwt_artifacts['presenters']:
+            try:
+                component = self.convert_gwt_presenter_to_component(artifact)
+                self._save_ui_component(component)
+                counts['presenters'] += 1
+                counts['total_components'] += 1
+            except Exception as e:
+                self.logger.error(f"Failed to convert presenter {artifact.get('file_path')}: {e}")
+
+        # Process views
+        for artifact in gwt_artifacts['views']:
+            try:
+                component = self.convert_gwt_view_to_component(artifact)
+                self._save_ui_component(component)
+                counts['views'] += 1
+                counts['total_components'] += 1
+            except Exception as e:
+                self.logger.error(f"Failed to convert view {artifact.get('file_path')}: {e}")
+
+        # Process UiBinders
+        for artifact in gwt_artifacts['ui_binders']:
+            try:
+                form = self.convert_gwt_uibinder_to_form(artifact)
+                if form:  # Skip if no form fields
+                    self._save_form(form)
+                    counts['ui_binders'] += 1
+                    counts['total_forms'] += 1
+            except Exception as e:
+                self.logger.error(f"Failed to convert UiBinder {artifact.get('file_path')}: {e}")
+
+        self.logger.info(f"Processed {counts['total_components']} GWT components "
+                        f"and {counts['total_forms']} forms")
+
+        return counts
+
+    def _save_ui_component(self, component: UIComponent):
+        """Save UI component to JSON file."""
+        component_file = self.components_dir / f"{component.id}.json"
+        try:
+            with open(component_file, 'w', encoding='utf-8') as f:
+                json.dump(component.to_dict(), f, indent=2, default=str)
+        except Exception as e:
+            self.logger.error(f"Failed to save component {component.id}: {e}")

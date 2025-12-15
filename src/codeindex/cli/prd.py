@@ -21,7 +21,7 @@ from codeindex.services.service_analyzer import ServiceAnalyzer
 from codeindex.services.frontend_analyzer import FrontendAnalyzer
 from codeindex.services.markdown_builder import MarkdownBuilder
 from codeindex.services.prd_generator import PRDGenerator
-from codeindex.models.prd import AnalysisLayer, ServiceDefinition, APIEndpoint, FormDefinition, UIComponent
+from codeindex.models.prd import AnalysisLayer, ServiceDefinition, APIEndpoint, FormDefinition, UIComponent, ComponentType, FormType
 from codeindex.schemas import check_weaviate_health
 
 logger = get_logger(__name__)
@@ -841,6 +841,30 @@ def _analyze_frontend_layer(
         # Run analysis
         result = analyzer.analyze_frontend_layer()
 
+        # Process GWT artifacts from extraction file if available
+        gwt_counts = {'presenters': 0, 'views': 0, 'ui_binders': 0}
+        extraction_file_paths = [
+            output_dir / "extraction-results.jsonl",
+            output_dir.parent / "gwt-validation" / "extraction-results.jsonl",
+            Path("output/gwt-validation/extraction-results.jsonl")
+        ]
+
+        for extraction_file in extraction_file_paths:
+            if extraction_file.exists():
+                if not quiet:
+                    click.echo(f"[INFO] Processing GWT artifacts from {extraction_file}...")
+                try:
+                    gwt_counts = analyzer.process_gwt_artifacts(
+                        extraction_file=extraction_file,
+                        project_id=None  # Process all projects
+                    )
+                    if not quiet:
+                        click.echo(f"[INFO] Processed {gwt_counts['presenters']} presenters, "
+                                 f"{gwt_counts['views']} views, {gwt_counts['ui_binders']} UiBinder forms")
+                    break
+                except Exception as e:
+                    logger.warning(f"Failed to process GWT artifacts from {extraction_file}: {e}")
+
         # Load extracted forms and components from output files
         forms = []
         components = []
@@ -890,13 +914,22 @@ def _analyze_frontend_layer(
         prd_file.parent.mkdir(parents=True, exist_ok=True)
         prd_file.write_text(prd_content, encoding="utf-8")
 
+        total_forms = result.get('forms_extracted', 0) + gwt_counts['ui_binders']
+        total_components = result.get('components_found', 0) + gwt_counts['presenters'] + gwt_counts['views']
+
         if not quiet:
-            click.echo(f"[INFO] Frontend analysis complete: {result.get('forms_extracted', 0)} forms, {result.get('components_found', 0)} components")
+            click.echo(f"[INFO] Frontend analysis complete: {total_forms} forms, {total_components} components")
+            if gwt_counts['presenters'] > 0 or gwt_counts['views'] > 0:
+                click.echo(f"[INFO] GWT components: {gwt_counts['presenters']} presenters, "
+                         f"{gwt_counts['views']} views, {gwt_counts['ui_binders']} UiBinder forms")
 
         return {
             "success": True,
-            "forms": result.get("forms_extracted", 0),
-            "components": result.get("components_found", 0),
+            "forms": total_forms,
+            "components": total_components,
+            "gwt_presenters": gwt_counts['presenters'],
+            "gwt_views": gwt_counts['views'],
+            "gwt_ui_binders": gwt_counts['ui_binders'],
             "analyzed": result.get("analyzed", 0),
             "skipped": result.get("skipped", 0),
             "failed": result.get("failed", 0)
@@ -1723,7 +1756,7 @@ def _generate_frontend_prd(forms: list, components: list) -> str:
                     lines.append("**Data Bindings:**")
                     lines.append("")
                     for binding in component.data_bindings:
-                        lines.append(f"- `{binding.target_property}` ← `{binding.source_expression}` ({binding.binding_type})")
+                        lines.append(f"- `{binding.field_name}` ← `{binding.data_source}` ({binding.binding_type})")
                     lines.append("")
 
                 # Navigation targets
@@ -1820,6 +1853,138 @@ def _generate_frontend_prd(forms: list, components: list) -> str:
     else:
         lines.append("*No navigation flows documented.*")
         lines.append("")
+
+    # GWT Components Section
+    gwt_presenters = [c for c in components if c.component_type == ComponentType.GWT_PRESENTER]
+    gwt_views = [c for c in components if c.component_type == ComponentType.GWT_VIEW]
+
+    if gwt_presenters or gwt_views:
+        lines.append("---")
+        lines.append("")
+        lines.append("## GWT Application Components")
+        lines.append("")
+        lines.append(f"This section documents **{len(gwt_presenters)} GWT Presenters** and **{len(gwt_views)} GWT Views** ")
+        lines.append("that implement the Model-View-Presenter (MVP) pattern.")
+        lines.append("")
+
+        # GWT Presenters
+        if gwt_presenters:
+            lines.append("### GWT Presenters")
+            lines.append("")
+            lines.append("Presenters contain the business logic and handle user interactions:")
+            lines.append("")
+
+            # Presenters table
+            headers = ["Presenter", "Event Handlers", "RPC Calls", "Navigation"]
+            rows = []
+            for presenter in sorted(gwt_presenters, key=lambda p: p.name):
+                event_count = len(presenter.events_handled) if presenter.events_handled else 0
+                rpc_count = len([b for b in (presenter.data_bindings or []) if b.binding_type == 'rpc_call'])
+                nav_count = len(presenter.navigation_targets) if presenter.navigation_targets else 0
+
+                rows.append([
+                    f"`{presenter.name}`",
+                    str(event_count),
+                    str(rpc_count),
+                    str(nav_count)
+                ])
+
+            lines.append(MarkdownBuilder.format_table(headers, rows))
+            lines.append("")
+
+            # Detailed presenter documentation
+            lines.append("#### Presenter Details")
+            lines.append("")
+
+            for presenter in sorted(gwt_presenters, key=lambda p: p.name)[:10]:  # Limit to first 10
+                lines.append(f"##### {presenter.name}")
+                lines.append("")
+
+                if presenter.description:
+                    lines.append(presenter.description)
+                    lines.append("")
+
+                # Event handlers
+                if presenter.events_handled:
+                    lines.append("**Event Handlers:**")
+                    lines.append("")
+                    for event in presenter.events_handled[:5]:  # First 5 events
+                        lines.append(f"- `{event.name}` ({event.type}): {event.description or event.handler or '-'}")
+                    if len(presenter.events_handled) > 5:
+                        lines.append(f"- *... and {len(presenter.events_handled) - 5} more*")
+                    lines.append("")
+
+                # RPC calls
+                rpc_bindings = [b for b in (presenter.data_bindings or []) if b.binding_type == 'rpc_call']
+                if rpc_bindings:
+                    lines.append("**RPC Service Calls:**")
+                    lines.append("")
+                    for binding in rpc_bindings[:5]:
+                        lines.append(f"- `{binding.data_source}.{binding.field_name}()`")
+                    if len(rpc_bindings) > 5:
+                        lines.append(f"- *... and {len(rpc_bindings) - 5} more*")
+                    lines.append("")
+
+                # Navigation
+                if presenter.navigation_targets:
+                    lines.append("**Navigation Targets:**")
+                    lines.append("")
+                    for target in presenter.navigation_targets[:5]:
+                        lines.append(f"- → `{target}`")
+                    if len(presenter.navigation_targets) > 5:
+                        lines.append(f"- *... and {len(presenter.navigation_targets) - 5} more*")
+                    lines.append("")
+
+                lines.append("---")
+                lines.append("")
+
+        # GWT Views
+        if gwt_views:
+            lines.append("### GWT Views")
+            lines.append("")
+            lines.append("Views define the user interface and delegate user actions to presenters:")
+            lines.append("")
+
+            # Views table
+            headers = ["View", "UI Fields", "Source File"]
+            rows = []
+            for view in sorted(gwt_views, key=lambda v: v.name):
+                ui_field_count = len(view.data_bindings) if view.data_bindings else 0
+                source_file = Path(view.source_file).name if view.source_file else '-'
+
+                rows.append([
+                    f"`{view.name}`",
+                    str(ui_field_count),
+                    f"`{source_file}`"
+                ])
+
+            lines.append(MarkdownBuilder.format_table(headers, rows))
+            lines.append("")
+
+            # Detailed view documentation
+            lines.append("#### View Details")
+            lines.append("")
+
+            for view in sorted(gwt_views, key=lambda v: v.name)[:10]:  # Limit to first 10
+                lines.append(f"##### {view.name}")
+                lines.append("")
+
+                if view.description:
+                    lines.append(view.description)
+                    lines.append("")
+
+                # UI Fields
+                if view.data_bindings:
+                    lines.append("**UI Fields:**")
+                    lines.append("")
+                    for binding in view.data_bindings[:8]:  # First 8 fields
+                        lines.append(f"- `{binding.field_name}` ({binding.data_source})")
+                    if len(view.data_bindings) > 8:
+                        lines.append(f"- *... and {len(view.data_bindings) - 8} more fields*")
+                    lines.append("")
+
+                lines.append("---")
+                lines.append("")
 
     return "\n".join(lines)
 
