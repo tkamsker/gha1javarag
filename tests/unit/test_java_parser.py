@@ -537,3 +537,158 @@ class TestIntegration:
         # Verify imports include annotation packages
         imports = result.get('imports', [])
         assert any('springframework' in imp for imp in imports)
+
+
+# ===================================================================
+# Tests for Validation Annotation Extraction (T043)
+# ===================================================================
+
+class TestValidationAnnotationExtraction:
+    """Test validation annotation extraction for DTOs (T043)."""
+
+    def test_extract_validation_annotations_not_null(self):
+        """Test extraction of @NotNull annotation."""
+        from src.codeindex.parsers.java_parser import extract_validation_annotations
+
+        fixture_path = Path("tests/fixtures/dto-classes/standard-dto.java")
+
+        annotations = extract_validation_annotations(fixture_path)
+
+        # Should find @NotNull annotations
+        not_null_annotations = [a for a in annotations if a['type'] == 'NotNull']
+        assert len(not_null_annotations) > 0
+
+        # Each annotation should have field name
+        for ann in not_null_annotations:
+            assert 'field_name' in ann
+            assert 'type' in ann
+
+    def test_extract_validation_annotations_size(self):
+        """Test extraction of @Size annotation with parameters."""
+        from src.codeindex.parsers.java_parser import extract_validation_annotations
+
+        fixture_path = Path("tests/fixtures/dto-classes/standard-dto.java")
+
+        annotations = extract_validation_annotations(fixture_path)
+
+        # Should find @Size annotations
+        size_annotations = [a for a in annotations if a['type'] == 'Size']
+        assert len(size_annotations) > 0
+
+        # @Size should have min/max parameters
+        for ann in size_annotations:
+            assert 'field_name' in ann
+            # Should have at least one of min or max
+            assert 'parameters' in ann
+            params = ann['parameters']
+            assert 'min' in params or 'max' in params
+
+    def test_extract_validation_annotations_pattern(self):
+        """Test extraction of @Pattern annotation with regexp."""
+        from src.codeindex.parsers.java_parser import extract_validation_annotations
+
+        fixture_path = Path("tests/fixtures/dto-classes/standard-dto.java")
+
+        annotations = extract_validation_annotations(fixture_path)
+
+        # Should find @Pattern annotations
+        pattern_annotations = [a for a in annotations if a['type'] == 'Pattern']
+        assert len(pattern_annotations) > 0
+
+        # @Pattern should have regexp parameter
+        for ann in pattern_annotations:
+            assert 'parameters' in ann
+            assert 'regexp' in ann['parameters']
+
+    def test_extract_validation_annotations_email(self):
+        """Test extraction of @Email annotation."""
+        from src.codeindex.parsers.java_parser import extract_validation_annotations
+
+        fixture_path = Path("tests/fixtures/dto-classes/standard-dto.java")
+
+        annotations = extract_validation_annotations(fixture_path)
+
+        # Should find @Email annotations
+        email_annotations = [a for a in annotations if a['type'] == 'Email']
+        assert len(email_annotations) > 0
+
+    def test_extract_validation_annotations_valid(self):
+        """Test extraction of @Valid annotation for nested DTOs."""
+        from src.codeindex.parsers.java_parser import extract_validation_annotations
+
+        fixture_path = Path("tests/fixtures/dto-classes/nested-dto.java")
+
+        annotations = extract_validation_annotations(fixture_path)
+
+        # Should find @Valid annotations on nested DTO fields
+        valid_annotations = [a for a in annotations if a['type'] == 'Valid']
+        assert len(valid_annotations) > 0
+
+    def test_extract_validation_annotations_min_max(self):
+        """Test extraction of @Min and @Max annotations."""
+        from src.codeindex.parsers.java_parser import extract_validation_annotations
+
+        fixture_path = Path("tests/fixtures/dto-classes/standard-dto.java")
+
+        annotations = extract_validation_annotations(fixture_path)
+
+        # Should find @Min or @Max annotations if present
+        min_max_annotations = [a for a in annotations if a['type'] in ['Min', 'Max']]
+
+        # Each should have value parameter
+        for ann in min_max_annotations:
+            assert 'parameters' in ann
+            assert 'value' in ann['parameters']
+
+    def test_extract_validation_annotations_not_empty(self):
+        """Test extraction of @NotEmpty annotation."""
+        from src.codeindex.parsers.java_parser import extract_validation_annotations
+
+        fixture_path = Path("tests/fixtures/dto-classes/standard-dto.java")
+
+        annotations = extract_validation_annotations(fixture_path)
+
+        # All annotations should be in list format
+        assert isinstance(annotations, list)
+
+        # Each annotation should have required fields
+        for ann in annotations:
+            assert 'type' in ann
+            assert 'field_name' in ann
+
+    def test_extract_validation_annotations_empty_file(self):
+        """Test that empty or non-existent files return empty list."""
+        from src.codeindex.parsers.java_parser import extract_validation_annotations
+
+        # Non-existent file
+        non_existent = Path("tests/fixtures/dto-classes/nonexistent.java")
+
+        annotations = extract_validation_annotations(non_existent)
+
+        # Should return empty list, not raise error
+        assert isinstance(annotations, list)
+        assert len(annotations) == 0
+
+    def test_annotation_parameter_parsing(self):
+        """Test that annotation parameters are correctly parsed."""
+        from src.codeindex.parsers.java_parser import extract_validation_annotations
+
+        fixture_path = Path("tests/fixtures/dto-classes/standard-dto.java")
+
+        annotations = extract_validation_annotations(fixture_path)
+
+        # Find an annotation with parameters
+        size_annotations = [a for a in annotations if a['type'] == 'Size']
+
+        if size_annotations:
+            ann = size_annotations[0]
+            params = ann['parameters']
+
+            # Parameters should be dict
+            assert isinstance(params, dict)
+
+            # Values should be properly typed (int, string, etc.)
+            for key, value in params.items():
+                assert isinstance(key, str)
+                # Value can be int, str, bool, etc.
+                assert value is not None

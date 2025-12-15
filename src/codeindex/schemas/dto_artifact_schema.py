@@ -105,6 +105,12 @@ def get_dto_artifact_schema() -> Dict[str, Any]:
 
             # Classification metadata
             {
+                "name": "is_dto",
+                "dataType": ["boolean"],
+                "description": "Whether this class is classified as a DTO",
+                "indexFilterable": True,
+            },
+            {
                 "name": "classification_confidence",
                 "dataType": ["int"],
                 "description": "Classification confidence score (0-100)",
@@ -120,8 +126,8 @@ def get_dto_artifact_schema() -> Dict[str, Any]:
             # Validation and serialization
             {
                 "name": "validation_rules",
-                "dataType": ["object"],
-                "description": "JSR-303 validation annotations mapped by field name",
+                "dataType": ["text"],
+                "description": "JSR-303 validation annotations mapped by field name (JSON string)",
             },
             {
                 "name": "serialization_markers",

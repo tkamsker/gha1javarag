@@ -13,6 +13,7 @@ from datetime import datetime
 from codeindex.models.extraction import ExtractionResult
 from codeindex.models.inventory import DiscoveryInventory
 from codeindex.models import ArtifactType, Project
+from codeindex.models.dto_artifact import DtoArtifact
 from codeindex.services.weaviate_store import WeaviateStore, create_weaviate_store
 from codeindex.utils.config import Config, get_config
 
@@ -148,6 +149,63 @@ class IndexingService:
             UUID of indexed project
         """
         return self.store.index_project(project)
+
+    # ==========================================================================
+    # DTO Indexing Methods (T064)
+    # ==========================================================================
+
+    def index_dto(
+        self,
+        dto_artifact: DtoArtifact,
+        project: Optional[str] = None
+    ) -> str:
+        """
+        Index a DtoArtifact to Weaviate.
+
+        Args:
+            dto_artifact: DtoArtifact to index
+            project: Optional project name
+
+        Returns:
+            Artifact ID of indexed DTO
+
+        Example:
+            >>> service = IndexingService()
+            >>> dto = DtoArtifact.from_classification(...)
+            >>> artifact_id = service.index_dto(dto, project="myproject")
+        """
+        return self.store.index_dto(dto_artifact, project=project)
+
+    def get_dto_by_id(self, artifact_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve a DTO artifact by its ID.
+
+        Args:
+            artifact_id: Artifact ID to retrieve
+
+        Returns:
+            Dictionary with DTO data, or None if not found
+        """
+        return self.store.get_dto_by_id(artifact_id)
+
+    def search_dtos(
+        self,
+        query: str,
+        project: Optional[str] = None,
+        limit: int = 10
+    ) -> List[Dict[str, Any]]:
+        """
+        Search for DTOs using semantic search.
+
+        Args:
+            query: Search query
+            project: Optional project filter
+            limit: Maximum number of results
+
+        Returns:
+            List of matching DTO artifacts
+        """
+        return self.store.search_dtos(query, project=project, limit=limit)
 
     def _load_extraction_results(self, extraction_path: Path) -> List[ExtractionResult]:
         """

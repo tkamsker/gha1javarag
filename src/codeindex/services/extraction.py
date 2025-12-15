@@ -11,12 +11,15 @@ from datetime import datetime
 
 from codeindex.models import ArtifactType
 from codeindex.models.extraction import ExtractionResult
+from codeindex.models.dto_artifact import DtoArtifact
 from codeindex.parsers import (
     JavaParser,
     JSPParser,
     XMLParser,
     SQLParser,
 )
+from codeindex.parsers.java_parser import extract_dto_metadata
+from codeindex.services.classifier import classify_dto
 from codeindex.services.ollama_client import OllamaClient, create_ollama_client
 from codeindex.services.gwt_analyzer_registry import get_gwt_analyzer_registry
 from codeindex.utils.config import Config, get_config
@@ -207,7 +210,62 @@ class ExtractionService:
         """
         try:
             if artifact_type in (ArtifactType.JAVA_SOURCE, ArtifactType.JAVA_TEST):
-                return self.java_parser.parse_file(file_path)
+                # Parse Java file normally
+                structural_data = self.java_parser.parse_file(file_path)
+
+                # Run DTO classification (T062)
+                try:
+                    classification_result = classify_dto(file_path)
+
+                    # If classified as DTO, extract full DTO metadata (T063)
+                    if classification_result.is_dto:
+                        self.logger.debug(
+                            f"DTO detected: {file_path.name} "
+                            f"(confidence: {classification_result.confidence:.1f})"
+                        )
+
+                        # Extract DTO metadata (fields, validation annotations, etc.)
+                        dto_metadata = extract_dto_metadata(file_path)
+
+                        # Create DtoArtifact from classification and metadata
+                        from codeindex.models.dto_artifact import DtoField
+
+                        # Convert metadata fields to DtoField objects
+                        dto_fields = []
+                        for field_data in dto_metadata.get('fields', []):
+                            dto_field = DtoField(
+                                name=field_data['name'],
+                                field_type=field_data['field_type'],
+                                modifiers=field_data.get('modifiers', []),
+                                is_nested_dto=field_data.get('is_nested_dto', False),
+                                validation_annotations=field_data.get('validation_annotations', []),
+                                is_collection=field_data.get('is_collection', False),
+                                collection_type=field_data.get('collection_type'),
+                                generic_types=field_data.get('generic_types', [])
+                            )
+                            dto_fields.append(dto_field)
+
+                        # Create DtoArtifact
+                        dto_artifact = DtoArtifact.from_classification(
+                            file_path=file_path,
+                            classification=classification_result,
+                            fields=dto_fields
+                        )
+
+                        # Store DtoArtifact in structural data
+                        structural_data['dto_artifact'] = dto_artifact
+                        structural_data['is_dto'] = True
+                        structural_data['dto_confidence'] = classification_result.confidence
+                    else:
+                        structural_data['is_dto'] = False
+
+                except Exception as dto_error:
+                    self.logger.warning(
+                        f"DTO classification failed for {file_path.name}: {dto_error}"
+                    )
+                    structural_data['is_dto'] = False
+
+                return structural_data
 
             elif artifact_type == ArtifactType.JSP_VIEW:
                 return self.jsp_parser.parse_file(file_path)
