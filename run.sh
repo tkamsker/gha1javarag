@@ -1,11 +1,19 @@
 #!/bin/bash
 # ==============================================================================
-# Java Codebase Indexer - Full Pipeline Runner (Updated)
+# Java Codebase Indexer - Full Pipeline Runner (Feature 004 Updated)
 # ==============================================================================
-# Usage: ./run.sh [project-name] [source-dir]
+# Usage: ./run.sh [project-name-or-path] [source-dir]
 #
-# Project name determination (in priority order):
-#   1. If provided as first argument, use it
+# Modes:
+#   1. Single project mode: Analyze entire source directory
+#      ./run.sh myapp /path/to/project
+#
+#   2. Monorepo mode: Analyze specific subdirectory within monorepo
+#      ./run.sh backend-api /path/to/monorepo
+#      # This will analyze /path/to/monorepo/backend-api with dependencies
+#
+# Project name/path determination (in priority order):
+#   1. If provided as first argument, use it (can be project name or subdir path)
 #   2. If source-dir contains pom.xml, use directory name
 #   3. Otherwise use timestamp: YYYY_MMM_DD_HHMM
 #
@@ -14,9 +22,10 @@
 #   2. Otherwise use JAVA_SOURCE_DIR from .env
 #
 # Examples:
-#   ./run.sh myapp                    # Uses JAVA_SOURCE_DIR from .env
-#   ./run.sh myapp /path/to/source    # Explicit source dir
-#   ./run.sh                          # Auto-detect everything
+#   ./run.sh                              # Auto-detect everything
+#   ./run.sh myapp                        # Single project mode
+#   ./run.sh backend-api /monorepo        # Monorepo mode (--project backend-api)
+#   ./run.sh services/api /monorepo       # Nested path in monorepo
 
 set -e  # Exit on error
 
@@ -76,14 +85,26 @@ if [ ! -d "$SOURCE_DIR" ]; then
     exit 1
 fi
 
-# Determine project name
+# Determine project name and monorepo mode
+MONOREPO_MODE=false
+PROJECT_SUBDIR=""
+
 if [ -n "$1" ]; then
-    # Project name provided as argument
+    # Project name/path provided as argument
     PROJECT_NAME="$1"
-    info "Using provided project name: $PROJECT_NAME"
+    info "Using provided project: $PROJECT_NAME"
+
+    # Check if this is a monorepo subdirectory
+    if [ -d "$SOURCE_DIR/$PROJECT_NAME" ]; then
+        MONOREPO_MODE=true
+        PROJECT_SUBDIR="$PROJECT_NAME"
+        ok "Detected monorepo mode: will analyze subdirectory $PROJECT_SUBDIR"
+    else
+        info "Single project mode: analyzing entire source directory"
+    fi
 else
     # Auto-detect project name
-    info "No project name provided, auto-detecting..."
+    info "No project specified, auto-detecting..."
 
     # Check if source directory contains pom.xml
     if [ -f "$SOURCE_DIR/pom.xml" ]; then
@@ -117,8 +138,15 @@ echo ""
 
 # Step 1: Discover
 info "Step 1: Discovering source files..."
-echo "Command: codeindex discover --source-dir \"$SOURCE_DIR\" --project \"$PROJECT_NAME\" --output \"$DISCOVERY_FILE\""
-codeindex discover --source-dir "$SOURCE_DIR" --project "$PROJECT_NAME" --output "$DISCOVERY_FILE"
+if [ "$MONOREPO_MODE" = true ]; then
+    # Monorepo mode: use --project to scope to subdirectory
+    echo "Command: codeindex discover --source-dir \"$SOURCE_DIR\" --project \"$PROJECT_SUBDIR\" --output \"$DISCOVERY_FILE\" --dependency-depth 1"
+    codeindex discover --source-dir "$SOURCE_DIR" --project "$PROJECT_SUBDIR" --output "$DISCOVERY_FILE" --dependency-depth 1
+else
+    # Single project mode: analyze entire source directory
+    echo "Command: codeindex discover --source-dir \"$SOURCE_DIR\" --output \"$DISCOVERY_FILE\" --dependency-depth 1"
+    codeindex discover --source-dir "$SOURCE_DIR" --output "$DISCOVERY_FILE" --dependency-depth 1
+fi
 ok "Discovery complete"
 echo ""
 

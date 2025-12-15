@@ -22,15 +22,18 @@ The project integrates with GitHub Spec Kit for spec-driven development workflow
 - ✅ **Phase 7**: E2E Testing - Full pipeline integration tests
 - ✅ **GWT Support**: Complete GWT extraction and PRD generation (84.9% coverage)
 - ✅ **Diagram Generation**: Auto-generate architecture diagrams in Mermaid format (88-91% test coverage)
+- ✅ **Feature 004 - Phase 2**: DTO Pattern Recognition - 5-phase confidence scoring, JSR-303 validation extraction
+- ✅ **Feature 004 - Phase 3**: Maven Dependency Resolution - Recursive resolution with circular detection, monorepo support
+- ✅ **Feature 004 - Phase 5**: Project-Scoped Analysis - Targeted monorepo analysis with --project parameter
 
 ### Test Results
 
-- **Unit Tests**: 497 passing (including 14 GWT-specific tests, 56 diagram tests)
-- **Coverage**: 46% overall (91% mermaid_renderer, 88% diagram_generator, 70% frontend_analyzer, 94% in critical modules)
+- **Unit Tests**: 523+ passing (including 24 DTO tests, 19 Maven tests, 17 ProjectConfiguration tests)
+- **Integration Tests**: 42 passing (9 project-scoped discovery, 9 DTO indexing, 6 dependency resolution)
+- **Coverage**: 15-94% (94% maven_parser, 84% discovery, 76% dependency_resolver, 40% classifier)
 - **E2E Tests**: Full pipeline verified working
 - **Production Test**: Successfully indexed 539-file codebase (cuco-ui-admin)
-- **GWT Tests**: 14 comprehensive unit tests for GWT artifact loading and conversion
-- **Diagram Tests**: 56 comprehensive tests (30 renderer + 26 generator)
+- **Feature 004 Tests**: All 68 tests passing (42 unit + 26 integration)
 
 ### Known Limitations
 
@@ -56,8 +59,49 @@ The system operates through six main CLI stages (implemented as subcommands):
 The extractor creates typed artifacts stored in Weaviate:
 - **Backend**: `DaoCall`, `IbatisStatement`, `BackendDoc`, `DbTable`, `GwtEndpoint`
 - **Frontend**: `JspForm`, `GwtModule`, `GwtUiBinder`, `GwtActivityPlace`, `JsArtifact`
+- **Data Models**: `DtoArtifact` - Data Transfer Objects with JSR-303 validation annotations, nested DTO relationships, and field metadata
 
 Each artifact includes: canonical ID, source path, language/framework type, and domain-specific metadata (endpoints, DTOs, DB schemas, form fields, navigation targets).
+
+#### DTO Pattern Recognition (Feature 004 - Phase 2)
+
+The system automatically detects and classifies Data Transfer Objects using 5-phase confidence scoring:
+
+1. **Naming Pattern** (80 points): Class name ends with "DTO" (e.g., UserDTO, OrderDTO)
+2. **Entity Exclusion** (-100 points): Excludes JPA @Entity classes
+3. **Structural Analysis** (40 points): Has getters/setters, implements Serializable
+4. **Serialization Markers** (20 points): Serializable interface, serialVersionUID
+5. **Package Location** (15 points): Located in dto/model/vo packages
+
+**Confidence Threshold**: 70+ points required for DTO classification
+
+**Extracted Metadata:**
+- Field names, types, and modifiers
+- JSR-303 validation annotations (@NotNull, @Size, @Pattern, @Email, @Min, @Max, etc.)
+- Nested DTO relationships
+- Collection types and generics
+- Is-DTO flag and confidence score
+
+**Example:**
+```java
+@Data  // Lombok
+public class UserDTO implements Serializable {
+    @NotNull
+    private Long userId;
+
+    @NotBlank
+    @Size(min = 3, max = 50)
+    private String username;
+
+    @Email
+    private String email;
+
+    @Valid
+    private List<AddressDTO> addresses;  // Nested DTO
+}
+```
+
+This UserDTO would score 100% confidence and extract all validation annotations and nested relationships.
 
 ### External Dependencies
 
@@ -103,28 +147,49 @@ ollama pull gemma3:12b
 ### Pipeline Execution
 
 ```bash
-# Run CLI commands using Python module
-python -m codeindex discover --source-dir /path/to/java/source --output ./output/discovery-inventory.jsonl
-python -m codeindex extract --inventory ./output/discovery-inventory.jsonl --output ./output/extraction-results.jsonl
-python -m codeindex index --inventory ./output/discovery-inventory.jsonl --extraction ./output/extraction-results.jsonl
-python -m codeindex search "database access"
-python -m codeindex status
-
-# Or use installed command (after pip install -e .)
-codeindex discover --source-dir /path/to/java/source
-codeindex extract --inventory ./output/discovery-inventory.jsonl
+# Basic pipeline commands
+codeindex discover --source-dir /path/to/java/source --output ./output/discovery-inventory.jsonl
+codeindex extract --inventory ./output/discovery-inventory.jsonl --output ./output/extraction-results.jsonl
 codeindex index --inventory ./output/discovery-inventory.jsonl --extraction ./output/extraction-results.jsonl
 codeindex search "database access"
 codeindex status
 
-# Project-specific operations
-codeindex discover --source-dir /path/to/project --project myproject
-codeindex status --project myproject
-codeindex search "user authentication" --project myproject
+# Maven dependency resolution (Feature 004 - Phase 3)
+codeindex discover --source-dir /path/to/project --dependency-depth 1
+codeindex discover --source-dir /path/to/project --dependency-depth 2  # Include transitive dependencies
+
+# Project-scoped analysis for monorepo (Feature 004 - Phase 5)
+codeindex discover --source-dir /monorepo --project backend-api
+codeindex discover --source-dir /monorepo --project services/payment  # Nested project
+codeindex discover --source-dir /monorepo --project my-service --dependency-depth 1  # With dependencies
+
+# Project filtering in search and status
+codeindex search "user authentication" --project backend-api
+codeindex status --project backend-api
 
 # Run full pipeline using convenience script
 ./run.sh
+./run.sh my-project  # Project-scoped
 # This runs: discover → extract → index → status
+```
+
+#### Monorepo Workflow Example
+
+```bash
+# Monorepo structure:
+# /monorepo/
+#   ├── backend-api/      (depends on shared-models)
+#   ├── frontend-app/
+#   └── shared-models/
+
+# Analyze only backend-api with its dependencies
+codeindex discover --source-dir /monorepo --project backend-api --dependency-depth 1
+
+# This will:
+# - Discover files only in /monorepo/backend-api
+# - Resolve dependencies from /monorepo root (finds shared-models)
+# - Include files from both backend-api and shared-models
+# - Output: Files from backend-api + shared-models dependencies
 ```
 
 ### Weaviate Management
