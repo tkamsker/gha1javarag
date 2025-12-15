@@ -184,9 +184,9 @@ description: "Task list for Maven Dependency Resolution and DTO Analysis impleme
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T085 [P] Update CLAUDE.md with new CLI parameters (--project, --dependency-depth) and usage examples
-- [ ] T086 [P] Add DTO artifact documentation to CLAUDE.md in "Key Artifact Types" section
-- [ ] T087 [P] Update run.sh convenience script to support --project parameter if needed
+- [x] T085 [P] Update CLAUDE.md with new CLI parameters (--project, --dependency-depth) and usage examples
+- [x] T086 [P] Add DTO artifact documentation to CLAUDE.md in "Key Artifact Types" section
+- [x] T087 [P] Update run.sh convenience script to support --project parameter if needed
 - [x] T088 [P] Add quickstart validation: Run full pipeline on test project and verify all success criteria (SC-001 through SC-008)
 - [x] T089 Code cleanup: Remove any TODOs or temporary debug logging from maven_parser.py, dependency_resolver.py, classifier.py
 - [x] T090 [P] Performance validation: Profile dependency resolution to ensure <10 seconds for 20 dependencies (SC-003)
