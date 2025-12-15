@@ -146,6 +146,24 @@ tail -f data/extraction-cuco-ui-admin.jsonl | jq -r '.file_path'
 
 ## Troubleshooting
 
+### Dependency Resolution Warnings
+
+If you see warnings like:
+```
+[WARNING] Artifact directory not found: .../administration.ui
+[WARNING] Artifact not found: cuco-cct-core (groupId: at.a1ta.cuco)
+```
+
+**This is normal and harmless.** The dependency resolver is looking for local Maven modules, but cuco-ui-admin is a single project (not a monorepo), so these dependencies don't exist locally.
+
+**Solution**: The script now disables dependency resolution by default since cuco-ui-admin doesn't need it.
+
+**If you want dependency resolution** (for monorepo projects):
+```bash
+# Edit run-cuco.sh and add --dependency-depth 1 to the discover command
+codeindex discover --source-dir "$SOURCE_DIR" --output "$DISCOVERY_FILE" --dependency-depth 1
+```
+
 ### Ollama Not Running
 
 ```bash

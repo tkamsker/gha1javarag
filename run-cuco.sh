@@ -142,8 +142,9 @@ START_TIME=$(date +%s)
 
 # Step 1: Discover
 info "Step 1: Discovering source files..."
-echo "Command: codeindex discover --source-dir \"$SOURCE_DIR\" --output \"$DISCOVERY_FILE\" --dependency-depth 1"
-codeindex discover --source-dir "$SOURCE_DIR" --output "$DISCOVERY_FILE" --dependency-depth 1
+echo "Command: codeindex discover --source-dir \"$SOURCE_DIR\" --output \"$DISCOVERY_FILE\""
+# Note: No --dependency-depth flag since cuco-ui-admin is a single project, not a monorepo
+codeindex discover --source-dir "$SOURCE_DIR" --output "$DISCOVERY_FILE"
 ok "Discovery complete"
 echo ""
 
