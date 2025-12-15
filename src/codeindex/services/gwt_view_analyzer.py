@@ -161,28 +161,29 @@ class GwtViewAnalyzer:
         Returns:
             Component type string
         """
-        extends = class_info.get('extends', '')
+        extends = class_info.get('extends') or ''
 
         # Check base class
-        if 'Composite' in extends:
+        if extends and 'Composite' in extends:
             return 'Composite'
-        elif 'PopupPanel' in extends or 'DialogBox' in extends:
+        elif extends and ('PopupPanel' in extends or 'DialogBox' in extends):
             return 'PopupPanel'
-        elif 'Panel' in extends:
+        elif extends and 'Panel' in extends:
             # Further classify panel types
-            if 'VerticalPanel' in extends:
+            if extends and 'VerticalPanel' in extends:
                 return 'VerticalPanel'
-            elif 'HorizontalPanel' in extends:
+            elif extends and 'HorizontalPanel' in extends:
                 return 'HorizontalPanel'
-            elif 'FlowPanel' in extends:
+            elif extends and 'FlowPanel' in extends:
                 return 'FlowPanel'
             else:
                 return 'Panel'
-        elif 'Widget' in extends:
+        elif extends and 'Widget' in extends:
             return 'Widget'
 
         # Check if it's a portlet by name
-        if 'Portlet' in class_info.get('class_name', ''):
+        class_name = class_info.get('class_name') or ''
+        if class_name and 'Portlet' in class_name:
             return 'Portlet'
 
         return 'Unknown'
