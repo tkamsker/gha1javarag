@@ -13,6 +13,7 @@ import click
 
 from codeindex.utils.logging import get_logger
 from codeindex.services.discovery import DiscoveryService
+from codeindex.models.project_configuration import ProjectConfiguration
 # Progress tracking will be added in future iterations
 
 logger = get_logger(__name__)
@@ -32,7 +33,7 @@ logger = get_logger(__name__)
 @click.option(
     '--project',
     type=str,
-    help='Filter to specific project by artifact ID'
+    help='Project subdirectory within source directory for focused analysis (e.g., "my-service" or "parent/child")'
 )
 @click.option(
     '--dry-run',
@@ -77,8 +78,11 @@ def discover_command(
         # Save inventory to file
         codeindex discover --output inventory.jsonl
 
-        # Filter to specific project
-        codeindex discover --project my-app
+        # Scope to specific project subdirectory (monorepo)
+        codeindex discover --project my-service
+
+        # Scope to nested project
+        codeindex discover --project services/backend/api
 
         # Preview without writing
         codeindex discover --dry-run
@@ -106,34 +110,43 @@ def discover_command(
     if not output:
         output = config.output_dir / "discovery-inventory.jsonl"
 
-    logger.info(f"Discovering Maven projects in {source_dir}")
+    # Create project configuration for scoped analysis (T071, T076-T077, T080)
+    try:
+        proj_config = ProjectConfiguration(
+            java_source_dir=source_dir,
+            project_subdirectory=project,
+            dependency_depth=dependency_depth
+        )
+    except ValueError as e:
+        # T077: Clear error message for invalid project directory (FR-024)
+        click.echo(f"Error: {e}", err=True)
+        ctx.exit(1)
+
+    # T080: Log resolved base directory (FR-027)
+    effective_dir = proj_config.effective_base_dir
+    if project:
+        logger.info(f"Project-scoped analysis: {project}")
+        logger.info(f"  Base directory: {source_dir}")
+        logger.info(f"  Effective directory: {effective_dir}")
+        if not quiet and output_format == 'text':
+            click.echo(f"Project scope: {project}")
+            click.echo(f"Analyzing: {effective_dir}")
+    else:
+        logger.info(f"Discovering Maven projects in {effective_dir}")
 
     # Create discovery service
     service = DiscoveryService(config=config, dependency_depth=dependency_depth)
 
-
     try:
         # Show progress message
         if not quiet and output_format == 'text':
-            click.echo(f"Discovering Maven projects in {source_dir}...")
+            if not project:
+                click.echo(f"Discovering Maven projects in {effective_dir}...")
             if dependency_depth > 0:
                 click.echo(f"Dependency resolution depth: {dependency_depth}")
 
-        # Generate discovery inventory
-        if project:
-            logger.info(f"Filtering to project: {project}")
-
-        inventory = service.generate_inventory(source_dir)
-
-        # Filter projects if requested
-        if project:
-            original_count = len(inventory.projects)
-            inventory.projects = [
-                p for p in inventory.projects
-                if project in p.get('artifact_id', '')
-            ]
-            filtered_count = len(inventory.projects)
-            logger.info(f"Filtered {original_count} -> {filtered_count} projects")
+        # Generate discovery inventory from effective directory
+        inventory = service.generate_inventory(effective_dir)
 
         # Output results
         if output_format == 'json':
