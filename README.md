@@ -21,6 +21,15 @@ Generate comprehensive Product Requirements Documents from your indexed codebase
 - **🎨 Frontend Layer Documentation**: Catalog UI forms, components, and user interactions
 - **📋 Master PRD Synthesis**: Combine all layers into a comprehensive master document with cross-layer mappings
 
+### Architecture Diagram Generation (Feature 003)
+
+Generate visual architecture diagrams in Mermaid format from your codebase:
+
+- **🏗️ Component Diagrams**: Visualize system architecture with presenters, views, services, DAOs, and data flow
+- **📱 GWT MVP Diagrams**: Document GWT presenter-view relationships, event handlers, and RPC calls
+- **🔄 Auto-generation**: Create diagrams directly from extracted artifacts
+- **🎨 Multiple Viewing Options**: View in GitHub, VS Code, Mermaid Live Editor, or export to SVG/PNG
+
 ## Quick Start
 
 ### Prerequisites
@@ -339,6 +348,263 @@ grep -E "IsSerializable|implements Serializable" path/to/DTO.java
 
 # Check package structure
 # Should contain .shared. or have serialization markers
+```
+
+## Architecture Diagram Generation
+
+Generate visual architecture diagrams in Mermaid format directly from your extracted artifacts.
+
+### Overview
+
+The diagram generation feature creates two types of diagrams:
+
+1. **Component Architecture Diagrams**: High-level system architecture showing components (presenters, views, services, DAOs), their relationships, and data flow
+2. **GWT MVP Diagrams**: Detailed presenter-view relationships in GWT applications, including event handlers and RPC service calls
+
+Both diagram types are generated in **Mermaid format (.mmd)**, which can be:
+- Rendered automatically in GitHub/GitLab markdown files
+- Viewed in VS Code with Mermaid extensions
+- Edited online in the [Mermaid Live Editor](https://mermaid.live)
+- Converted to SVG/PNG using mermaid-cli
+
+### Commands
+
+```bash
+# Generate component architecture diagram
+codeindex diagram component --output ./output/diagrams
+
+# Generate GWT MVP diagram
+codeindex diagram gwt --output ./output/diagrams
+
+# Generate all diagram types
+codeindex diagram all --output ./output/diagrams
+```
+
+### Command Options
+
+```bash
+codeindex diagram [TYPE] [OPTIONS]
+
+Arguments:
+  TYPE                    Diagram type: component|gwt|all
+
+Options:
+  --source-dir PATH       Source directory (default: JAVA_SOURCE_DIR env var)
+  --project TEXT          Project name/ID to diagram
+  --output PATH           Output directory (default: ./output/<project>/diagrams)
+  --style TEXT            Diagram style: default|minimal|detailed (default: default)
+  --depth INT             Component depth for filtering (default: 3)
+  -v, --verbose           Enable verbose logging
+```
+
+### Output Structure
+
+```
+output/
+└── myproject/
+    └── diagrams/
+        ├── README.md                    # Viewing instructions
+        ├── component/
+        │   └── architecture.mmd         # Component diagram
+        └── gwt/
+            └── mvp-overview.mmd         # GWT MVP diagram
+```
+
+### Viewing Diagrams
+
+#### Option 1: Command-line with mermaid-cli
+
+```bash
+# Install mermaid-cli globally
+npm install -g @mermaid-js/mermaid-cli
+
+# Convert Mermaid to SVG
+mmdc -i output/myproject/diagrams/component/architecture.mmd -o architecture.svg
+
+# Convert to PNG with custom dimensions
+mmdc -i output/myproject/diagrams/gwt/mvp-overview.mmd -o mvp.png -w 1920 -H 1080
+
+# Batch convert all diagrams
+find output -name "*.mmd" -exec mmdc -i {} -o {}.svg \;
+```
+
+#### Option 2: GitHub/GitLab
+
+Embed diagrams in markdown files using code fences:
+
+````markdown
+# Architecture Overview
+
+```mermaid
+graph TB
+    subgraph Frontend["Frontend Layer"]
+        UserPresenter[UserPresenter]
+        AdminPresenter[AdminPresenter]
+    end
+
+    subgraph Backend["Backend Layer"]
+        UserService[UserService]
+        AdminService[AdminService]
+    end
+
+    UserPresenter -->|calls| UserService
+    AdminPresenter -->|calls| AdminService
+```
+````
+
+Or reference the .mmd file:
+```markdown
+![Component Architecture](./diagrams/component/architecture.mmd)
+```
+
+#### Option 3: VS Code
+
+1. Install extension: "Markdown Preview Mermaid Support" or "Mermaid Editor"
+2. Open .mmd file
+3. Use preview pane (Ctrl+Shift+V / Cmd+Shift+V)
+
+#### Option 4: Online Editor
+
+1. Copy .mmd file contents
+2. Open [Mermaid Live Editor](https://mermaid.live)
+3. Paste content
+4. View, edit, and export (SVG, PNG, PDF)
+
+### Example Component Diagram
+
+```mermaid
+graph TB
+
+    subgraph Frontend["Frontend Layer"]
+        UserPresenter[UserPresenter]
+        ProductPresenter[ProductPresenter]
+        UserView[UserView]
+        ProductView[ProductView]
+    end
+
+    subgraph Backend["Backend Layer"]
+        UserService[UserService]
+        ProductService[ProductService]
+        UserDAO[UserDAO]
+        ProductDAO[ProductDAO]
+    end
+
+    subgraph Data["Data Layer"]
+        DB[(Database)]
+    end
+
+    UserPresenter -->|Display| UserView
+    ProductPresenter -->|Display| ProductView
+    UserPresenter -->|calls| UserService
+    ProductPresenter -->|calls| ProductService
+    UserService -->|uses| UserDAO
+    ProductService -->|uses| ProductDAO
+    UserDAO -->|queries| DB
+    ProductDAO -->|queries| DB
+```
+
+### Example GWT MVP Diagram
+
+```mermaid
+graph TB
+
+    subgraph Presenters["GWT Presenters"]
+        UserPresenter[UserPresenter<br/>2 events, 1 RPC]
+        AdminPresenter[AdminPresenter<br/>3 events, 2 RPCs]
+    end
+
+    subgraph Views["GWT Views"]
+        UserView[UserView<br/>3 UI fields]
+        AdminView[AdminView<br/>5 UI fields]
+    end
+
+    subgraph Services["RPC Services"]
+        UserService[UserService]
+        AdminService[AdminService]
+    end
+
+    UserPresenter -->|binds| UserView
+    AdminPresenter -->|binds| AdminView
+    UserPresenter -->|calls| UserService
+    AdminPresenter -->|calls| UserService
+    AdminPresenter -->|calls| AdminService
+```
+
+### Diagram Styles
+
+**Default Style**:
+- Shows all components with basic relationships
+- Color-coded layers (Frontend: blue, Backend: yellow, Data: green)
+- Suitable for documentation and presentations
+
+**Minimal Style**:
+- Simplified view with essential components only
+- Minimal decorations and labels
+- Best for high-level overviews
+
+**Detailed Style**:
+- Includes additional metadata (event counts, RPC calls, UI field counts)
+- Shows more granular relationships
+- Useful for deep technical analysis
+
+### Integration with PRD Generation
+
+Diagrams complement PRD documents:
+
+```bash
+# 1. Discover and extract artifacts
+codeindex discover --source-dir /path/to/source --project myapp
+codeindex extract --project myapp
+
+# 2. Generate diagrams
+codeindex diagram all --project myapp --output ./output/myapp/diagrams
+
+# 3. Generate PRDs
+codeindex prd full --project myapp --output-dir ./output/myapp
+
+# 4. Reference diagrams in specs
+cp output/myapp/diagrams/*.mmd specs/myfeature/
+```
+
+### Troubleshooting Diagrams
+
+**Issue: "UnknownDiagramError" from mermaid-cli**
+
+```bash
+# Verify .mmd file contains valid Mermaid syntax (not markdown code fences)
+head -n 5 diagram.mmd
+# Should start with: graph TB
+# NOT with: ```mermaid
+
+# Check mermaid-cli version
+mmdc --version
+# Update if needed: npm update -g @mermaid-js/mermaid-cli
+```
+
+**Issue: Diagram too large or cluttered**
+
+```bash
+# Use depth parameter to filter components
+codeindex diagram component --depth 2
+
+# Or use minimal style
+codeindex diagram component --style minimal
+
+# Or filter to specific project
+codeindex diagram component --project myapp
+```
+
+**Issue: Missing components in diagram**
+
+```bash
+# Verify extraction completed successfully
+codeindex status --project myapp
+
+# Check for extraction errors
+grep -i error data/extraction-results.jsonl
+
+# Re-extract with verbose logging
+codeindex extract --project myapp -v
 ```
 
 ## Integration with Spec Kit
