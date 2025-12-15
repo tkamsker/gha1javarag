@@ -390,7 +390,6 @@ class ServiceAnalyzer:
 
         response = self.ollama_client.call_ollama(
             prompt=prompt,
-            timeout=self.llm_timeout,
         )
 
         if not response or "response" not in response:
