@@ -1,0 +1,73 @@
+ There are several ways to check the pipeline progress:
+
+  1. Check Background Task Status (Current Method)
+
+  The pipeline is running as background task b9343e1. You can check it with:
+
+  # Non-blocking check (quick status)
+  /tasks
+
+  # Or check the specific task output
+  cat /tmp/claude/tasks/b9343e1.output | tail -50
+
+  Let me check the current status:
+
+⏺ Bash(tail -30 /tmp/claude/tasks/b9343e1.output | grep -E "(Progress:|Processing batch|Step [0-9]:|SUCCESS|ERROR|FAIL)" | tail -15)
+  ⎿    Progress: 150/183 files        
+     Processing batch 16 (10 files)...
+       Progress: 160/183 files
+     Processing batch 17 (10 files)...
+
+⏺ 2. Real-Time Monitoring
+
+  You can watch the progress in real-time:
+
+⏺ Bash(tail -5 /tmp/claude/tasks/b9343e1.output)
+  ⎿ 2025-12-15 13:28:37 [INFO] codeindex.services.extraction: Extracting java_source: /Users/thomaskamsker/Documents/Atom/vron.one/playground/java/cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/servlet/SalesInfoServletAsync.java
+    2025-12-15 13:28:51 [INFO] codeindex.services.extraction: Extracting java_source: /Users/thomaskamsker/Documents/Atom/vron.one/playground/java/cuco-ui-admin/src/main/java/at/a1ta/cuco/ui/admin/client/servlet/SettingsEditorServletAsync
+    .java
+    … +4 lines (ctrl+o to expand)
+
+
+
+⏺ 3. Progress Summary
+
+⏺ Bash(echo "=== Pipeline Progress ===" && grep -E "Progress: [0-9]+/[0-9]+" /tmp/claude/tasks/b9343e1.output | tail -1 && echo "" && echo "=== Current Phase ===" && g…)
+  ⎿  === Pipeline Progress ===    
+       Progress: 160/183 files
+     … +7 lines (ctrl+o to expand)
+
+⏺ Current Status
+
+  Progress: 160/183 files (87% complete)
+  Phase: Step 2 - Extracting semantic information with AI
+  Errors: 4 non-critical errors (GWT analyzer issues - handled gracefully)
+
+  Summary of Monitoring Commands
+
+  # 1. Quick progress check
+  tail -30 /tmp/claude/tasks/b9343e1.output | grep "Progress:"
+
+  # 2. See what's currently processing
+  tail -10 /tmp/claude/tasks/b9343e1.output
+
+  # 3. Watch in real-time (press Ctrl+C to stop)
+  tail -f /tmp/claude/tasks/b9343e1.output
+
+  # 4. Check for errors
+  grep "ERROR\|FAIL" /tmp/claude/tasks/b9343e1.output | tail -10
+
+  # 5. See completion summary (when done)
+  grep -A 20 "SUCCESS\|Pipeline complete" /tmp/claude/tasks/b9343e1.output
+
+  # 6. List all background tasks
+  /tasks
+
+  Files to Check
+
+  - Live output: /tmp/claude/tasks/b9343e1.output
+  - Discovery results: data/discovery-cuco-ui-admin.jsonl
+  - Extraction results: data/extraction-cuco-ui-admin.jsonl (written when extraction completes)
+  - Index results: Will be in Weaviate after indexing phase
+
+  The pipeline should complete in about 10-15 more minutes (23 files remaining at ~1.5 min/file).

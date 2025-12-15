@@ -46,6 +46,7 @@ class Project:
     summary: Optional[str] = None  # AI-generated project summary (future)
     indexed_at: Optional[datetime] = None  # Timestamp of last indexing
     file_count: int = 0  # Total files in project
+    dependency_resolution: Optional[dict] = None  # Phase 3: Dependency resolution statistics
 
     def __post_init__(self):
         """Validate fields after initialization."""
@@ -107,6 +108,7 @@ class Project:
             "summary": self.summary,
             "indexed_at": self.indexed_at.isoformat() if self.indexed_at else None,
             "file_count": self.file_count,
+            "dependency_resolution": self.dependency_resolution,
         }
 
     @classmethod

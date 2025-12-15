@@ -1,0 +1,89 @@
+ I've successfully created the specification for Feature 004: Maven Dependency Resolution and DTO Analysis.
+
+  Branch and Files Created
+
+  Branch: 004-maven-dependency-resolution
+
+  Files:
+  - specs/004-maven-dependency-resolution/spec.md - Complete feature specification
+  - specs/004-maven-dependency-resolution/checklists/requirements.md - Quality validation checklist
+
+  Feature Overview
+
+  This feature addresses the file reading issue by implementing Maven dependency resolution and DTO analysis capabilities:
+
+  Problem Solved:
+  - Current system only analyzes files in immediate project directory
+  - Missing code in dependent Maven modules (referenced in pom.xml)
+  - No understanding of DTO patterns for data transfer analysis
+
+  Solution Implemented (in spec):
+
+  1. Maven Dependency Resolution (P1 - Priority 1)
+    - Parses pom.xml dependencies (groupId, artifactId)
+    - Resolves to: JAVA_SOURCE_DIR/artifactId/
+    - Supports --project parameter: JAVA_SOURCE_DIR/project/
+    - Handles circular dependencies, missing artifacts gracefully
+    - Configurable depth with --dependency-depth
+  2. DTO Pattern Recognition (P2 - Priority 2)
+    - Identifies DTOs by naming (*DTO, *Request, *Response, etc.)
+    - Extracts field definitions and validation annotations
+    - Detects serialization markers (Serializable, IsSerializable)
+    - Captures nested DTO relationships
+    - Differentiates DTOs from JPA entities
+  3. Project-Scoped Analysis (P3 - Priority 3)
+    - --project parameter for monorepo support
+    - Targeted analysis of specific modules
+    - Path resolution relative to project directory
+
+  Specification Quality
+
+  All Checklist Items Pass ✅:
+  - ✅ No implementation details (technology-agnostic)
+  - ✅ No clarifications needed (informed assumptions documented)
+  - ✅ 27 functional requirements (all testable)
+  - ✅ 8 measurable success criteria
+  - ✅ 15 acceptance scenarios (5 per user story)
+  - ✅ 6 edge cases with resolution strategies
+  - ✅ Clear scope boundaries (Out of Scope section)
+  - ✅ 8 documented assumptions
+
+  Key Requirements
+
+  Maven Dependency Resolution:
+  - FR-001 to FR-010: Parse pom.xml, resolve artifact paths, handle errors gracefully
+
+  DTO Analysis:
+  - FR-011 to FR-020: Identify DTOs, extract fields/annotations, detect serialization
+
+  Path Configuration:
+  - FR-021 to FR-027: JAVA_SOURCE_DIR + --project parameter, path validation
+
+  Success Metrics
+
+  - SC-001: 95%+ dependency resolution accuracy
+  - SC-002: 90%+ DTO classification accuracy
+  - SC-003: <10 second resolution for 20 dependencies
+  - SC-004: 50-200% inventory size increase
+  - SC-008: <30 second project analysis in monorepo
+
+  Next Steps
+
+  The specification is ready for the next phase. You can now run:
+
+  /speckit.clarify  # Ask up to 5 targeted clarification questions (optional)
+  /speckit.plan     # Generate implementation plan and design artifacts
+
+  Recommendation: Proceed directly to /speckit.plan - all requirements are complete with documented assumptions. Clarification phase is optional since there are zero ambiguities.
+
+  Example Usage (from spec)
+
+  # Analyze project with dependency resolution
+  codeindex discover --source-dir /workspace --project cuco-ui-admin
+
+  # Result: Discovers files in:
+  # - /workspace/cuco-ui-admin/ (main project)
+  # - /workspace/cuco-cct-core/ (dependency from pom.xml)
+  # - /workspace/other-artifact/ (another dependency)
+
+  The spec is comprehensive, testable, and ready for implementation planning! 🎉
