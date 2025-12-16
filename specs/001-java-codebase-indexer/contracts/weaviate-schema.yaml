@@ -1,0 +1,217 @@
+# Weaviate Schema Definition
+# Java Codebase Indexer Pipeline
+# Feature: 001-java-codebase-indexer
+# Date: 2025-12-12
+
+# This schema defines the Weaviate classes for Project and CodeArtifact entities.
+# Deploy using: weaviate-client schema creation or REST API
+
+classes:
+  - class: Project
+    description: "Maven project with metadata and module structure"
+    vectorizer: text2vec-transformers
+    moduleConfig:
+      text2vec-transformers:
+        poolingStrategy: masked_mean
+        vectorizeClassName: false
+    properties:
+      - name: projectId
+        dataType: ["text"]
+        description: "Unique project identifier (groupId:artifactId:version or hash)"
+        indexFilterable: true
+        indexSearchable: true
+
+      - name: name
+        dataType: ["text"]
+        description: "Project name from Maven artifactId"
+        indexFilterable: true
+        indexSearchable: true
+
+      - name: groupId
+        dataType: ["text"]
+        description: "Maven groupId"
+        indexFilterable: true
+        indexSearchable: true
+
+      - name: artifactId
+        dataType: ["text"]
+        description: "Maven artifactId"
+        indexFilterable: true
+        indexSearchable: true
+
+      - name: version
+        dataType: ["text"]
+        description: "Maven version string"
+        indexFilterable: true
+
+      - name: packaging
+        dataType: ["text"]
+        description: "Maven packaging type (jar, war, pom, ear)"
+        indexFilterable: true
+
+      - name: path
+        dataType: ["text"]
+        description: "Absolute path to project root"
+        indexFilterable: false
+        indexSearchable: false
+
+      - name: modules
+        dataType: ["text[]"]
+        description: "List of child module names"
+        indexFilterable: true
+
+      - name: dependencies
+        dataType: ["text[]"]
+        description: "Maven dependencies as coordinates"
+        indexFilterable: false
+
+      - name: frameworks
+        dataType: ["text[]"]
+        description: "Detected frameworks (Spring, GWT, etc.)"
+        indexFilterable: true
+
+      - name: sourceRoots
+        dataType: ["text[]"]
+        description: "Source directory paths"
+        indexFilterable: false
+
+      - name: testRoots
+        dataType: ["text[]"]
+        description: "Test directory paths"
+        indexFilterable: false
+
+      - name: resourceRoots
+        dataType: ["text[]"]
+        description: "Resource directory paths"
+        indexFilterable: false
+
+      - name: summary
+        dataType: ["text"]
+        description: "AI-generated project summary (future)"
+        moduleConfig:
+          text2vec-transformers:
+            skip: false
+            vectorizePropertyName: false
+
+      - name: indexedAt
+        dataType: ["date"]
+        description: "Timestamp of last indexing"
+        indexFilterable: true
+
+      - name: fileCount
+        dataType: ["int"]
+        description: "Total files in project"
+        indexFilterable: true
+
+  - class: CodeArtifact
+    description: "File or chunk with AI understanding and metadata"
+    vectorizer: text2vec-transformers
+    moduleConfig:
+      text2vec-transformers:
+        poolingStrategy: masked_mean
+        vectorizeClassName: false
+    properties:
+      - name: projectId
+        dataType: ["text"]
+        description: "Foreign key to Project.projectId"
+        indexFilterable: true
+        indexSearchable: true
+
+      - name: relativePath
+        dataType: ["text"]
+        description: "Path relative to project root"
+        indexFilterable: true
+        indexSearchable: true
+
+      - name: fileName
+        dataType: ["text"]
+        description: "File name with extension"
+        indexFilterable: true
+        indexSearchable: true
+
+      - name: language
+        dataType: ["text"]
+        description: "Programming language (Java, JSP, SQL, etc.)"
+        indexFilterable: true
+
+      - name: artifactType
+        dataType: ["text"]
+        description: "Semantic type (java_source, jsp_view, etc.)"
+        indexFilterable: true
+
+      - name: frameworks
+        dataType: ["text[]"]
+        description: "Detected frameworks for this file"
+        indexFilterable: true
+
+      - name: summary
+        dataType: ["text"]
+        description: "AI-generated natural language summary (PRIMARY VECTOR)"
+        moduleConfig:
+          text2vec-transformers:
+            skip: false
+            vectorizePropertyName: false
+
+      - name: entities
+        dataType: ["text[]"]
+        description: "Extracted entities (classes, methods, tables, etc.)"
+        indexFilterable: true
+        indexSearchable: true
+
+      - name: tagsLayer
+        dataType: ["text[]"]
+        description: "Layer tags (backend, frontend, persistence, etc.)"
+        indexFilterable: true
+
+      - name: tagsDomain
+        dataType: ["text[]"]
+        description: "Domain tags (auth, billing, reporting, etc.)"
+        indexFilterable: true
+
+      - name: tagsConcerns
+        dataType: ["text[]"]
+        description: "Concern tags (security, validation, etc.)"
+        indexFilterable: true
+
+      - name: dependencies
+        dataType: ["text[]"]
+        description: "Referenced dependencies or imports"
+        indexFilterable: false
+
+      - name: pomContext
+        dataType: ["text"]
+        description: "Maven coordinates of containing project"
+        indexFilterable: true
+
+      - name: chunkIndex
+        dataType: ["int"]
+        description: "Chunk number if file was chunked (0-based)"
+        indexFilterable: true
+
+      - name: chunkCount
+        dataType: ["int"]
+        description: "Total chunks for this file"
+        indexFilterable: true
+
+      - name: rawTextHash
+        dataType: ["text"]
+        description: "SHA-256 hash of file content"
+        indexFilterable: true
+
+      - name: indexedAt
+        dataType: ["date"]
+        description: "Timestamp of indexing"
+        indexFilterable: true
+
+      - name: confidenceScore
+        dataType: ["number"]
+        description: "AI confidence in classification (0-1)"
+        indexFilterable: true
+
+# Schema Notes:
+# 1. Vectorization focuses on summary field (semantic search primary use case)
+# 2. All filter fields are indexed for query performance
+# 3. Array fields (text[]) support multi-value filtering
+# 4. Dates are ISO 8601 format
+# 5. UUID primary keys are implicit in Weaviate
+# 6. Schema versioning: v1.0.0 (increment for breaking changes)
