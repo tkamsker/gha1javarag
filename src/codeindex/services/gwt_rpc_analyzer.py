@@ -89,8 +89,12 @@ class GwtRpcAnalyzer:
             # Identify service interface
             service_interface = self.identify_service_interface(file_path, content)
 
-            # Extract referenced DTOs
-            referenced_dtos = self.extract_referenced_dtos(rpc_methods)
+            # Extract DTOs/DAOs from imports and method signatures
+            imported_dtos = self._extract_dtos_from_imports(content)
+            imported_daos = self._extract_daos_from_imports(content)
+
+            # Extract referenced DTOs from method signatures
+            referenced_dtos = self.extract_referenced_dtos(rpc_methods, imported_dtos)
 
             # Build metadata matching data-model.md schema
             metadata = {
@@ -102,12 +106,13 @@ class GwtRpcAnalyzer:
                 'base_class': class_info.get('extends', 'RemoteServiceServlet'),
                 'rpc_methods': rpc_methods,
                 'referenced_dtos': referenced_dtos,
+                'referenced_daos': sorted(list(imported_daos)),
                 'spring_annotations': self._extract_spring_annotations(content)
             }
 
             self.logger.info(
                 f"Extracted {len(rpc_methods)} RPC methods from {file_path.name}, "
-                f"{len(referenced_dtos)} DTOs referenced"
+                f"{len(referenced_dtos)} DTOs referenced, {len(imported_daos)} DAOs referenced"
             )
 
             return metadata
@@ -124,6 +129,7 @@ class GwtRpcAnalyzer:
                 'base_class': 'RemoteServiceServlet',
                 'rpc_methods': [],
                 'referenced_dtos': [],
+                'referenced_daos': [],
                 'spring_annotations': [],
                 'error': str(e)
             }
@@ -202,12 +208,17 @@ class GwtRpcAnalyzer:
             self.logger.warning(f"Could not identify service interface: {e}")
             return None
 
-    def extract_referenced_dtos(self, rpc_methods: List[Dict[str, Any]]) -> List[str]:
+    def extract_referenced_dtos(
+        self,
+        rpc_methods: List[Dict[str, Any]],
+        imported_dtos: set
+    ) -> List[str]:
         """
         Extract all DTO class names used in RPC methods.
 
         Args:
             rpc_methods: List of extracted RPC methods
+            imported_dtos: Set of DTO class names from imports
 
         Returns:
             List of unique DTO class names
@@ -217,42 +228,113 @@ class GwtRpcAnalyzer:
         for method in rpc_methods:
             # Extract from return type
             return_type = method.get('return_type', '')
-            dto_set.update(self._extract_dto_from_type(return_type))
+            dto_set.update(self._extract_dto_from_type(return_type, imported_dtos))
 
             # Extract from parameters
             parameters = method.get('parameters', [])
             for param in parameters:
                 param_type = param.get('type', '')
-                dto_set.update(self._extract_dto_from_type(param_type))
+                dto_set.update(self._extract_dto_from_type(param_type, imported_dtos))
 
         # Return sorted list
         return sorted(list(dto_set))
 
-    def _extract_dto_from_type(self, type_string: str) -> set:
+    def _extract_dto_from_type(self, type_string: str, imported_dtos: set) -> set:
         """
         Extract DTO class names from a type string.
 
         Handles:
-        - Simple types: UserDTO
-        - Generic types: List<UserDTO>
+        - Simple types: UserDTO, InventoryProductGroup
+        - Generic types: List<UserDTO>, ArrayList<Product>
         - Nested generics: Map<String, List<UserDTO>>
 
         Args:
             type_string: Java type string
+            imported_dtos: Set of known DTO class names from imports
 
         Returns:
             Set of DTO class names
         """
         dtos = set()
 
-        # Pattern to match class names ending with DTO
+        # Pattern 1: Match class names ending with DTO
         dto_pattern = re.compile(r'\b(\w+DTO)\b')
-
         for match in dto_pattern.finditer(type_string):
             dto_name = match.group(1)
             dtos.add(dto_name)
 
+        # Pattern 2: Match any class name from imported DTOs
+        # Extract all capitalized class names from type string
+        class_pattern = re.compile(r'\b([A-Z][a-zA-Z0-9]*)\b')
+        for match in class_pattern.finditer(type_string):
+            class_name = match.group(1)
+            # Check if this class is in the imported DTOs
+            if class_name in imported_dtos:
+                dtos.add(class_name)
+
         return dtos
+
+    def _extract_dtos_from_imports(self, content: str) -> set:
+        """
+        Extract DTO class names from import statements.
+
+        Looks for imports from packages containing .dto. or .shared.dto.
+
+        Args:
+            content: Java source code
+
+        Returns:
+            Set of DTO class names (simple names, not fully qualified)
+        """
+        dto_classes = set()
+
+        # Pattern to match imports from .dto. or .shared.dto. packages
+        import_pattern = re.compile(
+            r'import\s+[\w.]+\.(?:shared\.)?dto\.(\w+)\s*;',
+            re.MULTILINE
+        )
+
+        for match in import_pattern.finditer(content):
+            class_name = match.group(1)
+            dto_classes.add(class_name)
+
+        return dto_classes
+
+    def _extract_daos_from_imports(self, content: str) -> set:
+        """
+        Extract DAO class names from import statements.
+
+        Looks for imports from packages containing .dao. or ending with DAO.
+
+        Args:
+            content: Java source code
+
+        Returns:
+            Set of DAO class names (simple names, not fully qualified)
+        """
+        dao_classes = set()
+
+        # Pattern 1: Match imports from .dao. packages
+        dao_package_pattern = re.compile(
+            r'import\s+[\w.]+\.dao\.(?:\w+\.)?(\w+)\s*;',
+            re.MULTILINE
+        )
+
+        for match in dao_package_pattern.finditer(content):
+            class_name = match.group(1)
+            dao_classes.add(class_name)
+
+        # Pattern 2: Match imports of classes ending with DAO
+        dao_suffix_pattern = re.compile(
+            r'import\s+[\w.]+\.(\w+DAO)\s*;',
+            re.MULTILINE
+        )
+
+        for match in dao_suffix_pattern.finditer(content):
+            class_name = match.group(1)
+            dao_classes.add(class_name)
+
+        return dao_classes
 
     def _extract_url_mapping(self, content: str) -> Optional[str]:
         """

@@ -210,7 +210,9 @@ class TestDtoReferenceExtraction:
         file_path = gwt_fixtures_dir / "FlashInfoServletImpl.java"
 
         methods = analyzer.extract_rpc_methods(file_path, servlet_impl_content)
-        dtos = analyzer.extract_referenced_dtos(methods)
+        # Extract DTOs from imports first
+        imported_dtos = analyzer._extract_dtos_from_imports(servlet_impl_content)
+        dtos = analyzer.extract_referenced_dtos(methods, imported_dtos)
 
         # FlashInfoDTO should be referenced multiple times
         assert 'FlashInfoDTO' in dtos
@@ -232,7 +234,9 @@ class TestDtoReferenceExtraction:
             }
         ]
 
-        dtos = analyzer.extract_referenced_dtos(methods)
+        # UserDTO ends with DTO so it will be detected even with empty imported_dtos
+        imported_dtos = set()
+        dtos = analyzer.extract_referenced_dtos(methods, imported_dtos)
 
         assert 'UserDTO' in dtos
 
@@ -249,7 +253,9 @@ class TestDtoReferenceExtraction:
             }
         ]
 
-        dtos = analyzer.extract_referenced_dtos(methods)
+        # UserDTO ends with DTO so it will be detected even with empty imported_dtos
+        imported_dtos = set()
+        dtos = analyzer.extract_referenced_dtos(methods, imported_dtos)
 
         assert 'UserDTO' in dtos
 
