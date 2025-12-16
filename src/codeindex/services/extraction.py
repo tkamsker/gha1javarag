@@ -451,7 +451,15 @@ class ExtractionService:
 
             return semantic_data
 
-        except (ConnectionError, TimeoutError) as e:
+        except TimeoutError as e:
+            # Ollama timeout - skip this file to avoid long delays
+            self.logger.warning(
+                f"Skipping {file_path.name}: Ollama timeout after 60s (file too complex/large). "
+                f"Using structural-only analysis."
+            )
+            return self._create_fallback_semantic(file_path, artifact_type, timeout=True)
+
+        except ConnectionError as e:
             # Ollama unavailable - return minimal fallback
             self.logger.warning(f"Ollama unavailable, using fallback: {e}")
             return self._create_fallback_semantic(file_path, artifact_type)
@@ -463,7 +471,8 @@ class ExtractionService:
     def _create_fallback_semantic(
         self,
         file_path: Path,
-        artifact_type: ArtifactType
+        artifact_type: ArtifactType,
+        timeout: bool = False
     ) -> Dict[str, Any]:
         """
         Create fallback semantic data when AI is unavailable.
@@ -471,12 +480,14 @@ class ExtractionService:
         Args:
             file_path: Path to file
             artifact_type: Type of artifact
+            timeout: Whether fallback is due to timeout
 
         Returns:
             Minimal semantic data
         """
+        summary_prefix = "(TIMEOUT) " if timeout else ""
         return {
-            'summary': f"{artifact_type.value}: {file_path.name}",
+            'summary': f"{summary_prefix}{artifact_type.value}: {file_path.name}",
             'roles': [],
             'entities': [],
             'tags': [artifact_type.value],

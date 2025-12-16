@@ -28,7 +28,7 @@ _rate_limiter = threading.Semaphore(MAX_CONCURRENT_AI_CALLS)
 
 # HTTP timeouts
 CONNECT_TIMEOUT = 10.0  # seconds
-READ_TIMEOUT = 300.0    # seconds (5 minutes for LLM inference)
+READ_TIMEOUT = 60.0     # seconds (1 minute for LLM inference, skip slow files)
 
 
 # ==============================================================================
@@ -155,7 +155,7 @@ class OllamaClient:
         if self.client:
             self.client.close()
 
-    @retry(max_attempts=3, base_delay=2.0, exponential_base=2.0)
+    @retry(max_attempts=3, base_delay=2.0, exponential_base=2.0, exceptions=(ConnectionError, httpx.HTTPStatusError))
     def call_ollama(
         self,
         prompt: str,
@@ -165,6 +165,9 @@ class OllamaClient:
     ) -> Dict[str, Any]:
         """
         Call Ollama API with retry and rate limiting.
+
+        Retries on connection errors and HTTP errors, but NOT on timeouts
+        (timeouts are raised immediately to avoid long delays).
 
         Args:
             prompt: User prompt
@@ -178,6 +181,7 @@ class OllamaClient:
         Raises:
             httpx.HTTPError: On HTTP errors
             ValueError: On invalid response
+            TimeoutError: On timeout (not retried)
         """
         # Acquire rate limiter
         with _rate_limiter:
