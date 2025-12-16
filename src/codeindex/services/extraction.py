@@ -5,6 +5,7 @@ Orchestrates parsers and AI to extract structural and semantic information.
 """
 
 import logging
+import re
 from pathlib import Path
 from typing import List, Tuple, Optional, Dict, Any
 from datetime import datetime
@@ -25,6 +26,109 @@ from codeindex.services.gwt_analyzer_registry import get_gwt_analyzer_registry
 from codeindex.utils.config import Config, get_config
 
 logger = logging.getLogger(__name__)
+
+
+# ==============================================================================
+# Helper Functions
+# ==============================================================================
+
+def detect_file_encoding(file_path: Path) -> str:
+    """
+    Detect the encoding of a file, with special handling for XML files.
+
+    For XML files, attempts to read the encoding from the XML declaration.
+    Falls back to trying common encodings if UTF-8 fails.
+
+    Args:
+        file_path: Path to the file
+
+    Returns:
+        Detected encoding name (e.g., 'utf-8', 'windows-1252')
+    """
+    # Try to detect encoding from XML declaration (first 1024 bytes)
+    try:
+        with open(file_path, 'rb') as f:
+            raw_content = f.read(1024)
+
+        # Look for XML encoding declaration
+        # Pattern: <?xml version="1.0" encoding="ENCODING"?>
+        encoding_match = re.search(
+            rb'<\?xml[^?]*encoding=["\']([^"\']+)["\']',
+            raw_content,
+            re.IGNORECASE
+        )
+
+        if encoding_match:
+            detected_encoding = encoding_match.group(1).decode('ascii').upper()
+            # Normalize encoding names
+            encoding_map = {
+                'WINDOWS-1252': 'cp1252',
+                'ISO-8859-1': 'iso-8859-1',
+                'UTF-8': 'utf-8',
+                'UTF-16': 'utf-16',
+                'US-ASCII': 'ascii'
+            }
+            normalized = encoding_map.get(detected_encoding, detected_encoding.lower())
+            logger.debug(f"Detected encoding from XML declaration: {normalized} for {file_path.name}")
+            return normalized
+
+    except Exception as e:
+        logger.debug(f"Could not detect encoding from XML declaration: {e}")
+
+    # Default to UTF-8
+    return 'utf-8'
+
+
+def read_file_with_fallback(file_path: Path) -> str:
+    """
+    Read file content with automatic encoding detection and fallback.
+
+    Tries encodings in this order:
+    1. Detected encoding from XML declaration (if XML file)
+    2. UTF-8
+    3. WINDOWS-1252 (common for German/European files)
+    4. ISO-8859-1 (Latin-1)
+    5. CP1252 (Windows Western European)
+    6. UTF-8 with error replacement (guaranteed to work)
+
+    Args:
+        file_path: Path to the file
+
+    Returns:
+        File content as string
+
+    Raises:
+        IOError: If file cannot be read
+    """
+    # Detect encoding from XML declaration if applicable
+    detected_encoding = detect_file_encoding(file_path)
+
+    # List of encodings to try
+    encodings_to_try = [detected_encoding]
+
+    # Add fallback encodings (avoid duplicates)
+    fallback_encodings = ['utf-8', 'cp1252', 'iso-8859-1', 'latin-1']
+    for enc in fallback_encodings:
+        if enc not in encodings_to_try:
+            encodings_to_try.append(enc)
+
+    # Try each encoding
+    for encoding in encodings_to_try:
+        try:
+            content = file_path.read_text(encoding=encoding)
+            if encoding != 'utf-8':
+                logger.debug(f"Successfully read {file_path.name} with encoding: {encoding}")
+            return content
+        except (UnicodeDecodeError, LookupError) as e:
+            logger.debug(f"Failed to read {file_path.name} with {encoding}: {e}")
+            continue
+
+    # Last resort: UTF-8 with error replacement
+    logger.warning(
+        f"All encoding attempts failed for {file_path.name}, "
+        "using UTF-8 with character replacement"
+    )
+    return file_path.read_text(encoding='utf-8', errors='replace')
 
 
 # ==============================================================================
@@ -316,8 +420,8 @@ class ExtractionService:
             return self._create_fallback_semantic(file_path, artifact_type)
 
         try:
-            # Read file content
-            content = file_path.read_text(encoding='utf-8')
+            # Read file content with automatic encoding detection
+            content = read_file_with_fallback(file_path)
 
             # Check if GWT analyzer can handle this file
             gwt_registry = get_gwt_analyzer_registry()

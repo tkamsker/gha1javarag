@@ -15,6 +15,8 @@ from codeindex.services.extraction import (
     ExtractionService,
     extract_file,
     extract_from_inventory,
+    detect_file_encoding,
+    read_file_with_fallback,
 )
 from codeindex.models import ArtifactType
 from codeindex.models.extraction import ExtractionResult
@@ -413,3 +415,130 @@ class TestIntegration:
         # Verify metadata
         assert result.extracted_at is not None
         assert result.file_path == str(sample_java_path)
+
+
+# Test encoding detection
+class TestEncodingDetection:
+    """Test file encoding detection and reading."""
+
+    def test_detect_utf8_encoding(self, tmp_path):
+        """Test detecting UTF-8 encoding."""
+        # Create UTF-8 file
+        test_file = tmp_path / "utf8.txt"
+        test_file.write_text("Hello World", encoding='utf-8')
+
+        encoding = detect_file_encoding(test_file)
+        assert encoding == 'utf-8'
+
+    def test_detect_xml_encoding_declaration(self, tmp_path):
+        """Test detecting encoding from XML declaration."""
+        # Create XML file with WINDOWS-1252 encoding declaration
+        test_file = tmp_path / "test.xml"
+        test_file.write_bytes(
+            b'<?xml version="1.0" encoding="WINDOWS-1252"?>\n'
+            b'<root>Test</root>'
+        )
+
+        encoding = detect_file_encoding(test_file)
+        assert encoding == 'cp1252'
+
+    def test_detect_iso8859_encoding(self, tmp_path):
+        """Test detecting ISO-8859-1 encoding from XML."""
+        test_file = tmp_path / "test.xml"
+        test_file.write_bytes(
+            b'<?xml version="1.0" encoding="ISO-8859-1"?>\n'
+            b'<root>Test</root>'
+        )
+
+        encoding = detect_file_encoding(test_file)
+        assert encoding == 'iso-8859-1'
+
+    def test_read_utf8_file(self, tmp_path):
+        """Test reading UTF-8 file."""
+        test_file = tmp_path / "utf8.txt"
+        test_content = "Hello World with UTF-8"
+        test_file.write_text(test_content, encoding='utf-8')
+
+        content = read_file_with_fallback(test_file)
+        assert content == test_content
+
+    def test_read_windows1252_file(self, tmp_path):
+        """Test reading WINDOWS-1252 encoded file."""
+        test_file = tmp_path / "windows1252.xml"
+        # Include special characters: ö (0xF6), ä (0xE4), ü (0xFC), ß (0xDF)
+        test_content = '<?xml version="1.0" encoding="WINDOWS-1252"?>\n<root>Götschka Straße</root>'
+        test_file.write_text(test_content, encoding='cp1252')
+
+        content = read_file_with_fallback(test_file)
+        assert 'Götschka' in content
+        assert 'Straße' in content
+
+    def test_read_with_special_characters(self, tmp_path):
+        """Test reading file with German special characters."""
+        test_file = tmp_path / "german.xml"
+        test_content = '<?xml version="1.0" encoding="WINDOWS-1252"?>\n<text>äöüÄÖÜß</text>'
+        test_file.write_text(test_content, encoding='cp1252')
+
+        content = read_file_with_fallback(test_file)
+        # All special characters should be preserved
+        assert 'ä' in content
+        assert 'ö' in content
+        assert 'ü' in content
+        assert 'Ä' in content
+        assert 'Ö' in content
+        assert 'Ü' in content
+        assert 'ß' in content
+
+    def test_fallback_on_invalid_encoding(self, tmp_path):
+        """Test fallback when file has invalid/mixed encoding."""
+        test_file = tmp_path / "mixed.txt"
+        # Write bytes that aren't valid UTF-8
+        test_file.write_bytes(b'Hello \xF6 World')  # 0xF6 is not valid UTF-8
+
+        # Should not crash, uses fallback
+        content = read_file_with_fallback(test_file)
+        assert 'Hello' in content
+        assert 'World' in content
+
+    def test_extraction_with_windows1252_xml(self, extraction_service, tmp_path):
+        """Test extraction service handles WINDOWS-1252 XML files."""
+        # Create XML file with WINDOWS-1252 encoding
+        test_file = tmp_path / "test.xml"
+        test_content = '''<?xml version="1.0" encoding="WINDOWS-1252"?>
+<config>
+    <customer>
+        <name>Götschka GmbH</name>
+        <street>Hauptstraße 123</street>
+    </customer>
+</config>'''
+        test_file.write_text(test_content, encoding='cp1252')
+
+        # Should extract without UnicodeDecodeError
+        result = extraction_service.extract_file(
+            test_file,
+            ArtifactType.XML_CONFIG
+        )
+
+        assert isinstance(result, ExtractionResult)
+        assert result.file_path == str(test_file)
+
+    def test_real_problematic_xml_file(self):
+        """Test with actual problematic XML file from codebase."""
+        # Use actual file that was causing errors
+        test_file = Path(
+            '/Users/thomaskamsker/Documents/Atom/vron.one/playground/java/'
+            'cuco-cct-core/src/test/resources/at/a1ta/cuco/cct/productoffering/'
+            'bpbv1-sample-quote-full-adsl.xml'
+        )
+
+        if not test_file.exists():
+            pytest.skip("Test file not available")
+
+        # Should detect cp1252 encoding
+        encoding = detect_file_encoding(test_file)
+        assert encoding == 'cp1252'
+
+        # Should read without errors
+        content = read_file_with_fallback(test_file)
+        assert len(content) > 0
+        assert 'Götschka' in content or 'ö' in content  # Has special characters
