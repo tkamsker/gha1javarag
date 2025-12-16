@@ -5,11 +5,16 @@
 # Dedicated script for analyzing the cuco-ui-admin codebase
 # This script can be run in a separate terminal while you work on other tasks
 #
-# Usage: ./run-cuco.sh [source-dir]
+# Usage: ./run-cuco.sh [OPTIONS] [source-dir]
+#
+# Options:
+#   --yes, -y    Skip confirmation prompts (for non-interactive execution)
 #
 # Examples:
 #   ./run-cuco.sh                                    # Use JAVA_SOURCE_DIR from .env
 #   ./run-cuco.sh /path/to/cuco-ui-admin             # Specify source directory
+#   ./run-cuco.sh --yes /path/to/cuco-ui-admin       # Non-interactive mode
+#   nohup ./run-cuco.sh --yes /path/to/project &     # Background execution
 
 set -e  # Exit on error
 
@@ -51,18 +56,39 @@ if [ -f ".env" ]; then
 fi
 
 # ==============================================================================
+# Argument Parsing
+# ==============================================================================
+
+# Parse arguments
+SKIP_CONFIRM=false
+SOURCE_DIR=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --yes|-y)
+            SKIP_CONFIRM=true
+            shift
+            ;;
+        *)
+            SOURCE_DIR="$1"
+            shift
+            ;;
+    esac
+done
+
+# ==============================================================================
 # Source Directory Setup
 # ==============================================================================
 
 # Get source directory (argument or from .env)
-if [ -n "$1" ]; then
-    SOURCE_DIR="$1"
-elif [ -n "$JAVA_SOURCE_DIR" ]; then
+if [ -z "$SOURCE_DIR" ] && [ -n "$JAVA_SOURCE_DIR" ]; then
     SOURCE_DIR="$JAVA_SOURCE_DIR"
-else
+elif [ -z "$SOURCE_DIR" ]; then
     err "Source directory not specified!"
     echo "Either provide it as argument or set JAVA_SOURCE_DIR in .env"
-    echo "Usage: ./run-cuco.sh [source-dir]"
+    echo "Usage: ./run-cuco.sh [OPTIONS] [source-dir]"
+    echo "Options:"
+    echo "  --yes, -y    Skip confirmation prompts"
     exit 1
 fi
 
@@ -76,11 +102,15 @@ fi
 if [ ! -f "$SOURCE_DIR/pom.xml" ]; then
     warn "No pom.xml found in $SOURCE_DIR"
     warn "Are you sure this is the cuco-ui-admin project?"
-    read -p "Continue anyway? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        info "Aborted"
-        exit 0
+    if [ "$SKIP_CONFIRM" = false ]; then
+        read -p "Continue anyway? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            info "Aborted"
+            exit 0
+        fi
+    else
+        info "Continuing without pom.xml (--yes mode)"
     fi
 fi
 
@@ -130,11 +160,15 @@ echo "=============================================="
 echo ""
 
 # Confirm before starting
-read -p "Start pipeline? This may take a while for large codebases. (Y/n): " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Nn]$ ]]; then
-    info "Aborted"
-    exit 0
+if [ "$SKIP_CONFIRM" = false ]; then
+    read -p "Start pipeline? This may take a while for large codebases. (Y/n): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Nn]$ ]]; then
+        info "Aborted"
+        exit 0
+    fi
+else
+    info "Starting pipeline in non-interactive mode (--yes)"
 fi
 
 # Record start time
