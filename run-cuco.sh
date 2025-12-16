@@ -53,6 +53,21 @@ source $VENV_DIR/bin/activate
 # Load .env for JAVA_SOURCE_DIR
 if [ -f ".env" ]; then
     export $(grep -v '^#' .env | xargs)
+
+    # Validate OLLAMA_BASE_URL for host execution
+    if [[ "$OLLAMA_BASE_URL" == *"host.docker.internal"* ]]; then
+        err "Invalid OLLAMA_BASE_URL in .env file!"
+        echo ""
+        echo "Your .env has: OLLAMA_BASE_URL=$OLLAMA_BASE_URL"
+        echo ""
+        echo "This URL only works INSIDE Docker containers."
+        echo "For host-side Python code (run-cuco.sh), use:"
+        echo ""
+        echo "  OLLAMA_BASE_URL=http://localhost:11434"
+        echo ""
+        echo "Please update your .env file and try again."
+        exit 1
+    fi
 fi
 
 # ==============================================================================
