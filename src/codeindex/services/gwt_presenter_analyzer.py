@@ -188,15 +188,70 @@ class GwtPresenterAnalyzer:
         self.logger.warning(f"Could not detect view binding for {file_path.name}")
         return None
 
+    def _detect_presenter_annotation(
+        self,
+        content: str,
+        class_info: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Detect @Presenter annotation with view parameter (95% confidence).
+
+        Pattern: @Presenter(view = SomeView.class, ...)
+
+        This is the most explicit and reliable pattern for MVP4G and similar frameworks.
+
+        Args:
+            content: Java source code
+            class_info: Parsed class information
+
+        Returns:
+            View binding with 95% confidence, or None
+        """
+        # Pattern: @Presenter(view = ViewName.class, ...)
+        # Matches both with and without multiple parameter
+        annotation_pattern = r'@Presenter\s*\(\s*view\s*=\s*(\w+)\.class'
+        match = re.search(annotation_pattern, content)
+
+        if not match:
+            return None
+
+        view_class = match.group(1)
+
+        # Try to find if there's a nested interface (View or Display) that matches
+        nested_interface = None
+        if 'public interface View' in content or 'public interface Display' in content:
+            # Check which one exists
+            if 'public interface View' in content:
+                nested_interface = 'View'
+            elif 'public interface Display' in content:
+                nested_interface = 'Display'
+
+        # Look for view field (might be inherited, so it's optional)
+        view_field, constructor_param = self._find_view_field_and_param(content, nested_interface or view_class)
+
+        self.logger.debug(f"Detected @Presenter annotation: view={view_class} (95% confidence)")
+
+        return {
+            'strategy': 'presenter_annotation',
+            'confidence': 0.95,
+            'view_interface': view_class,
+            'view_field': view_field,
+            'constructor_param': constructor_param,
+            'nested_interface': nested_interface,
+            'annotation_view_class': view_class
+        }
+
     def _detect_nested_display(
         self,
         content: str,
         class_info: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         """
-        Detect nested Display interface pattern (90% confidence).
+        Detect nested Display or View interface pattern (90% confidence).
 
-        Pattern: public interface Display { ... }
+        Patterns:
+        - public interface Display { ... }
+        - public interface View { ... }
 
         Args:
             content: Java source code
@@ -205,25 +260,28 @@ class GwtPresenterAnalyzer:
         Returns:
             View binding with 90% confidence, or None
         """
-        # Look for nested Display interface
-        display_pattern = r'public\s+interface\s+Display\s*\{'
-        if not re.search(display_pattern, content):
+        # Look for nested Display or View interface
+        # Pattern allows for "extends SomeInterface" before the opening brace
+        display_pattern = r'public\s+interface\s+(Display|View)\s*(?:extends\s+[\w<>,\s]+)?\s*\{'
+        match = re.search(display_pattern, content)
+
+        if not match:
             return None
 
-        # Find Display field and constructor param
-        view_field, constructor_param = self._find_view_field_and_param(content, 'Display')
+        interface_name = match.group(1)
 
-        if view_field:
-            self.logger.debug("Detected nested Display interface pattern (90% confidence)")
-            return {
-                'strategy': 'nested_display_interface',
-                'confidence': 0.90,
-                'view_interface': 'Display',
-                'view_field': view_field,
-                'constructor_param': constructor_param
-            }
+        # Find field and constructor param (optional for nested interfaces)
+        view_field, constructor_param = self._find_view_field_and_param(content, interface_name)
 
-        return None
+        # Return result even if field not found (might be inherited from base class)
+        self.logger.debug(f"Detected nested {interface_name} interface pattern (90% confidence)")
+        return {
+            'strategy': 'nested_interface',
+            'confidence': 0.90,
+            'view_interface': interface_name,
+            'view_field': view_field,
+            'constructor_param': constructor_param
+        }
 
     def _detect_separate_interface(
         self,
