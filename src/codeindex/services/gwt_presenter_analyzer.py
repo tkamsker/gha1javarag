@@ -274,8 +274,8 @@ class GwtPresenterAnalyzer:
         Returns:
             View binding with 70% confidence, or None
         """
-        presenter_name = class_info.get('class_name', '')
-        if not presenter_name.endswith('Presenter'):
+        presenter_name = class_info.get('class_name') or ''
+        if not presenter_name or not presenter_name.endswith('Presenter'):
             return None
 
         # Derive view name

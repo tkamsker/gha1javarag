@@ -51,6 +51,16 @@ logger = get_logger(__name__)
     default=1,
     help='Maximum depth for Maven dependency resolution (default: 1)'
 )
+@click.option(
+    '--workspace-root',
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    help='Workspace root directory for sibling dependency search (Feature 005). Auto-detected if not specified.'
+)
+@click.option(
+    '--search-siblings/--no-search-siblings',
+    default=True,
+    help='Enable/disable sibling directory search for dependencies (default: enabled)'
+)
 @click.pass_context
 def discover_command(
     ctx,
@@ -59,7 +69,9 @@ def discover_command(
     project: Optional[str],
     dry_run: bool,
     quiet: bool,
-    dependency_depth: int
+    dependency_depth: int,
+    workspace_root: Optional[Path],
+    search_siblings: bool
 ):
     """
     Discover Maven projects and create file inventory.
@@ -144,12 +156,20 @@ def discover_command(
                 click.echo(f"Discovering Maven projects in {effective_dir}...")
             if dependency_depth > 0:
                 click.echo(f"Dependency resolution depth: {dependency_depth}")
+                if search_siblings:
+                    if workspace_root:
+                        click.echo(f"Workspace root (sibling search): {workspace_root}")
+                    else:
+                        click.echo(f"Sibling search enabled (auto-detect workspace root)")
 
         # Generate discovery inventory from effective directory
         # T078: Pass source_dir as dependency_base_dir for monorepo support
+        # Feature 005: Pass workspace_root and search_siblings for sibling dependency search
         inventory = service.generate_inventory(
             root_directory=effective_dir,
-            dependency_base_dir=source_dir if project else None
+            dependency_base_dir=source_dir if project else None,
+            workspace_root=workspace_root,
+            search_siblings=search_siblings
         )
 
         # Output results

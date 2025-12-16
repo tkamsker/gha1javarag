@@ -144,6 +144,28 @@ tail -f data/extraction-cuco-ui-admin.jsonl
 tail -f data/extraction-cuco-ui-admin.jsonl | jq -r '.file_path'
 ```
 
+## Multi-Project Workspace Support
+
+cuco-ui-admin and its dependencies (administration.ui, cuco-cct-core, etc.) are organized as **sibling directories** in a shared workspace:
+
+```
+/playground/java/
+├── cuco-ui-admin/           ← Main project (analyzing this)
+│   ├── pom.xml              (depends on: administration.ui, cuco-cct-core, ...)
+│   └── src/main/java/...
+├── administration.ui/        ← Dependency (sibling)
+│   ├── pom.xml
+│   └── src/main/java/...
+├── cuco-cct-core/           ← Dependency (sibling)
+└── ...
+```
+
+The pipeline automatically:
+- Detects the workspace root directory
+- Searches sibling directories for Maven dependencies
+- Indexes all dependencies along with the main project
+- Enables semantic search across all dependencies
+
 ## Troubleshooting
 
 ### Dependency Resolution Warnings
@@ -154,15 +176,24 @@ If you see warnings like:
 [WARNING] Artifact not found: cuco-cct-core (groupId: at.a1ta.cuco)
 ```
 
-**This is normal and harmless.** The dependency resolver is looking for local Maven modules, but cuco-ui-admin is a single project (not a monorepo), so these dependencies don't exist locally.
+**Solution**: The script now uses workspace root detection to find sibling dependencies automatically (Feature 005). If dependencies are still not found:
 
-**Solution**: The script now disables dependency resolution by default since cuco-ui-admin doesn't need it.
+1. Check that dependency directories exist as siblings:
+   ```bash
+   ls $(dirname /path/to/cuco-ui-admin)
+   # Should show: cuco-ui-admin, administration.ui, cuco-cct-core, etc.
+   ```
 
-**If you want dependency resolution** (for monorepo projects):
-```bash
-# Edit run-cuco.sh and add --dependency-depth 1 to the discover command
-codeindex discover --source-dir "$SOURCE_DIR" --output "$DISCOVERY_FILE" --dependency-depth 1
-```
+2. Verify each dependency has a pom.xml:
+   ```bash
+   ls $(dirname /path/to/cuco-ui-admin)/*/pom.xml
+   ```
+
+3. If dependencies are in a different location, specify workspace root explicitly:
+   ```bash
+   ./run-cuco.sh /path/to/cuco-ui-admin
+   # Or edit run-cuco.sh to set WORKSPACE_ROOT manually
+   ```
 
 ### Ollama Not Running
 
