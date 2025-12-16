@@ -6,6 +6,7 @@ Based on data-model.md specification from Feature 004.
 """
 
 from typing import Dict, Any
+from .weaviate import get_ollama_endpoint_for_weaviate
 
 
 def get_dto_artifact_schema() -> Dict[str, Any]:
@@ -31,7 +32,7 @@ def get_dto_artifact_schema() -> Dict[str, Any]:
         "moduleConfig": {
             "text2vec-ollama": {
                 "model": "nomic-embed-text",
-                "apiEndpoint": "http://host.docker.internal:11434",
+                "apiEndpoint": get_ollama_endpoint_for_weaviate(),
                 "vectorizeClassName": False,
                 "vectorizePropertyName": False,
             }

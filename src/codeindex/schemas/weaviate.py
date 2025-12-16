@@ -4,10 +4,29 @@ Weaviate schema definitions for Java Codebase Indexer Pipeline.
 Based on contracts/weaviate-schema.yaml
 """
 import logging
+import platform
 from typing import Optional, Dict, Any
 import weaviate
 
 logger = logging.getLogger("codeindex.schemas")
+
+
+def get_ollama_endpoint_for_weaviate() -> str:
+    """
+    Get the correct Ollama endpoint for Weaviate container to access host Ollama.
+
+    Platform-specific configuration:
+    - macOS: host.docker.internal:11434 (Docker Desktop provides this DNS)
+    - Linux: 127.0.0.1:11434 (works with network_mode: host in docker-compose.ubuntu.yml)
+
+    Returns:
+        Ollama API endpoint URL for use inside Weaviate container
+    """
+    system = platform.system().lower()
+    if system == "darwin":  # macOS
+        return "http://host.docker.internal:11434"
+    else:  # Linux and other Unix-like systems
+        return "http://127.0.0.1:11434"
 
 
 # ==============================================================================
@@ -28,7 +47,7 @@ def get_project_schema() -> Dict[str, Any]:
         "moduleConfig": {
             "text2vec-ollama": {
                 "model": "nomic-embed-text",
-                "apiEndpoint": "http://host.docker.internal:11434",
+                "apiEndpoint": get_ollama_endpoint_for_weaviate(),
                 "vectorizeClassName": False
             }
         },
@@ -157,7 +176,7 @@ def get_code_artifact_schema() -> Dict[str, Any]:
         "moduleConfig": {
             "text2vec-ollama": {
                 "model": "nomic-embed-text",
-                "apiEndpoint": "http://host.docker.internal:11434",
+                "apiEndpoint": get_ollama_endpoint_for_weaviate(),
                 "vectorizeClassName": False
             }
         },
