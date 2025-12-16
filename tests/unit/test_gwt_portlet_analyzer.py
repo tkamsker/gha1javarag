@@ -91,7 +91,7 @@ public class ProductAdministrationPortletPresenter {
     # Check view binding was detected with nested View interface
     view_binding = result['view_binding']
     assert view_binding is not None
-    assert view_binding['strategy'] == 'nested_interface'
+    assert view_binding['strategy'] == 'nested_view_interface'
     assert view_binding['confidence'] == 0.90
     assert view_binding['view_interface'] == 'View'
     assert view_binding['view_field'] == 'view'

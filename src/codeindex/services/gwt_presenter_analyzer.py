@@ -275,8 +275,12 @@ class GwtPresenterAnalyzer:
 
         # Return result even if field not found (might be inherited from base class)
         self.logger.debug(f"Detected nested {interface_name} interface pattern (90% confidence)")
+
+        # Use specific strategy name based on interface type
+        strategy = f'nested_{interface_name.lower()}_interface'
+
         return {
-            'strategy': 'nested_interface',
+            'strategy': strategy,
             'confidence': 0.90,
             'view_interface': interface_name,
             'view_field': view_field,
