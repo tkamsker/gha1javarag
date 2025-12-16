@@ -150,11 +150,12 @@ class GwtPresenterAnalyzer:
         class_info: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         """
-        Detect view binding using 3 strategies with confidence scoring.
+        Detect view binding using 4 strategies with confidence scoring.
 
-        Strategy 1: Nested Display interface (90% confidence)
-        Strategy 2: Separate interface (85% confidence)
-        Strategy 3: Naming convention (70% confidence)
+        Strategy 1: @Presenter annotation (95% confidence)
+        Strategy 2: Nested Display/View interface (90% confidence)
+        Strategy 3: Separate interface (85% confidence)
+        Strategy 4: Naming convention (70% confidence)
 
         Args:
             file_path: Path to presenter file
@@ -164,17 +165,22 @@ class GwtPresenterAnalyzer:
         Returns:
             View binding dictionary with confidence score, or None
         """
-        # Strategy 1: Nested Display interface (90% confidence)
+        # Strategy 1: @Presenter annotation with view parameter (95% confidence)
+        annotation_binding = self._detect_presenter_annotation(content, class_info)
+        if annotation_binding:
+            return annotation_binding
+
+        # Strategy 2: Nested Display or View interface (90% confidence)
         display_binding = self._detect_nested_display(content, class_info)
         if display_binding:
             return display_binding
 
-        # Strategy 2: Separate interface (85% confidence)
+        # Strategy 3: Separate interface (85% confidence)
         separate_binding = self._detect_separate_interface(content, class_info)
         if separate_binding:
             return separate_binding
 
-        # Strategy 3: Naming convention (70% confidence)
+        # Strategy 4: Naming convention (70% confidence)
         naming_binding = self._detect_naming_convention(file_path, content, class_info)
         if naming_binding:
             return naming_binding
