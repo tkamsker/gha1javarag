@@ -385,19 +385,36 @@ class DatabaseAnalyzer:
                 format_json=True
             )
 
-            # Parse JSON response
+            # Parse JSON response with cleaning
             response_text = response["response"]
-            extracted = json.loads(response_text)
+            cleaned_text = self.ollama_client._clean_json_response(response_text)
 
-            # Validate required fields
-            if "entity_name" not in extracted:
+            try:
+                extracted = json.loads(cleaned_text)
+            except json.JSONDecodeError as e:
+                # Log error with file context and response preview
+                response_preview = cleaned_text[:500] if len(cleaned_text) > 500 else cleaned_text
+                self.logger.error(
+                    f"Failed to parse LLM JSON for {file_path.name}: {e}\n"
+                    f"Response preview: {response_preview}"
+                )
+                raise ValueError(f"Invalid JSON from LLM: {e}")
+
+            # Validate required fields with better error messages
+            if "entity_name" not in extracted or not extracted.get("entity_name"):
+                self.logger.error(f"Missing entity_name in response for {file_path.name}")
                 raise ValueError("Missing required field: entity_name")
-            if "columns" not in extracted or not extracted["columns"]:
+
+            if "columns" not in extracted or not extracted.get("columns"):
+                self.logger.error(f"Missing or empty columns in response for {file_path.name}")
                 raise ValueError("Missing or empty required field: columns")
+
             if "description" not in extracted:
+                self.logger.error(f"Missing description in response for {file_path.name}")
                 raise ValueError("Missing required field: description")
 
-            self.logger.debug(f"Successfully extracted entity: {extracted.get('entity_name')}")
+            # Log success with INFO level (was DEBUG)
+            self.logger.info(f"✓ Extracted entity: {extracted.get('entity_name')}")
             return extracted
 
         except json.JSONDecodeError as e:

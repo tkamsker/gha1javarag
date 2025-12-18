@@ -74,7 +74,12 @@ def status_command(
         weaviate_healthy = False
 
     try:
-        ollama = OllamaClient(base_url=config.ollama_base_url, model=config.ollama_model_name)
+        ollama = OllamaClient(
+            base_url=config.ollama_base_url,
+            model=config.ollama_model_name,
+            connect_timeout=float(config.ollama_connect_timeout),
+            read_timeout=float(config.ollama_read_timeout)
+        )
         ollama_healthy = ollama.health_check()
         ollama.close()
     except Exception as e:

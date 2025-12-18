@@ -288,7 +288,9 @@ def prd_command(
         ollama_client = OllamaClient(
             base_url=config.ollama_base_url,
             model=llm_model or config.ollama_model_name,
-            max_retries=llm_retries
+            max_retries=llm_retries,
+            connect_timeout=float(config.ollama_connect_timeout),
+            read_timeout=float(config.ollama_read_timeout)
         )
     except Exception as e:
         if not quiet:

@@ -26,9 +26,9 @@ logger = logging.getLogger(__name__)
 MAX_CONCURRENT_AI_CALLS = 10
 _rate_limiter = threading.Semaphore(MAX_CONCURRENT_AI_CALLS)
 
-# HTTP timeouts
-CONNECT_TIMEOUT = 10.0  # seconds
-READ_TIMEOUT = 60.0     # seconds (1 minute for LLM inference, skip slow files)
+# HTTP timeouts (defaults, can be overridden in OllamaClient constructor)
+DEFAULT_CONNECT_TIMEOUT = 10.0  # seconds
+DEFAULT_READ_TIMEOUT = 240.0    # seconds (4 minutes for complex LLM inference)
 
 
 # ==============================================================================
@@ -106,7 +106,9 @@ class OllamaClient:
         self,
         base_url: str = "http://localhost:11434",
         model: str = "gemma2:12b",
-        max_retries: int = 3
+        max_retries: int = 3,
+        connect_timeout: float = DEFAULT_CONNECT_TIMEOUT,
+        read_timeout: float = DEFAULT_READ_TIMEOUT
     ):
         """
         Initialize Ollama client.
@@ -115,10 +117,20 @@ class OllamaClient:
             base_url: Ollama server base URL
             model: Model name to use
             max_retries: Maximum retry attempts
+            connect_timeout: Connection timeout in seconds
+            read_timeout: Read timeout in seconds for long-running LLM requests
         """
         self.base_url = base_url.rstrip('/')
         self.model = model
         self.max_retries = max_retries
+        self.connect_timeout = connect_timeout
+        self.read_timeout = read_timeout
+
+        # Log initialization
+        logger.info(
+            f"OllamaClient initialized: model={model}, "
+            f"read_timeout={read_timeout}s, connect_timeout={connect_timeout}s"
+        )
 
         # Create HTTP client with connection pooling
         limits = httpx.Limits(
@@ -127,8 +139,8 @@ class OllamaClient:
         )
 
         timeout = httpx.Timeout(
-            connect=CONNECT_TIMEOUT,
-            read=READ_TIMEOUT,
+            connect=self.connect_timeout,
+            read=self.read_timeout,
             write=30.0,
             pool=10.0
         )
@@ -154,6 +166,43 @@ class OllamaClient:
         """Close HTTP client."""
         if self.client:
             self.client.close()
+
+    def _clean_json_response(self, response_text: str) -> str:
+        """
+        Clean common JSON formatting issues from LLM responses.
+
+        Args:
+            response_text: Raw LLM response
+
+        Returns:
+            Cleaned JSON string
+
+        Examples:
+            - Strips markdown code fences: ```json ... ```
+            - Removes trailing commas: {"a": 1,} → {"a": 1}
+            - Strips whitespace
+        """
+        import re
+
+        # Strip markdown code fences
+        if response_text.strip().startswith("```"):
+            lines = response_text.strip().split('\n')
+            # Remove first line if it's a code fence
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            # Remove last line if it's a code fence
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            response_text = '\n'.join(lines)
+
+        # Strip leading/trailing whitespace
+        response_text = response_text.strip()
+
+        # Remove trailing commas before closing braces/brackets
+        # Handles: {"a": 1,} and ["a",]
+        response_text = re.sub(r',(\s*[}\]])', r'\1', response_text)
+
+        return response_text
 
     @retry(max_attempts=3, base_delay=2.0, exponential_base=2.0, exceptions=(ConnectionError, httpx.HTTPStatusError))
     def call_ollama(
@@ -279,10 +328,18 @@ class OllamaClient:
             # Parse JSON response
             response_text = response["response"]
 
+            # Clean JSON response to handle common LLM formatting issues
+            cleaned_text = self._clean_json_response(response_text)
+
             try:
-                extracted = json.loads(response_text)
+                extracted = json.loads(cleaned_text)
             except json.JSONDecodeError as e:
-                self.logger.warning(f"Failed to parse Ollama JSON response: {e}")
+                # Log error with response preview for debugging
+                response_preview = cleaned_text[:500] if len(cleaned_text) > 500 else cleaned_text
+                self.logger.warning(
+                    f"Failed to parse Ollama JSON response for {Path(file_path).name}: {e}\n"
+                    f"Response preview (first 500 chars): {response_preview}"
+                )
                 # Return minimal fallback
                 extracted = {
                     "summary": f"Code file: {Path(file_path).name}",
@@ -343,7 +400,9 @@ class OllamaClient:
 
 def create_ollama_client(
     base_url: Optional[str] = None,
-    model: Optional[str] = None
+    model: Optional[str] = None,
+    connect_timeout: Optional[float] = None,
+    read_timeout: Optional[float] = None
 ) -> OllamaClient:
     """
     Create Ollama client with configuration from environment.
@@ -351,16 +410,31 @@ def create_ollama_client(
     Args:
         base_url: Optional override for Ollama URL
         model: Optional override for model name
+        connect_timeout: Optional override for connection timeout
+        read_timeout: Optional override for read timeout
 
     Returns:
         Configured OllamaClient instance
     """
-    import os
+    from codeindex.utils.config import get_config
+
+    config = get_config()
 
     if not base_url:
-        base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+        base_url = config.ollama_base_url
 
     if not model:
-        model = os.getenv("OLLAMA_MODEL_NAME", "gemma2:12b")
+        model = config.ollama_model_name
 
-    return OllamaClient(base_url=base_url, model=model)
+    if connect_timeout is None:
+        connect_timeout = float(config.ollama_connect_timeout)
+
+    if read_timeout is None:
+        read_timeout = float(config.ollama_read_timeout)
+
+    return OllamaClient(
+        base_url=base_url,
+        model=model,
+        connect_timeout=connect_timeout,
+        read_timeout=read_timeout
+    )

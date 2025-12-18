@@ -339,6 +339,8 @@ def test_analyze_file_with_mock_llm(
     """Test analyzing a single file with mocked LLM."""
     # Mock LLM response
     mock_ollama_client.call_ollama.return_value = sample_llm_response
+    # Mock JSON cleaning (pass-through)
+    mock_ollama_client._clean_json_response = lambda text: text
 
     analyzer = DatabaseAnalyzer(
         ollama_client=mock_ollama_client,
