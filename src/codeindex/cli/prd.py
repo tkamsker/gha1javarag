@@ -288,7 +288,9 @@ def prd_command(
         ollama_client = OllamaClient(
             base_url=config.ollama_base_url,
             model=llm_model or config.ollama_model_name,
-            max_retries=llm_retries
+            max_retries=llm_retries,
+            connect_timeout=float(config.ollama_connect_timeout),
+            read_timeout=float(config.ollama_read_timeout)
         )
     except Exception as e:
         if not quiet:
@@ -1652,12 +1654,15 @@ def _generate_frontend_prd(forms: list, components: list) -> str:
                 lines.append("")
 
             # Validation rules
-            if form.validation_rules:
-                lines.append("**Validation Rules:**")
-                lines.append("")
-                for rule in form.validation_rules:
-                    lines.append(f"- **{rule.field}** ({rule.rule_type}): {rule.message}")
-                lines.append("")
+            # TODO: validation_rules contains rule IDs (strings), not rule objects
+            # To display rules, need to load rule JSON files from output_dir/frontend/rules/
+            # For now, skip this section to prevent AttributeError (Bug Fix 006)
+            # if form.validation_rules:
+            #     lines.append("**Validation Rules:**")
+            #     lines.append("")
+            #     for rule in form.validation_rules:
+            #         lines.append(f"- **{rule.field}** ({rule.rule_type}): {rule.message}")
+            #     lines.append("")
 
             # Navigation
             if form.navigation_on_success or form.navigation_on_cancel:

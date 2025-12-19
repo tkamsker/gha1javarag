@@ -79,8 +79,18 @@ class Config:
 
     @property
     def ollama_timeout(self) -> int:
-        """Ollama request timeout in seconds."""
+        """Ollama request timeout in seconds (deprecated, use ollama_read_timeout)."""
         return int(os.getenv("OLLAMA_TIMEOUT", "240"))
+
+    @property
+    def ollama_read_timeout(self) -> int:
+        """Ollama read timeout for long-running requests in seconds."""
+        return int(os.getenv("OLLAMA_READ_TIMEOUT", os.getenv("OLLAMA_TIMEOUT", "240")))
+
+    @property
+    def ollama_connect_timeout(self) -> int:
+        """Ollama connection timeout in seconds."""
+        return int(os.getenv("OLLAMA_CONNECT_TIMEOUT", "10"))
 
     # Performance Tuning
 

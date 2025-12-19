@@ -370,10 +370,16 @@ class DatabaseAnalyzer:
             TimeoutError: On LLM timeout
             ValueError: On invalid response
         """
+        # Reduce source code size for better LLM comprehension
+        max_source_chars = 10000  # Reduced from 15000
+        truncated_source = file_content[:max_source_chars]
+        if len(file_content) > max_source_chars:
+            truncated_source += f"\n\n... [truncated {len(file_content) - max_source_chars} chars]"
+
         prompt = DAO_EXTRACTION_PROMPT_TEMPLATE.format(
             file_path=str(file_path),
             framework=framework,
-            source_code=file_content[:15000],  # Limit to 15k chars
+            source_code=truncated_source,
             related_entities_summary=related_entities or "None"
         )
 
@@ -385,19 +391,90 @@ class DatabaseAnalyzer:
                 format_json=True
             )
 
-            # Parse JSON response
+            # Parse JSON response with cleaning
             response_text = response["response"]
-            extracted = json.loads(response_text)
+            cleaned_text = self.ollama_client._clean_json_response(response_text)
 
-            # Validate required fields
-            if "entity_name" not in extracted:
-                raise ValueError("Missing required field: entity_name")
-            if "columns" not in extracted or not extracted["columns"]:
-                raise ValueError("Missing or empty required field: columns")
-            if "description" not in extracted:
-                raise ValueError("Missing required field: description")
+            try:
+                extracted = json.loads(cleaned_text)
+            except json.JSONDecodeError as e:
+                # Log error with file context and response preview
+                response_preview = cleaned_text[:1000] if len(cleaned_text) > 1000 else cleaned_text
+                self.logger.error(
+                    f"Failed to parse LLM JSON for {file_path.name}: {e}\n"
+                    f"Response preview (first 1000 chars): {response_preview}"
+                )
 
-            self.logger.debug(f"Successfully extracted entity: {extracted.get('entity_name')}")
+                # Dump full details to separate error log file for debugging
+                error_log_path = self.output_dir / ".error_logs" / f"{file_path.stem}_parse_error.txt"
+                error_log_path.parent.mkdir(exist_ok=True)
+                with open(error_log_path, "w", encoding="utf-8") as f:
+                    f.write(f"=== PARSE ERROR for {file_path.name} ===\n")
+                    f.write(f"Error: {e}\n\n")
+                    f.write(f"=== PROMPT (first 2000 chars) ===\n")
+                    f.write(prompt[:2000] + "...\n\n")
+                    f.write(f"=== FULL RESPONSE ===\n")
+                    f.write(cleaned_text)
+                self.logger.info(f"Full error details saved to: {error_log_path}")
+
+                raise ValueError(f"Invalid JSON from LLM: {e}")
+
+            # Validate and fix missing required fields with resilient defaults
+            is_incomplete = False
+
+            if "entity_name" not in extracted or not extracted.get("entity_name"):
+                self.logger.warning(f"Missing entity_name in response for {file_path.name}, using filename")
+                # Use filename as fallback entity name
+                extracted["entity_name"] = file_path.stem.replace("DAO", "").replace("Dao", "")
+                is_incomplete = True
+
+            if "columns" not in extracted or not extracted.get("columns"):
+                self.logger.warning(f"Missing or empty columns in response for {file_path.name}")
+
+                # Dump full details to error log for missing columns
+                error_log_path = self.output_dir / ".error_logs" / f"{file_path.stem}_missing_columns.txt"
+                error_log_path.parent.mkdir(exist_ok=True)
+                with open(error_log_path, "w", encoding="utf-8") as f:
+                    f.write(f"=== MISSING COLUMNS for {file_path.name} ===\n")
+                    f.write(f"Entity name: {extracted.get('entity_name', 'UNKNOWN')}\n\n")
+                    f.write(f"=== PROMPT (first 2000 chars) ===\n")
+                    f.write(prompt[:2000] + "...\n\n")
+                    f.write(f"=== FULL RESPONSE ===\n")
+                    f.write(json.dumps(extracted, indent=2))
+                self.logger.info(f"Full error details saved to: {error_log_path}")
+
+                # Create minimal column entry as fallback
+                extracted["columns"] = [
+                    {
+                        "name": "id",
+                        "data_type": "BIGINT",
+                        "nullable": False,
+                        "default_value": None,
+                        "description": f"Primary key for {extracted.get('entity_name', 'entity')} (auto-detected fallback)"
+                    }
+                ]
+                is_incomplete = True
+
+            if "description" not in extracted or not extracted.get("description"):
+                self.logger.warning(f"Missing description in response for {file_path.name}, using generic")
+                extracted["description"] = f"Database entity extracted from {file_path.name}"
+                is_incomplete = True
+
+            # Fill in optional fields with defaults if missing
+            if "primary_key" not in extracted:
+                extracted["primary_key"] = []
+            if "foreign_keys" not in extracted:
+                extracted["foreign_keys"] = []
+            if "indexes" not in extracted:
+                extracted["indexes"] = []
+            if "constraints" not in extracted:
+                extracted["constraints"] = []
+            if "business_rules" not in extracted:
+                extracted["business_rules"] = []
+
+            # Log success with INFO level (was DEBUG)
+            status = "⚠ Partially extracted" if is_incomplete else "✓ Extracted entity"
+            self.logger.info(f"{status}: {extracted.get('entity_name')}")
             return extracted
 
         except json.JSONDecodeError as e:
