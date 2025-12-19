@@ -1654,12 +1654,15 @@ def _generate_frontend_prd(forms: list, components: list) -> str:
                 lines.append("")
 
             # Validation rules
-            if form.validation_rules:
-                lines.append("**Validation Rules:**")
-                lines.append("")
-                for rule in form.validation_rules:
-                    lines.append(f"- **{rule.field}** ({rule.rule_type}): {rule.message}")
-                lines.append("")
+            # TODO: validation_rules contains rule IDs (strings), not rule objects
+            # To display rules, need to load rule JSON files from output_dir/frontend/rules/
+            # For now, skip this section to prevent AttributeError (Bug Fix 006)
+            # if form.validation_rules:
+            #     lines.append("**Validation Rules:**")
+            #     lines.append("")
+            #     for rule in form.validation_rules:
+            #         lines.append(f"- **{rule.field}** ({rule.rule_type}): {rule.message}")
+            #     lines.append("")
 
             # Navigation
             if form.navigation_on_success or form.navigation_on_cancel:

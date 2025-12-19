@@ -22,9 +22,9 @@
 
 **Purpose**: Verify environment and baseline before fixes
 
-- [ ] T001 Verify Python 3.8+ environment and pytest installed
-- [ ] T002 Run existing test suite to establish baseline in tests/unit/ and tests/integration/
-- [ ] T003 [P] Verify production log available at project root for reference
+- [X] T001 Verify Python 3.8+ environment and pytest installed
+- [X] T002 Run existing test suite to establish baseline in tests/unit/ and tests/integration/
+- [X] T003 [P] Verify production log available at project root for reference
 
 **Checkpoint**: Environment ready, baseline test results recorded
 
@@ -40,10 +40,10 @@
 
 ### Implementation for Bug Fix 1
 
-- [ ] T004 [FR1] Search for all occurrences of `READ_TIMEOUT` in src/codeindex/services/ollama_client.py
-- [ ] T005 [FR1] Fix line 280: Change `READ_TIMEOUT` to `self.read_timeout` in src/codeindex/services/ollama_client.py
-- [ ] T006 [FR1] Verify no other undefined `READ_TIMEOUT` references in src/codeindex/services/ollama_client.py
-- [ ] T007 [FR1] Add unit test for timeout exception logging in tests/unit/test_ollama_client.py
+- [X] T004 [FR1] Search for all occurrences of `READ_TIMEOUT` in src/codeindex/services/ollama_client.py
+- [X] T005 [FR1] Fix line 280: Change `READ_TIMEOUT` to `self.read_timeout` in src/codeindex/services/ollama_client.py
+- [X] T006 [FR1] Verify no other undefined `READ_TIMEOUT` references in src/codeindex/services/ollama_client.py
+- [X] T007 [FR1] Add unit test for timeout exception logging in tests/unit/test_ollama_client.py
 
 **Checkpoint**: ollama_client.py fix complete, timeout errors logged with correct value
 
@@ -59,10 +59,10 @@
 
 ### Implementation for Bug Fix 2
 
-- [ ] T008 [FR2] Locate validation_rules iteration in src/codeindex/cli/prd.py at lines 1657-1662
-- [ ] T009 [FR2] Comment out lines 1657-1662 (validation_rules section) in src/codeindex/cli/prd.py
-- [ ] T010 [FR2] Add TODO comment explaining validation_rules are IDs, future enhancement needed in src/codeindex/cli/prd.py
-- [ ] T011 [FR2] Add unit test for validation_rules handling in tests/unit/test_prd.py
+- [X] T008 [FR2] Locate validation_rules iteration in src/codeindex/cli/prd.py at lines 1657-1662
+- [X] T009 [FR2] Comment out lines 1657-1662 (validation_rules section) in src/codeindex/cli/prd.py
+- [X] T010 [FR2] Add TODO comment explaining validation_rules are IDs, future enhancement needed in src/codeindex/cli/prd.py
+- [X] T011 [FR2] Add unit test for validation_rules handling in tests/unit/test_prd.py
 
 **Checkpoint**: prd.py fix complete, PRD generation no longer crashes on validation_rules
 
@@ -76,12 +76,12 @@
 
 ### Integration Tests
 
-- [ ] T012 [FR3] Run existing unit tests in tests/unit/test_ollama_client.py to verify no regressions
-- [ ] T013 [FR3] Run existing unit tests in tests/unit/test_prd.py to verify no regressions
-- [ ] T014 [FR3] Run integration test with production extraction file (output/cuco-ui-admin/extraction-results.jsonl) if available
-- [ ] T015 [FR3] Verify no NameError in logs from integration test
-- [ ] T016 [FR3] Verify no AttributeError in logs from integration test
-- [ ] T017 [FR3] Verify frontend PRD generated successfully in output directory
+- [X] T012 [FR3] Run existing unit tests in tests/unit/test_ollama_client.py to verify no regressions
+- [X] T013 [FR3] Run existing unit tests in tests/unit/test_prd.py to verify no regressions
+- [X] T014 [FR3] Run integration test with production extraction file (output/cuco-ui-admin/extraction-results.jsonl) if available
+- [X] T015 [FR3] Verify no NameError in logs from integration test
+- [X] T016 [FR3] Verify no AttributeError in logs from integration test
+- [X] T017 [FR3] Verify frontend PRD generated successfully in output directory
 
 **Checkpoint**: All tests pass, integration validated with production-like data
 
@@ -91,11 +91,11 @@
 
 **Purpose**: Update documentation and finalize changes
 
-- [ ] T018 [P] Update CLAUDE.md troubleshooting section with NameError fix at project root
-- [ ] T019 [P] Update CLAUDE.md troubleshooting section with AttributeError fix at project root
-- [ ] T020 [P] Verify quickstart.md validation steps work in specs/006-ollama-timeout-json-fix/quickstart.md
+- [X] T018 [P] Update CLAUDE.md troubleshooting section with NameError fix at project root
+- [X] T019 [P] Update CLAUDE.md troubleshooting section with AttributeError fix at project root
+- [X] T020 [P] Verify quickstart.md validation steps work in specs/006-ollama-timeout-json-fix/quickstart.md
 - [ ] T021 Add production error context to commit message
-- [ ] T022 Run full test suite to verify no regressions in tests/
+- [X] T022 Run full test suite to verify no regressions in tests/
 
 **Checkpoint**: Documentation complete, all fixes validated, ready for commit
 

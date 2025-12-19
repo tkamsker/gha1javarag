@@ -277,7 +277,7 @@ class OllamaClient:
                 ) from e
 
             except httpx.TimeoutException as e:
-                self.logger.warning(f"Ollama timeout after {READ_TIMEOUT}s: {e}")
+                self.logger.warning(f"Ollama timeout after {self.read_timeout}s: {e}")
                 raise TimeoutError(f"Ollama request timed out: {e}") from e
 
             except httpx.HTTPStatusError as e:
