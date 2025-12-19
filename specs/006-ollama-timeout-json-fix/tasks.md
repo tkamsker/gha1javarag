@@ -94,7 +94,7 @@
 - [X] T018 [P] Update CLAUDE.md troubleshooting section with NameError fix at project root
 - [X] T019 [P] Update CLAUDE.md troubleshooting section with AttributeError fix at project root
 - [X] T020 [P] Verify quickstart.md validation steps work in specs/006-ollama-timeout-json-fix/quickstart.md
-- [ ] T021 Add production error context to commit message
+- [X] T021 Add production error context to commit message
 - [X] T022 Run full test suite to verify no regressions in tests/
 
 **Checkpoint**: Documentation complete, all fixes validated, ready for commit
