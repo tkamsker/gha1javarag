@@ -1,117 +1,286 @@
-# Tasks: Feature 006 - Ollama Timeout and JSON Parsing Fix
+# Tasks: Ollama Timeout and JSON Parsing Fix
 
-## Setup Phase
+**Input**: Design documents from `/specs/006-ollama-timeout-json-fix/`
+**Prerequisites**: plan.md (complete), spec.md (complete), research.md (complete), quickstart.md (complete)
 
-- [X] T001: Create feature branch `006-ollama-timeout-json-fix`
-- [X] T002: Create feature specification document
-- [ ] T003: Review specification with stakeholders
+**Organization**: This is a bug fix feature with two independent fixes organized as functional requirements (FR1, FR2, FR3).
 
-## Phase 1: Configuration Updates
+## Format: `[ID] [P?] [FR] Description`
 
-- [ ] T010: Add `ollama_read_timeout` property to `src/codeindex/utils/config.py` (default 240s)
-- [ ] T011: Add `ollama_connect_timeout` property to `src/codeindex/utils/config.py` (default 10s)
-- [ ] T012: Update `.env.example` with new timeout configuration examples
-- [ ] T013: Add timeout configuration to README.md documentation
+- **[P]**: Can run in parallel (different files, no dependencies)
+- **[FR]**: Which functional requirement this task addresses (FR1, FR2, FR3)
+- Include exact file paths in descriptions
 
-## Phase 2: OllamaClient Enhancements
+## Path Conventions
 
-- [ ] T020: Add `connect_timeout` and `read_timeout` parameters to `OllamaClient.__init__`
-- [ ] T021: Update httpx.Timeout initialization to use instance timeout values
-- [ ] T022: Add initialization logging for timeout values and model name
-- [ ] T023: Implement `_clean_json_response()` method in OllamaClient
-  - Strip markdown code fences (```json...```)
-  - Remove trailing commas before closing braces/brackets
-  - Strip leading/trailing whitespace
-- [ ] T024: Update `extract_semantics()` to use `_clean_json_response()`
-- [ ] T025: Improve error logging in `extract_semantics()` with response preview (500 chars)
-- [ ] T026: Update `create_ollama_client()` convenience function to pass config timeouts
+- **Single project**: `src/`, `tests/` at repository root
+- Changes isolated to 2 files: `src/codeindex/services/ollama_client.py`, `src/codeindex/cli/prd.py`
 
-## Phase 3: DatabaseAnalyzer Improvements
+---
 
-- [ ] T030: Update `_extract_entity_with_llm()` to use `_clean_json_response()`
-- [ ] T031: Improve JSON parse error logging with file context and response preview
-- [ ] T032: Enhance required field validation error messages with file context
-- [ ] T033: Change validation success log from DEBUG to INFO level (✓ Extracted entity: ...)
+## Phase 1: Setup (Validation & Environment)
 
-## Phase 4: CLI Integration
+**Purpose**: Verify environment and baseline before fixes
 
-- [ ] T040: Update `src/codeindex/cli/prd.py` database command to pass config timeouts
-- [ ] T041: Update `src/codeindex/cli/prd.py` backend command to pass config timeouts
-- [ ] T042: Update `src/codeindex/cli/prd.py` frontend command to pass config timeouts
-- [ ] T043: Update any other CLI commands using OllamaClient (search codebase)
+- [ ] T001 Verify Python 3.8+ environment and pytest installed
+- [ ] T002 Run existing test suite to establish baseline in tests/unit/ and tests/integration/
+- [ ] T003 [P] Verify production log available at project root for reference
 
-## Phase 5: Testing
+**Checkpoint**: Environment ready, baseline test results recorded
 
-- [ ] T050: Add unit test for `OllamaClient` configurable timeouts
-- [ ] T051: Add unit test for `_clean_json_response()` with markdown code fences
-- [ ] T052: Add unit test for `_clean_json_response()` with trailing commas
-- [ ] T053: Add unit test for `_clean_json_response()` with whitespace issues
-- [ ] T054: Add unit test for JSON parse fallback behavior
-- [ ] T055: Update existing OllamaClient tests to use new parameters
-- [ ] T056: Add integration test with malformed JSON samples
-- [ ] T057: Run full test suite and ensure all tests pass
+---
 
-## Phase 6: Production Validation
+## Phase 2: Bug Fix 1 - NameError in ollama_client.py (FR1: Configurable Timeout)
 
-- [ ] T060: Test with actual problematic DAO files from production logs
-- [ ] T061: Run `./step2.sh cuco-ui-admin` and verify reduced errors
-- [ ] T062: Measure success rate improvement (target >90%)
-- [ ] T063: Verify timeout behavior with slow/complex files
-- [ ] T064: Check PRD output quality for completeness
+**Goal**: Fix NameError where `READ_TIMEOUT` is undefined, should reference `self.read_timeout`
 
-## Phase 7: Documentation
+**Root Cause**: Line 280 uses undefined variable `READ_TIMEOUT` instead of instance attribute `self.read_timeout`
 
-- [ ] T070: Update README.md with new timeout configuration section
-- [ ] T071: Update CLAUDE.md troubleshooting section with JSON parsing guidance
-- [ ] T072: Document JSON cleaning behavior in code comments
-- [ ] T073: Add production troubleshooting guide for timeout issues
+**Independent Test**: Timeout exception logs correct timeout value without NameError
 
-## Phase 8: Code Review and Merge
+### Implementation for Bug Fix 1
 
-- [ ] T080: Self-review all changes
-- [ ] T081: Run linting and code quality checks
-- [ ] T082: Create pull request with detailed description
-- [ ] T083: Address review feedback
-- [ ] T084: Merge to main branch
-- [ ] T085: Tag release version
+- [ ] T004 [FR1] Search for all occurrences of `READ_TIMEOUT` in src/codeindex/services/ollama_client.py
+- [ ] T005 [FR1] Fix line 280: Change `READ_TIMEOUT` to `self.read_timeout` in src/codeindex/services/ollama_client.py
+- [ ] T006 [FR1] Verify no other undefined `READ_TIMEOUT` references in src/codeindex/services/ollama_client.py
+- [ ] T007 [FR1] Add unit test for timeout exception logging in tests/unit/test_ollama_client.py
 
-## Dependencies
+**Checkpoint**: ollama_client.py fix complete, timeout errors logged with correct value
 
-- T020-T026 must complete before T030-T033 (OllamaClient changes needed first)
-- T030-T033 must complete before T040-T043 (DatabaseAnalyzer changes needed first)
-- T010-T043 must complete before T050-T057 (implementation before testing)
-- T050-T057 must pass before T060-T064 (tests must pass before production validation)
+---
 
-## Parallel Execution
+## Phase 3: Bug Fix 2 - AttributeError in prd.py (FR2: Robust JSON Parsing)
 
-Tasks within the same phase can be executed in parallel:
-- Phase 1: T010, T011, T012, T013 [P]
-- Phase 2: T023, T024, T025 can be done in parallel after T020-T022 [P]
-- Phase 4: T040, T041, T042, T043 [P]
-- Phase 5: T050-T056 [P]
-- Phase 7: T070, T071, T072, T073 [P]
+**Goal**: Fix AttributeError where code expects `validation_rules` to contain objects, but contains string IDs
 
-## Estimated Effort
+**Root Cause**: Lines 1657-1662 iterate `validation_rules` expecting objects with `.field`, `.rule_type`, `.message` attributes, but list contains string IDs
 
-- Setup: 0.5 hours (complete)
-- Phase 1: 0.5 hours
-- Phase 2: 2 hours
-- Phase 3: 1 hour
-- Phase 4: 0.5 hours
-- Phase 5: 2 hours
-- Phase 6: 1 hour
-- Phase 7: 0.5 hours
-- Phase 8: 1 hour
+**Independent Test**: Frontend PRD generation completes without AttributeError
 
-**Total: ~9 hours**
+### Implementation for Bug Fix 2
+
+- [ ] T008 [FR2] Locate validation_rules iteration in src/codeindex/cli/prd.py at lines 1657-1662
+- [ ] T009 [FR2] Comment out lines 1657-1662 (validation_rules section) in src/codeindex/cli/prd.py
+- [ ] T010 [FR2] Add TODO comment explaining validation_rules are IDs, future enhancement needed in src/codeindex/cli/prd.py
+- [ ] T011 [FR2] Add unit test for validation_rules handling in tests/unit/test_prd.py
+
+**Checkpoint**: prd.py fix complete, PRD generation no longer crashes on validation_rules
+
+---
+
+## Phase 4: Integration Testing (FR3: Improved Error Handling)
+
+**Goal**: Validate both fixes work together with production data
+
+**Independent Test**: Full PRD generation pipeline completes without NameError or AttributeError
+
+### Integration Tests
+
+- [ ] T012 [FR3] Run existing unit tests in tests/unit/test_ollama_client.py to verify no regressions
+- [ ] T013 [FR3] Run existing unit tests in tests/unit/test_prd.py to verify no regressions
+- [ ] T014 [FR3] Run integration test with production extraction file (output/cuco-ui-admin/extraction-results.jsonl) if available
+- [ ] T015 [FR3] Verify no NameError in logs from integration test
+- [ ] T016 [FR3] Verify no AttributeError in logs from integration test
+- [ ] T017 [FR3] Verify frontend PRD generated successfully in output directory
+
+**Checkpoint**: All tests pass, integration validated with production-like data
+
+---
+
+## Phase 5: Documentation & Polish
+
+**Purpose**: Update documentation and finalize changes
+
+- [ ] T018 [P] Update CLAUDE.md troubleshooting section with NameError fix at project root
+- [ ] T019 [P] Update CLAUDE.md troubleshooting section with AttributeError fix at project root
+- [ ] T020 [P] Verify quickstart.md validation steps work in specs/006-ollama-timeout-json-fix/quickstart.md
+- [ ] T021 Add production error context to commit message
+- [ ] T022 Run full test suite to verify no regressions in tests/
+
+**Checkpoint**: Documentation complete, all fixes validated, ready for commit
+
+---
+
+## Dependencies & Execution Order
+
+### Phase Dependencies
+
+- **Setup (Phase 1)**: No dependencies - can start immediately
+- **Bug Fix 1 (Phase 2)**: Depends on Setup (baseline established)
+- **Bug Fix 2 (Phase 3)**: Independent of Bug Fix 1 - can run in parallel after Setup
+- **Integration Testing (Phase 4)**: Depends on both Bug Fix 1 AND Bug Fix 2 completion
+- **Documentation (Phase 5)**: Depends on Integration Testing passing
+
+### Bug Fix Independence
+
+- **Bug Fix 1 (ollama_client.py)**: Independent - different file than Bug Fix 2
+- **Bug Fix 2 (prd.py)**: Independent - different file than Bug Fix 1
+
+**Critical Path**: Setup → (Bug Fix 1 OR Bug Fix 2) → Integration Testing → Documentation
+
+### Parallel Opportunities
+
+**After Setup (Phase 1) completes:**
+- T004-T007 (Bug Fix 1) can run in parallel with T008-T011 (Bug Fix 2)
+- Both fix different files with no dependencies
+
+**In Documentation (Phase 5):**
+- T018, T019, T020 can all run in parallel (different files)
+
+---
+
+## Parallel Example: Both Bug Fixes Together
+
+Since the fixes are independent and affect different files, they can be implemented in parallel:
+
+```bash
+# After completing Phase 1 (Setup), launch both fix phases together:
+
+# Developer A or Agent A:
+Task: "Search for all occurrences of READ_TIMEOUT in src/codeindex/services/ollama_client.py"
+Task: "Fix line 280: Change READ_TIMEOUT to self.read_timeout in src/codeindex/services/ollama_client.py"
+Task: "Verify no other undefined READ_TIMEOUT references in src/codeindex/services/ollama_client.py"
+Task: "Add unit test for timeout exception logging in tests/unit/test_ollama_client.py"
+
+# Developer B or Agent B (in parallel):
+Task: "Locate validation_rules iteration in src/codeindex/cli/prd.py at lines 1657-1662"
+Task: "Comment out lines 1657-1662 (validation_rules section) in src/codeindex/cli/prd.py"
+Task: "Add TODO comment explaining validation_rules are IDs, future enhancement needed in src/codeindex/cli/prd.py"
+Task: "Add unit test for validation_rules handling in tests/unit/test_prd.py"
+```
+
+---
+
+## Implementation Strategy
+
+### Sequential Execution (Single Developer)
+
+1. **Phase 1: Setup** (5 minutes)
+   - Verify environment
+   - Run baseline tests
+   - Record results
+
+2. **Phase 2: Bug Fix 1** (10 minutes)
+   - Search for READ_TIMEOUT references
+   - Fix line 280
+   - Add unit test
+   - Verify fix
+
+3. **Phase 3: Bug Fix 2** (10 minutes)
+   - Locate validation_rules section
+   - Comment out problematic lines
+   - Add TODO
+   - Add unit test
+
+4. **Phase 4: Integration Testing** (15 minutes)
+   - Run all unit tests
+   - Run integration test with production data
+   - Verify both fixes work together
+   - Check logs for errors
+
+5. **Phase 5: Documentation** (10 minutes)
+   - Update CLAUDE.md
+   - Verify quickstart
+   - Prepare commit message
+
+**Total Time**: ~50 minutes (30 minutes fixes + 20 minutes validation/docs)
+
+### Parallel Execution (Two Developers/Agents)
+
+1. **Phase 1: Setup** (5 minutes) - Together
+2. **Phases 2 & 3: Both Bug Fixes** (10 minutes) - In parallel
+3. **Phase 4: Integration Testing** (15 minutes) - Together
+4. **Phase 5: Documentation** (10 minutes) - Parallel on different docs
+
+**Total Time**: ~35 minutes (time saved by parallel fix implementation)
+
+### MVP Approach (Bug Fix 1 Only)
+
+If prioritizing timeout errors first:
+
+1. Complete Phase 1 (Setup)
+2. Complete Phase 2 (Bug Fix 1 - NameError)
+3. Test Bug Fix 1 independently
+4. **STOP and VALIDATE**: Verify timeout errors now log correctly
+5. Deploy/merge if urgent
+6. Later: Complete Bug Fix 2 (AttributeError) separately
+
+---
 
 ## Success Criteria
 
-- [ ] All unit tests pass
-- [ ] All integration tests pass
-- [ ] Production DAO files process with >90% success rate
-- [ ] Timeout errors reduced to <7%
-- [ ] JSON parse errors reduced to <4%
-- [ ] No regression in processing time for successful requests
-- [ ] Documentation updated
-- [ ] Code reviewed and merged
+### Before (Production Issues)
+
+- NameError: ~15-20 timeout errors with undefined variable `READ_TIMEOUT`
+- AttributeError: 1 crash blocking frontend PRD generation
+- PRD generation success rate: 0% (blocked by AttributeError)
+
+### After (Target)
+
+- NameError: 0 (timeout value logged correctly as `self.read_timeout`)
+- AttributeError: 0 (validation_rules section skipped safely)
+- PRD generation success rate: 100% (completes without crashes)
+- All existing tests pass (630+ unit, 42+ integration)
+- Test coverage maintained or improved
+
+---
+
+## Testing Validation
+
+### Unit Tests Added
+
+1. **test_ollama_client.py**:
+   - `test_ollama_timeout_logging`: Mock httpx.TimeoutException, verify log message contains correct timeout value
+
+2. **test_prd.py**:
+   - `test_prd_validation_rules_as_strings`: Create form with validation_rules as strings, verify no AttributeError
+
+### Integration Test Validation
+
+- Run frontend PRD generation with production extraction file
+- Verify command completes (exit code 0)
+- Verify no NameError in logs
+- Verify no AttributeError in logs
+- Verify PRD file generated with expected content
+
+### Regression Testing
+
+- All existing ollama_client tests pass
+- All existing prd tests pass
+- All integration tests pass
+- No decrease in test coverage percentages
+
+---
+
+## Notes
+
+- Both fixes are independent (different files)
+- No architectural changes required
+- Backward compatible with existing code
+- No new dependencies needed
+- No breaking changes to public APIs
+- Fixes validated against production log samples
+- Each fix can be tested independently before integration
+- validation_rules fix includes TODO for future enhancement (load rules by ID)
+- Commit after each phase or logical group
+- Reference production log in commit message: `log_cuco-ui-admin_step2_2025-12-18_10-37-44.log`
+
+---
+
+## Future Enhancements (Not in This Feature)
+
+Based on research.md, these are deferred to future features:
+
+1. **Enhancement 1**: Load validation_rules by ID from JSON files
+   - Effort: 2-3 hours
+   - Benefit: Complete PRD with validation rule details
+   - When: If validation rules documentation becomes important
+
+2. **Enhancement 2**: JSON cleaning improvements
+   - Effort: 3-4 hours
+   - Benefit: Reduced LLM JSON parsing failures
+   - When: If/when production logs show JSON parse failures (not seen in current logs)
+
+---
+
+**End of Tasks**

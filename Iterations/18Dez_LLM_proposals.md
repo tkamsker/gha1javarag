@@ -1,122 +1,122 @@
-Excellent! You have some great models already! Here's my recommendation:                                                                                                                                                                                                     
-                                                                                                                                                                                                                                                                               
-  🥇 Use qwen2.5-coder:32b (BEST CHOICE)                                                                                                                                                                                                                                       
-                                                                                                                                                                                                                                                                               
-  This is even better than what we were trying to download! It's the code-specialized model but 32B instead of 7B.                                                                                                                                                             
-                                                                                                                                                                                                                                                                               
-  # Update .env                                                                                                                                                                                                                                                                
-  sed -i 's/OLLAMA_MODEL_NAME=.*/OLLAMA_MODEL_NAME=qwen2.5-coder:32b/' .env                                                                                                                                                                                                    
-                                                                                                                                                                                                                                                                               
-  # Also increase timeout since it's a larger model                                                                                                                                                                                                                            
-  sed -i 's/OLLAMA_READ_TIMEOUT=.*/OLLAMA_READ_TIMEOUT=360/' .env                                                                                                                                                                                                              
-                                                                                                                                                                                                                                                                               
-  # Verify                                                                                                                                                                                                                                                                     
-  cat .env | grep OLLAMA                                                                                                                                                                                                                                                       
-                                                                                                                                                                                                                                                                               
-  # Run                                                                                                                                                                                                                                                                        
-  ./step2.sh cuco-ui-admin                                                                                                                                                                                                                                                     
-                                                                                                                                                                                                                                                                               
-  Expected results:                                                                                                                                                                                                                                                            
-  - ✅ Excellent code understanding (32B parameters)                                                                                                                                                                                                                           
-  - ✅ Best JSON generation quality                                                                                                                                                                                                                                            
-  - ✅ Should handle complex DAOs perfectly                                                                                                                                                                                                                                    
-  - ⚠️ Slower: ~120-150s per file (2.5-3 hours total for 76 files)                                                                                                                                                                                                             
-  - ✅ Success rate: 95%+ expected                                                                                                                                                                                                                                             
-                                                                                                                                                                                                                                                                               
-  ---                                                                                                                                                                                                                                                                          
-  🥈 Alternative: llama3:latest (if you need speed)                                                                                                                                                                                                                            
-                                                                                                                                                                                                                                                                               
-  If qwen2.5-coder:32b is too slow, try this:                                                                                                                                                                                                                                  
-                                                                                                                                                                                                                                                                               
-  sed -i 's/OLLAMA_MODEL_NAME=.*/OLLAMA_MODEL_NAME=llama3:latest/' .env                                                                                                                                                                                                        
-  sed -i 's/OLLAMA_READ_TIMEOUT=.*/OLLAMA_READ_TIMEOUT=240/' .env                                                                                                                                                                                                              
-  ./step2.sh cuco-ui-admin                                                                                                                                                                                                                                                     
-                                                                                                                                                                                                                                                                               
-  Expected results:                                                                                                                                                                                                                                                            
-  - ✅ Much faster: ~45-60s per file (1 hour total)                                                                                                                                                                                                                            
-  - ✅ Good JSON generation                                                                                                                                                                                                                                                    
-  - ⚠️ Success rate: 80-85%                                                                                                                                                                                                                                                    
-                                                                                                                                                                                                                                                                               
-  ---                                                                                                                                                                                                                                                                          
-  🥉 Alternative: deepseek-r1:14b (good balance)                                                                                                                                                                                                                               
-                                                                                                                                                                                                                                                                               
-  Recent model with strong reasoning:                                                                                                                                                                                                                                          
-                                                                                                                                                                                                                                                                               
-  sed -i 's/OLLAMA_MODEL_NAME=.*/OLLAMA_MODEL_NAME=deepseek-r1:14b/' .env                                                                                                                                                                                                      
-  sed -i 's/OLLAMA_READ_TIMEOUT=.*/OLLAMA_READ_TIMEOUT=300/' .env                                                                                                                                                                                                              
-  ./step2.sh cuco-ui-admin                                                                                                                                                                                                                                                     
-                                                                                                                                                                                                                                                                               
-  Expected results:                                                                                                                                                                                                                                                            
-  - ✅ Good reasoning                                                                                                                                                                                                                                                          
-  - ✅ Recent model (Jan 2025)                                                                                                                                                                                                                                                 
-  - ✅ Medium speed: ~90s per file (2 hours total)                                                                                                                                                                                                                             
-  - ✅ Success rate: 85-90%                                                                                                                                                                                                                                                    
-                                                                                                                                                                                                                                                                               
-  ---                                                                                                                                                                                                                                                                          
-  ⚠️ Avoid These                                                                                                                                                                                                                                                               
-                                                                                                                                                                                                                                                                               
-  - ❌ gemma3:12b - Your current failing model                                                                                                                                                                                                                                 
-  - ❌ mistral-large:latest (73 GB) - Way too slow                                                                                                                                                                                                                             
-  - ❌ deepseek-r1:70b (42 GB) - Too slow                                                                                                                                                                                                                                      
-  - ❌ qwen3:30b-thinking - Designed for reasoning, not extraction                                                                                                                                                                                                             
-                                                                                                                                                                                                                                                                               
-  ---                                                                                                                                                                                                                                                                          
-  My Strong Recommendation                                                                                                                                                                                                                                                     
-                                                                                                                                                                                                                                                                               
-  Start with qwen2.5-coder:32b:                                                                                                                                                                                                                                                
-                                                                                                                                                                                                                                                                               
-  # Complete setup                                                                                                                                                                                                                                                             
-  cat > /tmp/update_env.sh <<'EOF'                                                                                                                                                                                                                                             
-  #!/bin/bash                                                                                                                                                                                                                                                                  
-  cd ~/development/Iteration20/gha1javarag                                                                                                                                                                                                                                     
-  sed -i 's/OLLAMA_MODEL_NAME=.*/OLLAMA_MODEL_NAME=qwen2.5-coder:32b/' .env                                                                                                                                                                                                    
-  sed -i 's/OLLAMA_READ_TIMEOUT=.*/OLLAMA_READ_TIMEOUT=360/' .env                                                                                                                                                                                                              
-  echo "Updated .env:"                                                                                                                                                                                                                                                         
-  cat .env | grep OLLAMA                                                                                                                                                                                                                                                       
-  EOF                                                                                                                                                                                                                                                                          
-                                                                                                                                                                                                                                                                               
-  bash /tmp/update_env.sh                                                                                                                                                                                                                                                      
-                                                                                                                                                                                                                                                                               
-  # Run PRD generation                                                                                                                                                                                                                                                         
-  ./step2.sh cuco-ui-admin 2>&1 | tee prd-test-run.log                                                                                                                                                                                                                         
-                                                                                                                                                                                                                                                                               
-  # Monitor progress (in another terminal)                                                                                                                                                                                                                                     
-  tail -f prd-test-run.log | grep -E "✓ Extracted|ERROR|Progress"                                                                                                                                                                                                              
-                                                                                                                                                                                                                                                                               
-  ---                                                                                                                                                                                                                                                                          
-  Compare Models (Optional)                                                                                                                                                                                                                                                    
-                                                                                                                                                                                                                                                                               
-  If you want to test multiple models, run this comparison:                                                                                                                                                                                                                    
-                                                                                                                                                                                                                                                                               
-  # Test 1: qwen2.5-coder:32b (best quality)                                                                                                                                                                                                                                   
-  sed -i 's/OLLAMA_MODEL_NAME=.*/OLLAMA_MODEL_NAME=qwen2.5-coder:32b/' .env                                                                                                                                                                                                    
-  ./step2.sh cuco-ui-admin 2>&1 | tee test-qwen-coder-32b.log                                                                                                                                                                                                                  
-                                                                                                                                                                                                                                                                               
-  # Count successes/failures                                                                                                                                                                                                                                                   
-  echo "Successes: $(grep -c '✓ Extracted entity:' test-qwen-coder-32b.log)"                                                                                                                                                                                                   
-  echo "Failures: $(grep -c 'ERROR.*failed' test-qwen-coder-32b.log)"                                                                                                                                                                                                          
-                                                                                                                                                                                                                                                                               
-  # Test 2: llama3:latest (fastest)                                                                                                                                                                                                                                            
-  sed -i 's/OLLAMA_MODEL_NAME=.*/OLLAMA_MODEL_NAME=llama3:latest/' .env                                                                                                                                                                                                        
-  ./step2.sh cuco-ui-admin 2>&1 | tee test-llama3.log                                                                                                                                                                                                                          
-                                                                                                                                                                                                                                                                               
-  echo "Successes: $(grep -c '✓ Extracted entity:' test-llama3.log)"                                                                                                                                                                                                           
-  echo "Failures: $(grep -c 'ERROR.*failed' test-llama3.log)"                                                                                                                                                                                                                  
-                                                                                                                                                                                                                                                                               
-  ---                                                                                                                                                                                                                                                                          
-  Summary                                                                                                                                                                                                                                                                      
-                                                                                                                                                                                                                                                                               
-  | Model             | Speed          | Quality    | Best For                      |                                                                                                                                                                                          
-  |-------------------|----------------|------------|-------------------------------|                                                                                                                                                                                          
-  | qwen2.5-coder:32b | 🐢 Slow (2.5h) | ⭐⭐⭐⭐⭐ | Best quality, worth the wait  |                                                                                                                                                                                          
-  | deepseek-r1:14b   | 🐇 Medium (2h) | ⭐⭐⭐⭐   | Good balance                  |                                                                                                                                                                                          
-  | llama3:latest     | 🚀 Fast (1h)   | ⭐⭐⭐     | Quick results, decent quality |                                                                                                                                                                                          
-                                                                                                                                                                                                                                                                               
-  My recommendation: Start with qwen2.5-coder:32b - it's perfect for your task and you already have it! The extra time is worth the 95%+ success rate.                                                                                                                         
-                                                                                                                                                                                                                                                                               
-  Ready to run? Execute this:                                                                                                                                                                                                                                                  
-                                                                                                                                                                                                                                                                               
-  cd ~/development/Iteration20/gha1javarag                                                                                                                                                                                                                                     
-  sed -i 's/OLLAMA_MODEL_NAME=.*/OLLAMA_MODEL_NAME=qwen2.5-coder:32b/' .env                                                                                                                                                                                                    
-  sed -i 's/OLLAMA_READ_TIMEOUT=.*/OLLAMA_READ_TIMEOUT=360/' .env                                                                                                                                                                                                              
-  ./step2.sh cuco-ui-admin                                           
+Excellent! You have some great models already! Here's my recommendation: 
+ 
+🥇 Use qwen2.5-coder:32b (BEST CHOICE) 
+ 
+This is even better than what we were trying to download! It's the code-specialized model but 32B instead of 7B. 
+ 
+# Update .env
+sed -i 's/OLLAMA_MODEL_NAME=.*/OLLAMA_MODEL_NAME=qwen2.5-coder:32b/' .env
+ 
+# Also increase timeout since it's a larger model
+sed -i 's/OLLAMA_READ_TIMEOUT=.*/OLLAMA_READ_TIMEOUT=360/' .env
+ 
+# Verify 
+cat .env | grep OLLAMA 
+ 
+# Run
+./step2.sh cuco-ui-admin 
+ 
+Expected results:
+- ✅ Excellent code understanding (32B parameters) 
+- ✅ Best JSON generation quality
+- ✅ Should handle complex DAOs perfectly
+- ⚠️ Slower: ~120-150s per file (2.5-3 hours total for 76 files) 
+- ✅ Success rate: 95%+ expected 
+ 
+---
+🥈 Alternative: llama3:latest (if you need speed)
+ 
+If qwen2.5-coder:32b is too slow, try this:
+ 
+sed -i 's/OLLAMA_MODEL_NAME=.*/OLLAMA_MODEL_NAME=llama3:latest/' .env
+sed -i 's/OLLAMA_READ_TIMEOUT=.*/OLLAMA_READ_TIMEOUT=240/' .env
+./step2.sh cuco-ui-admin 
+ 
+Expected results:
+- ✅ Much faster: ~45-60s per file (1 hour total)
+- ✅ Good JSON generation
+- ⚠️ Success rate: 80-85%
+ 
+---
+🥉 Alternative: deepseek-r1:14b (good balance) 
+ 
+Recent model with strong reasoning:
+ 
+sed -i 's/OLLAMA_MODEL_NAME=.*/OLLAMA_MODEL_NAME=deepseek-r1:14b/' .env
+sed -i 's/OLLAMA_READ_TIMEOUT=.*/OLLAMA_READ_TIMEOUT=300/' .env
+./step2.sh cuco-ui-admin 
+ 
+Expected results:
+- ✅ Good reasoning
+- ✅ Recent model (Jan 2025) 
+- ✅ Medium speed: ~90s per file (2 hours total) 
+- ✅ Success rate: 85-90%
+ 
+---
+⚠️ Avoid These 
+ 
+- ❌ gemma3:12b - Your current failing model 
+- ❌ mistral-large:latest (73 GB) - Way too slow 
+- ❌ deepseek-r1:70b (42 GB) - Too slow
+- ❌ qwen3:30b-thinking - Designed for reasoning, not extraction 
+ 
+---
+My Strong Recommendation 
+ 
+Start with qwen2.5-coder:32b:
+ 
+# Complete setup 
+cat > /tmp/update_env.sh <<'EOF' 
+#!/bin/bash
+cd ~/development/Iteration20/gha1javarag 
+sed -i 's/OLLAMA_MODEL_NAME=.*/OLLAMA_MODEL_NAME=qwen2.5-coder:32b/' .env
+sed -i 's/OLLAMA_READ_TIMEOUT=.*/OLLAMA_READ_TIMEOUT=360/' .env
+echo "Updated .env:" 
+cat .env | grep OLLAMA 
+EOF
+ 
+bash /tmp/update_env.sh
+ 
+# Run PRD generation 
+./step2.sh cuco-ui-admin 2>&1 | tee prd-test-run.log 
+ 
+# Monitor progress (in another terminal) 
+tail -f prd-test-run.log | grep -E "✓ Extracted|ERROR|Progress"
+ 
+---
+Compare Models (Optional)
+ 
+If you want to test multiple models, run this comparison:
+ 
+# Test 1: qwen2.5-coder:32b (best quality) 
+sed -i 's/OLLAMA_MODEL_NAME=.*/OLLAMA_MODEL_NAME=qwen2.5-coder:32b/' .env
+./step2.sh cuco-ui-admin 2>&1 | tee test-qwen-coder-32b.log
+ 
+# Count successes/failures 
+echo "Successes: $(grep -c '✓ Extracted entity:' test-qwen-coder-32b.log)" 
+echo "Failures: $(grep -c 'ERROR.*failed' test-qwen-coder-32b.log)"
+ 
+# Test 2: llama3:latest (fastest)
+sed -i 's/OLLAMA_MODEL_NAME=.*/OLLAMA_MODEL_NAME=llama3:latest/' .env
+./step2.sh cuco-ui-admin 2>&1 | tee test-llama3.log
+ 
+echo "Successes: $(grep -c '✓ Extracted entity:' test-llama3.log)" 
+echo "Failures: $(grep -c 'ERROR.*failed' test-llama3.log)"
+ 
+---
+Summary
+ 
+| Model | Speed| Quality| Best For|
+|-------------------|----------------|------------|-------------------------------|
+| qwen2.5-coder:32b | 🐢 Slow (2.5h) | ⭐⭐⭐⭐⭐ | Best quality, worth the wait|
+| deepseek-r1:14b | 🐇 Medium (2h) | ⭐⭐⭐⭐ | Good balance|
+| llama3:latest | 🚀 Fast (1h) | ⭐⭐⭐ | Quick results, decent quality |
+ 
+My recommendation: Start with qwen2.5-coder:32b - it's perfect for your task and you already have it! The extra time is worth the 95%+ success rate. 
+ 
+Ready to run? Execute this:
+ 
+cd ~/development/Iteration20/gha1javarag 
+sed -i 's/OLLAMA_MODEL_NAME=.*/OLLAMA_MODEL_NAME=qwen2.5-coder:32b/' .env
+sed -i 's/OLLAMA_READ_TIMEOUT=.*/OLLAMA_READ_TIMEOUT=360/' .env
+./step2.sh cuco-ui-admin 
