@@ -106,6 +106,9 @@ class GwtViewAnalyzer:
             # Extract UI field bindings
             ui_fields = self.extract_ui_field_bindings(content)
 
+            # Extract navigation widgets (T064)
+            navigation_widgets = self.extract_navigation_widgets(content)
+
             # Detect implemented interface (Display, etc.)
             implemented_interface = self._detect_implemented_interface(content, class_info)
 
@@ -120,6 +123,7 @@ class GwtViewAnalyzer:
                 'component_type': component_type,
                 'uibinder_template': uibinder_template,
                 'ui_fields': ui_fields,
+                'navigation_widgets': navigation_widgets,
                 'implements_interface': implemented_interface,
                 'presenter_interface': presenter_interface
             }
@@ -128,7 +132,8 @@ class GwtViewAnalyzer:
                 f"Extracted view metadata from {file_path.name}: "
                 f"type={component_type}, "
                 f"uibinder={uibinder_template is not None}, "
-                f"fields={len(ui_fields)}"
+                f"fields={len(ui_fields)}, "
+                f"navigation_widgets={len(navigation_widgets)}"
             )
 
             return metadata
@@ -141,6 +146,7 @@ class GwtViewAnalyzer:
                 'component_type': 'Unknown',
                 'uibinder_template': None,
                 'ui_fields': [],
+                'navigation_widgets': [],
                 'implements_interface': None,
                 'presenter_interface': None,
                 'error': str(e)
@@ -257,6 +263,91 @@ class GwtViewAnalyzer:
 
         self.logger.debug(f"Extracted {len(ui_fields)} @UiField bindings")
         return ui_fields
+
+    def extract_navigation_widgets(self, content: str) -> List[Dict[str, Any]]:
+        """
+        Extract navigation-related widgets from view.
+
+        Implements T064 - Navigation widget extraction.
+
+        Finds:
+        - Buttons with navigation-related names (save, cancel, submit, etc.)
+        - Anchor/Link widgets
+        - Menu items that trigger navigation
+        - Widgets with "get" methods suggesting click handlers
+
+        Args:
+            content: Java source code
+
+        Returns:
+            List of navigation widget dictionaries
+        """
+        widgets = []
+
+        # Pattern 1: Navigation-related button fields
+        # @UiField Button saveButton, @UiField Button cancelButton, etc.
+        nav_button_pattern = r'@UiField\s+Button\s+(\w*(?:save|cancel|submit|ok|close|back|next|delete|add|edit|create|update|view|details|go)(?:Btn|Button)?)\s*;'
+        for match in re.finditer(nav_button_pattern, content, re.IGNORECASE):
+            widget_name = match.group(1)
+            widgets.append({
+                'widget_name': widget_name,
+                'widget_type': 'Button',
+                'navigation_hint': 'action_button',
+                'getter_method': f"get{widget_name[0].upper()}{widget_name[1:]}"
+            })
+
+        # Pattern 2: Anchor/Link widgets
+        anchor_pattern = r'@UiField\s+Anchor\s+(\w+)\s*;'
+        for match in re.finditer(anchor_pattern, content):
+            widget_name = match.group(1)
+            widgets.append({
+                'widget_name': widget_name,
+                'widget_type': 'Anchor',
+                'navigation_hint': 'link',
+                'getter_method': f"get{widget_name[0].upper()}{widget_name[1:]}"
+            })
+
+        # Pattern 3: Hyperlink widgets
+        hyperlink_pattern = r'@UiField\s+Hyperlink\s+(\w+)\s*;'
+        for match in re.finditer(hyperlink_pattern, content):
+            widget_name = match.group(1)
+            widgets.append({
+                'widget_name': widget_name,
+                'widget_type': 'Hyperlink',
+                'navigation_hint': 'link',
+                'getter_method': f"get{widget_name[0].upper()}{widget_name[1:]}"
+            })
+
+        # Pattern 4: Menu items (MenuItem, MenuBar)
+        menuitem_pattern = r'@UiField\s+MenuItem\s+(\w+)\s*;'
+        for match in re.finditer(menuitem_pattern, content):
+            widget_name = match.group(1)
+            widgets.append({
+                'widget_name': widget_name,
+                'widget_type': 'MenuItem',
+                'navigation_hint': 'menu',
+                'getter_method': f"get{widget_name[0].upper()}{widget_name[1:]}"
+            })
+
+        # Pattern 5: Getter methods for widgets (indicates potential click handler)
+        # public Button getSaveButton() or getSaveButton() in Display interface
+        getter_pattern = r'(?:public\s+)?(?:Button|Anchor|Hyperlink|MenuItem|HasClickHandlers)\s+get(\w+(?:Button|Btn|Link)?)\s*\(\s*\)'
+        for match in re.finditer(getter_pattern, content):
+            widget_name = match.group(1)
+
+            # Skip if already found via @UiField
+            if any(w['widget_name'].lower() == widget_name.lower() for w in widgets):
+                continue
+
+            widgets.append({
+                'widget_name': widget_name,
+                'widget_type': 'Unknown',
+                'navigation_hint': 'getter_method',
+                'getter_method': f"get{widget_name}"
+            })
+
+        self.logger.debug(f"Extracted {len(widgets)} navigation widgets")
+        return widgets
 
     def _detect_implemented_interface(
         self,

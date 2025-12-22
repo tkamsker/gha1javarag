@@ -7,10 +7,12 @@ to extract database entity definitions and business rules.
 import logging
 import hashlib
 import json
+import re
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Any, Optional, Set
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
 
 from codeindex.models.prd import (
     DatabaseEntity,
@@ -27,10 +29,26 @@ from codeindex.models.prd import (
     AnalysisLayer,
     VisitStatus,
 )
+from codeindex.models.foreign_key import ForeignKeyRelationship, ForeignKeySource
 from codeindex.services.ollama_client import OllamaClient
+from codeindex.parsers.sql_parser import SQLParser
 from codeindex.utils.retry import retry
+from codeindex.utils.metrics import get_metrics_collector
+from codeindex.models.metrics import ForeignKeyMetric
 
 logger = logging.getLogger(__name__)
+
+
+# ==============================================================================
+# FK Validation Result
+# ==============================================================================
+
+@dataclass
+class FKValidationResult:
+    """Result of FK column validation"""
+    fk: ForeignKeyRelationship
+    is_valid: bool
+    error_message: Optional[str] = None
 
 
 # ==============================================================================
@@ -823,3 +841,431 @@ class DatabaseAnalyzer:
             "entities": len(self.extracted_entities),
             "rules": len(self.extracted_rules)
         }
+
+    # ==========================================================================
+    # Foreign Key Extraction Methods (Feature 007 US2)
+    # ==========================================================================
+
+    def _collect_columns(self, file_path: Path, file_content: str) -> Set[str]:
+        """
+        Collect all column names from a Java DAO/Entity file.
+
+        Extracts columns from:
+        - JPA @Column annotations
+        - Field declarations
+        - iBATIS resultMap entries
+
+        Args:
+            file_path: Path to file
+            file_content: File content
+
+        Returns:
+            Set of column names found in the file
+        """
+        columns: Set[str] = set()
+
+        # Pattern 1: @Column(name = "column_name")
+        column_pattern = re.compile(r'@Column\s*\([^)]*name\s*=\s*"([^"]+)"', re.IGNORECASE)
+        for match in column_pattern.finditer(file_content):
+            columns.add(match.group(1))
+
+        # Pattern 2: @JoinColumn(name = "fk_column")
+        join_column_pattern = re.compile(r'@JoinColumn\s*\([^)]*name\s*=\s*"([^"]+)"', re.IGNORECASE)
+        for match in join_column_pattern.finditer(file_content):
+            columns.add(match.group(1))
+
+        # Pattern 3: Field declarations (private Type fieldName) -> convert to snake_case
+        field_pattern = re.compile(r'private\s+\w+(?:<[^>]+>)?\s+(\w+)\s*;')
+        for match in field_pattern.finditer(file_content):
+            field_name = match.group(1)
+            # Convert camelCase to snake_case
+            snake_case = re.sub('([a-z0-9])([A-Z])', r'\1_\2', field_name).lower()
+            columns.add(snake_case)
+
+        # Pattern 4: iBATIS resultMap <result property="field" column="column_name"/>
+        if file_path.suffix == ".xml":
+            result_pattern = re.compile(r'<result\s+property="[^"]*"\s+column="([^"]+)"', re.IGNORECASE)
+            for match in result_pattern.finditer(file_content):
+                columns.add(match.group(1))
+
+            # iBATIS <id> tag
+            id_pattern = re.compile(r'<id\s+property="[^"]*"\s+column="([^"]+)"', re.IGNORECASE)
+            for match in id_pattern.finditer(file_content):
+                columns.add(match.group(1))
+
+        logger.debug(f"Collected {len(columns)} columns from {file_path.name}: {columns}")
+        return columns
+
+    def _extract_fk_from_java(self, file_path: Path, file_content: str, entity_name: str) -> List[ForeignKeyRelationship]:
+        """
+        Extract foreign keys from Java @JoinColumn annotations.
+
+        Args:
+            file_path: Path to Java file
+            file_content: File content
+            entity_name: Source entity name
+
+        Returns:
+            List of ForeignKeyRelationship from Java annotations
+        """
+        fk_relationships: List[ForeignKeyRelationship] = []
+
+        # Pattern: @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
+        # private UserDao user;
+        join_column_pattern = re.compile(
+            r'@JoinColumn\s*\('
+            r'[^)]*name\s*=\s*"([^"]+)"'  # FK column name
+            r'[^)]*referencedColumnName\s*=\s*"([^"]+)"'  # Target column
+            r'[^)]*\)'
+            r'\s*private\s+(\w+)\s+(\w+);',  # Target entity type and field name
+            re.MULTILINE | re.DOTALL
+        )
+
+        for match in join_column_pattern.finditer(file_content):
+            fk_column = match.group(1)
+            target_column = match.group(2)
+            target_type = match.group(3)  # e.g., UserDao, User
+            field_name = match.group(4)
+
+            # Clean target entity name (remove Dao suffix)
+            target_entity = target_type.replace("Dao", "").replace("DAO", "")
+
+            # Check for nullable attribute
+            nullable = True
+            nullable_match = re.search(r'nullable\s*=\s*(true|false)', match.group(0), re.IGNORECASE)
+            if nullable_match:
+                nullable = nullable_match.group(1).lower() == "true"
+
+            # Check for fetch type
+            fetch_type = None
+            fetch_match = re.search(r'fetch\s*=\s*FetchType\.(\w+)', file_content[max(0, match.start()-200):match.start()])
+            if fetch_match:
+                fetch_type = fetch_match.group(1)
+
+            # Check relationship type (@ManyToOne, @OneToOne, @OneToMany)
+            relationship_type = None
+            if "@ManyToOne" in file_content[max(0, match.start()-100):match.start()]:
+                relationship_type = "ManyToOne"
+            elif "@OneToOne" in file_content[max(0, match.start()-100):match.start()]:
+                relationship_type = "OneToOne"
+            elif "@OneToMany" in file_content[max(0, match.start()-100):match.start()]:
+                relationship_type = "OneToMany"
+
+            fk = ForeignKeyRelationship(
+                source_entity=entity_name,
+                source_column=fk_column,
+                target_entity=target_entity,
+                target_column=target_column,
+                fk_source=ForeignKeySource.JAVA,
+                nullable=nullable,
+                fetch_type=fetch_type,
+                relationship_type=relationship_type
+            )
+
+            fk_relationships.append(fk)
+            logger.debug(f"Extracted Java FK: {fk_column} -> {target_entity}.{target_column}")
+
+        return fk_relationships
+
+    def _extract_fk_from_ibatis(self, file_path: Path, file_content: str, entity_name: str) -> List[ForeignKeyRelationship]:
+        """
+        Extract foreign keys from iBATIS XML associations and collections.
+
+        Args:
+            file_path: Path to iBATIS XML file
+            file_content: File content
+            entity_name: Source entity name
+
+        Returns:
+            List of ForeignKeyRelationship from iBATIS XML
+        """
+        fk_relationships: List[ForeignKeyRelationship] = []
+
+        # Pattern 1: <association property="user" javaType="UserDao">
+        #              <id property="id" column="user_id" />
+        #            </association>
+        association_pattern = re.compile(
+            r'<association\s+property="(\w+)"\s+javaType="([^"]+)"[^>]*>'
+            r'(.*?)'
+            r'</association>',
+            re.MULTILINE | re.DOTALL
+        )
+
+        for match in association_pattern.finditer(file_content):
+            property_name = match.group(1)
+            java_type = match.group(2)
+            association_content = match.group(3)
+
+            # Extract target entity from javaType (e.g., com.example.dao.UserDao -> UserDao)
+            target_entity = java_type.split(".")[-1].replace("Dao", "").replace("DAO", "")
+
+            # Extract FK column from <id> or <result> tags
+            id_pattern = re.compile(r'<id\s+property="(\w+)"\s+column="([^"]+)"', re.IGNORECASE)
+            id_match = id_pattern.search(association_content)
+
+            if id_match:
+                target_column_property = id_match.group(1)
+                fk_column = id_match.group(2)
+
+                fk = ForeignKeyRelationship(
+                    source_entity=entity_name,
+                    source_column=fk_column,
+                    target_entity=target_entity,
+                    target_column=target_column_property,  # Usually "id"
+                    fk_source=ForeignKeySource.IBATIS
+                )
+
+                fk_relationships.append(fk)
+                logger.debug(f"Extracted iBATIS FK: {fk_column} -> {target_entity}.{target_column_property}")
+
+        # Pattern 2: <collection property="notes" ofType="MyNotesDao">
+        #              <result property="userId" column="user_id" />
+        #            </collection>
+        collection_pattern = re.compile(
+            r'<collection\s+property="(\w+)"\s+ofType="([^"]+)"[^>]*>'
+            r'(.*?)'
+            r'</collection>',
+            re.MULTILINE | re.DOTALL
+        )
+
+        for match in collection_pattern.finditer(file_content):
+            property_name = match.group(1)
+            of_type = match.group(2)
+            collection_content = match.group(3)
+
+            # Extract FK from result tags (e.g., <result property="userId" column="user_id"/>)
+            result_pattern = re.compile(r'<result\s+property="(\w+)"\s+column="([^"]+)"', re.IGNORECASE)
+            for result_match in result_pattern.finditer(collection_content):
+                property_field = result_match.group(1)
+                fk_column = result_match.group(2)
+
+                # If property looks like a FK (ends with Id or contains foreign entity name)
+                if "id" in property_field.lower() or property_field.endswith("Id"):
+                    # Infer target entity from property name (e.g., userId -> User)
+                    target_entity = property_field.replace("Id", "").replace("id", "")
+                    target_entity = target_entity[0].upper() + target_entity[1:]  # Capitalize
+
+                    fk = ForeignKeyRelationship(
+                        source_entity=of_type.split(".")[-1].replace("Dao", "").replace("DAO", ""),
+                        source_column=fk_column,
+                        target_entity=target_entity,
+                        target_column="id",
+                        fk_source=ForeignKeySource.IBATIS
+                    )
+
+                    fk_relationships.append(fk)
+                    logger.debug(f"Extracted iBATIS collection FK: {fk_column} -> {target_entity}.id")
+
+        return fk_relationships
+
+    def _validate_fk_columns(
+        self,
+        fk_relationships: List[ForeignKeyRelationship],
+        collected_columns: Set[str]
+    ) -> List[FKValidationResult]:
+        """
+        Validate that FK columns exist in collected columns.
+
+        Args:
+            fk_relationships: List of FK to validate
+            collected_columns: Set of column names collected from entity
+
+        Returns:
+            List of FKValidationResult with validation status
+        """
+        results: List[FKValidationResult] = []
+
+        for fk in fk_relationships:
+            if fk.source_column in collected_columns:
+                # Valid FK
+                results.append(FKValidationResult(
+                    fk=fk,
+                    is_valid=True,
+                    error_message=None
+                ))
+                logger.debug(f"✓ FK column validated: {fk.source_column}")
+            else:
+                # Invalid FK - column not found
+                error_msg = f"Column {fk.source_column} not found in collected columns"
+                results.append(FKValidationResult(
+                    fk=fk,
+                    is_valid=False,
+                    error_message=error_msg
+                ))
+                logger.warning(f"✗ FK validation failed: {error_msg}")
+
+        return results
+
+    def extract_foreign_keys(
+        self,
+        file_path: Path,
+        file_content: str,
+        entity_name: str
+    ) -> List[ForeignKeyRelationship]:
+        """
+        Extract and merge foreign keys from all sources (Java, iBATIS, SQL).
+
+        Implements Feature 007 US2 FK extraction with merge logic.
+
+        Args:
+            file_path: Path to file
+            file_content: File content
+            entity_name: Entity name
+
+        Returns:
+            Merged list of ForeignKeyRelationship with duplicates removed
+        """
+        all_fk: List[ForeignKeyRelationship] = []
+
+        # Extract from Java @JoinColumn
+        if file_path.suffix == ".java":
+            java_fk = self._extract_fk_from_java(file_path, file_content, entity_name)
+            all_fk.extend(java_fk)
+            logger.info(f"Extracted {len(java_fk)} FK from Java annotations")
+
+        # Extract from iBATIS XML
+        if file_path.suffix == ".xml":
+            ibatis_fk = self._extract_fk_from_ibatis(file_path, file_content, entity_name)
+            all_fk.extend(ibatis_fk)
+            logger.info(f"Extracted {len(ibatis_fk)} FK from iBATIS XML")
+
+        # Extract from SQL JOIN statements (T041)
+        sql_fk = self._extract_fk_from_sql(file_content, entity_name)
+        if sql_fk:
+            all_fk.extend(sql_fk)
+            logger.info(f"Extracted {len(sql_fk)} FK from SQL JOIN statements")
+
+        # Merge duplicates using priority: Java (3) > iBATIS (2) > SQL (1)
+        merged_fk = self._merge_fk_by_priority(all_fk)
+
+        logger.info(f"Merged {len(all_fk)} FK into {len(merged_fk)} unique relationships")
+        return merged_fk
+
+    def _extract_fk_from_sql(self, file_content: str, entity_name: str) -> List[ForeignKeyRelationship]:
+        """
+        Extract foreign keys from SQL JOIN statements embedded in Java code.
+
+        Args:
+            file_content: File content (Java or SQL)
+            entity_name: Entity name
+
+        Returns:
+            List of ForeignKeyRelationship from SQL
+        """
+        sql_parser = SQLParser()
+        return sql_parser.extract_foreign_keys_from_joins(file_content)
+
+    def _merge_fk_by_priority(self, fk_list: List[ForeignKeyRelationship]) -> List[ForeignKeyRelationship]:
+        """
+        Merge FK relationships by priority, keeping highest priority source.
+
+        Priority: Java (3) > iBATIS (2) > SQL (1)
+
+        Args:
+            fk_list: List of FK relationships to merge
+
+        Returns:
+            Merged list with duplicates removed (keeping highest priority)
+        """
+        fk_map: Dict[tuple, ForeignKeyRelationship] = {}
+
+        for fk in fk_list:
+            # Create key from entities and columns (ignoring source)
+            key = (fk.source_entity, fk.source_column, fk.target_entity, fk.target_column)
+
+            if key in fk_map:
+                # Duplicate found - keep higher priority
+                existing_fk = fk_map[key]
+                if fk.get_source_priority() > existing_fk.get_source_priority():
+                    fk_map[key] = fk
+                    logger.debug(
+                        f"Merged FK {fk.source_column}: {fk.fk_source.value} "
+                        f"(priority {fk.get_source_priority()}) replaces "
+                        f"{existing_fk.fk_source.value} (priority {existing_fk.get_source_priority()})"
+                    )
+            else:
+                fk_map[key] = fk
+
+        return list(fk_map.values())
+
+    def extract_foreign_keys_from_file(self, file_path: Path) -> List[ForeignKeyRelationship]:
+        """
+        Extract foreign keys from a single DAO/Entity file.
+
+        Wrapper method for integration tests.
+
+        Args:
+            file_path: Path to file
+
+        Returns:
+            List of ForeignKeyRelationship extracted from file
+        """
+        try:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                file_content = f.read()
+
+            # Infer entity name from filename
+            entity_name = file_path.stem.replace("Dao", "").replace("DAO", "")
+
+            # Extract FK
+            fk_relationships = self.extract_foreign_keys(file_path, file_content, entity_name)
+
+            # Log FK metric
+            metric = ForeignKeyMetric(
+                file_path=str(file_path),
+                source_entity=entity_name,
+                fk_count=len(fk_relationships),
+                validation_passed=True,  # Will be validated later
+                sources_used=[fk.fk_source.value for fk in fk_relationships],
+                timestamp=datetime.now()
+            )
+
+            metrics_collector = get_metrics_collector()
+            metrics_collector.add_fk_metric(metric)
+
+            return fk_relationships
+
+        except Exception as e:
+            logger.error(f"Failed to extract FK from {file_path}: {e}")
+            return []
+
+    def merge_foreign_keys(self, fk_lists: List[List[ForeignKeyRelationship]]) -> List[ForeignKeyRelationship]:
+        """
+        Merge FK from multiple sources (e.g., Java files and iBATIS XML).
+
+        Args:
+            fk_lists: List of FK lists from different files
+
+        Returns:
+            Merged list of unique FK relationships
+        """
+        all_fk: List[ForeignKeyRelationship] = []
+        for fk_list in fk_lists:
+            all_fk.extend(fk_list)
+
+        return self._merge_fk_by_priority(all_fk)
+
+    def validate_foreign_keys(
+        self,
+        fk_relationships: List[ForeignKeyRelationship],
+        collected_columns: Set[str]
+    ) -> List[FKValidationResult]:
+        """
+        Validate FK relationships against collected columns.
+
+        Args:
+            fk_relationships: List of FK to validate
+            collected_columns: Set of column names from entity
+
+        Returns:
+            List of FKValidationResult
+        """
+        return self._validate_fk_columns(fk_relationships, collected_columns)
+
+
+# ==============================================================================
+# Type Alias for Backwards Compatibility
+# ==============================================================================
+
+# Alias for integration tests that expect DbAnalyzer
+DbAnalyzer = DatabaseAnalyzer

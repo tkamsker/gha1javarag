@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="MyNotes">
+
+    <!-- Result map with foreign key associations -->
+    <resultMap id="noteResultMap" class="com.example.dao.MyNotesDao">
+        <result property="noteId" column="note_id" />
+        <result property="title" column="title" />
+        <result property="content" column="content" />
+        <result property="createdAt" column="created_at" />
+        <result property="updatedAt" column="updated_at" />
+        <result property="isArchived" column="is_archived" />
+        <result property="priority" column="priority" />
+
+        <!-- Foreign key association to users table -->
+        <association property="user" javaType="com.example.dao.UserDao">
+            <id property="id" column="user_id" />
+        </association>
+
+        <!-- Foreign key association to categories table -->
+        <association property="category" javaType="com.example.dao.CategoryDao">
+            <id property="id" column="category_id" />
+        </association>
+
+        <!-- Foreign key association to projects table -->
+        <association property="project" javaType="com.example.dao.ProjectDao">
+            <id property="projectId" column="project_id" />
+        </association>
+    </resultMap>
+
+    <!-- Result map with nested foreign keys -->
+    <resultMap id="noteWithDetailsMap" class="com.example.dao.MyNotesDao" extends="noteResultMap">
+        <!-- Foreign key to team table -->
+        <association property="team" javaType="com.example.dao.TeamDao">
+            <id property="teamId" column="team_id" />
+            <result property="teamName" column="team_name" />
+        </association>
+    </resultMap>
+
+    <!-- Select query with foreign key columns -->
+    <select id="findNoteById" parameterClass="long" resultMap="noteResultMap">
+        SELECT
+            n.note_id,
+            n.title,
+            n.content,
+            n.user_id,
+            n.category_id,
+            n.project_id,
+            n.created_at,
+            n.updated_at,
+            n.is_archived,
+            n.priority
+        FROM my_notes n
+        WHERE n.note_id = #noteId#
+    </select>
+
+    <!-- Select query with JOIN showing foreign key relationships -->
+    <select id="findNotesByUser" parameterClass="long" resultMap="noteResultMap">
+        SELECT
+            n.note_id,
+            n.title,
+            n.content,
+            n.user_id,
+            n.category_id,
+            n.project_id,
+            n.created_at,
+            n.updated_at,
+            u.username,
+            c.category_name
+        FROM my_notes n
+        INNER JOIN users u ON n.user_id = u.id
+        LEFT JOIN categories c ON n.category_id = c.id
+        WHERE n.user_id = #userId#
+        ORDER BY n.created_at DESC
+    </select>
+
+    <!-- Insert statement with foreign key columns -->
+    <insert id="insertNote" parameterClass="com.example.dao.MyNotesDao">
+        INSERT INTO my_notes (
+            title,
+            content,
+            user_id,
+            category_id,
+            project_id,
+            created_at,
+            is_archived,
+            priority
+        ) VALUES (
+            #title#,
+            #content#,
+            #user.id#,
+            #category.id#,
+            #project.projectId#,
+            NOW(),
+            #isArchived#,
+            #priority#
+        )
+        <selectKey keyProperty="noteId" resultClass="long">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+    <!-- Update statement with foreign key columns -->
+    <update id="updateNote" parameterClass="com.example.dao.MyNotesDao">
+        UPDATE my_notes
+        SET
+            title = #title#,
+            content = #content#,
+            category_id = #category.id#,
+            project_id = #project.projectId#,
+            updated_at = NOW(),
+            is_archived = #isArchived#,
+            priority = #priority#
+        WHERE note_id = #noteId#
+        AND user_id = #user.id#
+    </update>
+
+    <!-- Delete statement -->
+    <delete id="deleteNote" parameterClass="long">
+        DELETE FROM my_notes
+        WHERE note_id = #noteId#
+    </delete>
+
+    <!-- Collection association example -->
+    <resultMap id="userWithNotesMap" class="com.example.dao.UserDao">
+        <id property="id" column="user_id" />
+        <result property="username" column="username" />
+
+        <!-- Collection with foreign key -->
+        <collection property="notes" ofType="com.example.dao.MyNotesDao">
+            <id property="noteId" column="note_id" />
+            <result property="title" column="title" />
+            <result property="userId" column="user_id" />
+        </collection>
+    </resultMap>
+
+</sqlMap>

@@ -154,15 +154,21 @@ class MermaidRenderer:
         self,
         presenters: List[Dict[str, Any]],
         views: List[Dict[str, Any]],
-        style: str = "default"
+        style: str = "default",
+        navigation_graph: Any = None,
+        presenter_view_bindings: Dict[str, Any] = None
     ) -> str:
         """
         Render GWT MVP architecture diagram in Mermaid format.
+
+        Implements T079 (navigation flows) and T080 (binding relationships).
 
         Args:
             presenters: List of presenter artifacts
             views: List of view artifacts
             style: Diagram style
+            navigation_graph: Optional navigation graph with navigation edges
+            presenter_view_bindings: Optional presenter-view-UiBinder bindings
 
         Returns:
             Mermaid diagram content as string
@@ -244,8 +250,31 @@ class MermaidRenderer:
             lines.append("    end")
             lines.append("")
 
-        # Add connections
-        lines.extend(self._generate_gwt_connections(presenters, views, rpc_services, style))
+        # T080: Add UiBinder templates section if bindings provided
+        if presenter_view_bindings and style == "detailed":
+            lines.append("    subgraph UiBinder[\"UiBinder Templates\"]")
+            # Show up to 5 templates
+            template_count = 0
+            for presenter_class, binding in list(presenter_view_bindings.items())[:5]:
+                if binding.get('template_file'):
+                    template_name = Path(binding['template_file']).stem
+                    template_id = self._sanitize_id(f"Template_{template_name}")
+                    confidence = binding.get('confidence', 0) * 100
+                    lines.append(f"        {template_id}[\"{template_name}.ui.xml\\n({confidence:.0f}% confidence)\"]")
+                    template_count += 1
+
+            if template_count == 0:
+                lines.append("        NoTemplates[\"No templates found\"]")
+
+            lines.append("    end")
+            lines.append("")
+
+        # Add connections (T079: includes navigation flows)
+        lines.extend(self._generate_gwt_connections(
+            presenters, views, rpc_services, style,
+            navigation_graph=navigation_graph,
+            presenter_view_bindings=presenter_view_bindings
+        ))
 
         # Styling
         lines.append("")
@@ -350,56 +379,90 @@ class MermaidRenderer:
         presenters: List[Dict[str, Any]],
         views: List[Dict[str, Any]],
         rpc_services: Set[str],
-        style: str
+        style: str,
+        navigation_graph: Any = None,
+        presenter_view_bindings: Dict[str, Any] = None
     ) -> List[str]:
         """
         Generate connections for GWT MVP diagram.
+
+        Implements T079 (navigation flows) and T080 (binding relationships).
 
         Args:
             presenters: List of presenters
             views: List of views
             rpc_services: Set of RPC service names
             style: Diagram style
+            navigation_graph: Optional navigation graph with navigation edges
+            presenter_view_bindings: Optional presenter-view-UiBinder bindings
 
         Returns:
             List of connection lines
         """
         lines = []
 
-        # Presenter -> View connections
-        for presenter in presenters[:10]:
-            semantic = presenter.get('semantic_data', {})
+        # T080: Presenter -> View -> UiBinder connections (if bindings provided)
+        if presenter_view_bindings:
+            for presenter_class, binding in list(presenter_view_bindings.items())[:10]:
+                presenter_name = presenter_class.split('.')[-1]
+                presenter_id = self._sanitize_id(presenter_name)
 
-            # Get presenter name (same logic as render method)
-            presenter_name = semantic.get('presenter_name', '')
-            if not presenter_name or presenter_name == 'View':
-                file_path = presenter.get('file_path', '')
-                if file_path:
-                    from pathlib import Path
-                    presenter_name = Path(file_path).stem
-                if not presenter_name or presenter_name == 'View':
-                    entities = semantic.get('entities', [])
-                    for entity in entities:
-                        if 'Presenter' in entity:
-                            presenter_name = entity
-                            break
-            if not presenter_name:
-                presenter_name = 'UnknownPresenter'
-
-            presenter_id = self._sanitize_id(presenter_name)
-
-            # Try to find matching view by name
-            view_binding = semantic.get('view_binding')
-            if not view_binding or not isinstance(view_binding, str):
-                view_binding = presenter_name.replace('Presenter', 'View')
-
-            for view in views:
-                view_semantic = view.get('semantic_data', {})
-                view_name = view_semantic.get('view_name', '')
-                if view_name and (view_binding in view_name or view_name in presenter_name):
+                view_class = binding.get('view_class')
+                if view_class:
+                    view_name = view_class.split('.')[-1]
                     view_id = self._sanitize_id(view_name)
-                    lines.append(f"    {presenter_id} -->|binds| {view_id}")
-                    break
+
+                    confidence = binding.get('confidence', 0)
+                    pattern = binding.get('binding_pattern', '')
+
+                    if confidence >= 0.7:
+                        label = f"binds ({confidence*100:.0f}%)"
+                    else:
+                        label = "weak binding"
+
+                    lines.append(f"    {presenter_id} -->|{label}| {view_id}")
+
+                    # View -> UiBinder template connection
+                    if binding.get('template_file') and style == "detailed":
+                        template_name = Path(binding['template_file']).stem
+                        template_id = self._sanitize_id(f"Template_{template_name}")
+                        lines.append(f"    {view_id} -->|uses| {template_id}")
+
+        # Original presenter -> View connections (fallback if no bindings)
+        if not presenter_view_bindings:
+            for presenter in presenters[:10]:
+                semantic = presenter.get('semantic_data', {})
+
+                # Get presenter name (same logic as render method)
+                presenter_name = semantic.get('presenter_name', '')
+                if not presenter_name or presenter_name == 'View':
+                    file_path = presenter.get('file_path', '')
+                    if file_path:
+                        from pathlib import Path
+                        presenter_name = Path(file_path).stem
+                    if not presenter_name or presenter_name == 'View':
+                        entities = semantic.get('entities', [])
+                        for entity in entities:
+                            if 'Presenter' in entity:
+                                presenter_name = entity
+                                break
+                if not presenter_name:
+                    presenter_name = 'UnknownPresenter'
+
+                presenter_id = self._sanitize_id(presenter_name)
+
+                # Try to find matching view by name
+                view_binding = semantic.get('view_binding')
+                if not view_binding or not isinstance(view_binding, str):
+                    view_binding = presenter_name.replace('Presenter', 'View')
+
+                for view in views:
+                    view_semantic = view.get('semantic_data', {})
+                    view_name = view_semantic.get('view_name', '')
+                    if view_name and (view_binding in view_name or view_name in presenter_name):
+                        view_id = self._sanitize_id(view_name)
+                        lines.append(f"    {presenter_id} -->|binds| {view_id}")
+                        break
 
         # Presenter -> RPC Service connections
         for presenter in presenters[:10]:
@@ -433,6 +496,23 @@ class MermaidRenderer:
                         lines.append(f"    {presenter_id} -->|{method}| {service_id}")
                     else:
                         lines.append(f"    {presenter_id} --> {service_id}")
+
+        # T079: Add navigation flows if navigation_graph provided
+        if navigation_graph:
+            # Extract navigation edges from graph
+            nav_edges = getattr(navigation_graph, 'edges', [])
+
+            # Add navigation connections (limit to avoid clutter)
+            for source_id, target_id in nav_edges[:10]:
+                # Extract simple names from module IDs
+                source_name = source_id.split('.')[-1] if '.' in source_id else source_id
+                target_name = target_id.split('.')[-1] if '.' in target_id else target_id
+
+                source_node = self._sanitize_id(source_name)
+                target_node = self._sanitize_id(target_name)
+
+                # Add navigation edge with distinct style
+                lines.append(f"    {source_node} -.->|navigates to| {target_node}")
 
         return lines
 

@@ -13,6 +13,7 @@ import click
 
 from codeindex.utils.logging import get_logger
 from codeindex.services.discovery import DiscoveryService
+from codeindex.services.gwt_navigation_analyzer import GWTNavigationAnalyzer
 from codeindex.models.project_configuration import ProjectConfiguration
 # Progress tracking will be added in future iterations
 
@@ -228,6 +229,57 @@ def discover_command(
                     if total_deps_not_found > 0:
                         click.echo(f"  Not found: {total_deps_not_found}")
                     logger.info(f"Resolved {total_deps_resolved} dependencies, {total_deps_not_found} not found")
+
+        # T065: GWT Navigation Analysis Phase
+        # Check for GWT entry points (index.html, index.jsp) in discovered files
+        navigation_graph = None
+        entry_point_files = []
+        for file_artifact in inventory.file_artifacts:
+            file_path = Path(file_artifact.get('file_path', ''))
+            file_name = file_path.name.lower()
+            if file_name in ['index.html', 'index.jsp']:
+                entry_point_files.append(file_path)
+
+        if entry_point_files:
+            if not quiet and output_format == 'text':
+                click.echo(f"\n{'='*60}")
+                click.echo("GWT Navigation Analysis")
+                click.echo("="*60)
+                click.echo(f"Found {len(entry_point_files)} GWT entry point(s)")
+
+            # Analyze navigation starting from first entry point
+            try:
+                analyzer = GWTNavigationAnalyzer(source_dir=effective_dir)
+                navigation_graph = analyzer.build_navigation_graph(
+                    index_file=entry_point_files[0],
+                    source_dir=effective_dir
+                )
+
+                if output_format == 'text':
+                    click.echo(f"Entry point: {entry_point_files[0].name}")
+                    click.echo(f"Modules discovered: {len(navigation_graph.nodes)}")
+                    click.echo(f"Max depth: {navigation_graph.max_depth}")
+                    click.echo(f"Entry modules: {len(navigation_graph.metadata.get('entry_modules', []))}")
+
+                    # Save navigation graph to file
+                    if not dry_run:
+                        nav_graph_file = output.parent / "navigation-graph.json"
+                        nav_graph_file.write_text(
+                            json.dumps(navigation_graph.to_dict(), indent=2),
+                            encoding='utf-8'
+                        )
+                        click.echo(f"✓ Navigation graph saved to: {nav_graph_file}")
+                        logger.info(f"Saved navigation graph to {nav_graph_file}")
+
+                logger.info(
+                    f"Navigation analysis complete: {len(navigation_graph.nodes)} modules, "
+                    f"max depth {navigation_graph.max_depth}"
+                )
+
+            except Exception as e:
+                logger.warning(f"Navigation analysis failed: {e}", exc_info=True)
+                if output_format == 'text':
+                    click.echo(f"⚠ Navigation analysis failed: {e}")
 
         # Save to file if not dry-run
         if not dry_run:

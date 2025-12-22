@@ -350,4 +350,42 @@ def _print_extraction_summary(results, inventory):
 
     if dto_count > 0:
         click.echo(f"\nDTOs classified: {dto_count}")
+
+    # T030: Display timeout metrics summary
+    from codeindex.utils.metrics import get_metrics_collector
+    metrics_collector = get_metrics_collector()
+    timeout_summary = metrics_collector.get_timeout_summary()
+
+    if timeout_summary['total_files'] > 0:
+        click.echo("\n" + "-"*60)
+        click.echo("Timeout Handling Summary")
+        click.echo("-"*60)
+        click.echo(f"Total files processed: {timeout_summary['total_files']}")
+        click.echo(f"Timeouts encountered: {timeout_summary['timeout_count']}")
+        click.echo(f"Successful retries: {timeout_summary['retry_success']}")
+        click.echo(f"Fallback used: {timeout_summary['fallback_count']}")
+        click.echo(f"Failed extractions: {timeout_summary['failed_count']}")
+
+        if timeout_summary['avg_retry_count'] > 0:
+            click.echo(f"Avg retry count: {timeout_summary['avg_retry_count']:.2f}")
+        if timeout_summary['avg_timeout_duration'] > 0:
+            click.echo(f"Avg timeout duration: {timeout_summary['avg_timeout_duration']:.1f}s")
         logger.info(f"Classified {dto_count} Data Transfer Objects")
+
+    # T044: Display FK extraction metrics
+    fk_summary = metrics_collector.get_fk_summary()
+
+    if fk_summary.get('total_extracted', 0) > 0:
+        click.echo("\n" + "-"*60)
+        click.echo("Foreign Key Extraction Summary")
+        click.echo("-"*60)
+        click.echo(f"Total FK extracted: {fk_summary['total_extracted']}")
+        click.echo(f"Validated FK: {fk_summary['validated_count']}")
+        click.echo(f"Failed validation: {fk_summary['failed_validation']}")
+
+        # Sources breakdown
+        sources = fk_summary.get('sources_breakdown', {})
+        if sources:
+            click.echo("\nFK by source:")
+            for source, count in sorted(sources.items()):
+                click.echo(f"  {source}: {count}")

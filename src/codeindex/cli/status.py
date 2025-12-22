@@ -234,7 +234,79 @@ def _show_overall_status(statistics: dict, verbose: bool):
                         click.echo(f"    {artifact_type:20s} {type_count:5,} ({percentage:5.1f}%)")
 
         click.echo()
+
+    # T031: Display timeout metrics if available
+    from codeindex.utils.metrics import get_metrics_collector
+    metrics_collector = get_metrics_collector()
+    timeout_summary = metrics_collector.get_timeout_summary()
+
+    if timeout_summary['total_files'] > 0:
+        click.echo()
+        click.echo("Timeout Handling Metrics:")
         click.echo("-" * 70)
+        click.echo(f"Files with timeout tracking: {timeout_summary['total_files']}")
+        click.echo(f"Timeouts encountered: {timeout_summary['timeout_count']}")
+        click.echo(f"Successful retries: {timeout_summary['retry_success']}")
+        click.echo(f"Fallback used: {timeout_summary['fallback_count']}")
+        click.echo(f"Failed extractions: {timeout_summary['failed_count']}")
+
+        if verbose and timeout_summary['avg_retry_count'] > 0:
+            click.echo(f"Avg retry count: {timeout_summary['avg_retry_count']:.2f}")
+            click.echo(f"Avg timeout duration: {timeout_summary['avg_timeout_duration']:.1f}s")
+
+        click.echo()
+
+    # T045: Display FK extraction metrics
+    fk_summary = metrics_collector.get_fk_summary()
+
+    if fk_summary.get('total_extracted', 0) > 0:
+        click.echo()
+        click.echo("Foreign Key Extraction Metrics:")
+        click.echo("-" * 70)
+        click.echo(f"Total FK extracted: {fk_summary['total_extracted']}")
+        click.echo(f"Validated FK: {fk_summary['validated_count']}")
+        click.echo(f"Failed validation: {fk_summary['failed_validation']}")
+
+        # Sources breakdown in verbose mode
+        if verbose:
+            sources = fk_summary.get('sources_breakdown', {})
+            if sources:
+                click.echo("\nFK by source:")
+                for source, count in sorted(sources.items()):
+                    click.echo(f"  {source}: {count}")
+
+        click.echo()
+
+    # T067: Display GWT Navigation metrics
+    nav_summary = metrics_collector.get_navigation_summary()
+
+    if nav_summary.get('entry_points', 0) > 0:
+        click.echo()
+        click.echo("GWT Navigation Analysis Metrics:")
+        click.echo("-" * 70)
+        click.echo(f"Entry points analyzed: {nav_summary['entry_points']}")
+        click.echo(f"Total modules parsed: {nav_summary['total_modules']}")
+        click.echo(f"Presenters discovered: {nav_summary['total_presenters']}")
+        click.echo(f"Views discovered: {nav_summary['total_views']}")
+        click.echo(f"Activities discovered: {nav_summary['total_activities']}")
+        click.echo(f"Places discovered: {nav_summary['total_places']}")
+        click.echo(f"Navigation edges: {nav_summary['total_navigation_edges']}")
+
+        if nav_summary.get('circular_dependencies', 0) > 0:
+            click.echo(click.style(
+                f"⚠ Circular dependencies: {nav_summary['circular_dependencies']}",
+                fg="yellow"
+            ))
+
+        # Discovery rate in verbose mode
+        if verbose:
+            avg_discovery = nav_summary.get('avg_discovery_rate', 0)
+            if avg_discovery > 0:
+                click.echo(f"\nAvg discovery rate: {avg_discovery:.1f}%")
+
+        click.echo()
+
+    click.echo("-" * 70)
 
 
 def _show_project_status(statistics: dict, verbose: bool):

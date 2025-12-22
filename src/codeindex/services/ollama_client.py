@@ -12,8 +12,10 @@ from pathlib import Path
 
 import httpx
 
-from codeindex.utils.retry import retry
+from codeindex.utils.retry import retry, calculate_exponential_backoff
 from codeindex.models import ArtifactType
+from codeindex.models.metrics import TimeoutMetric
+from codeindex.utils.metrics import get_metrics_collector
 
 logger = logging.getLogger(__name__)
 
@@ -166,6 +168,48 @@ class OllamaClient:
         """Close HTTP client."""
         if self.client:
             self.client.close()
+
+    def _calculate_timeout(self, file_lines: int) -> float:
+        """
+        Calculate adaptive timeout based on file size.
+
+        Formula: timeout = base_timeout * (1 + file_lines / 1000)
+
+        For small files (100 lines): 132s (2.2 minutes)
+        For medium files (500 lines): 180s (3 minutes)
+        For large files (1000 lines): 240s (4 minutes)
+        For very large files (5000 lines): 720s (12 minutes)
+
+        Args:
+            file_lines: Number of lines in the file
+
+        Returns:
+            Adaptive timeout in seconds
+
+        Examples:
+            >>> client = OllamaClient()
+            >>> client._calculate_timeout(100)
+            132.0
+            >>> client._calculate_timeout(500)
+            180.0
+            >>> client._calculate_timeout(2000)
+            360.0
+        """
+        if file_lines < 0:
+            file_lines = 0
+
+        # Use read_timeout as base (default 240s)
+        base_timeout = self.read_timeout
+
+        # Adaptive formula: scale by file size
+        adaptive_timeout = base_timeout * (1 + file_lines / 1000.0)
+
+        logger.debug(
+            f"Calculated adaptive timeout: {adaptive_timeout:.1f}s "
+            f"for file with {file_lines} lines (base={base_timeout}s)"
+        )
+
+        return adaptive_timeout
 
     def _clean_json_response(self, response_text: str) -> str:
         """
@@ -377,6 +421,206 @@ class OllamaClient:
                 "concerns": [],
                 "dependencies": []
             }
+
+    def extract_with_timeout(
+        self,
+        file_path: str,
+        file_content: str,
+        artifact_type: ArtifactType,
+        file_lines: int,
+        pom_context: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Extract metadata with adaptive timeout, exponential backoff retry, and structural fallback.
+
+        Implements Feature 007 US1 requirements:
+        - Adaptive timeout based on file size
+        - 3 retry attempts with exponential backoff [5s, 15s, 45s]
+        - Structural analysis fallback when retries exhausted
+        - Detailed timeout metrics logging
+
+        Args:
+            file_path: Absolute path to source file
+            file_content: Full source code content
+            artifact_type: Type of artifact (service, dao, presenter, etc.)
+            file_lines: Number of lines in file (for timeout calculation)
+            pom_context: Optional POM context
+
+        Returns:
+            ExtractionResult with metadata or fallback indicators
+
+        Raises:
+            ConnectionError: If Ollama is completely unavailable (not retried)
+        """
+        import time
+        from codeindex.services.structural_analyzer import StructuralAnalyzer
+
+        # Calculate adaptive timeout
+        adaptive_timeout = self._calculate_timeout(file_lines)
+
+        # Update HTTP client timeout for this request
+        original_timeout = self.read_timeout
+        self.read_timeout = adaptive_timeout
+        self.client = httpx.Client(
+            base_url=self.base_url,
+            limits=httpx.Limits(
+                max_keepalive_connections=MAX_CONCURRENT_AI_CALLS,
+                max_connections=MAX_CONCURRENT_AI_CALLS
+            ),
+            timeout=httpx.Timeout(
+                connect=self.connect_timeout,
+                read=adaptive_timeout,
+                write=30.0,
+                pool=10.0
+            ),
+            follow_redirects=True
+        )
+
+        # Retry loop with exponential backoff
+        max_attempts = 3
+        retry_count = 0
+        fallback_used = False
+        extraction_quality = 'failed'
+        timeout_duration = 0.0
+        last_error = None
+        result = None
+
+        for attempt in range(1, max_attempts + 1):
+            try:
+                logger.info(
+                    f"Extraction attempt {attempt}/{max_attempts} for {Path(file_path).name} "
+                    f"(timeout={adaptive_timeout:.1f}s)"
+                )
+
+                start_time = time.time()
+
+                # Attempt LLM extraction
+                result = self.extract_semantics(
+                    file_path=file_path,
+                    file_content=file_content,
+                    artifact_type=artifact_type,
+                    pom_context=pom_context
+                )
+
+                elapsed = time.time() - start_time
+
+                # Success - no timeout
+                extraction_quality = 'full'
+                logger.info(
+                    f"Extraction succeeded on attempt {attempt} "
+                    f"in {elapsed:.1f}s for {Path(file_path).name}"
+                )
+                break
+
+            except TimeoutError as e:
+                elapsed = time.time() - start_time
+                timeout_duration = elapsed
+                retry_count = attempt
+                last_error = e
+
+                logger.warning(
+                    f"Timeout on attempt {attempt}/{max_attempts} for {Path(file_path).name} "
+                    f"after {elapsed:.1f}s (threshold={adaptive_timeout:.1f}s)"
+                )
+
+                # If not last attempt, wait with exponential backoff
+                if attempt < max_attempts:
+                    delay = calculate_exponential_backoff(
+                        attempt=attempt,
+                        base_delay=5.0,
+                        multiplier=3.0
+                    )
+                    logger.info(f"Retrying in {delay:.1f}s...")
+                    time.sleep(delay)
+                    continue
+                else:
+                    # Last attempt failed - trigger fallback
+                    logger.warning(
+                        f"All {max_attempts} attempts failed for {Path(file_path).name}, "
+                        f"using structural fallback"
+                    )
+                    fallback_used = True
+
+            except ConnectionError as e:
+                # Ollama unavailable - don't retry, raise immediately
+                logger.error(f"Ollama unavailable: {e}")
+                raise
+
+            except Exception as e:
+                # Other errors - log and continue to fallback
+                logger.error(
+                    f"Unexpected error on attempt {attempt} for {Path(file_path).name}: {e}"
+                )
+                retry_count = attempt
+                last_error = e
+                if attempt >= max_attempts:
+                    fallback_used = True
+
+        # If fallback needed, use structural analyzer
+        if fallback_used:
+            try:
+                logger.info(f"Using structural fallback for {Path(file_path).name}")
+                analyzer = StructuralAnalyzer()
+                structural_metadata = analyzer.extract_basic_metadata(
+                    file_path=file_path,
+                    file_content=file_content
+                )
+
+                # Convert structural metadata to extraction format
+                result = {
+                    "summary": f"Java class: {structural_metadata.get('class_name', Path(file_path).stem)}",
+                    "roles": ["structural_analysis_fallback"],
+                    "entities": [structural_metadata.get('class_name', '')],
+                    "tags": ["fallback", "structural"],
+                    "language": artifact_type.value,
+                    "frameworks": [],
+                    "concerns": [],
+                    "dependencies": structural_metadata.get('imports', [])[:10],  # Limit to 10
+                    "metadata": structural_metadata
+                }
+
+                extraction_quality = 'structural'
+                logger.info(
+                    f"Structural fallback successful for {Path(file_path).name}: "
+                    f"class={structural_metadata.get('class_name')}, "
+                    f"methods={len(structural_metadata.get('methods', []))}"
+                )
+
+            except Exception as e:
+                logger.error(f"Structural fallback also failed for {Path(file_path).name}: {e}")
+                # Return minimal fallback
+                result = {
+                    "summary": f"Code file: {Path(file_path).name}",
+                    "roles": ["fallback_failed"],
+                    "entities": [],
+                    "tags": ["error"],
+                    "language": artifact_type.value,
+                    "frameworks": [],
+                    "concerns": [],
+                    "dependencies": []
+                }
+                extraction_quality = 'failed'
+
+        # Log timeout metric
+        metric = TimeoutMetric(
+            file_path=file_path,
+            timeout_threshold=adaptive_timeout,
+            retry_count=retry_count,
+            fallback_used=fallback_used,
+            extraction_quality=extraction_quality,
+            file_lines=file_lines,
+            timeout_duration=timeout_duration,
+            error_message=str(last_error) if last_error else None
+        )
+
+        # Add metric to global collector
+        metrics_collector = get_metrics_collector()
+        metrics_collector.add_timeout_metric(metric)
+
+        # Restore original timeout
+        self.read_timeout = original_timeout
+
+        return result
 
     def health_check(self) -> bool:
         """

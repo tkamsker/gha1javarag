@@ -499,6 +499,227 @@ The system recognizes these GWT patterns:
 - RemoteServiceServlet inheritance
 - Method parameters and return types
 
+#### GWT Navigation Analysis (Feature 007 - US3)
+
+**NEW**: Comprehensive navigation graph building from entry points with complete UI flow mapping.
+
+**Entry Point Detection**:
+
+The system automatically detects and analyzes GWT entry points:
+
+1. **index.html / index.jsp**:
+   ```html
+   <!-- Detected as GWT entry point -->
+   <script type="text/javascript" language="javascript"
+           src="com.example.Application/com.example.Application.nocache.js">
+   </script>
+   ```
+
+2. **GWT Module Files (*.gwt.xml)**:
+   ```xml
+   <module rename-to='application'>
+       <inherits name='com.google.gwt.user.User'/>
+       <entry-point class='com.example.client.Application'/>
+   </module>
+   ```
+
+**Navigation Graph Building**:
+
+```bash
+# Automatic navigation analysis during discovery
+codeindex discover --source-dir /path/to/gwt-app
+
+# The system:
+# 1. Finds index.html/index.jsp entry points
+# 2. Parses referenced *.gwt.xml modules
+# 3. Follows module inheritance chain (BFS traversal)
+# 4. Discovers all Presenters from entry-point classes
+# 5. Maps Presenter → View → UiBinder relationships
+# 6. Extracts navigation targets (Place/Activity flows)
+# 7. Builds complete navigation graph
+
+# Output files:
+# - discovery-inventory.jsonl: All discovered files
+# - navigation-graph.json: Complete navigation graph
+```
+
+**Navigation Graph Structure**:
+
+```json
+{
+  "entry_modules": ["com.example.Application"],
+  "nodes": {
+    "com.example.Application": {
+      "type": "module",
+      "depth": 0,
+      "entry_points": ["com.example.client.Application"],
+      "inherits": ["com.google.gwt.user.User"]
+    },
+    "com.example.client.UserPresenter": {
+      "type": "presenter",
+      "view_binding": {
+        "view_class": "com.example.client.UserView",
+        "template_file": "/path/to/UserView.ui.xml",
+        "confidence": 1.0
+      },
+      "navigation_targets": ["com.example.client.DashboardPlace"]
+    }
+  },
+  "edges": [
+    ["com.example.Application", "com.google.gwt.user.User"],
+    ["com.example.client.UserPresenter", "com.example.client.DashboardPlace"]
+  ],
+  "max_depth": 3,
+  "metadata": {
+    "total_modules": 5,
+    "total_presenters": 15,
+    "total_views": 15,
+    "circular_dependencies": 0
+  }
+}
+```
+
+**Presenter-View-UiBinder Binding**:
+
+The system maps complete MVP chains with confidence scoring:
+
+```bash
+# Binding detection strategies:
+# 1. Display Interface (40% confidence)
+#    - Inner Display interface in Presenter
+#    - View implements Presenter.Display
+#
+# 2. View Class (35% confidence)
+#    - Naming convention: UserPresenter → UserView
+#    - File existence verification
+#
+# 3. UiBinder Template (25% confidence)
+#    - Template file: UserView.ui.xml
+#    - Widget hierarchy extraction
+
+# High confidence binding (100%):
+# - Display interface ✓
+# - View class ✓
+# - UiBinder template ✓
+
+# Medium confidence binding (75%):
+# - Display interface ✓
+# - View class ✓
+# - UiBinder template ✗
+
+# Low confidence binding (35%):
+# - Display interface ✗
+# - View class ✓ (naming only)
+# - UiBinder template ✗
+```
+
+**Navigation Flow Analysis**:
+
+```bash
+# Check navigation metrics
+codeindex status --verbose
+
+# Shows:
+# GWT Navigation Analysis Metrics:
+# - Entry points analyzed: 1
+# - Total modules parsed: 5
+# - Presenters discovered: 15
+# - Views discovered: 15
+# - Activities discovered: 8
+# - Places discovered: 12
+# - Navigation edges: 24
+# - Circular dependencies: 0
+
+# Inspect navigation graph
+cat output/navigation-graph.json | jq '.nodes | length'
+cat output/navigation-graph.json | jq '.edges | length'
+
+# Find circular dependencies (should be 0)
+cat output/navigation-graph.json | jq '.metadata.circular_dependencies'
+```
+
+**Widget Hierarchy Extraction**:
+
+From UiBinder templates:
+
+```xml
+<!-- UserView.ui.xml -->
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+    <g:VerticalPanel>
+        <g:HorizontalPanel ui:field="topPanel">
+            <g:TextBox ui:field="nameField"/>
+            <g:Button ui:field="saveButton" text="Save"/>
+        </g:HorizontalPanel>
+        <g:HTMLPanel>
+            <g:Label ui:field="statusLabel"/>
+        </g:HTMLPanel>
+    </g:VerticalPanel>
+</ui:UiBinder>
+```
+
+Extracted hierarchy:
+
+```json
+{
+  "widget_type": "VerticalPanel",
+  "depth": 0,
+  "is_container": true,
+  "children": [
+    {
+      "widget_type": "HorizontalPanel",
+      "ui_field": "topPanel",
+      "depth": 1,
+      "children": [
+        {"widget_type": "TextBox", "ui_field": "nameField", "depth": 2},
+        {"widget_type": "Button", "ui_field": "saveButton", "depth": 2}
+      ]
+    },
+    {
+      "widget_type": "HTMLPanel",
+      "depth": 1,
+      "children": [
+        {"widget_type": "Label", "ui_field": "statusLabel", "depth": 2}
+      ]
+    }
+  ]
+}
+```
+
+**Troubleshooting Navigation Analysis**:
+
+```bash
+# Problem: No entry points found
+# Solution: Verify index.html/index.jsp exists with GWT script reference
+ls -la src/main/webapp/index.*
+grep "nocache.js" src/main/webapp/index.html
+
+# Problem: Incomplete module graph
+# Solution: Check *.gwt.xml files are discovered
+find . -name "*.gwt.xml" -type f
+
+# Problem: Low presenter discovery
+# Solution: Verify entry-point classes in *.gwt.xml
+grep "entry-point" */src/**/*.gwt.xml
+
+# Problem: Missing View bindings
+# Solution: Check naming conventions (FooPresenter → FooView)
+# Or verify Display interface implementation
+grep -r "interface Display" --include="*Presenter.java"
+
+# Problem: No widget hierarchy
+# Solution: Verify UiBinder files have proper namespace
+grep "urn:ui:com.google.gwt.uibinder" */src/**/*.ui.xml
+```
+
+**Expected Results**:
+- Entry point detection: 100% (all index.html/jsp files)
+- Module discovery: >95% (follows inheritance chains)
+- Presenter discovery: >90% (from entry-point classes)
+- View binding: >85% (high confidence bindings)
+- Widget hierarchy: 100% (all valid *.ui.xml files)
+- Navigation edges: Complete user flow graph
+
 #### GWT PRD Generation
 
 **NEW**: Generate comprehensive PRDs from GWT metadata with 84.9% coverage.
@@ -862,10 +1083,26 @@ Critical environment variables:
 - `WEAVIATE_URL` - Weaviate endpoint (default: http://localhost:8080)
 - `OLLAMA_URL` - Ollama endpoint (default: http://localhost:11434)
 - `OLLAMA_MODEL_NAME` - Model to use (default: gemma3:12b)
+- `OLLAMA_CONNECT_TIMEOUT` - Ollama connection timeout in seconds (default: 10)
+- `OLLAMA_READ_TIMEOUT` - Ollama read timeout in seconds (default: 300, adaptive based on file size)
 - `MAX_CONCURRENT_AI_CALLS` - Concurrent Ollama requests (default: 10)
 - `BATCH_SIZE` - Weaviate batch size (default: 50)
 - `LOG_LEVEL` - Logging verbosity (DEBUG/INFO/WARNING/ERROR)
 - `OUTPUT_DIR` - Directory for intermediate files (default: ./data)
+
+**Timeout Configuration (Feature 007 - US1)**:
+- **Adaptive Timeout**: The system automatically adjusts read timeout based on file size
+  - Base timeout: 300 seconds (5 minutes)
+  - Additional time: +10 seconds per 1000 lines of code
+  - Large files (>5000 lines) get proportionally longer timeouts
+- **Retry Logic**: Failed extractions are retried with exponential backoff
+  - First retry: Wait 2 seconds
+  - Second retry: Wait 4 seconds
+  - Maximum retries: 3 attempts
+- **Graceful Degradation**: After all retries fail, falls back to structural analysis without AI
+  - Extracts basic structure (class names, method signatures)
+  - Logs timeout metrics for monitoring
+  - Continues processing remaining files
 
 ### OS-Specific Behavior
 
@@ -1009,6 +1246,197 @@ AttributeError: 'str' object has no attribute 'field'
 
 **Verification**: PRD generation completes successfully without AttributeError
 
+### Ollama Timeout Errors (Feature 007 - US1)
+
+**Problem**: Extraction timeouts on large files with errors like:
+```
+TimeoutError: Request to Ollama timed out after 300 seconds
+ReadTimeout: HTTPConnectionPool(host='localhost', port=11434): Read timed out
+```
+
+**Troubleshooting Steps:**
+
+1. **Verify Ollama is running and responsive**:
+   ```bash
+   curl -s http://localhost:11434/api/tags
+   # Should return list of available models
+
+   ollama list
+   # Should show installed models
+   ```
+
+2. **Check timeout configuration** in `.env` or environment:
+   ```bash
+   # Default values
+   OLLAMA_CONNECT_TIMEOUT=10  # Connection timeout (seconds)
+   OLLAMA_READ_TIMEOUT=300    # Read timeout (seconds, adaptive)
+
+   # For very large files (>10,000 lines), consider increasing:
+   OLLAMA_READ_TIMEOUT=600    # 10 minutes
+   ```
+
+3. **Monitor timeout logs** during extraction:
+   ```bash
+   codeindex extract --inventory discovery.jsonl 2>&1 | grep -i timeout
+
+   # Look for patterns:
+   # - "Timeout on attempt 1/3" - Normal retry in progress
+   # - "All retries exhausted" - File will use fallback extraction
+   # - "Fallback extraction succeeded" - Structural analysis completed
+   ```
+
+4. **Check timeout metrics** after completion:
+   ```bash
+   codeindex status --verbose
+
+   # Shows:
+   # - Files with timeout tracking: X
+   # - Timeouts encountered: Y
+   # - Successful retries: Z
+   # - Fallback used: W
+   # - Failed extractions: 0 (should be zero)
+   ```
+
+5. **Analyze fallback quality**:
+   ```bash
+   # Fallback extraction provides:
+   # - Class names and inheritance
+   # - Method signatures
+   # - Field definitions
+   # - Basic structure (no semantic analysis)
+
+   # To check fallback files:
+   grep -l "fallback" output/extraction-results.jsonl
+   ```
+
+**Expected Behavior**:
+- Small files (<1000 lines): Rarely timeout, complete in <30 seconds
+- Medium files (1000-5000 lines): May timeout occasionally, retries usually succeed
+- Large files (>5000 lines): Higher timeout rate, fallback ensures completion
+- Result: Zero failed extractions (100% file coverage with fallback)
+
+**Performance Impact**:
+- Retry overhead: <20% additional time for files that timeout once
+- Fallback extraction: Completes in <5 seconds (no LLM call)
+- Overall pipeline: Minimal impact due to concurrent processing
+
+### Foreign Key Extraction Errors (Feature 007 - US2)
+
+**Problem**: FK validation errors like:
+```
+Foreign key column 'salesInfoId' not found in columns for table 'sales_info'
+FK validation failed for productId, customerId, user_id
+```
+
+**Root Cause**: System attempted to validate FK relationships before collecting all table columns from multiple sources (SQL DDL, iBATIS XML, JPA annotations).
+
+**How FK Extraction Works (Multi-Source)**:
+
+1. **SQL DDL Statements**:
+   ```sql
+   CREATE TABLE orders (
+       order_id INT PRIMARY KEY,
+       customer_id INT,
+       FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+   );
+   ```
+   Extracted: `customer_id → customers.customer_id`
+
+2. **iBATIS XML Mappings**:
+   ```xml
+   <select id="getOrdersByCustomer" resultType="Order">
+       SELECT o.* FROM orders o
+       WHERE o.customer_id = #{customerId}
+   </select>
+   ```
+   Extracted: `customer_id` (inferred from WHERE clause)
+
+3. **JPA/Hibernate Annotations**:
+   ```java
+   @Entity
+   @Table(name = "orders")
+   public class Order {
+       @ManyToOne
+       @JoinColumn(name = "customer_id")
+       private Customer customer;
+   }
+   ```
+   Extracted: `customer_id → Customer` (relationship type: ManyToOne)
+
+**Extraction Process**:
+1. **Phase 1 - Column Collection**: Gather all columns from all sources
+   - SQL: Parse CREATE TABLE statements
+   - iBATIS: Extract column names from SELECT/WHERE clauses
+   - JPA: Read @Column and @JoinColumn annotations
+2. **Phase 2 - FK Detection**: Find foreign key relationships
+   - SQL: FOREIGN KEY constraints
+   - iBATIS: Join conditions and parameterized queries
+   - JPA: @ManyToOne, @OneToMany, @ManyToMany annotations
+3. **Phase 3 - Validation**: Verify FKs reference existing columns
+   - Check source column exists in source table
+   - Check target column exists in target table
+   - Log warnings for missing columns (don't fail)
+
+**Troubleshooting Steps**:
+
+1. **Check FK extraction metrics**:
+   ```bash
+   codeindex status --verbose
+
+   # Shows:
+   # - Total FK extracted: X
+   # - Validated FK: Y
+   # - Failed validation: Z (should be low)
+   # - FK by source: {sql: N, ibatis: M, jpa: K}
+   ```
+
+2. **Inspect failed validations**:
+   ```bash
+   # Check extraction logs for warnings
+   grep "FK validation failed" output/extraction-results.jsonl
+
+   # Common causes:
+   # - Column name mismatch (camelCase vs snake_case)
+   # - Missing table definition
+   # - Incomplete iBATIS mapping
+   ```
+
+3. **Verify multi-source collection**:
+   ```bash
+   # Check that columns are collected from all sources
+   jq '.columns | length' output/extraction-results.jsonl
+
+   # Should show columns from:
+   # - SQL DDL (CREATE TABLE)
+   # - iBATIS queries (SELECT columns)
+   # - JPA annotations (@Column)
+   ```
+
+**Expected Behavior**:
+- FK extraction rate: >90% of relationships detected
+- Validation success: >95% of extracted FKs validate correctly
+- Failed validations: Logged as warnings, don't block processing
+- Result: Complete relationship graph with minor gaps
+
+**Example - Correct Extraction**:
+```bash
+# Input sources:
+# 1. SQL: CREATE TABLE orders (order_id INT, customer_id INT, ...)
+# 2. iBATIS: SELECT * FROM orders WHERE customer_id = #{id}
+# 3. JPA: @JoinColumn(name="customer_id")
+
+# Extracted relationship:
+{
+  "source_table": "orders",
+  "source_column": "customer_id",
+  "target_table": "customers",
+  "target_column": "customer_id",
+  "relationship_type": "ManyToOne",
+  "confidence": "high",
+  "sources": ["sql_ddl", "ibatis_xml", "jpa_annotation"]
+}
+```
+
 
 ## Active Technologies
 - Python 3.8+ (minimum version for type hints and modern async support) (001-java-codebase-indexer)
@@ -1017,6 +1445,8 @@ AttributeError: 'str' object has no attribute 'field'
 - Weaviate vector database (existing - adds GWT-specific metadata fields) (001-gwt-prd-support)
 - Python 3.8+ (minimum for type hints and async support, consistent with Feature 001) (004-maven-dependency-resolution)
 - Weaviate vector database (existing) - extended with DtoArtifact schema (004-maven-dependency-resolution)
+- Python 3.8+ (existing project requirement, type hints mandatory) (007-gwt-navigation-and-error-fixes)
+- Weaviate vector database (persistent storage in weaviate-data/ directory), JSONL files for intermediate pipeline stages (007-gwt-navigation-and-error-fixes)
 
 ## Recent Changes
 - 001-java-codebase-indexer: Added Python 3.8+ (minimum version for type hints and modern async support)

@@ -6,11 +6,59 @@ Used for handling transient failures with external services (Weaviate, Ollama).
 import time
 import functools
 import logging
-from typing import Callable, TypeVar, Any, Type, Tuple
+from typing import Callable, TypeVar, Any, Type, Tuple, Optional
 
 logger = logging.getLogger("codeindex.retry")
 
 T = TypeVar('T')
+
+
+def calculate_exponential_backoff(
+    attempt: int,
+    base_delay: float = 5.0,
+    multiplier: float = 3.0
+) -> float:
+    """
+    Calculate exponential backoff delay for retry attempts.
+
+    Formula: delay = base_delay * (multiplier ** (attempt - 1))
+    For attempt=1: 5s, attempt=2: 15s, attempt=3: 45s (with defaults)
+
+    Args:
+        attempt: Current attempt number (1-based, NOT 0-based)
+        base_delay: Base delay in seconds (default: 5.0)
+        multiplier: Exponential multiplier (default: 3.0)
+
+    Returns:
+        Delay in seconds for this attempt
+
+    Raises:
+        ValueError: If attempt < 1 or parameters are invalid
+
+    Example:
+        >>> calculate_exponential_backoff(1, base_delay=5.0, multiplier=3.0)
+        5.0
+        >>> calculate_exponential_backoff(2, base_delay=5.0, multiplier=3.0)
+        15.0
+        >>> calculate_exponential_backoff(3, base_delay=5.0, multiplier=3.0)
+        45.0
+    """
+    if attempt < 1:
+        raise ValueError(f"attempt must be >= 1, got {attempt}")
+
+    if base_delay <= 0:
+        raise ValueError(f"base_delay must be positive, got {base_delay}")
+
+    if multiplier <= 1.0:
+        raise ValueError(f"multiplier must be > 1.0, got {multiplier}")
+
+    # Calculate delay: base_delay * (multiplier ** (attempt - 1))
+    # attempt=1: base_delay * 1 = base_delay
+    # attempt=2: base_delay * multiplier
+    # attempt=3: base_delay * multiplier^2
+    delay = base_delay * (multiplier ** (attempt - 1))
+
+    return delay
 
 
 def retry(
