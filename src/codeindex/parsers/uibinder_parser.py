@@ -127,12 +127,16 @@ class GwtUiBinderParser:
             # Extract form fields
             form_fields = self.parse_form_fields(root, content)
 
+            # T077: Extract widget hierarchy
+            widget_hierarchy = self.extract_widget_hierarchy(root)
+
             # Extract metadata
             result = {
                 'template_name': file_path.stem,
                 'template_path': str(file_path),
                 'form_fields': form_fields,
                 'field_count': len(form_fields),
+                'widget_hierarchy': widget_hierarchy,
                 'warnings': []
             }
 
@@ -149,6 +153,86 @@ class GwtUiBinderParser:
         except Exception as e:
             self.logger.error(f"Error parsing UiBinder template {file_path}: {e}", exc_info=True)
             return self._error_result(str(e))
+
+    def extract_widget_hierarchy(self, root: ET.Element) -> Dict[str, Any]:
+        """
+        Extract widget hierarchy from UiBinder XML.
+
+        Implements T077 - Widget hierarchy extraction.
+
+        Parses nested widget structure to show container relationships:
+        - Root panels (HTMLPanel, VerticalPanel, etc.)
+        - Nested containers (FlowPanel, HorizontalPanel, etc.)
+        - Leaf widgets (TextBox, Button, etc.)
+
+        Args:
+            root: XML root element
+
+        Returns:
+            Dictionary representing widget tree structure
+        """
+        # Container types we track
+        container_types = {
+            'HTMLPanel', 'VerticalPanel', 'HorizontalPanel', 'FlowPanel',
+            'DockLayoutPanel', 'LayoutPanel', 'SplitLayoutPanel',
+            'TabLayoutPanel', 'StackLayoutPanel', 'ScrollPanel',
+            'SimplePanel', 'FocusPanel', 'FormPanel', 'PopupPanel',
+            'DialogBox', 'DecoratorPanel', 'Grid', 'FlexTable'
+        }
+
+        def build_widget_node(element: ET.Element, depth: int = 0) -> Optional[Dict[str, Any]]:
+            """Recursively build widget node structure"""
+            tag_name = self._strip_namespace(element.tag)
+
+            # Skip non-widget elements
+            if tag_name in ['ui:UiBinder', 'ui:with', 'ui:style', 'ui:image']:
+                return None
+
+            # Get ui:field if present
+            ui_field = element.get('{urn:ui:com.google.gwt.uibinder}field')
+
+            # Build node
+            node = {
+                'widget_type': tag_name,
+                'ui_field': ui_field,
+                'depth': depth,
+                'is_container': tag_name in container_types,
+                'children': []
+            }
+
+            # Add attributes
+            if ui_field:
+                node['attributes'] = {}
+                for attr_key, attr_value in element.attrib.items():
+                    # Skip ui:field (already captured)
+                    if 'field' not in attr_key:
+                        attr_name = self._strip_namespace(attr_key)
+                        node['attributes'][attr_name] = attr_value
+
+            # Recursively process children if this is a container
+            if tag_name in container_types:
+                for child in element:
+                    child_node = build_widget_node(child, depth + 1)
+                    if child_node:
+                        node['children'].append(child_node)
+
+            return node
+
+        # Find the root UI widget (skip ui:UiBinder wrapper)
+        ui_root = None
+        for child in root:
+            tag_name = self._strip_namespace(child.tag)
+            if tag_name not in ['ui:with', 'ui:style', 'ui:image', 'ui:data']:
+                ui_root = child
+                break
+
+        if ui_root is None:
+            return {'widget_type': 'unknown', 'children': []}
+
+        # Build hierarchy starting from root widget
+        hierarchy = build_widget_node(ui_root, depth=0)
+
+        return hierarchy if hierarchy else {'widget_type': 'unknown', 'children': []}
 
     def parse_form_fields(self, root: ET.Element, content: str) -> List[Dict[str, Any]]:
         """

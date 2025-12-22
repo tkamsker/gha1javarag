@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>GWT Application - Test Fixture</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- GWT module script references for testing -->
+    <script type="text/javascript" language="javascript" src="app/app.nocache.js"></script>
+    <script type="text/javascript" language="javascript" src="admin/admin.nocache.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    <noscript>
+        <div style="color: red;">
+            Your web browser must have JavaScript enabled in order for this application to display correctly.
+        </div>
+    </noscript>
+
+    <div id="loading">Loading application...</div>
+
+    <!-- GWT history support -->
+    <iframe src="javascript:''" id="__gwt_historyFrame" tabIndex='-1'
+            style="position:absolute;width:0;height:0;border:0"></iframe>
+
+    <!-- GWT application container -->
+    <div id="gwtAppContainer"></div>
+
+    <!-- Inline GWT active modules for testing regex fallback -->
+    <script type="text/javascript">
+        var __gwt_activeModules = {
+            'app': 'com.example.App',
+            'admin': 'com.example.Admin'
+        };
+    </script>
+</body>
+</html>

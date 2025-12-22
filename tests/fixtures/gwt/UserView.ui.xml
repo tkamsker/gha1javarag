@@ -1,0 +1,121 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+             xmlns:g="urn:import:com.google.gwt.user.client.ui">
+
+    <ui:style>
+        .mainPanel {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .formPanel {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .fieldLabel {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .textBox {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .buttonPanel {
+            margin-top: 20px;
+            text-align: right;
+        }
+
+        .saveButton {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            margin-left: 10px;
+        }
+
+        .cancelButton {
+            background-color: #f44336;
+            color: white;
+            padding: 10px 20px;
+            margin-left: 10px;
+        }
+
+        .deleteButton {
+            background-color: #ff9800;
+            color: white;
+            padding: 10px 20px;
+            margin-left: 10px;
+        }
+
+        .errorPanel {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .loadingPanel {
+            text-align: center;
+            padding: 40px;
+        }
+    </ui:style>
+
+    <g:VerticalPanel styleName="{style.mainPanel}">
+        <!-- Header -->
+        <g:HTMLPanel>
+            <h2>User Management</h2>
+        </g:HTMLPanel>
+
+        <!-- Error Panel (hidden by default) -->
+        <g:VerticalPanel ui:field="errorPanel" styleName="{style.errorPanel}">
+            <g:Label ui:field="errorLabel" />
+        </g:VerticalPanel>
+
+        <!-- Loading Panel (hidden by default) -->
+        <g:VerticalPanel ui:field="loadingPanel" styleName="{style.loadingPanel}">
+            <g:Label text="Loading..." />
+        </g:VerticalPanel>
+
+        <!-- Form Panel -->
+        <g:VerticalPanel ui:field="formPanel" styleName="{style.formPanel}">
+            <!-- Username Field -->
+            <g:HTMLPanel>
+                <label class="{style.fieldLabel}">Username:</label>
+            </g:HTMLPanel>
+            <g:TextBox ui:field="usernameTextBox" styleName="{style.textBox}" />
+
+            <!-- Email Field -->
+            <g:HTMLPanel>
+                <label class="{style.fieldLabel}">Email:</label>
+            </g:HTMLPanel>
+            <g:TextBox ui:field="emailTextBox" styleName="{style.textBox}" />
+
+            <!-- Status Display -->
+            <g:HorizontalPanel>
+                <g:HTMLPanel>
+                    <label class="{style.fieldLabel}">Status:</label>
+                </g:HTMLPanel>
+                <g:Label ui:field="statusLabel" />
+            </g:HorizontalPanel>
+
+            <!-- Button Panel -->
+            <g:HorizontalPanel styleName="{style.buttonPanel}">
+                <g:Button ui:field="viewDetailsButton" text="View Details" />
+                <g:Button ui:field="saveButton" text="Save" styleName="{style.saveButton}" />
+                <g:Button ui:field="cancelButton" text="Cancel" styleName="{style.cancelButton}" />
+                <g:Button ui:field="deleteButton" text="Delete" styleName="{style.deleteButton}" />
+            </g:HorizontalPanel>
+        </g:VerticalPanel>
+    </g:VerticalPanel>
+
+</ui:UiBinder>

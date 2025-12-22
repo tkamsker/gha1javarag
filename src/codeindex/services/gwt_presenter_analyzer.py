@@ -428,13 +428,19 @@ class GwtPresenterAnalyzer:
         """
         Extract navigation logic from presenter.
 
-        Finds PlaceController.goTo() calls and navigateTo() calls.
+        Implements T063 - Enhanced navigation target extraction.
+
+        Finds:
+        - PlaceController.goTo() calls
+        - History.newItem() calls
+        - navigateTo() URL calls
+        - Activity navigation patterns
 
         Args:
             content: Java source code
 
         Returns:
-            List of navigation dictionaries
+            List of navigation dictionaries with type, target, and source method
         """
         navigation = []
 
@@ -452,7 +458,8 @@ class GwtPresenterAnalyzer:
             navigation.append({
                 'navigation_type': 'place',
                 'target': place_name,
-                'source_method': source_method
+                'source_method': source_method,
+                'pattern': 'PlaceController.goTo'
             })
 
         # Pattern 2: view.navigateTo("/some/url") or navigateTo() with string concatenation
@@ -466,7 +473,55 @@ class GwtPresenterAnalyzer:
             navigation.append({
                 'navigation_type': 'url',
                 'target': url,
-                'source_method': source_method
+                'source_method': source_method,
+                'pattern': 'navigateTo'
+            })
+
+        # Pattern 3: History.newItem("token") or History.newItem(token, true)
+        history_pattern = r'History\.newItem\s*\(\s*"([^"]+)"'
+        for match in re.finditer(history_pattern, content):
+            token = match.group(1)
+
+            source_method = self._find_containing_method(content, match.start())
+
+            navigation.append({
+                'navigation_type': 'history_token',
+                'target': token,
+                'source_method': source_method,
+                'pattern': 'History.newItem'
+            })
+
+        # Pattern 4: Activity navigation - ActivityManager with Place
+        # Example: activityManager.setActivity(new SomeActivity(...))
+        activity_pattern = r'\.setActivity\s*\(\s*new\s+([\w.]+Activity)'
+        for match in re.finditer(activity_pattern, content):
+            activity_name = match.group(1)
+            # Extract just the class name if fully qualified
+            if '.' in activity_name:
+                activity_name = activity_name.split('.')[-1]
+
+            source_method = self._find_containing_method(content, match.start())
+
+            navigation.append({
+                'navigation_type': 'activity',
+                'target': activity_name,
+                'source_method': source_method,
+                'pattern': 'ActivityManager.setActivity'
+            })
+
+        # Pattern 5: goTo method calls (custom navigation methods)
+        # Example: goToDashboard(), goToUserDetails(userId)
+        goto_method_pattern = r'\bgoTo(\w+)\s*\('
+        for match in re.finditer(goto_method_pattern, content):
+            target_name = match.group(1)
+
+            source_method = self._find_containing_method(content, match.start())
+
+            navigation.append({
+                'navigation_type': 'method',
+                'target': f"goTo{target_name}",
+                'source_method': source_method,
+                'pattern': 'goTo method'
             })
 
         self.logger.debug(f"Extracted {len(navigation)} navigation calls")

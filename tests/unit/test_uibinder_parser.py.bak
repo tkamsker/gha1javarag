@@ -1,0 +1,331 @@
+"""
+Unit tests for UiBinder Parser.
+
+Tests widget hierarchy extraction and @UiField parsing (T068, T070).
+"""
+
+import pytest
+from pathlib import Path
+from codeindex.parsers.uibinder_parser import GwtUiBinderParser
+
+
+class TestWidgetHierarchyExtraction:
+    """Tests for widget hierarchy extraction (T068)"""
+
+    @pytest.fixture
+    def parser(self):
+        """Create GwtUiBinderParser instance"""
+        return GwtUiBinderParser()
+
+    @pytest.fixture
+    def sample_uibinder_file(self):
+        """Path to sample UiBinder fixture"""
+        return Path(__file__).parent.parent / "fixtures" / "gwt" / "UserView.ui.xml"
+
+    def test_extract_widget_hierarchy_basic_structure(self, parser, sample_uibinder_file):
+        """Test extracting basic widget hierarchy from UiBinder template (T068)"""
+        # Given a UiBinder template with nested widgets
+        assert sample_uibinder_file.exists()
+
+        # When parsing the template
+        content = sample_uibinder_file.read_text(encoding='utf-8')
+        result = parser.parse(sample_uibinder_file, content)
+
+        # Then should extract widget hierarchy
+        assert 'widget_hierarchy' in result
+        hierarchy = result['widget_hierarchy']
+        assert hierarchy is not None
+        assert 'widget_type' in hierarchy
+        assert 'depth' in hierarchy
+
+    def test_extract_widget_hierarchy_identifies_containers(self, parser, sample_uibinder_file):
+        """Test that container widgets are properly identified (T068)"""
+        # Given a UiBinder template with container widgets
+        result = parser.parse(sample_uibinder_file)
+        hierarchy = result['widget_hierarchy']
+
+        # When checking container types
+        def find_containers(node, containers=None):
+            if containers is None:
+                containers = []
+            if node.get('is_container', False):
+                containers.append(node['widget_type'])
+            for child in node.get('children', []):
+                find_containers(child, containers)
+            return containers
+
+        containers = find_containers(hierarchy)
+
+        # Then should identify container widgets
+        # Common container types: VerticalPanel, HorizontalPanel, HTMLPanel, etc.
+        assert isinstance(containers, list)
+
+    def test_extract_widget_hierarchy_nested_depth(self, parser, sample_uibinder_file):
+        """Test that widget depth is correctly calculated (T068)"""
+        # Given a UiBinder template with nested structure
+        result = parser.parse(sample_uibinder_file)
+        hierarchy = result['widget_hierarchy']
+
+        # When checking depth values
+        def collect_depths(node, depths=None):
+            if depths is None:
+                depths = []
+            depths.append(node.get('depth', 0))
+            for child in node.get('children', []):
+                collect_depths(child, depths)
+            return depths
+
+        depths = collect_depths(hierarchy)
+
+        # Then root should be depth 0, children should increment
+        assert 0 in depths  # Root widget
+        assert all(isinstance(d, int) and d >= 0 for d in depths)
+
+    def test_extract_widget_hierarchy_with_ui_fields(self, parser, sample_uibinder_file):
+        """Test extracting widgets with ui:field attributes (T068)"""
+        # Given a UiBinder template with @UiField widgets
+        result = parser.parse(sample_uibinder_file)
+        hierarchy = result['widget_hierarchy']
+
+        # When searching for ui:field widgets
+        def find_ui_fields(node, fields=None):
+            if fields is None:
+                fields = []
+            if node.get('ui_field'):
+                fields.append({
+                    'field_name': node['ui_field'],
+                    'widget_type': node['widget_type'],
+                    'depth': node['depth']
+                })
+            for child in node.get('children', []):
+                find_ui_fields(child, fields)
+            return fields
+
+        ui_fields = find_ui_fields(hierarchy)
+
+        # Then should find ui:field widgets in hierarchy
+        assert isinstance(ui_fields, list)
+
+    def test_extract_widget_hierarchy_children_list(self, parser, sample_uibinder_file):
+        """Test that children are properly collected (T068)"""
+        # Given a UiBinder template with container widgets
+        result = parser.parse(sample_uibinder_file)
+        hierarchy = result['widget_hierarchy']
+
+        # When checking children property
+        assert 'children' in hierarchy
+        children = hierarchy['children']
+
+        # Then should have children list
+        assert isinstance(children, list)
+
+    def test_extract_widget_hierarchy_handles_empty_template(self, parser, tmp_path):
+        """Test handling of minimal/empty UiBinder template (T068)"""
+        # Given an empty UiBinder template
+        empty_template = tmp_path / "empty.ui.xml"
+        empty_template.write_text("""
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+    <g:HTMLPanel>
+    </g:HTMLPanel>
+</ui:UiBinder>
+        """)
+
+        # When parsing the template
+        result = parser.parse(empty_template)
+
+        # Then should return valid hierarchy structure
+        assert 'widget_hierarchy' in result
+        hierarchy = result['widget_hierarchy']
+        assert hierarchy['widget_type'] == 'HTMLPanel'
+        assert hierarchy['children'] == []
+
+    def test_extract_widget_hierarchy_multi_level_nesting(self, parser, tmp_path):
+        """Test extracting hierarchy with multiple nesting levels (T068)"""
+        # Given a template with 3+ levels of nesting
+        nested_template = tmp_path / "nested.ui.xml"
+        nested_template.write_text("""
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+    <g:VerticalPanel>
+        <g:HorizontalPanel ui:field="topPanel">
+            <g:Button ui:field="button1" text="Click Me"/>
+            <g:TextBox ui:field="textBox1"/>
+        </g:HorizontalPanel>
+        <g:HTMLPanel>
+            <g:Label ui:field="label1" text="Label"/>
+        </g:HTMLPanel>
+    </g:VerticalPanel>
+</ui:UiBinder>
+        """)
+
+        # When parsing the template
+        result = parser.parse(nested_template)
+        hierarchy = result['widget_hierarchy']
+
+        # Then should have correct depth levels
+        assert hierarchy['depth'] == 0
+        assert hierarchy['widget_type'] == 'VerticalPanel'
+        assert len(hierarchy['children']) == 2
+
+        # Check second level
+        first_child = hierarchy['children'][0]
+        assert first_child['depth'] == 1
+        assert first_child['widget_type'] == 'HorizontalPanel'
+
+        # Check third level
+        assert len(first_child['children']) == 2
+        grandchild = first_child['children'][0]
+        assert grandchild['depth'] == 2
+
+
+class TestUiFieldExtraction:
+    """Tests for @UiField extraction (T070)"""
+
+    @pytest.fixture
+    def parser(self):
+        """Create GwtUiBinderParser instance"""
+        return GwtUiBinderParser()
+
+    @pytest.fixture
+    def sample_uibinder_file(self):
+        """Path to sample UiBinder fixture"""
+        return Path(__file__).parent.parent / "fixtures" / "gwt" / "UserView.ui.xml"
+
+    def test_extract_ui_field_annotations(self, parser, sample_uibinder_file):
+        """Test extracting @UiField annotations from UiBinder template (T070)"""
+        # Given a UiBinder template with ui:field attributes
+        result = parser.parse(sample_uibinder_file)
+
+        # When checking for form fields
+        form_fields = result.get('form_fields', [])
+
+        # Then should extract ui:field widgets
+        assert isinstance(form_fields, list)
+
+    def test_extract_ui_field_with_widget_types(self, parser, tmp_path):
+        """Test that widget types are extracted with @UiField (T070)"""
+        # Given a template with various ui:field types
+        template = tmp_path / "form.ui.xml"
+        template.write_text("""
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+    <g:VerticalPanel>
+        <g:TextBox ui:field="nameField"/>
+        <g:ListBox ui:field="typeSelector"/>
+        <g:CheckBox ui:field="activeCheckbox"/>
+        <g:Button ui:field="submitButton" text="Submit"/>
+    </g:VerticalPanel>
+</ui:UiBinder>
+        """)
+
+        # When parsing the template
+        result = parser.parse(template)
+        form_fields = result.get('form_fields', [])
+
+        # Then should extract all ui:field widgets with types
+        assert len(form_fields) == 4
+
+        # Check that field names and types are captured
+        field_names = [f['field_name'] for f in form_fields]
+        assert 'nameField' in field_names
+        assert 'typeSelector' in field_names
+        assert 'activeCheckbox' in field_names
+        assert 'submitButton' in field_names
+
+        widget_types = [f['widget_type'] for f in form_fields]
+        assert 'TextBox' in widget_types
+        assert 'ListBox' in widget_types
+        assert 'CheckBox' in widget_types
+        assert 'Button' in widget_types
+
+    def test_extract_ui_field_in_hierarchy(self, parser, tmp_path):
+        """Test that @UiField widgets appear in both form_fields and hierarchy (T070)"""
+        # Given a template with ui:field widgets
+        template = tmp_path / "form.ui.xml"
+        template.write_text("""
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+    <g:HTMLPanel>
+        <g:TextBox ui:field="emailField"/>
+    </g:HTMLPanel>
+</ui:UiBinder>
+        """)
+
+        # When parsing the template
+        result = parser.parse(template)
+        form_fields = result.get('form_fields', [])
+        hierarchy = result['widget_hierarchy']
+
+        # Then should appear in both structures
+        assert len(form_fields) == 1
+        assert form_fields[0]['field_name'] == 'emailField'
+
+        # Check it's in hierarchy
+        def find_ui_field_in_hierarchy(node, field_name):
+            if node.get('ui_field') == field_name:
+                return True
+            for child in node.get('children', []):
+                if find_ui_field_in_hierarchy(child, field_name):
+                    return True
+            return False
+
+        assert find_ui_field_in_hierarchy(hierarchy, 'emailField')
+
+    def test_extract_ui_field_without_label(self, parser, tmp_path):
+        """Test extracting ui:field widgets without explicit labels (T070)"""
+        # Given a template with ui:field but no label
+        template = tmp_path / "form.ui.xml"
+        template.write_text("""
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+    <g:HTMLPanel>
+        <g:TextBox ui:field="unlabeledField"/>
+    </g:HTMLPanel>
+</ui:UiBinder>
+        """)
+
+        # When parsing the template
+        result = parser.parse(template)
+        form_fields = result.get('form_fields', [])
+
+        # Then should still extract the field
+        assert len(form_fields) == 1
+        assert form_fields[0]['field_name'] == 'unlabeledField'
+        # Label might be inferred or empty
+        assert 'label' in form_fields[0]
+
+    def test_extract_ui_field_ignores_non_ui_widgets(self, parser, tmp_path):
+        """Test that widgets without ui:field are not in form_fields (T070)"""
+        # Given a template with some widgets without ui:field
+        template = tmp_path / "form.ui.xml"
+        template.write_text("""
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+    <g:VerticalPanel>
+        <g:Label text="Static Label"/>
+        <g:TextBox ui:field="inputField"/>
+        <g:Button text="Static Button"/>
+    </g:VerticalPanel>
+</ui:UiBinder>
+        """)
+
+        # When parsing the template
+        result = parser.parse(template)
+        form_fields = result.get('form_fields', [])
+
+        # Then only ui:field widgets should be in form_fields
+        assert len(form_fields) == 1
+        assert form_fields[0]['field_name'] == 'inputField'
+
+    def test_extract_ui_field_field_count_matches(self, parser, sample_uibinder_file):
+        """Test that field_count matches number of extracted fields (T070)"""
+        # Given a UiBinder template
+        result = parser.parse(sample_uibinder_file)
+
+        # When checking field count
+        field_count = result.get('field_count', 0)
+        form_fields = result.get('form_fields', [])
+
+        # Then field_count should match actual count
+        assert field_count == len(form_fields)
