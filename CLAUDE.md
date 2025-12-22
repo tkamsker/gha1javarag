@@ -1477,3 +1477,9 @@ FK validation failed for productId, customerId, user_id
   - All tests passing (575 total: 569 baseline + 6 new)
   - Zero production errors expected for timeout logging and PRD generation
   - Documented fixes in CLAUDE.md troubleshooting section
+- 007-gwt-navigation-analysis: Production bug fix (Commit 21687ae)
+  - Fixed AttributeError in discover.py:237 (`inventory.file_artifacts` doesn't exist)
+  - Corrected GWT navigation analysis (T065) to iterate over `inventory.projects[].files`
+  - Production pipeline now completes successfully (13,639 files discovered)
+  - All 686 unit tests passing
+  - GWT entry point detection (index.html, index.jsp) functional
