@@ -38,7 +38,6 @@ class MermaidRenderer:
             if not name or name == 'View':
                 source_file = component.get('source_file') or component.get('file_path', '')
                 if source_file:
-                    from pathlib import Path
                     name = Path(source_file).stem
 
             # Try entities list
@@ -191,7 +190,6 @@ class MermaidRenderer:
                     # Try to extract from file path
                     file_path = presenter.get('file_path', '')
                     if file_path:
-                        from pathlib import Path
                         name = Path(file_path).stem
                     # Or use first entity that ends with Presenter
                     if not name or name == 'View':
@@ -438,7 +436,6 @@ class MermaidRenderer:
                 if not presenter_name or presenter_name == 'View':
                     file_path = presenter.get('file_path', '')
                     if file_path:
-                        from pathlib import Path
                         presenter_name = Path(file_path).stem
                     if not presenter_name or presenter_name == 'View':
                         entities = semantic.get('entities', [])
@@ -473,7 +470,6 @@ class MermaidRenderer:
             if not presenter_name or presenter_name == 'View':
                 file_path = presenter.get('file_path', '')
                 if file_path:
-                    from pathlib import Path
                     presenter_name = Path(file_path).stem
                 if not presenter_name or presenter_name == 'View':
                     entities = semantic.get('entities', [])
