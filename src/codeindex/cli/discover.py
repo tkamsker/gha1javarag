@@ -234,11 +234,13 @@ def discover_command(
         # Check for GWT entry points (index.html, index.jsp) in discovered files
         navigation_graph = None
         entry_point_files = []
-        for file_artifact in inventory.file_artifacts:
-            file_path = Path(file_artifact.get('file_path', ''))
-            file_name = file_path.name.lower()
-            if file_name in ['index.html', 'index.jsp']:
-                entry_point_files.append(file_path)
+        # Iterate over projects, then their files (inventory.projects[].files)
+        for project in inventory.projects:
+            for file_artifact in project.get('files', []):
+                file_path = Path(file_artifact.get('file_path', ''))
+                file_name = file_path.name.lower()
+                if file_name in ['index.html', 'index.jsp']:
+                    entry_point_files.append(file_path)
 
         if entry_point_files:
             if not quiet and output_format == 'text':
