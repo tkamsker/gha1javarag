@@ -1211,13 +1211,19 @@ class DatabaseAnalyzer:
             fk_relationships = self.extract_foreign_keys(file_path, file_content, entity_name)
 
             # Log FK metric
+            # Count FK by source
+            fk_from_java = sum(1 for fk in fk_relationships if fk.fk_source == ForeignKeySource.JAVA)
+            fk_from_ibatis = sum(1 for fk in fk_relationships if fk.fk_source == ForeignKeySource.IBATIS)
+            fk_from_sql = sum(1 for fk in fk_relationships if fk.fk_source == ForeignKeySource.SQL)
+
             metric = ForeignKeyMetric(
-                file_path=str(file_path),
-                source_entity=entity_name,
-                fk_count=len(fk_relationships),
-                validation_passed=True,  # Will be validated later
-                sources_used=[fk.fk_source.value for fk in fk_relationships],
-                timestamp=datetime.now()
+                dao_file=str(file_path),
+                fk_extracted=len(fk_relationships),
+                fk_from_java=fk_from_java,
+                fk_from_ibatis=fk_from_ibatis,
+                fk_from_sql=fk_from_sql,
+                validation_errors=0,  # Will be updated during validation
+                columns_collected=0   # Will be updated if column collection runs
             )
 
             metrics_collector = get_metrics_collector()

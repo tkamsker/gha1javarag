@@ -9,7 +9,9 @@ from pathlib import Path
 from typing import List
 
 from codeindex.models.foreign_key import ForeignKeyRelationship, ForeignKeySource
-from codeindex.services.db_analyzer import DbAnalyzer
+from codeindex.services.db_analyzer import DatabaseAnalyzer
+from codeindex.services.ollama_client import OllamaClient
+from unittest.mock import Mock
 
 
 class TestDaoAnalysisWithMultipleFKSources:
@@ -17,8 +19,16 @@ class TestDaoAnalysisWithMultipleFKSources:
 
     @pytest.fixture
     def db_analyzer(self):
-        """Create DbAnalyzer instance"""
-        return DbAnalyzer()
+        """Create DatabaseAnalyzer instance"""
+        # Create mock OllamaClient (not needed for FK extraction)
+        mock_ollama = Mock(spec=OllamaClient)
+        output_dir = Path(__file__).parent.parent / "fixtures"
+        source_dir = Path(__file__).parent.parent / "fixtures" / "dao"
+        return DatabaseAnalyzer(
+            ollama_client=mock_ollama,
+            output_dir=output_dir,
+            source_dir=source_dir
+        )
 
     @pytest.fixture
     def my_notes_dao_path(self) -> Path:
@@ -64,18 +74,18 @@ class TestDaoAnalysisWithMultipleFKSources:
 
     def test_analyze_ibatis_xml_fk(self, db_analyzer, my_notes_ibatis_path):
         """Test extracting FK from iBATIS XML associations"""
-        # Given notes.ibatis.xml with multiple associations
+        # Given notes.ibatis.xml with multiple associations and SQL statements
         assert my_notes_ibatis_path.exists()
 
         # When analyzing the XML file
         fk_relationships = db_analyzer.extract_foreign_keys_from_file(my_notes_ibatis_path)
 
-        # Then should extract FK from associations
+        # Then should extract FK from associations and SQL
         assert len(fk_relationships) >= 2
 
-        # Check FK source is iBATIS
-        for fk in fk_relationships:
-            assert fk.fk_source == ForeignKeySource.IBATIS
+        # Check FK sources include iBATIS and potentially SQL
+        fk_sources = {fk.fk_source for fk in fk_relationships}
+        assert ForeignKeySource.IBATIS in fk_sources or ForeignKeySource.SQL in fk_sources
 
     def test_analyze_sql_join_fk(self, db_analyzer, single_turnaround_dao_path):
         """Test extracting FK from SQL JOIN statements"""

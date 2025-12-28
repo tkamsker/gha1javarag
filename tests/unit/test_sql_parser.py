@@ -362,3 +362,104 @@ class TestIntegration:
         types = result['statement_types']
         assert 'SELECT' in types
         assert 'UPDATE' in types
+
+
+# Test FK extraction from JOIN statements (T034)
+class TestExtractFKFromJoinStatements:
+    """Test extracting foreign key relationships from SQL JOIN ON clauses."""
+
+    def test_extract_fk_from_inner_join_simple(self):
+        """Test extracting FK from simple INNER JOIN"""
+        from codeindex.parsers.sql_parser import extract_foreign_keys_from_joins
+
+        sql = """
+        SELECT t.*, s.*
+        FROM single_turnaround t
+        INNER JOIN sales_info s ON t.sales_info_id = s.sales_info_id
+        """
+
+        # When extracting FK
+        fks = extract_foreign_keys_from_joins(sql)
+
+        # Then should extract 1 FK
+        assert len(fks) == 1
+        assert fks[0].source_entity == "single_turnaround"
+        assert fks[0].source_column == "sales_info_id"
+        assert fks[0].target_entity == "sales_info"
+        assert fks[0].target_column == "sales_info_id"
+
+    def test_extract_fk_from_left_join(self):
+        """Test extracting FK from LEFT JOIN"""
+        from codeindex.parsers.sql_parser import extract_foreign_keys_from_joins
+
+        sql = """
+        SELECT t.*, p.*
+        FROM single_turnaround t
+        LEFT JOIN products p ON t.product_id = p.product_id
+        """
+
+        # When extracting FK
+        fks = extract_foreign_keys_from_joins(sql)
+
+        # Then should extract 1 FK
+        assert len(fks) == 1
+        assert fks[0].source_column == "product_id"
+        assert fks[0].target_column == "product_id"
+
+    def test_extract_fk_from_multiple_joins(self):
+        """Test extracting FK from multiple JOIN statements"""
+        from codeindex.parsers.sql_parser import extract_foreign_keys_from_joins
+
+        sql = """
+        SELECT t.*, s.*, c.*
+        FROM single_turnaround t
+        INNER JOIN sales_info s ON t.sales_info_id = s.id
+        INNER JOIN customers c ON t.customer_id = c.id
+        LEFT JOIN products p ON t.product_id = p.product_id
+        """
+
+        # When extracting all FK
+        fks = extract_foreign_keys_from_joins(sql)
+
+        # Then should extract 3 FK
+        assert len(fks) == 3
+        fk_columns = [(fk.source_column, fk.target_column) for fk in fks]
+        assert ("sales_info_id", "id") in fk_columns
+        assert ("customer_id", "id") in fk_columns
+        assert ("product_id", "product_id") in fk_columns
+
+    def test_extract_fk_with_table_aliases(self):
+        """Test extracting FK when tables use aliases"""
+        from codeindex.parsers.sql_parser import extract_foreign_keys_from_joins
+
+        sql = """
+        SELECT t.turnaround_id, s.sales_name
+        FROM single_turnaround AS t
+        JOIN sales_info AS s ON t.sales_info_id = s.sales_info_id
+        """
+
+        # When extracting FK
+        fks = extract_foreign_keys_from_joins(sql)
+
+        # Then should extract FK with original table names
+        assert len(fks) == 1
+        assert fks[0].source_entity == "single_turnaround"
+        assert fks[0].target_entity == "sales_info"
+
+    def test_extract_fk_from_complex_join_condition(self):
+        """Test extracting FK from JOIN with complex conditions"""
+        from codeindex.parsers.sql_parser import extract_foreign_keys_from_joins
+
+        sql = """
+        SELECT t.*
+        FROM single_turnaround t
+        JOIN sales_info s ON (t.sales_info_id = s.sales_info_id AND s.is_active = 1)
+        """
+
+        # When extracting FK
+        fks = extract_foreign_keys_from_joins(sql)
+
+        # Then should extract FK from equality condition only
+        assert len(fks) == 1
+        assert fks[0].source_column == "sales_info_id"
+        assert fks[0].target_column == "sales_info_id"

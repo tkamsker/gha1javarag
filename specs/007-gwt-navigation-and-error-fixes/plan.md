@@ -59,7 +59,7 @@ This feature fixes critical production issues in the GEMINI Code Analysis Pipeli
 - [x] **Test strategy defined**
   - Unit tests: Timeout retry logic, exponential backoff calculation, FK extraction from multiple sources, GWT module parsing, navigation graph building
   - Integration tests: End-to-end timeout scenarios with mock Ollama, DAO analysis with test fixtures, GWT navigation from index.html to components
-  - Fixtures needed: Large Java service files (>500 lines), DAO files with various FK patterns, index.html/jsp with GWT modules, GWT module descriptors, Presenter/View/UiBinder samples
+  - Fixtures needed: Large Java service files (>1000 lines), DAO files with various FK patterns, index.html/jsp with GWT modules, GWT module descriptors, Presenter/View/UiBinder samples
 
 - [x] **External dependencies documented**
   - Weaviate schema: No changes required (existing artifact types support new metadata)
@@ -291,7 +291,7 @@ No violations. This feature adheres to all constitutional principles:
 **Decision**: Use file-size-based timeout calculation with configurable base timeout.
 
 **Rationale**:
-- Large service files (>500 lines) inherently take longer to analyze
+- Large service files (>1000 lines) inherently take longer to analyze
 - Fixed timeout penalizes large files unnecessarily
 - Adaptive timeout: `base_timeout * (1 + file_lines / 1000)` scales linearly
 - Base timeout configurable via READ_TIMEOUT environment variable (default 600s)

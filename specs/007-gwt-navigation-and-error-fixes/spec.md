@@ -17,7 +17,7 @@ As a developer analyzing large codebases, I need the extraction process to compl
 
 **Acceptance Scenarios**:
 
-1. **Given** a large service file (>500 lines) being analyzed, **When** LLM extraction is triggered, **Then** the system completes analysis within timeout threshold OR falls back gracefully to structural analysis
+1. **Given** a large service file (>1000 lines) being analyzed, **When** LLM extraction is triggered, **Then** the system completes analysis within timeout threshold OR falls back gracefully to structural analysis
 2. **Given** Ollama service is temporarily slow, **When** extraction timeout occurs, **Then** system retries with exponential backoff up to 3 attempts before falling back
 3. **Given** extraction completes with fallback mode, **When** results are logged, **Then** detailed metrics show timeout duration, retry count, and fallback reason
 4. **Given** a batch of 100 files being analyzed, **When** some files timeout, **Then** remaining files continue processing without cascading failures
@@ -92,9 +92,9 @@ As a UI/UX analyst, I need detailed frontend component hierarchies with Presente
 
 #### Ollama Timeout Handling (US1)
 
-- **FR-001**: System MUST increase Ollama read timeout to 600 seconds for files larger than 1000 lines
+- **FR-001**: System MUST use adaptive Ollama read timeout with configurable base (default 600 seconds), calculated as `base_timeout * (1 + file_lines / 1000)` for files larger than 1000 lines
 - **FR-002**: System MUST implement exponential backoff retry logic with 3 attempts (delays: 5s, 15s, 45s)
-- **FR-003**: System MUST fall back to structural analysis (Java AST parsing without LLM) when all retry attempts fail
+- **FR-003**: System MUST fall back to structural analysis (Java AST parsing without LLM) when all retry attempts fail, extracting class names, method signatures, imports, and annotations (estimated 60-70% semantic coverage compared to LLM analysis)
 - **FR-004**: System MUST log timeout metrics including file path, timeout duration, retry count, and fallback reason
 - **FR-005**: System MUST continue processing remaining files when individual file timeouts occur
 - **FR-006**: System MUST display timeout summary in pipeline status showing: total timeouts, successful retries, fallback count
@@ -105,7 +105,7 @@ As a UI/UX analyst, I need detailed frontend component hierarchies with Presente
 - **FR-008**: System MUST extract foreign key relationships from iBATIS XML `<select>`, `<insert>`, `<update>` statements
 - **FR-009**: System MUST parse SQL JOIN statements to extract foreign key column relationships as fallback
 - **FR-010**: System MUST validate foreign key columns exist in collected column set before creating FK relationship
-- **FR-011**: System MUST handle missing FK columns gracefully by logging warnings without failing entire DAO analysis
+- **FR-011**: System MUST handle missing FK columns gracefully by logging WARNING with FK details (source/target columns) and continuing processing of other FK relationships without failing entire DAO analysis
 - **FR-012**: System MUST merge foreign keys from multiple sources (Java, iBATIS, SQL) and mark source in metadata
 
 #### GWT Navigation Path Analysis (US3)
@@ -113,7 +113,7 @@ As a UI/UX analyst, I need detailed frontend component hierarchies with Presente
 - **FR-013**: System MUST parse index.html and index.jsp files to extract GWT module references from `<script>` tags
 - **FR-014**: System MUST parse GWT module descriptors (*.gwt.xml) to extract entry-point classes, inherits, and source paths
 - **FR-015**: System MUST follow GWT module `<inherits>` clauses recursively to discover all inherited modules
-- **FR-016**: System MUST detect circular module dependencies and process each module exactly once
+- **FR-016**: System MUST detect circular module dependencies, log WARNING with cycle path (e.g., "A → B → A"), and process each module exactly once using visited tracking
 - **FR-017**: System MUST extract GWT Presenters by analyzing entry-point classes and following Activity/Place patterns
 - **FR-018**: System MUST discover View interfaces and implementations through Presenter Display pattern analysis
 - **FR-019**: System MUST extract GWT Activities and Places from PlaceHistoryMapper and ActivityMapper classes
@@ -123,7 +123,7 @@ As a UI/UX analyst, I need detailed frontend component hierarchies with Presente
 
 #### Enhanced Frontend Layout Extraction (US4)
 
-- **FR-023**: System MUST extract UiBinder widget hierarchies showing parent-child relationships and container types
+- **FR-023**: System MUST extract UiBinder widget hierarchies showing parent-child relationships and container types, up to 10 levels deep, logging WARNING for deeper nesting
 - **FR-024**: System MUST map Presenter → Display interface → View implementation → UiBinder template relationships
 - **FR-025**: System MUST extract @UiField annotations with field names, types, and event handler presence
 - **FR-026**: System MUST document widget event handlers (@UiHandler) with handler methods and event types
@@ -171,7 +171,7 @@ As a UI/UX analyst, I need detailed frontend component hierarchies with Presente
 - **SC-005**: Complete GWT navigation graph is generated starting from index.html/jsp entry points
 - **SC-006**: Greater than 90% of GWT Presenters, Views, Activities, and Places are discovered through navigation analysis
 - **SC-007**: Presenter-View-UiBinder relationships are mapped with >85% accuracy based on Display pattern and naming conventions
-- **SC-008**: Generated frontend architecture diagrams include all major navigation flows from entry points to leaf components
+- **SC-008**: Generated frontend architecture diagrams include navigation flows from all entry points to at least 80% of discovered Presenters and Views
 - **SC-009**: Pipeline execution time increases by less than 20% compared to current implementation (acceptable overhead for improved accuracy)
 - **SC-010**: Developers can understand complete GWT application structure by reading generated PRD and navigation graph
 
