@@ -494,3 +494,123 @@ def extract_statement_types(file_path: Path) -> Dict[str, int]:
     """
     parser = SQLParser()
     return parser.extract_statement_types(file_path)
+
+
+# ==============================================================================
+# Foreign Key Extraction from JOIN Statements
+# ==============================================================================
+
+def extract_foreign_keys_from_joins(sql: str) -> List[ForeignKeyRelationship]:
+    """
+    Extract foreign key relationships from SQL JOIN statements.
+
+    Analyzes JOIN ON clauses to identify foreign key relationships based on
+    equality conditions between columns.
+
+    Args:
+        sql: SQL query string containing JOIN statements
+
+    Returns:
+        List of ForeignKeyRelationship objects extracted from JOIN conditions
+
+    Example:
+        >>> sql = "SELECT * FROM orders o JOIN customers c ON o.customer_id = c.id"
+        >>> fks = extract_foreign_keys_from_joins(sql)
+        >>> fks[0].source_entity  # 'orders'
+        >>> fks[0].source_column  # 'customer_id'
+    """
+    fk_relationships = []
+
+    # Pattern to match JOIN statements with ON clauses
+    # Matches: [INNER|LEFT|RIGHT|FULL] JOIN table_name [AS] alias ON conditions
+    join_pattern = re.compile(
+        r'\b(?:INNER\s+|LEFT\s+|RIGHT\s+|FULL\s+)?JOIN\s+'
+        r'([`"\[]?\w+[`"\]]?)'  # Table name
+        r'(?:\s+(?:AS\s+)?(\w+))?'  # Optional alias
+        r'\s+ON\s+'
+        r'(.+?)(?=(?:\b(?:INNER|LEFT|RIGHT|FULL)?\s*JOIN\b|WHERE|GROUP\s+BY|ORDER\s+BY|LIMIT|$))',
+        re.IGNORECASE | re.DOTALL
+    )
+
+    # Pattern to match equality conditions in ON clause
+    # Matches: table.column = table.column or alias.column = alias.column
+    equality_pattern = re.compile(
+        r'(\w+)\.(\w+)\s*=\s*(\w+)\.(\w+)',
+        re.IGNORECASE
+    )
+
+    # Build a mapping of table aliases to actual table names
+    # Extract FROM clause table
+    from_match = FROM_PATTERN.search(sql)
+    from_table = None
+    from_alias = None
+    if from_match:
+        # Try to extract both table and alias from FROM clause
+        from_full = re.search(
+            r'\bFROM\s+([`"\[]?\w+[`"\]]?)(?:\s+(?:AS\s+)?(\w+))?',
+            sql,
+            re.IGNORECASE
+        )
+        if from_full:
+            from_table = from_full.group(1).strip('`"[]')
+            from_alias = from_full.group(2) if from_full.group(2) else from_table
+
+    # Map aliases to table names
+    alias_to_table = {}
+    if from_table and from_alias:
+        alias_to_table[from_alias] = from_table
+
+    # Find all JOIN statements
+    for join_match in join_pattern.finditer(sql):
+        table_name = join_match.group(1).strip('`"[]')
+        alias = join_match.group(2) if join_match.group(2) else table_name
+        on_clause = join_match.group(3)
+
+        # Add to alias mapping
+        alias_to_table[alias] = table_name
+
+        # Extract FK from ON clause equality conditions
+        for eq_match in equality_pattern.finditer(on_clause):
+            left_table_alias = eq_match.group(1)
+            left_column = eq_match.group(2)
+            right_table_alias = eq_match.group(3)
+            right_column = eq_match.group(4)
+
+            # Resolve aliases to actual table names
+            left_table = alias_to_table.get(left_table_alias, left_table_alias)
+            right_table = alias_to_table.get(right_table_alias, right_table_alias)
+
+            # Determine which is source and which is target
+            # Convention: The table in FROM clause or left side of JOIN is typically the source
+            if left_table == from_table or left_table not in alias_to_table.values():
+                # Left table is source
+                source_entity = left_table
+                source_column = left_column
+                target_entity = right_table
+                target_column = right_column
+            else:
+                # Right table is source (less common)
+                source_entity = right_table
+                source_column = right_column
+                target_entity = left_table
+                target_column = left_column
+
+            # Create ForeignKeyRelationship
+            fk = ForeignKeyRelationship(
+                source_entity=source_entity,
+                source_column=source_column,
+                target_entity=target_entity,
+                target_column=target_column,
+                fk_source=ForeignKeySource.SQL,
+                relationship_type="ManyToOne",  # Default assumption for SQL joins
+                nullable=True,  # Cannot determine from SQL alone
+                confidence=0.7  # Medium confidence from SQL inference
+            )
+
+            fk_relationships.append(fk)
+            logger.debug(
+                f"Extracted FK from SQL JOIN: {source_entity}.{source_column} -> "
+                f"{target_entity}.{target_column}"
+            )
+
+    return fk_relationships
