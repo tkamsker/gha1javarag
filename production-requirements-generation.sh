@@ -4,7 +4,8 @@
 # Usage: ./production-requirements-generation.sh <project-name> <source-path>
 # Example: ./production-requirements-generation.sh cuco-ui-admin /mnt/cucocalcai/cuco-master/cuco-ui-admin
 
-set -e  # Exit on error
+# Don't exit on error immediately - we want to check status codes
+set +e
 
 # Colors for output
 RED='\033[0;31m'
@@ -95,29 +96,35 @@ fi
 # Step 2: Generate PRD documents (equivalent to step2.sh)
 echo ""
 echo "Step 2: Generating PRD documents..."
-info "Starting backend PRD generation..."
-nohup "$VENV_DIR/bin/codeindex" prd backend \
+info "Starting services (backend) PRD generation..."
+# Increase LLM timeout to handle large files that may timeout
+nohup "$VENV_DIR/bin/codeindex" prd services \
     --project "$PROJECT_NAME" \
     --output-dir "$OUTPUT_DIR/prd" \
-    > "${LOG_DIR}/log_${PROJECT_NAME}_backend_prd_${TIMESTAMP}.log" 2>&1 &
+    --llm-timeout 240 \
+    --llm-retries 3 \
+    > "${LOG_DIR}/log_${PROJECT_NAME}_services_prd_${TIMESTAMP}.log" 2>&1 &
 
-BACKEND_PID=$!
+SERVICES_PID=$!
 
 info "Starting frontend PRD generation..."
+# Increase LLM timeout to handle large files that may timeout
 nohup "$VENV_DIR/bin/codeindex" prd frontend \
     --project "$PROJECT_NAME" \
     --output-dir "$OUTPUT_DIR/prd" \
+    --llm-timeout 240 \
+    --llm-retries 3 \
     > "${LOG_DIR}/log_${PROJECT_NAME}_frontend_prd_${TIMESTAMP}.log" 2>&1 &
 
 FRONTEND_PID=$!
 
-info "Backend PRD generation started (PID: $BACKEND_PID)"
+info "Services PRD generation started (PID: $SERVICES_PID)"
 info "Frontend PRD generation started (PID: $FRONTEND_PID)"
 info "Waiting for PRD generation to complete..."
 
 # Wait for PRD generation to complete
-wait $BACKEND_PID
-BACKEND_STATUS=$?
+wait $SERVICES_PID
+SERVICES_STATUS=$?
 
 wait $FRONTEND_PID
 FRONTEND_STATUS=$?
@@ -125,11 +132,11 @@ FRONTEND_STATUS=$?
 # Check results
 echo ""
 echo "==================================="
-if [ $BACKEND_STATUS -eq 0 ] && [ $FRONTEND_STATUS -eq 0 ]; then
+if [ $SERVICES_STATUS -eq 0 ] && [ $FRONTEND_STATUS -eq 0 ]; then
     ok "PRD GENERATION COMPLETE!"
     echo "==================================="
     echo ""
-    ok "Backend PRD: $OUTPUT_DIR/prd/backend_prd.md"
+    ok "Services PRD: $OUTPUT_DIR/prd/services_prd.md"
     ok "Frontend PRD: $OUTPUT_DIR/prd/frontend_prd.md"
     echo ""
     info "View results:"
@@ -137,20 +144,20 @@ if [ $BACKEND_STATUS -eq 0 ] && [ $FRONTEND_STATUS -eq 0 ]; then
     echo ""
     info "Log files:"
     echo "  - Pipeline: ${LOG_DIR}/log_${PROJECT_NAME}_pipeline_${TIMESTAMP}.log"
-    echo "  - Backend PRD: ${LOG_DIR}/log_${PROJECT_NAME}_backend_prd_${TIMESTAMP}.log"
+    echo "  - Services PRD: ${LOG_DIR}/log_${PROJECT_NAME}_services_prd_${TIMESTAMP}.log"
     echo "  - Frontend PRD: ${LOG_DIR}/log_${PROJECT_NAME}_frontend_prd_${TIMESTAMP}.log"
     echo ""
     info "Next steps:"
-    echo "  1. Review PRDs: cat $OUTPUT_DIR/prd/backend_prd.md"
+    echo "  1. Review PRDs: cat $OUTPUT_DIR/prd/services_prd.md"
     echo "  2. Check status: codeindex status"
     echo "  3. Search codebase: codeindex search 'your query'"
 else
     err "PRD GENERATION FAILED"
     echo "==================================="
     echo ""
-    if [ $BACKEND_STATUS -ne 0 ]; then
-        err "Backend PRD generation failed (exit code: $BACKEND_STATUS)"
-        echo "  Log: ${LOG_DIR}/log_${PROJECT_NAME}_backend_prd_${TIMESTAMP}.log"
+    if [ $SERVICES_STATUS -ne 0 ]; then
+        err "Services PRD generation failed (exit code: $SERVICES_STATUS)"
+        echo "  Log: ${LOG_DIR}/log_${PROJECT_NAME}_services_prd_${TIMESTAMP}.log"
     fi
     if [ $FRONTEND_STATUS -ne 0 ]; then
         err "Frontend PRD generation failed (exit code: $FRONTEND_STATUS)"
@@ -161,6 +168,6 @@ else
     echo "  1. Check log files above for detailed errors"
     echo "  2. Verify Weaviate is running: docker ps | grep weaviate"
     echo "  3. Verify indexing completed: codeindex status"
-    echo "  4. Check CLAUDE.md for common issues"
+    echo "  4. Check for Ollama timeout errors in logs (may need to increase --llm-timeout)"
     exit 1
 fi
