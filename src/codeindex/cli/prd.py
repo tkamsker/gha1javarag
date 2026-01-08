@@ -452,16 +452,31 @@ def _validate_arguments(
         return EXIT_SOURCE_DIR_NOT_FOUND
 
     # Check output directory is writable
+    import os
     try:
+        # Ensure parent directories exist first
+        output_dir.parent.mkdir(parents=True, exist_ok=True)
         output_dir.mkdir(parents=True, exist_ok=True)
         # Try writing a test file
         test_file = output_dir / ".write_test"
         test_file.touch()
         test_file.unlink()
-    except Exception as e:
+    except OSError as e:
+        cwd = os.getcwd()
+        abs_output_dir = output_dir.resolve()
         if not quiet:
-            click.echo(f"Error: Cannot write to output directory: {output_dir} - {e}", err=True)
-        logger.error(f"Output directory not writable: {output_dir} - {e}")
+            click.echo(f"Error: Cannot write to output directory: {abs_output_dir}", err=True)
+            click.echo(f"  Current working directory: {cwd}", err=True)
+            click.echo(f"  Error details: {e}", err=True)
+        logger.error(f"Output directory not writable: {abs_output_dir} (cwd: {cwd}) - {e}")
+        return EXIT_OUTPUT_DIR_ERROR
+    except Exception as e:
+        cwd = os.getcwd()
+        abs_output_dir = output_dir.resolve()
+        if not quiet:
+            click.echo(f"Error: Cannot write to output directory: {abs_output_dir} - {e}", err=True)
+            click.echo(f"  Current working directory: {cwd}", err=True)
+        logger.error(f"Output directory not writable: {abs_output_dir} (cwd: {cwd}) - {e}")
         return EXIT_OUTPUT_DIR_ERROR
 
     # Validate skip flags only apply to 'full' layer

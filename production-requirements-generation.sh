@@ -30,8 +30,14 @@ fi
 PROJECT_NAME=$1
 SOURCE_PATH=$2
 TIMESTAMP=$(date +'%Y-%m-%d_%H-%M-%S')
-LOG_DIR="./logs"
-OUTPUT_DIR="./output/${PROJECT_NAME}"
+
+# Get script directory and ensure we're running from project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR" || exit 1
+
+# Use absolute paths for directories
+LOG_DIR="${SCRIPT_DIR}/logs"
+OUTPUT_DIR="${SCRIPT_DIR}/output/${PROJECT_NAME}"
 
 # Validate virtual environment exists
 VENV_DIR=".venv"
@@ -51,6 +57,7 @@ fi
 # Create directories
 mkdir -p "$LOG_DIR"
 mkdir -p "$OUTPUT_DIR"
+mkdir -p "${OUTPUT_DIR}/prd"
 
 echo "==================================="
 echo "PRD Generation for: $PROJECT_NAME"
