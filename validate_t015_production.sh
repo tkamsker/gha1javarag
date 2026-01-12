@@ -85,6 +85,15 @@ echo "-----------------------------------"
 # Check Python environment
 check_result "Python virtual environment" "$([ -d .venv ] && echo true || echo false)"
 
+# Activate virtual environment
+if [ -d .venv ]; then
+    source .venv/bin/activate
+    echo "  Activated virtual environment"
+else
+    echo -e "${RED}Error: .venv not found. Run: python -m venv .venv${NC}"
+    exit 1
+fi
+
 # Check package installed
 if python -c "import codeindex" 2>/dev/null; then
     check_result "codeindex package installed" "true"
