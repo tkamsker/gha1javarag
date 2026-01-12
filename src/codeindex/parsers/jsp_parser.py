@@ -348,6 +348,166 @@ class JSPParser:
 
         return attributes
 
+    def extract_html_forms(self, content: str) -> List[Dict[str, Any]]:
+        """
+        Extract HTML form elements from JSP content.
+
+        Feature 008 T009: Added HTML form extraction for JSP files.
+
+        Args:
+            content: JSP source code
+
+        Returns:
+            List of form information with fields
+        """
+        forms = []
+
+        # Pattern to match form tags with attributes
+        form_pattern = re.compile(
+            r'<form\s+([^>]+)>(.*?)</form>',
+            re.IGNORECASE | re.DOTALL
+        )
+
+        for match in form_pattern.finditer(content):
+            form_attrs_str = match.group(1)
+            form_content = match.group(2)
+
+            # Parse form attributes
+            form_attrs = self._parse_attributes(form_attrs_str)
+
+            # Extract fields within this form
+            fields = self.extract_form_fields(form_content)
+
+            form = {
+                'action': form_attrs.get('action', ''),
+                'method': form_attrs.get('method', 'GET').upper(),
+                'name': form_attrs.get('name', ''),
+                'id': form_attrs.get('id', ''),
+                'fields': fields,
+                'field_count': len(fields)
+            }
+
+            forms.append(form)
+
+        return forms
+
+    def extract_form_fields(self, content: str) -> List[Dict[str, Any]]:
+        """
+        Extract HTML form fields (input, textarea, select) from content.
+
+        Feature 008 T009: Extract form fields for better frontend analysis.
+
+        Args:
+            content: HTML/JSP content
+
+        Returns:
+            List of form field information
+        """
+        fields = []
+
+        # Input fields: <input type="..." name="..." .../>
+        input_pattern = re.compile(
+            r'<input\s+([^>]+)(?:/>|>)',
+            re.IGNORECASE
+        )
+
+        for match in input_pattern.finditer(content):
+            attrs = self._parse_attributes(match.group(1))
+
+            field = {
+                'type': 'input',
+                'input_type': attrs.get('type', 'text'),
+                'name': attrs.get('name', ''),
+                'id': attrs.get('id', ''),
+                'value': attrs.get('value', ''),
+                'placeholder': attrs.get('placeholder', ''),
+                'required': 'required' in match.group(1).lower(),
+                'pattern': attrs.get('pattern', ''),
+            }
+
+            if field['name'] or field['id']:  # Only add if has name or id
+                fields.append(field)
+
+        # Textarea fields: <textarea name="..." ...>...</textarea>
+        textarea_pattern = re.compile(
+            r'<textarea\s+([^>]+)>',
+            re.IGNORECASE
+        )
+
+        for match in textarea_pattern.finditer(content):
+            attrs = self._parse_attributes(match.group(1))
+
+            field = {
+                'type': 'textarea',
+                'name': attrs.get('name', ''),
+                'id': attrs.get('id', ''),
+                'placeholder': attrs.get('placeholder', ''),
+                'required': 'required' in match.group(1).lower(),
+                'rows': attrs.get('rows', ''),
+                'cols': attrs.get('cols', ''),
+            }
+
+            if field['name'] or field['id']:
+                fields.append(field)
+
+        # Select/dropdown fields: <select name="..." ...>
+        select_pattern = re.compile(
+            r'<select\s+([^>]+)>(.*?)</select>',
+            re.IGNORECASE | re.DOTALL
+        )
+
+        for match in select_pattern.finditer(content):
+            attrs = self._parse_attributes(match.group(1))
+            select_content = match.group(2)
+
+            # Extract options
+            option_pattern = re.compile(
+                r'<option\s+(?:value=["\']([^"\']*)["\'])?>([^<]*)</option>',
+                re.IGNORECASE
+            )
+            options = []
+            for opt_match in option_pattern.finditer(select_content):
+                options.append({
+                    'value': opt_match.group(1) or opt_match.group(2).strip(),
+                    'label': opt_match.group(2).strip()
+                })
+
+            field = {
+                'type': 'select',
+                'name': attrs.get('name', ''),
+                'id': attrs.get('id', ''),
+                'required': 'required' in match.group(1).lower(),
+                'multiple': 'multiple' in match.group(1).lower(),
+                'options': options,
+                'option_count': len(options)
+            }
+
+            if field['name'] or field['id']:
+                fields.append(field)
+
+        # Button elements: <button type="submit" ...>
+        button_pattern = re.compile(
+            r'<button\s+([^>]+)>([^<]*)</button>',
+            re.IGNORECASE
+        )
+
+        for match in button_pattern.finditer(content):
+            attrs = self._parse_attributes(match.group(1))
+            button_text = match.group(2).strip()
+
+            button_type = attrs.get('type', 'button')
+            if button_type in ('submit', 'reset'):
+                field = {
+                    'type': 'button',
+                    'button_type': button_type,
+                    'name': attrs.get('name', ''),
+                    'id': attrs.get('id', ''),
+                    'text': button_text,
+                }
+                fields.append(field)
+
+        return fields
+
 
 # ==============================================================================
 # Standalone Functions

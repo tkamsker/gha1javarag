@@ -267,6 +267,153 @@ class TestErrorHandling:
             xml_parser.parse_file(invalid)
 
 
+# Test null safety (Feature 008 T003)
+class TestNullSafety:
+    """Test null safety for malformed XML files (Feature 008 T003).
+
+    Production issue: AttributeError: 'NoneType' object has no attribute 'tag'
+    Root cause: parse_tree() didn't check if root is None before accessing root.tag
+    Fix: Added null check and _empty_result() method
+    """
+
+    def test_parse_tree_with_none_root_returns_empty_result(self, xml_parser):
+        """Test that parse_tree returns empty result when root is None."""
+        from lxml import etree
+        from unittest.mock import Mock
+
+        # Create a mock tree that returns None for getroot()
+        mock_tree = Mock(spec=etree._ElementTree)
+        mock_tree.getroot.return_value = None
+
+        result = xml_parser.parse_tree(mock_tree)
+
+        # Should return empty result structure
+        assert result == {
+            'root_element': None,
+            'root_attributes': {},
+            'namespaces': {},
+            'elements': {},
+        }
+
+    def test_parse_tree_with_none_root_logs_warning(self, xml_parser, caplog):
+        """Test that parse_tree logs warning when root is None."""
+        from lxml import etree
+        from unittest.mock import Mock
+        import logging
+
+        # Ensure warning level is captured
+        caplog.set_level(logging.WARNING)
+
+        # Create a mock tree that returns None for getroot()
+        mock_tree = Mock(spec=etree._ElementTree)
+        mock_tree.getroot.return_value = None
+
+        result = xml_parser.parse_tree(mock_tree)
+
+        # Should log warning about malformed XML
+        # Use getMessage() to get the formatted message
+        log_messages = [record.getMessage() for record in caplog.records]
+        assert any("malformed xml" in msg.lower() for msg in log_messages), f"Log messages: {log_messages}"
+        assert any("none for root element" in msg.lower() for msg in log_messages), f"Log messages: {log_messages}"
+
+    def test_empty_result_structure(self, xml_parser):
+        """Test that _empty_result returns correct structure."""
+        result = xml_parser._empty_result()
+
+        # Verify structure matches parse_tree output
+        assert isinstance(result, dict)
+        assert 'root_element' in result
+        assert 'root_attributes' in result
+        assert 'namespaces' in result
+        assert 'elements' in result
+
+        # Verify empty values
+        assert result['root_element'] is None
+        assert result['root_attributes'] == {}
+        assert result['namespaces'] == {}
+        assert result['elements'] == {}
+
+    def test_parse_severely_malformed_xml_does_not_crash(self, xml_parser, tmp_path):
+        """Test that severely malformed XML doesn't cause AttributeError.
+
+        This test simulates the production error scenario where malformed XML
+        caused AttributeError on root.tag access.
+        """
+        # Create a severely malformed XML file (missing root element)
+        malformed = tmp_path / "severely_malformed.xml"
+        malformed.write_text("<?xml version='1.0'?>")
+
+        # Parser should not crash, either raises XMLSyntaxError or returns empty result
+        try:
+            result = xml_parser.parse_file(malformed)
+            # If parsing succeeds with recover=True, should return empty or valid result
+            assert isinstance(result, dict)
+        except Exception as e:
+            # If it raises, should be XMLSyntaxError, not AttributeError
+            from lxml import etree
+            assert isinstance(e, (etree.XMLSyntaxError, FileNotFoundError))
+            # Should NOT be AttributeError about 'tag'
+            assert not isinstance(e, AttributeError)
+
+    def test_parse_xml_with_only_prolog(self, xml_parser, tmp_path):
+        """Test XML file with only XML declaration (no root element)."""
+        from lxml import etree
+
+        xml_with_prolog = tmp_path / "prolog_only.xml"
+        xml_with_prolog.write_text("<?xml version='1.0' encoding='UTF-8'?>")
+
+        # Should either raise XMLSyntaxError or return empty result
+        # Should NOT raise AttributeError about NoneType
+        try:
+            result = xml_parser.parse_file(xml_with_prolog)
+            assert isinstance(result, dict)
+        except etree.XMLSyntaxError:
+            # This is acceptable - parser detected invalid XML
+            pass
+        except AttributeError as e:
+            # This should NOT happen after the fix
+            pytest.fail(f"AttributeError should not occur: {e}")
+
+    def test_production_error_scenario_prevented(self, xml_parser, tmp_path):
+        """Test that production error scenario is prevented.
+
+        Production error:
+            File: ProductPortletView.ui.xml
+            Error: AttributeError: 'NoneType' object has no attribute 'tag'
+            Location: xml_parser.py:84 (root.tag access)
+
+        After fix:
+            - Null check added before root.tag access
+            - _empty_result() returns safe fallback
+            - Warning logged for diagnostics
+        """
+        from lxml import etree
+
+        # Simulate the production file (malformed GWT UiBinder)
+        production_file = tmp_path / "ProductPortletView.ui.xml"
+        production_file.write_text("""<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE ui:UiBinder SYSTEM "http://example.com/UiBinder.dtd">
+<!-- Malformed: missing actual XML content -->
+""")
+
+        # This should NOT raise AttributeError
+        try:
+            result = xml_parser.parse_file(production_file)
+            # If parsing succeeds, verify it's a dict (not AttributeError)
+            assert isinstance(result, dict)
+        except etree.XMLSyntaxError:
+            # Acceptable - parser detected malformed XML
+            pass
+        except AttributeError as e:
+            # FAIL - this is the production error we're preventing
+            if "'NoneType' object has no attribute" in str(e):
+                pytest.fail(
+                    f"Production AttributeError still occurs after fix: {e}\n"
+                    "The null check in parse_tree() is not working correctly."
+                )
+            raise
+
+
 # Test edge cases
 class TestEdgeCases:
     """Test edge cases in XML parsing."""

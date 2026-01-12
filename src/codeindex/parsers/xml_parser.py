@@ -79,6 +79,14 @@ class XMLParser:
         """
         root = tree.getroot()
 
+        # Feature 008 T003: Add null check for malformed XML files
+        if root is None:
+            self.logger.warning(
+                "XML parser returned None for root element (malformed XML). "
+                "Returning empty result."
+            )
+            return self._empty_result()
+
         # Extract basic information
         result = {
             'root_element': self._strip_namespace(root.tag),
@@ -237,6 +245,22 @@ class XMLParser:
             counts[tag] = counts.get(tag, 0) + 1
 
         return counts
+
+    def _empty_result(self) -> Dict[str, Any]:
+        """
+        Return empty result dictionary for malformed/empty XML files.
+
+        Feature 008 T003: Graceful handling of malformed XML.
+
+        Returns:
+            Dictionary with empty values matching parse_tree structure
+        """
+        return {
+            'root_element': None,
+            'root_attributes': {},
+            'namespaces': {},
+            'elements': {},
+        }
 
 
 # ==============================================================================

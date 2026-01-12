@@ -324,12 +324,31 @@ class ServiceDependency:
 
 @dataclass
 class TransactionInfo:
-    """Transaction boundary information."""
+    """
+    Transaction boundary information.
+
+    Valid isolation levels:
+    - READ_UNCOMMITTED: Lowest isolation, allows dirty reads
+    - READ_COMMITTED: Prevents dirty reads (default in most DBs)
+    - REPEATABLE_READ: Prevents non-repeatable reads
+    - SERIALIZABLE: Highest isolation, prevents phantom reads
+    """
     method_name: str
     transaction_type: str  # REQUIRED, REQUIRES_NEW, SUPPORTS, etc.
     propagation: Optional[str] = None
     isolation_level: Optional[str] = None
     read_only: Optional[bool] = None
+
+    @property
+    def isolation(self) -> Optional[str]:
+        """
+        Alias for isolation_level for backward compatibility.
+
+        Returns:
+            The isolation level (READ_UNCOMMITTED, READ_COMMITTED,
+            REPEATABLE_READ, SERIALIZABLE) or None if not specified.
+        """
+        return self.isolation_level
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""

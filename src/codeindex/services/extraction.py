@@ -405,7 +405,10 @@ class ExtractionService:
         pom_context: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Extract semantic information using AI.
+        Extract semantic information using AI with adaptive timeouts.
+
+        Feature 008 T005: Integrated adaptive timeout calculation.
+        Uses extract_with_timeout for dynamic timeouts based on file size.
 
         Args:
             file_path: Path to file
@@ -423,6 +426,13 @@ class ExtractionService:
             # Read file content with automatic encoding detection
             content = read_file_with_fallback(file_path)
 
+            # Count non-empty lines for adaptive timeout calculation (T005)
+            file_lines = sum(1 for line in content.splitlines() if line.strip())
+            self.logger.debug(
+                f"File {file_path.name}: {file_lines} non-empty lines "
+                f"(adaptive timeout will be calculated)"
+            )
+
             # Check if GWT analyzer can handle this file
             gwt_registry = get_gwt_analyzer_registry()
             gwt_metadata = None
@@ -436,11 +446,17 @@ class ExtractionService:
                     semantic_data=None  # GWT analyzer runs first, before Ollama
                 )
 
-            # Call Ollama for semantic extraction
-            semantic_data = self.ollama_client.extract_semantics(
+            # Call Ollama for semantic extraction with adaptive timeout (T005)
+            # This method includes:
+            # - Dynamic timeout based on file_lines
+            # - Exponential backoff retry (3 attempts)
+            # - Structural fallback when retries exhausted
+            # - Detailed timeout metrics logging
+            semantic_data = self.ollama_client.extract_with_timeout(
                 str(file_path),
                 content,
                 artifact_type,
+                file_lines,  # For adaptive timeout calculation
                 pom_context
             )
 
@@ -452,10 +468,11 @@ class ExtractionService:
             return semantic_data
 
         except TimeoutError as e:
-            # Ollama timeout - skip this file to avoid long delays
+            # Ollama timeout - all retries exhausted
+            # extract_with_timeout handles retries, so this means all attempts failed
             self.logger.warning(
-                f"Skipping {file_path.name}: Ollama timeout after 60s (file too complex/large). "
-                f"Using structural-only analysis."
+                f"All timeout retries exhausted for {file_path.name}. "
+                f"Using structural-only analysis. Error: {e}"
             )
             return self._create_fallback_semantic(file_path, artifact_type, timeout=True)
 

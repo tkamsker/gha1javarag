@@ -14,6 +14,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from uuid import uuid4
 
 from codeindex.parsers.uibinder_parser import GwtUiBinderParser
+from codeindex.parsers.html_parser import HtmlFormParser
 from codeindex.models.prd import (
     FormDefinition,
     FormField,
@@ -146,6 +147,9 @@ class FrontendAnalyzer:
 
         # Initialize GWT parsers
         self.uibinder_parser = GwtUiBinderParser()
+
+        # Initialize HTML parser (T011)
+        self.html_parser = HtmlFormParser()
 
     def _load_visit_log(self) -> Dict[str, FileVisitEntry]:
         """Load visit log from JSON Lines file."""
@@ -317,6 +321,75 @@ class FrontendAnalyzer:
             'data_bindings': []
         }
 
+    def _convert_html_to_llm_format(
+        self,
+        html_result: Dict[str, Any],
+        file_path: Path
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Convert HTML parser output to LLM-compatible format.
+
+        Feature 008 T011: Integrate HTML parser into frontend analyzer.
+
+        Args:
+            html_result: Output from HtmlFormParser.parse()
+            file_path: Path to HTML file
+
+        Returns:
+            Dictionary in LLM extraction format, or None if no forms
+        """
+        forms = html_result.get('forms', [])
+
+        if not forms:
+            return None
+
+        # Use first form (most HTML files have one form)
+        form_data = forms[0]
+
+        # Convert HTML fields to LLM format
+        fields = []
+        for field_data in form_data.get('fields', []):
+            field_type = field_data.get('type')
+
+            # Handle input fields with subtypes
+            if field_type == 'input':
+                field_type = field_data.get('input_type', 'text')
+
+            field = {
+                'name': field_data.get('name', ''),
+                'type': field_type,
+                'label': field_data.get('label', ''),
+                'required': field_data.get('required', False),
+                'validation_pattern': field_data.get('pattern', None),
+                'default_value': field_data.get('value') or field_data.get('default_value', None)
+            }
+
+            # Add options for select
+            if field_type == 'select' and 'options' in field_data:
+                field['options'] = [opt['label'] for opt in field_data['options']]
+
+            fields.append(field)
+
+        # Extract button actions
+        actions = []
+        for button_data in form_data.get('buttons', []):
+            button_text = button_data.get('text', '')
+            if button_text:
+                actions.append(button_text)
+
+        return {
+            'form_name': form_data.get('name') or form_data.get('id') or file_path.stem,
+            'form_type': 'html_form',
+            'description': f"HTML form from {file_path.name}",
+            'fields': fields,
+            'submission_endpoint': form_data.get('action', None),
+            'submission_method': form_data.get('method', 'GET'),
+            'bound_entities': [],
+            'actions': actions,
+            'validation_rules': [],
+            'data_bindings': []
+        }
+
     @retry(max_attempts=3, base_delay=1.0, exponential_base=2.0)
     def _extract_form_with_llm(
         self,
@@ -356,17 +429,60 @@ class FrontendAnalyzer:
             raise
 
     def _has_form(self, file_content: str) -> bool:
-        """Check if file contains a form."""
+        """
+        Check if file contains form-related content.
+
+        Feature 008 T008: Relaxed detection to improve extraction rate.
+        Previously only 0.35% of files were detected (5/1380).
+
+        Now detects:
+        - HTML/JSP forms and input elements
+        - GWT widgets (TextBox, ListBox, CheckBox, etc.)
+        - Form submission patterns
+        - Input validation patterns
+        """
         form_patterns = [
+            # HTML/JSP Form Elements
             r'<form',  # HTML/JSP form tag
+            r'<input',  # HTML input elements
+            r'<textarea',  # HTML textarea
+            r'<select',  # HTML select/dropdown
+            r'<button[^>]*type=["\']submit',  # Submit buttons
+
+            # GWT Form Widgets (common patterns)
             r'@UiField.*Form',  # GWT form field
-            r'new\s+\w*Form\w*\(',  # JavaScript/GWT form instantiation
+            r'new\s+\w*Form\w*\(',  # Form instantiation
             r'FormPanel',  # GWT FormPanel
+            r'TextBox',  # GWT TextBox widget
+            r'TextArea',  # GWT TextArea widget
+            r'ListBox',  # GWT ListBox (dropdown)
+            r'CheckBox',  # GWT CheckBox
+            r'RadioButton',  # GWT RadioButton
+            r'PasswordTextBox',  # GWT password field
+            r'DateBox',  # GWT date picker
+            r'FileUpload',  # GWT file upload
+            r'@UiField',  # Any GWT UI field (broad catch)
+
+            # Form Submission Patterns
+            r'action=["\']',  # Form action attribute
+            r'onSubmit',  # Form submit handler
+            r'\.submit\(',  # JavaScript form submission
+            r'SubmitButton',  # Submit button widget
+
+            # Validation Patterns
+            r'required',  # HTML5 required attribute
+            r'pattern=["\']',  # HTML5 validation pattern
+            r'@NotNull',  # Java validation annotation
+            r'@NotBlank',  # Java validation annotation
+            r'@Size',  # Java validation annotation
+            r'@Email',  # Java validation annotation
+            r'validate',  # Validation method calls
         ]
 
         for pattern in form_patterns:
             if re.search(pattern, file_content, re.IGNORECASE):
                 return True
+
         return False
 
     def analyze_file(self, file_path: Path) -> Optional[Dict[str, Any]]:
@@ -396,6 +512,22 @@ class FrontendAnalyzer:
                     self.logger.info(f"GWT UiBinder parser extracted {len(llm_result.get('fields', []))} fields")
                 except Exception as e:
                     self.logger.warning(f"GWT UiBinder parser failed, falling back to LLM: {e}")
+                    llm_result = None
+
+            # Fast path: Use HTML parser for .html files (T011)
+            if not llm_result and file_type == "HTML":
+                self.logger.info(f"Using HTML parser for {file_path.name}")
+                try:
+                    html_result = self.html_parser.parse(file_content)
+
+                    # Convert HTML result to LLM-compatible format
+                    llm_result = self._convert_html_to_llm_format(html_result, file_path)
+                    if llm_result:
+                        self.logger.info(f"HTML parser extracted {len(llm_result.get('fields', []))} fields")
+                    else:
+                        self.logger.info(f"HTML parser found no forms in {file_path.name}")
+                except Exception as e:
+                    self.logger.warning(f"HTML parser failed, falling back to LLM: {e}")
                     llm_result = None
 
             # Fallback: Extract form using LLM if parser didn't work
@@ -835,12 +967,16 @@ class FrontendAnalyzer:
         # Load GWT artifacts
         gwt_artifacts = self.load_gwt_artifacts_from_extraction(extraction_file, project_id)
 
+        # Link components (T009)
+        linkage = self.link_gwt_components(gwt_artifacts)
+
         counts = {
             'presenters': 0,
             'views': 0,
             'ui_binders': 0,
             'total_components': 0,
-            'total_forms': 0
+            'total_forms': 0,
+            'linked_chains': len(linkage['complete_chains'])
         }
 
         # Process presenters
@@ -874,10 +1010,129 @@ class FrontendAnalyzer:
             except Exception as e:
                 self.logger.error(f"Failed to convert UiBinder {artifact.get('file_path')}: {e}")
 
+        # Save linkage information (T009)
+        self._save_gwt_linkage(linkage)
+
         self.logger.info(f"Processed {counts['total_components']} GWT components "
-                        f"and {counts['total_forms']} forms")
+                        f"and {counts['total_forms']} forms "
+                        f"({counts['linked_chains']} complete MVP chains)")
 
         return counts
+
+    def link_gwt_components(
+        self,
+        gwt_artifacts: Dict[str, List[Dict[str, Any]]]
+    ) -> Dict[str, Dict[str, Any]]:
+        """
+        Link Presenter → View → UiBinder chains based on naming conventions.
+
+        Feature 008 T009: Establish relationships between GWT MVP components.
+
+        Args:
+            gwt_artifacts: Dict with presenters, views, ui_binders lists
+
+        Returns:
+            Dict with linkage information:
+            - presenter_view_links: {presenter_name: view_name}
+            - view_uibinder_links: {view_name: uibinder_path}
+            - complete_chains: [{presenter, view, uibinder}]
+        """
+        linkage = {
+            'presenter_view_links': {},
+            'view_uibinder_links': {},
+            'complete_chains': []
+        }
+
+        # Build view name index
+        view_index = {}
+        for view_artifact in gwt_artifacts.get('views', []):
+            semantic = view_artifact.get('semantic_data', {})
+            view_name = semantic.get('class_name') or Path(view_artifact['file_path']).stem
+            view_index[view_name] = view_artifact
+
+        # Build UiBinder file index
+        uibinder_index = {}
+        for uibinder_artifact in gwt_artifacts.get('ui_binders', []):
+            file_path = Path(uibinder_artifact['file_path'])
+            # Index by stem: UserView.ui.xml → UserView
+            stem = file_path.stem.replace('.ui', '')
+            uibinder_index[stem] = uibinder_artifact
+
+        # Link presenters to views
+        for presenter_artifact in gwt_artifacts.get('presenters', []):
+            semantic = presenter_artifact.get('semantic_data', {})
+            presenter_name = semantic.get('class_name') or Path(presenter_artifact['file_path']).stem
+
+            # Try multiple view name patterns
+            view_name_candidates = []
+
+            # Pattern 1: UserPresenter → UserView
+            if presenter_name.endswith('Presenter'):
+                base_name = presenter_name[:-9]  # Remove 'Presenter'
+                view_name_candidates.append(f"{base_name}View")
+
+            # Pattern 2: Same name (less common but valid)
+            view_name_candidates.append(presenter_name)
+
+            # Pattern 3: Check view_binding in semantic data
+            if 'view_binding' in semantic:
+                view_binding = semantic['view_binding']
+                if isinstance(view_binding, dict) and 'view_class' in view_binding:
+                    view_class = view_binding['view_class']
+                    # Extract simple name: com.example.client.UserView → UserView
+                    view_name_candidates.insert(0, view_class.split('.')[-1])
+
+            # Find matching view
+            matched_view = None
+            matched_view_name = None
+            for candidate in view_name_candidates:
+                if candidate in view_index:
+                    matched_view = view_index[candidate]
+                    matched_view_name = candidate
+                    break
+
+            if matched_view:
+                linkage['presenter_view_links'][presenter_name] = matched_view_name
+
+                # Try to link view to UiBinder
+                matched_uibinder = None
+                if matched_view_name in uibinder_index:
+                    matched_uibinder = uibinder_index[matched_view_name]
+                    linkage['view_uibinder_links'][matched_view_name] = matched_uibinder['file_path']
+
+                    # Complete chain found
+                    linkage['complete_chains'].append({
+                        'presenter': presenter_name,
+                        'presenter_file': presenter_artifact['file_path'],
+                        'view': matched_view_name,
+                        'view_file': matched_view['file_path'],
+                        'uibinder': matched_uibinder['file_path']
+                    })
+
+        self.logger.info(
+            f"GWT Component Linking: {len(linkage['presenter_view_links'])} presenter-view links, "
+            f"{len(linkage['view_uibinder_links'])} view-uibinder links, "
+            f"{len(linkage['complete_chains'])} complete MVP chains"
+        )
+
+        return linkage
+
+    def _save_gwt_linkage(self, linkage: Dict[str, Any]):
+        """
+        Save GWT component linkage information.
+
+        Feature 008 T009: Store Presenter → View → UiBinder relationships.
+
+        Args:
+            linkage: Linkage dictionary from link_gwt_components
+        """
+        linkage_file = self.components_dir / "gwt_linkage.json"
+        try:
+            with open(linkage_file, 'w', encoding='utf-8') as f:
+                json.dump(linkage, f, indent=2, default=str)
+            self.logger.info(f"Saved GWT linkage to {linkage_file}")
+        except Exception as e:
+            self.logger.error(f"Failed to save GWT linkage: {e}")
 
     def _save_ui_component(self, component: UIComponent):
         """Save UI component to JSON file."""

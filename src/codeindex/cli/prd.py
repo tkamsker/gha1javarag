@@ -8,7 +8,7 @@ Documents from indexed codebase artifacts.
 import logging
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, Any
 
 import click
 
@@ -901,12 +901,26 @@ def _analyze_frontend_layer(
         components_dir = output_dir / "frontend" / "components"
         if components_dir.exists():
             for component_file in components_dir.glob("*.json"):
+                # Skip linkage file
+                if component_file.name == "gwt_linkage.json":
+                    continue
                 try:
                     with open(component_file, "r", encoding="utf-8") as f:
                         component_data = json.load(f)
                         components.append(UIComponent.from_dict(component_data))
                 except Exception as e:
                     logger.warning(f"Failed to load component from {component_file}: {e}")
+
+        # Load GWT linkage information (T009)
+        gwt_linkage = None
+        linkage_file = components_dir / "gwt_linkage.json"
+        if linkage_file.exists():
+            try:
+                with open(linkage_file, "r", encoding="utf-8") as f:
+                    gwt_linkage = json.load(f)
+                logger.info(f"Loaded GWT linkage: {len(gwt_linkage.get('complete_chains', []))} MVP chains")
+            except Exception as e:
+                logger.warning(f"Failed to load GWT linkage: {e}")
 
         # Generate index.md
         if not quiet:
@@ -926,7 +940,7 @@ def _analyze_frontend_layer(
         if not quiet:
             click.echo("[INFO] Generating frontend PRD...")
 
-        prd_content = _generate_frontend_prd(forms, components)
+        prd_content = _generate_frontend_prd(forms, components, gwt_linkage)
         prd_file = output_dir / "prd" / "frontend_prd.md"
         prd_file.parent.mkdir(parents=True, exist_ok=True)
         prd_file.write_text(prd_content, encoding="utf-8")
@@ -1564,8 +1578,20 @@ def _generate_service_prd(services: list, endpoints: list) -> str:
     return "\n".join(lines)
 
 
-def _generate_frontend_prd(forms: list, components: list) -> str:
-    """Generate comprehensive frontend PRD markdown."""
+def _generate_frontend_prd(forms: list, components: list, gwt_linkage: Optional[Dict[str, Any]] = None) -> str:
+    """
+    Generate comprehensive frontend PRD markdown.
+
+    Feature 008 T009: Includes GWT component linkage information.
+
+    Args:
+        forms: List of form definitions
+        components: List of UI components
+        gwt_linkage: Optional GWT linkage information (Presenter → View → UiBinder)
+
+    Returns:
+        Markdown content
+    """
     from datetime import datetime
 
     lines = []
@@ -1886,6 +1912,33 @@ def _generate_frontend_prd(forms: list, components: list) -> str:
         lines.append(f"This section documents **{len(gwt_presenters)} GWT Presenters** and **{len(gwt_views)} GWT Views** ")
         lines.append("that implement the Model-View-Presenter (MVP) pattern.")
         lines.append("")
+
+        # MVP Chains (T009)
+        if gwt_linkage and gwt_linkage.get('complete_chains'):
+            complete_chains = gwt_linkage['complete_chains']
+            lines.append(f"**Complete MVP Chains:** {len(complete_chains)}")
+            lines.append("")
+            lines.append("The following Presenter → View → UiBinder chains were identified:")
+            lines.append("")
+
+            # MVP chains table
+            headers = ["Presenter", "View", "UiBinder Template"]
+            rows = []
+            for chain in complete_chains[:15]:  # Show first 15 chains
+                presenter_name = Path(chain['presenter_file']).stem if 'presenter_file' in chain else chain['presenter']
+                view_name = Path(chain['view_file']).stem if 'view_file' in chain else chain['view']
+                uibinder_name = Path(chain['uibinder']).name
+
+                rows.append([
+                    f"`{presenter_name}`",
+                    f"`{view_name}`",
+                    f"`{uibinder_name}`"
+                ])
+
+            lines.append(MarkdownBuilder.format_table(headers, rows))
+            if len(complete_chains) > 15:
+                lines.append(f"*... and {len(complete_chains) - 15} more complete chains*")
+            lines.append("")
 
         # GWT Presenters
         if gwt_presenters:

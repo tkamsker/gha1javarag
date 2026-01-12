@@ -13,6 +13,7 @@ from pathlib import Path
 import httpx
 
 from codeindex.utils.retry import retry, calculate_exponential_backoff
+from codeindex.utils.timeout_calculator import TimeoutCalculator
 from codeindex.models import ArtifactType
 from codeindex.models.metrics import TimeoutMetric
 from codeindex.utils.metrics import get_metrics_collector
@@ -25,12 +26,15 @@ logger = logging.getLogger(__name__)
 # ==============================================================================
 
 # Rate limiting: max concurrent AI calls
-MAX_CONCURRENT_AI_CALLS = 10
+# Feature 008 T002: Reduced from 10 to 5 to prevent Ollama overload
+# Production issue: 11.5% timeout rate with 10 workers
+# Target: <2% timeout rate with 5 workers
+MAX_CONCURRENT_AI_CALLS = 5
 _rate_limiter = threading.Semaphore(MAX_CONCURRENT_AI_CALLS)
 
 # HTTP timeouts (defaults, can be overridden in OllamaClient constructor)
 DEFAULT_CONNECT_TIMEOUT = 10.0  # seconds
-DEFAULT_READ_TIMEOUT = 240.0    # seconds (4 minutes for complex LLM inference)
+DEFAULT_READ_TIMEOUT = 240.0    # seconds (base timeout for adaptive calculation)
 
 
 # ==============================================================================
@@ -113,14 +117,18 @@ class OllamaClient:
         read_timeout: float = DEFAULT_READ_TIMEOUT
     ):
         """
-        Initialize Ollama client.
+        Initialize Ollama client with adaptive timeout support.
 
         Args:
             base_url: Ollama server base URL
             model: Model name to use
             max_retries: Maximum retry attempts
             connect_timeout: Connection timeout in seconds
-            read_timeout: Read timeout in seconds for long-running LLM requests
+            read_timeout: Base read timeout in seconds (used as base for adaptive calculation)
+
+        Note:
+            Feature 008 T002: Adaptive timeouts are calculated using TimeoutCalculator
+            based on file size. The read_timeout parameter serves as the base timeout.
         """
         self.base_url = base_url.rstrip('/')
         self.model = model
@@ -128,10 +136,20 @@ class OllamaClient:
         self.connect_timeout = connect_timeout
         self.read_timeout = read_timeout
 
+        # Initialize adaptive timeout calculator (Feature 008 T002)
+        # Use read_timeout as base, with scaling factor of 10s per 100 lines
+        self.timeout_calculator = TimeoutCalculator(
+            base=int(read_timeout),  # Use read_timeout as base (default 240s)
+            scale=10,                 # Add 10s per 100 lines
+            min_timeout=60,           # Minimum 1 minute
+            max_timeout=600           # Maximum 10 minutes
+        )
+
         # Log initialization
         logger.info(
             f"OllamaClient initialized: model={model}, "
-            f"read_timeout={read_timeout}s, connect_timeout={connect_timeout}s"
+            f"base_timeout={read_timeout}s, connect_timeout={connect_timeout}s, "
+            f"adaptive_timeouts=enabled"
         )
 
         # Create HTTP client with connection pooling
@@ -171,14 +189,16 @@ class OllamaClient:
 
     def _calculate_timeout(self, file_lines: int) -> float:
         """
-        Calculate adaptive timeout based on file size.
+        Calculate adaptive timeout based on file size using TimeoutCalculator.
 
-        Formula: timeout = base_timeout * (1 + file_lines / 1000)
+        Feature 008 T002: New adaptive timeout algorithm
+        Formula: timeout = base + (lines / 100) * scale
+        Capped at: max(min_timeout, min(timeout, max_timeout))
 
-        For small files (100 lines): 132s (2.2 minutes)
-        For medium files (500 lines): 180s (3 minutes)
-        For large files (1000 lines): 240s (4 minutes)
-        For very large files (5000 lines): 720s (12 minutes)
+        For small files (100 lines): 250s
+        For medium files (500 lines): 290s
+        For large files (1000 lines): 340s
+        For very large files (5000 lines): 600s (capped)
 
         Args:
             file_lines: Number of lines in the file
@@ -189,27 +209,23 @@ class OllamaClient:
         Examples:
             >>> client = OllamaClient()
             >>> client._calculate_timeout(100)
-            132.0
-            >>> client._calculate_timeout(500)
-            180.0
-            >>> client._calculate_timeout(2000)
-            360.0
+            250.0
+            >>> client._calculate_timeout(1000)
+            340.0
+            >>> client._calculate_timeout(5000)
+            600.0  # Capped at max_timeout
         """
-        if file_lines < 0:
-            file_lines = 0
-
-        # Use read_timeout as base (default 240s)
-        base_timeout = self.read_timeout
-
-        # Adaptive formula: scale by file size
-        adaptive_timeout = base_timeout * (1 + file_lines / 1000.0)
+        # Use TimeoutCalculator for consistent timeout calculation
+        timeout = self.timeout_calculator.calculate_for_lines(file_lines)
 
         logger.debug(
-            f"Calculated adaptive timeout: {adaptive_timeout:.1f}s "
-            f"for file with {file_lines} lines (base={base_timeout}s)"
+            f"Calculated adaptive timeout: {timeout}s "
+            f"for file with {file_lines} lines "
+            f"(base={self.timeout_calculator.base}s, "
+            f"scale={self.timeout_calculator.scale}s/100lines)"
         )
 
-        return adaptive_timeout
+        return float(timeout)
 
     def _clean_json_response(self, response_text: str) -> str:
         """
