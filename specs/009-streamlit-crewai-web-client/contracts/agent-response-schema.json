@@ -1,0 +1,410 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vron.one/schemas/agent-response.json",
+  "title": "Agent Response Schema",
+  "description": "Standardized response format for all CrewAI agents in Feature 009",
+  "version": "1.0.0",
+  "type": "object",
+  "properties": {
+    "agent_role": {
+      "type": "string",
+      "enum": [
+        "senior_developer",
+        "data_analyst",
+        "frontend_specialist",
+        "backend_specialist",
+        "prd_writer",
+        "speckit_writer",
+        "gherkin_test_writer",
+        "playwright_test_writer"
+      ],
+      "description": "Role of the agent that generated this response"
+    },
+    "response_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for this response (for tracking and audit)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when response was generated"
+    },
+    "query": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000,
+      "description": "Original user query that triggered this response"
+    },
+    "response_text": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Agent's response text in Markdown format"
+    },
+    "response_format": {
+      "type": "string",
+      "enum": ["markdown", "json", "gherkin", "playwright", "yaml"],
+      "default": "markdown",
+      "description": "Format of the response_text field"
+    },
+    "citations": {
+      "type": "array",
+      "description": "References to artifacts and source files used in response",
+      "items": {
+        "type": "object",
+        "properties": {
+          "citation_id": {
+            "type": "string",
+            "description": "Unique citation identifier (e.g., [1], [2], ...)"
+          },
+          "artifact_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Weaviate artifact UUID"
+          },
+          "artifact_type": {
+            "type": "string",
+            "enum": [
+              "DaoCall",
+              "GwtPresenter",
+              "GwtView",
+              "GwtUiBinder",
+              "DtoArtifact",
+              "DbTable",
+              "BackendDoc",
+              "JspForm",
+              "GwtEndpoint",
+              "IbatisStatement",
+              "JsArtifact"
+            ],
+            "description": "Type of artifact being cited"
+          },
+          "file_path": {
+            "type": "string",
+            "description": "Absolute path to source file"
+          },
+          "line_numbers": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "end": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "description": "Optional: specific line range being referenced"
+          },
+          "excerpt": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Short excerpt from source (first 200 chars)"
+          },
+          "relevance_score": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0,
+            "description": "Confidence score for this citation (from Weaviate search)"
+          }
+        },
+        "required": ["citation_id", "artifact_id", "artifact_type", "file_path"]
+      },
+      "maxItems": 20
+    },
+    "tools_used": {
+      "type": "array",
+      "description": "List of tools the agent invoked to generate response",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tool_name": {
+            "type": "string",
+            "enum": ["semantic_search", "read_source_file", "llm_query"]
+          },
+          "invocation_count": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Number of times this tool was called"
+          },
+          "total_execution_time_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total time spent in this tool (milliseconds)"
+          }
+        },
+        "required": ["tool_name", "invocation_count"]
+      }
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low"],
+      "description": "Agent's confidence in the response quality"
+    },
+    "follow_up_suggestions": {
+      "type": "array",
+      "description": "Suggested follow-up questions for the user",
+      "items": {
+        "type": "string",
+        "minLength": 10,
+        "maxLength": 200
+      },
+      "maxItems": 5
+    },
+    "warnings": {
+      "type": "array",
+      "description": "Warnings about potential issues or limitations",
+      "items": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "string",
+            "enum": ["info", "warning", "error"]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "context": {
+            "type": "string",
+            "description": "Additional context for the warning"
+          }
+        },
+        "required": ["level", "message"]
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata for tracking and debugging",
+      "properties": {
+        "execution_time_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total time to generate response (milliseconds)"
+        },
+        "tokens_used": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total LLM tokens consumed (prompt + response)"
+        },
+        "model": {
+          "type": "string",
+          "default": "gemma3:12b",
+          "description": "LLM model used for generation"
+        },
+        "workspace_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Optional: workspace context for this response"
+        },
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Optional: conversation thread ID for context retention"
+        },
+        "retry_count": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Number of retries due to LLM timeout or error"
+        },
+        "error": {
+          "type": "object",
+          "properties": {
+            "occurred": {
+              "type": "boolean",
+              "default": false
+            },
+            "type": {
+              "type": "string",
+              "description": "Error class name (e.g., TimeoutError, ConnectionError)"
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message"
+            }
+          },
+          "description": "Error information if response generation failed"
+        }
+      }
+    }
+  },
+  "required": [
+    "agent_role",
+    "response_id",
+    "timestamp",
+    "query",
+    "response_text",
+    "response_format"
+  ],
+  "examples": [
+    {
+      "agent_role": "senior_developer",
+      "response_id": "resp-123e4567-e89b-12d3-a456-426614174000",
+      "timestamp": "2026-01-14T10:30:00Z",
+      "query": "Explain the authentication flow in UserService.java",
+      "response_text": "# Authentication Flow Analysis\n\nThe `UserService.java` class implements a multi-step authentication flow:\n\n1. **Input Validation** [1]: The service validates username/password format before database lookup\n2. **Credential Lookup** [2]: Uses `UserDAO.findByUsername()` to retrieve user record\n3. **Password Verification** [3]: Compares hashed password using BCrypt\n4. **Session Creation** [4]: Generates JWT token on successful authentication\n\n## Security Considerations\n- Uses BCrypt with 12 rounds (secure)\n- JWT tokens expire after 24 hours\n- Failed login attempts are logged for audit\n\n## Related Components\n- `UserDAO.java` [2]: Database access layer\n- `AuthenticationFilter.java` [5]: Request interceptor\n- `JwtTokenProvider.java` [4]: Token generation\n\n## References\n[1] UserService.java:42-58\n[2] UserDAO.java:123-145\n[3] UserService.java:67-72\n[4] JwtTokenProvider.java:28-45\n[5] AuthenticationFilter.java:15-30",
+      "response_format": "markdown",
+      "citations": [
+        {
+          "citation_id": "[1]",
+          "artifact_id": "artifact-uuid-001",
+          "artifact_type": "BackendDoc",
+          "file_path": "/path/to/UserService.java",
+          "line_numbers": {
+            "start": 42,
+            "end": 58
+          },
+          "excerpt": "public User authenticate(String username, String password) {\n    validateInputs(username, password);\n    ...",
+          "relevance_score": 0.95
+        },
+        {
+          "citation_id": "[2]",
+          "artifact_id": "artifact-uuid-002",
+          "artifact_type": "DaoCall",
+          "file_path": "/path/to/UserDAO.java",
+          "line_numbers": {
+            "start": 123,
+            "end": 145
+          },
+          "excerpt": "public Optional<User> findByUsername(String username) {\n    return jdbcTemplate.queryForObject(...);\n    ...",
+          "relevance_score": 0.89
+        }
+      ],
+      "tools_used": [
+        {
+          "tool_name": "semantic_search",
+          "invocation_count": 2,
+          "total_execution_time_ms": 1234
+        },
+        {
+          "tool_name": "read_source_file",
+          "invocation_count": 3,
+          "total_execution_time_ms": 456
+        }
+      ],
+      "confidence": "high",
+      "follow_up_suggestions": [
+        "How are JWT tokens validated in the authentication filter?",
+        "What happens when a user enters an incorrect password multiple times?",
+        "Are there any vulnerabilities in the password hashing implementation?",
+        "How does the system handle expired JWT tokens?"
+      ],
+      "warnings": [],
+      "metadata": {
+        "execution_time_ms": 8234,
+        "tokens_used": 1542,
+        "model": "gemma3:12b",
+        "retry_count": 0,
+        "error": {
+          "occurred": false
+        }
+      }
+    },
+    {
+      "agent_role": "gherkin_test_writer",
+      "response_id": "resp-987f6543-e21a-34b5-c678-426614174001",
+      "timestamp": "2026-01-14T11:45:00Z",
+      "query": "Generate Gherkin test cases for user login functionality",
+      "response_text": "Feature: User Authentication\n  As a registered user\n  I want to log in to the system\n  So that I can access my account\n\n  Background:\n    Given the system is running\n    And the database is seeded with test users\n\n  Scenario: Successful login with valid credentials\n    Given I am on the login page\n    When I enter username \"testuser\" and password \"SecurePass123\"\n    And I click the \"Login\" button\n    Then I should be redirected to the dashboard\n    And I should see a welcome message \"Welcome, testuser\"\n    And a JWT token should be stored in session storage\n\n  Scenario: Failed login with invalid password\n    Given I am on the login page\n    When I enter username \"testuser\" and password \"WrongPassword\"\n    And I click the \"Login\" button\n    Then I should see an error message \"Invalid username or password\"\n    And I should remain on the login page\n    And no JWT token should be stored\n\n  Scenario: Failed login with non-existent user\n    Given I am on the login page\n    When I enter username \"nonexistentuser\" and password \"AnyPassword\"\n    And I click the \"Login\" button\n    Then I should see an error message \"Invalid username or password\"\n    And the failed login attempt should be logged\n\n  Scenario Outline: Input validation for login form\n    Given I am on the login page\n    When I enter username \"<username>\" and password \"<password>\"\n    And I click the \"Login\" button\n    Then I should see a validation error \"<error_message>\"\n\n    Examples:\n      | username | password     | error_message                        |\n      |          | password123  | Username is required                 |\n      | user     |              | Password is required                 |\n      | ab       | password123  | Username must be at least 3 chars    |\n      | user     | 123          | Password must be at least 8 chars    |",
+      "response_format": "gherkin",
+      "citations": [
+        {
+          "citation_id": "[1]",
+          "artifact_id": "artifact-uuid-003",
+          "artifact_type": "GwtPresenter",
+          "file_path": "/path/to/LoginPresenter.java",
+          "excerpt": "class LoginPresenter implements Presenter { ... }",
+          "relevance_score": 0.92
+        }
+      ],
+      "tools_used": [
+        {
+          "tool_name": "semantic_search",
+          "invocation_count": 1,
+          "total_execution_time_ms": 987
+        }
+      ],
+      "confidence": "high",
+      "follow_up_suggestions": [
+        "Generate Playwright tests for these Gherkin scenarios",
+        "Add test cases for password reset functionality",
+        "Create security-focused test scenarios (SQL injection, XSS)"
+      ],
+      "warnings": [
+        {
+          "level": "info",
+          "message": "Scenario outlines assume username/password validation rules match implementation",
+          "context": "Verify validation rules in UserService.java:42-58"
+        }
+      ],
+      "metadata": {
+        "execution_time_ms": 5432,
+        "tokens_used": 987,
+        "model": "gemma3:12b",
+        "retry_count": 0,
+        "error": {
+          "occurred": false
+        }
+      }
+    },
+    {
+      "agent_role": "data_analyst",
+      "response_id": "resp-456a7890-b12c-56d7-e890-426614174002",
+      "timestamp": "2026-01-14T12:00:00Z",
+      "query": "Analyze the database schema for the user management module",
+      "response_text": "# Database Schema Analysis: User Management Module\n\n## Tables Identified\n\n### 1. users (Primary Table)\n- **Columns**: user_id (PK), username, email, password_hash, created_at, updated_at\n- **Constraints**: UNIQUE(username), UNIQUE(email)\n- **Indexes**: idx_users_username, idx_users_email\n\n### 2. user_roles (Role Assignment)\n- **Columns**: role_id (PK), user_id (FK), role_name, assigned_at\n- **Foreign Keys**: user_id → users.user_id (ON DELETE CASCADE)\n- **Indexes**: idx_user_roles_user_id\n\n### 3. user_sessions (Active Sessions)\n- **Columns**: session_id (PK), user_id (FK), jwt_token, expires_at, created_at\n- **Foreign Keys**: user_id → users.user_id (ON DELETE CASCADE)\n- **Indexes**: idx_user_sessions_user_id, idx_user_sessions_expires_at\n\n## Foreign Key Relationships\n\n```\nusers (1) ----< (N) user_roles\nusers (1) ----< (N) user_sessions\n```\n\n## Data Quality Issues\n\n1. **Missing Index**: No index on user_sessions.jwt_token (performance issue for token lookups)\n2. **No Normalization**: role_name stored as TEXT in user_roles (should reference roles table)\n3. **Missing Constraint**: password_hash allows NULL (security risk)\n\n## Recommendations\n\n1. Add index: `CREATE INDEX idx_user_sessions_token ON user_sessions(jwt_token)`\n2. Create roles table: `CREATE TABLE roles (role_id, role_name, permissions)`\n3. Add constraint: `ALTER TABLE users MODIFY password_hash VARCHAR(255) NOT NULL`",
+      "response_format": "markdown",
+      "citations": [
+        {
+          "citation_id": "[1]",
+          "artifact_id": "artifact-uuid-004",
+          "artifact_type": "DbTable",
+          "file_path": "/path/to/schema.sql",
+          "line_numbers": {
+            "start": 1,
+            "end": 25
+          },
+          "excerpt": "CREATE TABLE users (\n    user_id INT PRIMARY KEY AUTO_INCREMENT,\n    username VARCHAR(50) NOT NULL UNIQUE,\n    ...",
+          "relevance_score": 0.98
+        }
+      ],
+      "tools_used": [
+        {
+          "tool_name": "semantic_search",
+          "invocation_count": 3,
+          "total_execution_time_ms": 2345
+        },
+        {
+          "tool_name": "llm_query",
+          "invocation_count": 1,
+          "total_execution_time_ms": 4567
+        }
+      ],
+      "confidence": "high",
+      "follow_up_suggestions": [
+        "Generate an entity-relationship diagram for the user management module",
+        "Analyze query performance for user authentication",
+        "Identify all queries that access the users table"
+      ],
+      "warnings": [
+        {
+          "level": "warning",
+          "message": "Missing foreign key index on user_roles.user_id may cause slow joins",
+          "context": "Consider adding composite index on (user_id, role_name)"
+        }
+      ],
+      "metadata": {
+        "execution_time_ms": 12345,
+        "tokens_used": 2134,
+        "model": "gemma3:12b",
+        "retry_count": 1,
+        "error": {
+          "occurred": false
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

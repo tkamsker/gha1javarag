@@ -60,3 +60,12 @@ docker-weaviate-data/
 
 # Shell scripts
 # *.sh
+
+# Feature 009: Web UI specific
+*.db
+*.sqlite
+*.sqlite3
+.streamlit/
+data/exports/
+data/workspaces.db
+data/annotations.db

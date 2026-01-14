@@ -1,0 +1,375 @@
+"""
+Test Generation page for GEMINI Code Analysis Pipeline Web UI (Phase 12).
+
+This page provides automated test generation with:
+- Gherkin BDD test generation
+- Playwright E2E test generation
+- Test preview with syntax highlighting
+- Export tests to files
+- Test from artifacts or natural language descriptions
+"""
+
+import streamlit as st
+import sys
+import time
+from pathlib import Path
+from typing import Optional, Dict, List, Any
+
+# Add src directory to Python path
+src_dir = Path(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(src_dir))
+
+from codeindex.web.services.agent_service import get_agent_service
+from codeindex.web.agents.base import AgentRole
+from codeindex.web.utils.session_state import (
+    initialize_session_state,
+    get,
+    set_value,
+    append_to_list,
+    clear_list
+)
+
+
+def initialize_tests_state():
+    """Initialize session state for tests page."""
+    defaults = {
+        "test_type": "gherkin",
+        "test_input": "",
+        "generated_tests": [],
+        "test_loading": False,
+        "test_error": None
+    }
+
+    initialize_session_state(defaults)
+
+
+def render_test_type_selector():
+    """Render test type selection."""
+    st.subheader("🧪 Test Generation")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("📝 Gherkin (BDD)", use_container_width=True, type="primary" if get("test_type") == "gherkin" else "secondary"):
+            set_value("test_type", "gherkin")
+            st.rerun()
+
+    with col2:
+        if st.button("🎭 Playwright (E2E)", use_container_width=True, type="primary" if get("test_type") == "playwright" else "secondary"):
+            set_value("test_type", "playwright")
+            st.rerun()
+
+    test_type = get("test_type", "gherkin")
+
+    if test_type == "gherkin":
+        st.info("""
+        **Gherkin BDD Tests**: Generate behavior-driven development scenarios in Given-When-Then format.
+        Perfect for documenting user stories and acceptance criteria.
+        """)
+    else:
+        st.info("""
+        **Playwright E2E Tests**: Generate end-to-end test scripts for web UI automation.
+        Includes page object patterns, proper locators, and comprehensive assertions.
+        """)
+
+
+def render_test_input():
+    """Render test generation input."""
+    st.subheader("📋 Describe What to Test")
+
+    test_type = get("test_type", "gherkin")
+
+    if test_type == "gherkin":
+        placeholder = """Example:
+Feature: User Login
+  As a user
+  I want to log in to the application
+  So that I can access my account
+
+Describe the login feature, authentication flow, and edge cases..."""
+    else:
+        placeholder = """Example:
+Test the user login flow:
+1. Navigate to login page
+2. Enter valid credentials
+3. Click login button
+4. Verify dashboard is displayed
+
+Describe the UI elements and expected behavior..."""
+
+    test_input = st.text_area(
+        "Test Description",
+        value=get("test_input", ""),
+        height=200,
+        placeholder=placeholder,
+        help="Describe the feature or user flow you want to test"
+    )
+
+    set_value("test_input", test_input)
+
+    # Action buttons
+    col1, col2, col3 = st.columns([1, 1, 4])
+
+    with col1:
+        if st.button("🎯 Generate Tests", type="primary", use_container_width=True):
+            if test_input.strip():
+                generate_tests(test_input)
+                st.rerun()
+            else:
+                st.error("❌ Please provide a test description")
+
+    with col2:
+        if st.button("🗑️ Clear", use_container_width=True):
+            set_value("test_input", "")
+            clear_list("generated_tests")
+            st.rerun()
+
+
+def generate_tests(description: str):
+    """Generate tests using appropriate agent."""
+    set_value("test_loading", True)
+    set_value("test_error", None)
+
+    try:
+        test_type = get("test_type", "gherkin")
+        agent_service = get_agent_service()
+
+        # Select appropriate agent
+        if test_type == "gherkin":
+            agent_role = AgentRole.GHERKIN_TEST_WRITER
+        else:
+            agent_role = AgentRole.PLAYWRIGHT_TEST_WRITER
+
+        # Generate tests
+        start_time = time.time()
+
+        response = agent_service.execute_query(
+            query=f"Generate {test_type} tests for: {description}",
+            agent_role=agent_role
+        )
+
+        end_time = time.time()
+
+        # Log performance
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(
+            f"Test generation: type={test_type}, "
+            f"time={response.duration_seconds:.2f}s"
+        )
+
+        if response.has_error():
+            set_value("test_error", response.error)
+        else:
+            # Add to generated tests
+            append_to_list("generated_tests", {
+                "type": test_type,
+                "description": description,
+                "content": response.response_text,
+                "timestamp": response.timestamp,
+                "citations": [c.to_dict() for c in response.citations]
+            })
+
+    except Exception as e:
+        set_value("test_error", str(e))
+
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Test generation failed: {e}", exc_info=True)
+
+    finally:
+        set_value("test_loading", False)
+
+
+def render_generated_tests():
+    """Render generated test results."""
+    tests = get("generated_tests", [])
+
+    if not tests:
+        return
+
+    st.markdown("---")
+    st.subheader("📄 Generated Tests")
+
+    for i, test in enumerate(reversed(tests)):  # Show newest first
+        with st.expander(f"{test['type'].upper()} Test - {test['timestamp'][:19]}", expanded=i==0):
+            # Description
+            st.caption(f"**Description**: {test['description'][:100]}...")
+
+            # Test content
+            if test['type'] == "gherkin":
+                st.code(test['content'], language="gherkin")
+            else:
+                st.code(test['content'], language="javascript")
+
+            # Actions
+            col1, col2, col3 = st.columns([1, 1, 4])
+
+            with col1:
+                # Download button
+                filename = f"{test['type']}_test_{int(time.time())}.txt"
+                st.download_button(
+                    label="💾 Download",
+                    data=test['content'],
+                    file_name=filename,
+                    mime="text/plain",
+                    key=f"download_{i}"
+                )
+
+            with col2:
+                # Copy button hint
+                st.caption("📋 Use browser copy")
+
+            # Citations
+            if test.get('citations'):
+                with st.expander(f"📚 References ({len(test['citations'])})"):
+                    for j, citation in enumerate(test['citations'], 1):
+                        file_path = citation.get("file_path", "")
+                        st.markdown(f"{j}. `{file_path}`")
+
+
+def render_test_examples():
+    """Render test generation examples."""
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("💡 Examples")
+
+    test_type = get("test_type", "gherkin")
+
+    if test_type == "gherkin":
+        examples = {
+            "User Login": """Feature: User Authentication
+Test the login flow with valid and invalid credentials, password reset, and account lockout scenarios.""",
+
+            "Search Feature": """Feature: Artifact Search
+Test natural language search, filtering by artifact type, pagination, and empty results handling.""",
+
+            "Workspace Management": """Feature: Workspace Collaboration
+Test creating, saving, loading, and sharing workspaces with team members."""
+        }
+    else:
+        examples = {
+            "Login Flow": """Test the complete user login flow:
+- Navigate to login page
+- Enter credentials
+- Handle success/error cases
+- Verify redirect to dashboard""",
+
+            "Search Interaction": """Test search functionality:
+- Enter search query
+- Apply filters
+- Verify results display
+- Test pagination controls""",
+
+            "Form Submission": """Test form submission:
+- Fill form fields
+- Validate input
+- Submit form
+- Verify success message"""
+        }
+
+    for title, example in examples.items():
+        if st.sidebar.button(f"📝 {title}", key=f"example_{title}"):
+            set_value("test_input", example)
+            st.rerun()
+
+
+def render_test_templates():
+    """Render test templates."""
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("📋 Templates")
+
+    test_type = get("test_type", "gherkin")
+
+    if test_type == "gherkin":
+        template = """Feature: [Feature Name]
+  As a [user role]
+  I want to [action]
+  So that [benefit]
+
+  Scenario: [Scenario Name]
+    Given [initial context]
+    When [action occurs]
+    Then [expected outcome]
+
+  Scenario Outline: [Parameterized Scenario]
+    Given [context with <parameter>]
+    When [action with <parameter>]
+    Then [outcome with <parameter>]
+
+    Examples:
+      | parameter |
+      | value1    |
+      | value2    |
+"""
+    else:
+        template = """import { test, expect } from '@playwright/test';
+
+test.describe('[Feature Name]', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+  });
+
+  test('[Test Name]', async ({ page }) => {
+    // Arrange
+    await page.locator('[data-testid="element"]').click();
+
+    // Act
+    await page.fill('[data-testid="input"]', 'value');
+    await page.click('[data-testid="submit"]');
+
+    // Assert
+    await expect(page.locator('[data-testid="result"]'))
+      .toContainText('expected text');
+  });
+});
+"""
+
+    with st.sidebar.expander("View Template"):
+        st.code(template, language="gherkin" if test_type == "gherkin" else "javascript")
+
+        if st.button("📋 Use Template"):
+            set_value("test_input", template)
+            st.rerun()
+
+
+def main():
+    """Main tests page function."""
+    # Page configuration
+    st.title("🧪 Test Generation")
+
+    st.markdown("""
+    Generate automated tests using AI agents. Describe your feature or user flow,
+    and get production-ready test cases in Gherkin or Playwright format.
+    """)
+
+    # Initialize session state
+    initialize_tests_state()
+
+    # Render examples and templates in sidebar
+    render_test_examples()
+    render_test_templates()
+
+    # Show loading indicator
+    if get("test_loading", False):
+        with st.spinner("🤖 Generating tests..."):
+            time.sleep(0.1)
+
+    # Show error if present
+    error = get("test_error")
+    if error:
+        st.error(f"❌ {error}")
+
+    # Render test type selector
+    render_test_type_selector()
+
+    st.markdown("---")
+
+    # Render input
+    render_test_input()
+
+    # Render generated tests
+    render_generated_tests()
+
+
+if __name__ == "__main__":
+    main()
