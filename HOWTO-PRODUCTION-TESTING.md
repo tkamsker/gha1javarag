@@ -18,8 +18,80 @@ This guide walks you through testing the Streamlit Web Client in a production-li
 - ✅ Indexed codebase - artifacts already in Weaviate
 
 ### Required Packages
+See Step 0 below for installation instructions.
+
+## Step 0: Virtual Environment Setup
+
+**Critical**: Always use a virtual environment to isolate project dependencies and avoid conflicts with system Python packages.
+
+### 0.1 Create Virtual Environment
+
 ```bash
-# Install web UI dependencies
+# Navigate to project root
+cd /path/to/gha1javarag
+
+# Create virtual environment (one-time setup)
+python3 -m venv .venv
+
+# This creates a .venv/ directory containing:
+# - Python interpreter
+# - pip package manager
+# - Isolated package installation directory
+```
+
+### 0.2 Activate Virtual Environment
+
+**Linux/macOS**:
+```bash
+source .venv/bin/activate
+
+# Your prompt should change to show (.venv)
+# Example: (.venv) user@host:~/gha1javarag$
+```
+
+**Windows (Command Prompt)**:
+```cmd
+.venv\Scripts\activate.bat
+```
+
+**Windows (PowerShell)**:
+```powershell
+.venv\Scripts\Activate.ps1
+
+# If you get execution policy error, run:
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+### 0.3 Verify Virtual Environment is Active
+
+```bash
+# Check Python location (should point to .venv/)
+which python3  # Linux/macOS
+where python   # Windows
+
+# Expected output (Linux/macOS):
+# /path/to/gha1javarag/.venv/bin/python3
+
+# Expected output (Windows):
+# C:\path\to\gha1javarag\.venv\Scripts\python.exe
+
+# Check pip location
+which pip3     # Linux/macOS
+where pip      # Windows
+
+# Verify Python version
+python3 --version  # Should be 3.8 or higher
+```
+
+### 0.4 Install Required Packages
+
+**Important**: Only install packages after activating the virtual environment.
+
+```bash
+# Ensure .venv is activated (prompt shows (.venv))
+# If not activated, run: source .venv/bin/activate
+
+# Install all dependencies
 pip install -r requirements.txt
 
 # Key packages for web UI:
@@ -28,7 +100,26 @@ pip install -r requirements.txt
 # - streamlit-cytoscape>=1.0.0
 # - reportlab>=4.0.0
 # - aiosqlite>=0.19.0
+
+# Verify installation
+pip list | grep streamlit
+# Expected: streamlit 1.30.0 (or higher)
 ```
+
+### 0.5 Deactivating Virtual Environment (When Done)
+
+```bash
+# To deactivate when finished testing
+deactivate
+
+# Prompt should return to normal (no (.venv) prefix)
+```
+
+**Important Notes**:
+- ✅ Always activate `.venv` before running any Python commands
+- ✅ Each terminal session requires activation
+- ✅ The `.venv/` directory is gitignored and project-specific
+- ✅ To reactivate later: `source .venv/bin/activate`
 
 ## Step 1: Environment Configuration
 
@@ -127,6 +218,9 @@ curl -s http://localhost:8080/v1/meta | jq .
 ### 2.3 Verify Service Health
 
 ```bash
+# Ensure virtual environment is activated
+source .venv/bin/activate  # Skip if already activated
+
 # Test connectivity to all services
 python3 << 'EOF'
 import httpx
@@ -166,6 +260,9 @@ EOF
 ### 3.1 Run Database Initialization
 
 ```bash
+# Ensure virtual environment is activated
+source .venv/bin/activate  # Skip if already activated
+
 # Initialize SQLite databases
 python3 << 'EOF'
 import sys
@@ -222,8 +319,8 @@ sqlite3 data/workspaces.db ".tables"
 ### 4.1 Start Streamlit Server
 
 ```bash
-# Activate virtual environment
-source .venv/bin/activate
+# Ensure virtual environment is activated
+source .venv/bin/activate  # Skip if already activated
 
 # Launch Streamlit app
 streamlit run src/codeindex/web/app.py \
@@ -645,6 +742,40 @@ rm -rf data/exports/*
 
 ## Troubleshooting
 
+### Issue: Virtual Environment Not Working
+
+**Symptoms**: "ModuleNotFoundError" or packages not found
+
+**Solution**:
+```bash
+# Check if venv is activated (prompt should show (.venv))
+echo $VIRTUAL_ENV  # Linux/macOS - should show path to .venv
+echo %VIRTUAL_ENV% # Windows - should show path to .venv
+
+# If empty, activate venv
+source .venv/bin/activate  # Linux/macOS
+.venv\Scripts\activate     # Windows
+
+# Verify Python is from venv
+which python3  # Should show: .../gha1javarag/.venv/bin/python3
+
+# If packages still missing, reinstall
+pip install -r requirements.txt
+
+# If venv is corrupted, recreate it
+deactivate
+rm -rf .venv
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+**Common Mistakes**:
+- ❌ Running `pip install` without activating venv (installs to system Python)
+- ❌ Using wrong Python interpreter (system Python instead of venv Python)
+- ❌ Forgetting to activate venv in new terminal sessions
+- ❌ Using `python` instead of `python3` on some systems
+
 ### Issue: Streamlit Won't Start
 
 **Symptoms**: Port already in use
@@ -670,6 +801,9 @@ streamlit run src/codeindex/web/app.py --server.port 8502
 ```bash
 # Verify Weaviate has data
 curl -s http://localhost:8080/v1/schema | jq '.classes[].class'
+
+# Ensure virtual environment is activated
+source .venv/bin/activate
 
 # Check artifact count
 python3 << 'EOF'
@@ -741,6 +875,13 @@ rm -rf ~/.streamlit/cache
 ## Production Readiness Checklist
 
 Use this checklist before deploying to production:
+
+### ✅ Environment
+- [ ] Python 3.8+ installed
+- [ ] Virtual environment created (`.venv/`)
+- [ ] Virtual environment activated (prompt shows `(.venv)`)
+- [ ] All dependencies installed (`pip install -r requirements.txt`)
+- [ ] Python points to venv (`which python3` shows `.venv/bin/python3`)
 
 ### ✅ Services
 - [ ] Ollama running and responsive
