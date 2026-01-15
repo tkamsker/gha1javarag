@@ -235,10 +235,10 @@ def get_workspace_manager() -> SQLiteConnectionManager:
         from codeindex.utils.config import get_config
         config = get_config()
 
-        db_path = config.get("WORKSPACE_DB_PATH", "data/workspaces.db")
+        db_path = config.workspace_db_path
         schema_path = Path(__file__).parent / "schema.sql"
 
-        _workspace_manager = SQLiteConnectionManager(db_path, str(schema_path))
+        _workspace_manager = SQLiteConnectionManager(str(db_path), str(schema_path))
         logger.info(f"Initialized workspace database at {db_path}")
 
     return _workspace_manager
@@ -259,10 +259,10 @@ def get_annotation_manager() -> SQLiteConnectionManager:
 
         # For MVP, use same database as workspaces (simpler deployment)
         # Can be split later if needed
-        db_path = config.get("WORKSPACE_DB_PATH", "data/workspaces.db")
+        db_path = config.workspace_db_path
         schema_path = Path(__file__).parent / "schema.sql"
 
-        _annotation_manager = SQLiteConnectionManager(db_path, str(schema_path))
+        _annotation_manager = SQLiteConnectionManager(str(db_path), str(schema_path))
         logger.info(f"Initialized annotation database at {db_path}")
 
     return _annotation_manager

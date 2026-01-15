@@ -164,6 +164,46 @@ class Config:
         """Model for text2vec-ollama module."""
         return os.getenv("EMBEDDING_MODEL", "nomic-embed-text")
 
+    # Web UI Configuration (Feature 009)
+
+    @property
+    def workspace_db_path(self) -> Path:
+        """SQLite database path for workspace storage."""
+        path_str = os.getenv("WORKSPACE_DB_PATH", "data/workspaces.db")
+        return Path(path_str)
+
+    @property
+    def annotations_db_path(self) -> Path:
+        """SQLite database path for annotations storage."""
+        path_str = os.getenv("ANNOTATIONS_DB_PATH", "data/annotations.db")
+        return Path(path_str)
+
+    @property
+    def export_dir(self) -> Path:
+        """Directory for exported reports (PRD, specs, tests)."""
+        path_str = os.getenv("EXPORT_DIR", "data/exports")
+        return Path(path_str)
+
+    @property
+    def streamlit_port(self) -> int:
+        """Streamlit server port."""
+        return int(os.getenv("STREAMLIT_PORT", "8501"))
+
+    @property
+    def streamlit_host(self) -> str:
+        """Streamlit server host."""
+        return os.getenv("STREAMLIT_HOST", "localhost")
+
+    @property
+    def max_concurrent_agents(self) -> int:
+        """Maximum concurrent agents for multi-agent workflows."""
+        return int(os.getenv("MAX_CONCURRENT_AGENTS", "3"))
+
+    @property
+    def auth_enabled(self) -> bool:
+        """Enable authentication for web UI."""
+        return os.getenv("AUTH_ENABLED", "false").lower() in ("true", "1", "yes")
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert configuration to dictionary for debugging."""
         return {
