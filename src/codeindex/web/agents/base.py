@@ -254,10 +254,15 @@ def get_agent_config(role: AgentRole, **overrides) -> AgentConfig:
 
     Args:
         role: Agent role
-        **overrides: Configuration overrides
+        **overrides: Configuration overrides (from UI settings)
 
     Returns:
         AgentConfig instance
+
+    Note:
+        Maps UI settings to AgentConfig parameters:
+        - "verbosity" (string: concise/standard/detailed) -> "verbose" (bool)
+        - Filters out unknown parameters
     """
     base_config = DEFAULT_AGENT_CONFIGS.get(role)
     if base_config is None:
@@ -265,7 +270,20 @@ def get_agent_config(role: AgentRole, **overrides) -> AgentConfig:
 
     # Apply overrides
     config_dict = base_config.to_dict()
-    config_dict.update(overrides)
+
+    # Map UI settings to AgentConfig parameters
+    mapped_overrides = {}
+    for key, value in overrides.items():
+        if key == "verbosity":
+            # Map verbosity string to verbose boolean
+            # "concise" -> False, "standard"/"detailed" -> True
+            mapped_overrides["verbose"] = value in ["standard", "detailed"]
+        elif key in config_dict:
+            # Only pass known parameters
+            mapped_overrides[key] = value
+        # Silently ignore unknown parameters (like UI-specific settings)
+
+    config_dict.update(mapped_overrides)
 
     # Convert role back to enum if it was overridden as string
     if isinstance(config_dict["role"], str):

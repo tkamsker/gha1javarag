@@ -53,9 +53,9 @@ def get_default_session_state() -> Dict[str, Any]:
         "current_workspace": None,
         "workspace_list": [],
 
-        # Agent settings
+        # Agent settings (UI uses "verbosity", mapped to "verbose" in get_agent_config)
         "agent_settings": {
-            "verbosity": "standard",
+            "verbosity": "standard",  # UI setting: concise/standard/detailed
             "technical_level": "senior",
             "citation_style": "inline",
             "output_format": "markdown"
