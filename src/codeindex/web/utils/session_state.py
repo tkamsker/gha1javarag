@@ -220,6 +220,23 @@ def remove_from_list(key: str, value: Any):
         st.session_state[key].remove(value)
 
 
+def clear_list(key: str):
+    """
+    Clear a list in session state (empty the list).
+
+    Args:
+        key: Session state key (must be a list)
+    """
+    if key not in st.session_state:
+        st.session_state[key] = []
+        return
+
+    if not isinstance(st.session_state[key], list):
+        raise ValueError(f"Session state key '{key}' is not a list")
+
+    st.session_state[key] = []
+
+
 def toggle(key: str):
     """
     Toggle boolean value in session state.
