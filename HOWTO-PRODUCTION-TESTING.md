@@ -217,6 +217,24 @@ curl -s http://localhost:8080/v1/meta | jq .
 
 ### 2.3 Verify Service Health
 
+**Option 1: Use Standalone Script (Recommended)**
+
+```bash
+# Run service health check script (works on macOS and Linux)
+./check-services.sh
+
+# For detailed output:
+./check-services.sh --verbose
+
+# Expected output:
+# ✅ Ollama: Connected (http://localhost:11434)
+# ✅ Weaviate: Connected (http://localhost:8080)
+# ✅ SQLite: Database exists (data/workspaces.db)
+# ✅ All services healthy - ready to proceed!
+```
+
+**Option 2: Manual Check with Python**
+
 ```bash
 # Ensure virtual environment is activated
 source .venv/bin/activate  # Skip if already activated
@@ -703,9 +721,21 @@ EOF
 - ✅ Application doesn't crash
 - ✅ Can recover from errors
 
-## Step 9: Cleanup and Shutdown
+## Step 9: Service Health Monitoring
 
-### 9.1 Export Test Data
+### 9.1 Quick Service Check
+
+```bash
+# Run anytime to verify services are healthy
+./check-services.sh
+
+# If services are unhealthy, see troubleshooting output
+# Script will provide specific commands to fix each service
+```
+
+## Step 10: Cleanup and Shutdown
+
+### 10.1 Export Test Data
 
 ```bash
 # Export workspaces for backup
@@ -715,7 +745,7 @@ sqlite3 data/workspaces.db .dump > backup/workspaces_backup.sql
 cp data/exports/* backup/test-exports/
 ```
 
-### 9.2 Shutdown Services
+### 10.2 Shutdown Services
 
 ```bash
 # Stop Streamlit (Ctrl+C in terminal)
@@ -727,7 +757,7 @@ cp data/exports/* backup/test-exports/
 pkill ollama
 ```
 
-### 9.3 Clean Test Data (Optional)
+### 10.3 Clean Test Data (Optional)
 
 ```bash
 # Remove test workspaces
@@ -741,6 +771,16 @@ rm -rf data/exports/*
 ```
 
 ## Troubleshooting
+
+### Quick Diagnostics
+
+```bash
+# Run comprehensive service health check first
+./check-services.sh --verbose
+
+# This will identify which services are having issues
+# and provide specific troubleshooting steps
+```
 
 ### Issue: Virtual Environment Not Working
 
