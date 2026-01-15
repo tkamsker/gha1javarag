@@ -321,8 +321,9 @@ from codeindex.web.database.connection import get_workspace_manager
 print("🔧 Initializing workspace database...")
 
 try:
+    # Get manager - initialization happens automatically in constructor
+    # if database doesn't exist or is empty
     manager = get_workspace_manager()
-    manager.initialize_database()
 
     print("✅ Database initialized successfully")
     print(f"   Location: {manager.db_path}")

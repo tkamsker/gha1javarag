@@ -113,8 +113,9 @@ try:
 
     info("Initializing workspace database...")
 
+    # Get manager - initialization happens automatically in constructor
+    # if database doesn't exist or is empty
     manager = get_workspace_manager()
-    manager.initialize_database()
 
     ok(f"Database initialized successfully")
     info(f"Location: {manager.db_path}")
