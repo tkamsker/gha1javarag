@@ -1,11 +1,12 @@
 """
-Playwright Test Writer Agent for generating E2E test scripts.
+Playwright Test Writer Agent for generating E2E test automation.
 
 This agent specializes in:
-- Playwright test script generation
-- E2E test scenario creation
-- Page object pattern implementation
-- UI test automation code
+- Writing Playwright test code
+- Creating page object models
+- Defining locator strategies
+- Implementing test assertions
+- E2E automation best practices
 """
 
 import logging
@@ -25,13 +26,15 @@ logger = logging.getLogger(__name__)
 
 class PlaywrightTestWriterAgent:
     """
-    Playwright Test Writer Agent for E2E test generation.
+    Playwright Test Writer Agent for E2E test automation.
 
     Specializes in:
-    - Creating Playwright test scripts
-    - Implementing page object patterns
-    - Generating UI interaction tests
-    - Writing assertions for E2E scenarios
+    - Playwright test code generation
+    - Page Object Model (POM) pattern
+    - Locator strategies (CSS, XPath, text, role)
+    - Test assertions and expectations
+    - Fixture setup and teardown
+    - Parallel test execution
     """
 
     def __init__(self, config: Optional[AgentConfig] = None):
@@ -42,7 +45,7 @@ class PlaywrightTestWriterAgent:
         self.config = config
         self.role = AgentRole.PLAYWRIGHT_TEST_WRITER
 
-        logger.info(f"Initialized Playwright Test Writer agent: {config.name}")
+        logger.info("Initialized Playwright Test Writer agent")
 
     def execute_query(
         self,
@@ -53,36 +56,28 @@ class PlaywrightTestWriterAgent:
         Execute query with Playwright Test Writer agent.
 
         Args:
-            query: User request for E2E test generation
-            context: Optional context (e.g., UI components, user flows)
+            query: Test automation request
+            context: Optional context from previous interactions
 
         Returns:
-            AgentResponse with generated Playwright tests
+            AgentResponse with generated Playwright test code
         """
         start_time = datetime.now()
 
         try:
             logger.info(f"Playwright Test Writer processing: {query[:50]}...")
 
-            # Step 1: Analyze UI flow
-            ui_flow = self._analyze_ui_flow(query, context)
+            # Step 1: Search for relevant artifacts (comprehensive)
+            artifacts = self._search_relevant_artifacts(query)
 
-            # Step 2: Identify UI elements
-            ui_elements = self._identify_ui_elements(ui_flow, context)
+            # Step 2: Generate Playwright test code using LLM
+            test_code = self._generate_document(query, artifacts, context)
 
-            # Step 3: Extract test scenarios
-            test_scenarios = self._extract_test_scenarios(ui_flow)
+            # Step 3: Extract citations
+            citations = self._extract_citations(artifacts)
 
-            # Step 4: Generate Playwright tests
-            playwright_content = self._generate_playwright(
-                query, ui_flow, ui_elements, test_scenarios, context
-            )
-
-            # Step 5: Extract citations (if UI artifacts provided)
-            citations = self._extract_citations(ui_flow, context)
-
-            # Step 6: Generate follow-up questions
-            suggested_questions = self._generate_follow_ups(query)
+            # Step 4: Generate follow-up questions
+            suggested_questions = self._generate_follow_ups(query, artifacts)
 
             duration = (datetime.now() - start_time).total_seconds()
 
@@ -91,11 +86,11 @@ class PlaywrightTestWriterAgent:
                 query=query,
                 timestamp=start_time.isoformat(),
                 duration_seconds=duration,
-                response_text=playwright_content,
+                response_text=test_code,
                 citations=citations,
-                confidence=0.78,
+                confidence=0.87,
                 suggested_questions=suggested_questions,
-                tools_used=["LLMQueryTool", "PlaywrightCodeGen", "WeaviateSearchTool"]
+                tools_used=["WeaviateSearchTool", "LLMGenerationTool", "PlaywrightCodeGen"]
             )
 
         except Exception as e:
@@ -111,170 +106,316 @@ class PlaywrightTestWriterAgent:
                 error=str(e)
             )
 
-    def _analyze_ui_flow(
+    def _search_relevant_artifacts(self, query: str) -> List[Dict[str, Any]]:
+        """
+        Search for relevant artifacts (comprehensive).
+
+        Args:
+            query: Search query
+
+        Returns:
+            List of relevant artifacts
+        """
+        try:
+            logger.debug(f"Searching artifacts for Playwright tests: {query}")
+
+            from codeindex.web.services.search_service import get_search_service
+            search_service = get_search_service()
+
+            # Comprehensive search with NO type filters
+            search_response = search_service.search(
+                query=query,
+                limit=15
+            )
+
+            artifacts = search_response.get("results", [])
+            logger.info(f"Found {len(artifacts)} artifacts for test automation")
+
+            return artifacts
+
+        except Exception as e:
+            logger.error(f"Artifact search failed: {e}")
+            return []
+
+    def _generate_document(
         self,
         query: str,
-        context: Optional[Dict[str, Any]]
-    ) -> Dict[str, Any]:
-        """
-        Analyze UI flow for test generation.
-
-        TODO: Integrate with Weaviate to find GWT UI artifacts
-
-        Args:
-            query: User flow description
-            context: Optional context
-
-        Returns:
-            UI flow analysis
-        """
-        # TODO: Implement UI flow analysis
-        # - Search for GwtView artifacts
-        # - Extract UiBinder templates
-        # - Map navigation flows
-        # - Identify user actions
-
-        logger.debug("Analyzing UI flow for Playwright generation")
-
-        return {
-            "flow_name": "User Flow",
-            "steps": [],
-            "screens": []
-        }
-
-    def _identify_ui_elements(
-        self,
-        ui_flow: Dict[str, Any],
-        context: Optional[Dict[str, Any]]
-    ) -> List[Dict[str, str]]:
-        """
-        Identify UI elements for test selectors.
-
-        Args:
-            ui_flow: UI flow analysis
-            context: Optional context
-
-        Returns:
-            List of UI elements with selectors
-        """
-        # TODO: Implement UI element identification
-        # - Extract @UiField annotations from GWT
-        # - Generate data-testid selectors
-        # - Map UI fields to test locators
-        # - Identify buttons, inputs, etc.
-
-        logger.debug("Identifying UI elements")
-
-        return []
-
-    def _extract_test_scenarios(self, ui_flow: Dict[str, Any]) -> List[Dict[str, str]]:
-        """
-        Extract E2E test scenarios.
-
-        Args:
-            ui_flow: UI flow analysis
-
-        Returns:
-            List of test scenarios
-        """
-        # TODO: Implement scenario extraction
-        # - Happy path flows
-        # - Error scenarios
-        # - Edge cases
-        # - Data validation tests
-
-        logger.debug("Extracting E2E test scenarios")
-
-        return []
-
-    def _generate_playwright(
-        self,
-        query: str,
-        ui_flow: Dict[str, Any],
-        ui_elements: List[Dict[str, str]],
-        test_scenarios: List[Dict[str, str]],
+        artifacts: List[Dict[str, Any]],
         context: Optional[Dict[str, Any]]
     ) -> str:
         """
-        Generate Playwright test script using LLM.
-
-        TODO: Integrate with Ollama LLM for intelligent test generation
+        Generate Playwright test code using LLM.
 
         Args:
-            query: User query
-            ui_flow: UI flow analysis
-            ui_elements: UI element selectors
-            test_scenarios: Test scenarios
+            query: Test automation request
+            artifacts: Relevant artifacts
             context: Optional context
 
         Returns:
-            Playwright test script
+            Generated Playwright test code
         """
-        # TODO: Replace with actual Playwright generation using Ollama
-        logger.debug("Generating Playwright test script")
+        try:
+            logger.debug("Generating Playwright test code with Ollama LLM")
 
-        return f"""import {{ test, expect }} from '@playwright/test';
+            from codeindex.services.ollama_client import OllamaClient
 
-test.describe('{ui_flow['flow_name']}', () => {{
-  test.beforeEach(async ({{ page }}) => {{
-    await page.goto('/');
-  }});
+            # Build context from artifacts
+            context_parts = []
 
-  test('happy path flow', async ({{ page }}) => {{
+            # Group artifacts by type
+            artifact_types = {}
+            for artifact in artifacts:
+                artifact_type = artifact.get("artifactType", "Unknown")
+                if artifact_type not in artifact_types:
+                    artifact_types[artifact_type] = []
+                artifact_types[artifact_type].append(artifact)
+
+            # Add artifact details (focus on UI components)
+            if artifact_types:
+                context_parts.append("## UI Components to Test:\n")
+
+                # Prioritize frontend artifacts
+                priority_types = ["GwtPresenter", "GwtView", "GwtUiBinder", "JspForm"]
+                for artifact_type in priority_types:
+                    if artifact_type in artifact_types:
+                        items = artifact_types[artifact_type]
+                        context_parts.append(f"\n**{artifact_type} ({len(items)}):**")
+                        for item in items[:5]:
+                            file_path = item.get("relativePath") or item.get("fileName", "Unknown")
+                            summary = item.get("summary", "")
+                            entities = item.get("entities", [])
+
+                            context_parts.append(f"- `{file_path}`")
+                            if summary:
+                                context_parts.append(f"  {summary}")
+                            if entities:
+                                context_parts.append(f"  Elements: {', '.join(entities[:5])}")
+
+            context_text = "\n".join(context_parts) if context_parts else "No specific UI components found."
+
+            # Create system prompt
+            system_prompt = """You are an Automation Engineer specializing in Playwright test automation.
+Generate production-ready Playwright test code following these guidelines:
+
+**Test Structure:**
+```typescript
+import { test, expect } from '@playwright/test';
+import { PageObjectName } from './pages/PageObjectName';
+
+test.describe('Feature Name', () => {
+  test.beforeEach(async ({ page }) => {
+    // Setup
+  });
+
+  test('test case name', async ({ page }) => {
     // Arrange
-    await page.locator('[data-testid="element"]').waitFor();
+    const pageObject = new PageObjectName(page);
 
     // Act
-    await page.click('[data-testid="button"]');
+    await pageObject.performAction();
 
     // Assert
-    await expect(page.locator('[data-testid="result"]'))
-      .toBeVisible();
-  }});
+    await expect(page.locator('selector')).toBeVisible();
+  });
+});
+```
 
-  test('error handling', async ({{ page }}) => {{
-    // Test error scenario
-    await page.click('[data-testid="trigger-error"]');
-    await expect(page.locator('[data-testid="error-message"]'))
-      .toContainText('Error');
-  }});
-}});
+**Page Object Pattern:**
+```typescript
+export class PageObjectName {
+  constructor(private page: Page) {}
 
-// Note: This is a placeholder response.
-// Full implementation will use Ollama LLM with UI artifact analysis
-// to generate comprehensive E2E test scripts.
-"""
+  // Locators
+  private readonly submitButton = this.page.locator('[data-testid="submit"]');
+  private readonly inputField = this.page.getByLabel('Username');
 
-    def _extract_citations(
-        self,
-        ui_flow: Dict[str, Any],
-        context: Optional[Dict[str, Any]]
-    ) -> List[Citation]:
-        """Extract citations from UI artifacts."""
+  // Actions
+  async fillForm(data: FormData) {
+    await this.inputField.fill(data.username);
+    await this.submitButton.click();
+  }
+
+  // Assertions
+  async expectSuccess() {
+    await expect(this.page.getByText('Success')).toBeVisible();
+  }
+}
+```
+
+**Best Practices:**
+1. Use Page Object Model (POM) for maintainability
+2. Prefer semantic locators: getByRole(), getByLabel(), getByText()
+3. Use data-testid for stable locators
+4. Add explicit waits: waitForLoadState(), waitForSelector()
+5. Use auto-waiting assertions: expect().toBeVisible(), expect().toHaveText()
+6. Handle multiple browsers: chromium, firefox, webkit
+7. Implement fixtures for common setup
+8. Add error screenshots on failure
+
+Base test code on the actual UI components from the codebase."""
+
+            # Create user prompt
+            user_prompt = f"""Test Automation Request: {query}
+
+{context_text}
+
+Please generate Playwright test code including:
+1. Test suite with describe/test blocks
+2. Page Object Model classes
+3. Locator strategies
+4. Test assertions
+5. Setup and teardown"""
+
+            # Call Ollama with higher token limit for code generation
+            ollama_client = OllamaClient()
+            response = ollama_client.call_ollama(
+                prompt=user_prompt,
+                system_prompt=system_prompt,
+                temperature=0.2,  # Precise code generation
+                format_json=False
+            )
+
+            test_code = response.get("response", "")
+
+            if not test_code:
+                test_code = self._generate_fallback_test(query, artifacts)
+
+            logger.info(f"Generated Playwright test code ({len(test_code)} chars)")
+            return test_code.strip()
+
+        except Exception as e:
+            logger.error(f"Failed to generate Playwright test code: {e}")
+            return self._generate_fallback_test(query, artifacts)
+
+    def _generate_fallback_test(self, query: str, artifacts: List[Dict[str, Any]]) -> str:
+        """
+        Generate basic Playwright template when LLM fails.
+
+        Args:
+            query: Test request
+            artifacts: Found artifacts
+
+        Returns:
+            Basic Playwright template
+        """
+        lines = [
+            "import { test, expect } from '@playwright/test';",
+            "import { Page } from '@playwright/test';\n",
+            f"// Test suite for: {query}\n",
+            "test.describe('Feature Test Suite', () => {",
+            "  test.beforeEach(async ({ page }) => {",
+            "    await page.goto('http://localhost:3000');",
+            "  });\n"
+        ]
+
+        # Add test cases based on artifacts
+        if artifacts:
+            for i, artifact in enumerate(artifacts[:3], 1):
+                artifact_type = artifact.get("artifactType", "Unknown")
+                file_path = artifact.get("relativePath") or artifact.get("fileName", "Unknown")
+
+                lines.extend([
+                    f"  test('test {artifact_type} - case {i}', async ({{ page }}) => {{",
+                    f"    // Testing: {file_path}",
+                    "    ",
+                    "    // Arrange",
+                    "    const element = page.locator('[data-testid=\"test-element\"]');",
+                    "    ",
+                    "    // Act",
+                    "    await element.click();",
+                    "    ",
+                    "    // Assert",
+                    "    await expect(element).toBeVisible();",
+                    "    await expect(page.locator('.success')).toHaveText('Success');",
+                    "  });\n"
+                ])
+        else:
+            lines.extend([
+                "  test('example test case', async ({ page }) => {",
+                "    // Arrange",
+                "    const button = page.getByRole('button', { name: 'Submit' });",
+                "    ",
+                "    // Act",
+                "    await button.click();",
+                "    ",
+                "    // Assert",
+                "    await expect(page).toHaveURL(/success/);",
+                "  });\n"
+            ])
+
+        lines.extend([
+            "});\n",
+            "// Page Object Model",
+            "export class FeaturePage {",
+            "  constructor(private page: Page) {}\n",
+            "  // Locators",
+            "  private readonly submitButton = this.page.getByRole('button', { name: 'Submit' });",
+            "  private readonly inputField = this.page.getByLabel('Input');",
+            "  private readonly successMessage = this.page.locator('.success');\n",
+            "  // Actions",
+            "  async performAction(value: string) {",
+            "    await this.inputField.fill(value);",
+            "    await this.submitButton.click();",
+            "  }\n",
+            "  // Assertions",
+            "  async expectSuccess() {",
+            "    await expect(this.successMessage).toBeVisible();",
+            "  }",
+            "}\n",
+            "// Note: LLM generation failed. Please ensure Ollama is running."
+        ])
+
+        return "\n".join(lines)
+
+    def _extract_citations(self, artifacts: List[Dict[str, Any]]) -> List[Citation]:
+        """
+        Extract citations from artifacts.
+
+        Args:
+            artifacts: Found artifacts
+
+        Returns:
+            List of citations
+        """
         citations = []
 
-        # TODO: Extract citations from GWT UI artifacts if available
-        if context and "artifacts" in context:
-            artifacts = context["artifacts"]
-            for artifact in artifacts[:5]:
-                if "file_path" in artifact:
-                    citations.append(Citation(
-                        file_path=artifact["file_path"],
-                        line_start=1,
-                        line_end=10,
-                        snippet=f"UI artifact: {artifact.get('type', 'Unknown')}",
-                        relevance_score=0.8
-                    ))
+        for artifact in artifacts[:10]:
+            artifact_id = artifact.get("_additional", {}).get("id", artifact.get("id", ""))
+            distance = artifact.get("_additional", {}).get("distance", 0.0)
+            confidence = 1.0 - distance if distance < 1.0 else 0.5
+
+            citations.append(Citation(
+                artifact_id=artifact_id,
+                file_path=artifact.get("relativePath") or artifact.get("fileName", "Unknown"),
+                artifact_type=artifact.get("artifactType", "Unknown"),
+                confidence=confidence
+            ))
 
         return citations
 
-    def _generate_follow_ups(self, query: str) -> List[str]:
-        """Generate follow-up questions."""
-        return [
-            "Would you like me to add page object classes?",
-            "Should I create Gherkin scenarios for these tests?",
-            "Would you like to add visual regression tests?"
+    def _generate_follow_ups(
+        self,
+        query: str,
+        artifacts: List[Dict[str, Any]]
+    ) -> List[str]:
+        """
+        Generate follow-up suggestions for test automation refinement.
+
+        Args:
+            query: Original query
+            artifacts: Found artifacts
+
+        Returns:
+            List of suggested questions
+        """
+        suggestions = [
+            "Can you add error handling test cases?",
+            "What visual regression tests should we include?",
+            "Can you add API mocking for this test?",
+            "What accessibility tests should we add?"
         ]
+
+        return suggestions[:4]
 
 
 # Global instance
@@ -282,7 +423,15 @@ _playwright_test_writer_agent: Optional[PlaywrightTestWriterAgent] = None
 
 
 def get_playwright_test_writer_agent(config: Optional[AgentConfig] = None) -> PlaywrightTestWriterAgent:
-    """Get global Playwright Test Writer agent instance."""
+    """
+    Get global Playwright Test Writer agent instance.
+
+    Args:
+        config: Optional agent configuration
+
+    Returns:
+        PlaywrightTestWriterAgent singleton
+    """
     global _playwright_test_writer_agent
 
     if _playwright_test_writer_agent is None:

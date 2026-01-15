@@ -2,10 +2,11 @@
 Spec-Kit Writer Agent for generating technical specifications.
 
 This agent specializes in:
-- Technical specification generation
-- Architecture documentation
-- Implementation planning
-- Design decision documentation
+- Writing detailed technical specifications
+- Defining architecture and component design
+- Documenting data models and API contracts
+- Creating implementation plans
+- Spec-Kit format compatibility
 """
 
 import logging
@@ -23,15 +24,17 @@ from codeindex.web.agents.base import (
 logger = logging.getLogger(__name__)
 
 
-class SpecKitWriterAgent:
+class SpeckitWriterAgent:
     """
     Spec-Kit Writer Agent for generating technical specifications.
 
     Specializes in:
-    - Creating technical specifications from code analysis
-    - Documenting system architecture
-    - Generating implementation plans
-    - Recording design decisions and trade-offs
+    - Technical architecture documentation
+    - Component and module design
+    - Data models and schemas
+    - API contracts and interfaces
+    - Implementation planning
+    - Spec-Kit format compliance
     """
 
     def __init__(self, config: Optional[AgentConfig] = None):
@@ -42,7 +45,7 @@ class SpecKitWriterAgent:
         self.config = config
         self.role = AgentRole.SPECKIT_WRITER
 
-        logger.info(f"Initialized Spec-Kit Writer agent: {config.name}")
+        logger.info("Initialized Spec-Kit Writer agent")
 
     def execute_query(
         self,
@@ -53,8 +56,8 @@ class SpecKitWriterAgent:
         Execute query with Spec-Kit Writer agent.
 
         Args:
-            query: User request for spec generation
-            context: Optional context (e.g., PRD or requirements)
+            query: Specification request
+            context: Optional context from previous interactions
 
         Returns:
             AgentResponse with generated specification
@@ -64,28 +67,17 @@ class SpecKitWriterAgent:
         try:
             logger.info(f"Spec-Kit Writer processing: {query[:50]}...")
 
-            # Step 1: Gather code artifacts
-            artifacts = self._gather_artifacts(query, context)
+            # Step 1: Search for relevant artifacts (comprehensive)
+            artifacts = self._search_relevant_artifacts(query)
 
-            # Step 2: Analyze architecture
-            architecture = self._analyze_architecture(artifacts)
+            # Step 2: Generate specification using LLM
+            spec_document = self._generate_document(query, artifacts, context)
 
-            # Step 3: Extract design patterns
-            design_patterns = self._extract_design_patterns(artifacts)
-
-            # Step 4: Identify implementation tasks
-            tasks = self._identify_tasks(artifacts, context)
-
-            # Step 5: Generate technical spec
-            spec_content = self._generate_spec(
-                query, artifacts, architecture, design_patterns, tasks, context
-            )
-
-            # Step 6: Extract citations
+            # Step 3: Extract citations
             citations = self._extract_citations(artifacts)
 
-            # Step 7: Generate follow-up questions
-            suggested_questions = self._generate_follow_ups(query)
+            # Step 4: Generate follow-up questions
+            suggested_questions = self._generate_follow_ups(query, artifacts)
 
             duration = (datetime.now() - start_time).total_seconds()
 
@@ -94,11 +86,11 @@ class SpecKitWriterAgent:
                 query=query,
                 timestamp=start_time.isoformat(),
                 duration_seconds=duration,
-                response_text=spec_content,
+                response_text=spec_document,
                 citations=citations,
-                confidence=0.81,
+                confidence=0.88,
                 suggested_questions=suggested_questions,
-                tools_used=["WeaviateSearchTool", "ExportService", "LLMQueryTool"]
+                tools_used=["WeaviateSearchTool", "LLMGenerationTool", "SpecKitFormatter"]
             )
 
         except Exception as e:
@@ -114,192 +106,267 @@ class SpecKitWriterAgent:
                 error=str(e)
             )
 
-    def _gather_artifacts(
-        self,
-        query: str,
-        context: Optional[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    def _search_relevant_artifacts(self, query: str) -> List[Dict[str, Any]]:
         """
-        Gather artifacts for spec generation.
-
-        TODO: Integrate with Weaviate
+        Search for relevant artifacts (comprehensive).
 
         Args:
             query: Search query
-            context: Optional context
 
         Returns:
-            List of artifacts
+            List of relevant artifacts
         """
-        # TODO: Replace with actual Weaviate search
-        logger.debug("Gathering artifacts for specification")
+        try:
+            logger.debug(f"Searching artifacts for specification: {query}")
 
-        if context and "artifacts" in context:
-            return context["artifacts"]
+            from codeindex.web.services.search_service import get_search_service
+            search_service = get_search_service()
 
-        return []
+            # Comprehensive search with NO type filters
+            search_response = search_service.search(
+                query=query,
+                limit=20
+            )
 
-    def _analyze_architecture(self, artifacts: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """
-        Analyze system architecture.
+            artifacts = search_response.get("results", [])
+            logger.info(f"Found {len(artifacts)} artifacts for specification")
 
-        Args:
-            artifacts: Code artifacts
+            return artifacts
 
-        Returns:
-            Architecture analysis
-        """
-        # TODO: Implement architecture analysis
-        # - Identify architectural layers
-        # - Map component dependencies
-        # - Extract technology stack
-        # - Document integration points
+        except Exception as e:
+            logger.error(f"Artifact search failed: {e}")
+            return []
 
-        logger.debug("Analyzing system architecture")
-
-        return {
-            "layers": ["Frontend", "Backend", "Data"],
-            "components": [],
-            "technologies": []
-        }
-
-    def _extract_design_patterns(self, artifacts: List[Dict[str, Any]]) -> List[str]:
-        """
-        Extract design patterns from code.
-
-        Args:
-            artifacts: Code artifacts
-
-        Returns:
-            List of design patterns
-        """
-        # TODO: Implement pattern extraction
-        # - Identify common patterns (MVC, MVP, Repository, etc.)
-        # - Document pattern usage
-        # - Analyze pattern consistency
-
-        logger.debug("Extracting design patterns")
-
-        return ["MVP", "Service Layer", "DAO"]
-
-    def _identify_tasks(
-        self,
-        artifacts: List[Dict[str, Any]],
-        context: Optional[Dict[str, Any]]
-    ) -> List[str]:
-        """
-        Identify implementation tasks.
-
-        Args:
-            artifacts: Code artifacts
-            context: Optional context
-
-        Returns:
-            List of tasks
-        """
-        # TODO: Implement task identification
-        # - Break down features into tasks
-        # - Identify dependencies
-        # - Estimate complexity
-
-        logger.debug("Identifying implementation tasks")
-
-        return []
-
-    def _generate_spec(
+    def _generate_document(
         self,
         query: str,
         artifacts: List[Dict[str, Any]],
-        architecture: Dict[str, Any],
-        design_patterns: List[str],
-        tasks: List[str],
         context: Optional[Dict[str, Any]]
     ) -> str:
         """
         Generate technical specification using LLM.
 
-        TODO: Integrate with Ollama LLM and ExportService
-
         Args:
-            query: User query
-            artifacts: Code artifacts
-            architecture: Architecture analysis
-            design_patterns: Design patterns
-            tasks: Implementation tasks
+            query: Specification request
+            artifacts: Relevant artifacts
             context: Optional context
 
         Returns:
-            Specification document text
+            Generated specification document
         """
-        # TODO: Replace with actual spec generation using Ollama + ExportService
-        logger.debug("Generating technical specification")
+        try:
+            logger.debug("Generating specification with Ollama LLM")
 
-        return f"""# Technical Specification
+            from codeindex.services.ollama_client import OllamaClient
 
-## 1. Architecture
+            # Build context from artifacts
+            context_parts = []
 
-**System Layers**: {', '.join(architecture['layers'])}
+            # Group artifacts by type
+            artifact_types = {}
+            for artifact in artifacts:
+                artifact_type = artifact.get("artifactType", "Unknown")
+                if artifact_type not in artifact_types:
+                    artifact_types[artifact_type] = []
+                artifact_types[artifact_type].append(artifact)
 
-## 2. Design Patterns
+            # Add artifact details
+            if artifact_types:
+                context_parts.append("## Codebase Architecture:\n")
+                for artifact_type, items in artifact_types.items():
+                    context_parts.append(f"\n**{artifact_type} ({len(items)}):**")
+                    for item in items[:5]:
+                        file_path = item.get("relativePath") or item.get("fileName", "Unknown")
+                        summary = item.get("summary", "")
+                        entities = item.get("entities", [])
 
-**Patterns Identified**: {', '.join(design_patterns)}
+                        context_parts.append(f"- `{file_path}`")
+                        if summary:
+                            context_parts.append(f"  {summary}")
+                        if entities:
+                            context_parts.append(f"  Entities: {', '.join(entities[:5])}")
 
-## 3. Implementation Plan
+            context_text = "\n".join(context_parts) if context_parts else "No specific artifacts found."
 
-**Tasks**: {len(tasks)} implementation tasks identified
+            # Create system prompt
+            system_prompt = """You are a Software Architect who creates detailed technical specifications.
+Your specifications follow Spec-Kit format and include:
 
-## 4. Technology Stack
+1. **Overview**: High-level technical summary
+2. **Architecture**: System design, components, layers
+3. **Components**: Detailed component specifications
+   - Responsibilities
+   - Interfaces
+   - Dependencies
+4. **Data Models**: Schemas, entities, relationships
+5. **API Contracts**: Endpoints, request/response formats
+6. **Implementation Plan**: Phased approach, tasks, priorities
+7. **Technical Decisions**: Architecture choices and rationale
+8. **Dependencies**: External libraries, services, integrations
+9. **Testing Strategy**: Unit, integration, E2E testing approach
 
-Based on analysis of {len(artifacts)} artifacts.
+Use precise technical language. Include diagrams (Mermaid format) where appropriate.
+Base your specification on the actual codebase structure."""
 
-## 5. Design Decisions
+            # Create user prompt
+            user_prompt = f"""Specification Request: {query}
 
-To be documented based on code analysis.
+{context_text}
 
-*Note: This is a placeholder response. Full implementation will use Ollama LLM with ExportService for comprehensive specification generation.*
-"""
+Please generate a comprehensive technical specification based on the codebase architecture."""
+
+            # Call Ollama
+            ollama_client = OllamaClient()
+            response = ollama_client.call_ollama(
+                prompt=user_prompt,
+                system_prompt=system_prompt,
+                temperature=0.3,  # Precise technical language
+                format_json=False
+            )
+
+            spec = response.get("response", "")
+
+            if not spec:
+                spec = self._generate_fallback_spec(query, artifacts)
+
+            logger.info(f"Generated specification ({len(spec)} chars)")
+            return spec.strip()
+
+        except Exception as e:
+            logger.error(f"Failed to generate specification: {e}")
+            return self._generate_fallback_spec(query, artifacts)
+
+    def _generate_fallback_spec(self, query: str, artifacts: List[Dict[str, Any]]) -> str:
+        """
+        Generate basic specification when LLM fails.
+
+        Args:
+            query: Specification request
+            artifacts: Found artifacts
+
+        Returns:
+            Basic spec template
+        """
+        sections = [
+            f"# Technical Specification\n",
+            f"## Feature: {query}\n",
+            f"**Status**: Draft",
+            f"**Author**: Spec-Kit Writer Agent",
+            f"**Date**: {datetime.now().strftime('%Y-%m-%d')}\n",
+            "## Overview",
+            f"Technical specification for: {query}\n",
+            "## Architecture",
+            f"Based on {len(artifacts)} codebase components:\n"
+        ]
+
+        # Group artifacts
+        artifact_types = {}
+        for artifact in artifacts[:15]:
+            artifact_type = artifact.get("artifactType", "Unknown")
+            if artifact_type not in artifact_types:
+                artifact_types[artifact_type] = []
+            artifact_types[artifact_type].append(artifact)
+
+        # Add by type
+        for artifact_type, items in artifact_types.items():
+            sections.append(f"\n### {artifact_type} Layer ({len(items)} components)")
+            for item in items[:5]:
+                file_path = item.get("relativePath") or item.get("fileName", "Unknown")
+                sections.append(f"- `{file_path}`")
+
+        sections.extend([
+            "\n## Components",
+            "[Define component responsibilities and interfaces]",
+            "\n## Data Models",
+            "[Document data schemas and entity relationships]",
+            "\n## API Contracts",
+            "[Define API endpoints and formats]",
+            "\n## Implementation Plan",
+            "1. Phase 1: [Define phases]",
+            "2. Phase 2: [...]",
+            "\n## Testing Strategy",
+            "- Unit tests: [Define approach]",
+            "- Integration tests: [Define approach]",
+            "\n**Note**: LLM generation failed. Please ensure Ollama is running."
+        ])
+
+        return "\n".join(sections)
 
     def _extract_citations(self, artifacts: List[Dict[str, Any]]) -> List[Citation]:
-        """Extract citations from artifacts."""
+        """
+        Extract citations from artifacts.
+
+        Args:
+            artifacts: Found artifacts
+
+        Returns:
+            List of citations
+        """
         citations = []
 
-        for artifact in artifacts[:10]:
-            if "file_path" in artifact:
-                citations.append(Citation(
-                    file_path=artifact["file_path"],
-                    line_start=1,
-                    line_end=10,
-                    snippet=f"Artifact: {artifact.get('type', 'Unknown')}",
-                    relevance_score=0.8
-                ))
+        for artifact in artifacts[:15]:  # More citations for technical specs
+            artifact_id = artifact.get("_additional", {}).get("id", artifact.get("id", ""))
+            distance = artifact.get("_additional", {}).get("distance", 0.0)
+            confidence = 1.0 - distance if distance < 1.0 else 0.5
+
+            citations.append(Citation(
+                artifact_id=artifact_id,
+                file_path=artifact.get("relativePath") or artifact.get("fileName", "Unknown"),
+                artifact_type=artifact.get("artifactType", "Unknown"),
+                confidence=confidence
+            ))
 
         return citations
 
-    def _generate_follow_ups(self, query: str) -> List[str]:
-        """Generate follow-up questions."""
-        return [
-            "Would you like me to generate implementation tasks?",
-            "Should I create a data model diagram?",
-            "Would you like to export this specification?"
+    def _generate_follow_ups(
+        self,
+        query: str,
+        artifacts: List[Dict[str, Any]]
+    ) -> List[str]:
+        """
+        Generate follow-up suggestions for spec refinement.
+
+        Args:
+            query: Original query
+            artifacts: Found artifacts
+
+        Returns:
+            List of suggested questions
+        """
+        suggestions = [
+            "Can you add sequence diagrams for key flows?",
+            "What are the API endpoint specifications?",
+            "Can you detail the data model schemas?",
+            "What are the component dependencies?"
         ]
+
+        return suggestions[:4]
 
 
 # Global instance
-_speckit_writer_agent: Optional[SpecKitWriterAgent] = None
+_speckit_writer_agent: Optional[SpeckitWriterAgent] = None
 
 
-def get_speckit_writer_agent(config: Optional[AgentConfig] = None) -> SpecKitWriterAgent:
-    """Get global Spec-Kit Writer agent instance."""
+def get_speckit_writer_agent(config: Optional[AgentConfig] = None) -> SpeckitWriterAgent:
+    """
+    Get global Spec-Kit Writer agent instance.
+
+    Args:
+        config: Optional agent configuration
+
+    Returns:
+        SpeckitWriterAgent singleton
+    """
     global _speckit_writer_agent
 
     if _speckit_writer_agent is None:
-        _speckit_writer_agent = SpecKitWriterAgent(config)
+        _speckit_writer_agent = SpeckitWriterAgent(config)
         logger.info("Created global Spec-Kit Writer agent instance")
 
     return _speckit_writer_agent
 
 
 __all__ = [
-    "SpecKitWriterAgent",
+    "SpeckitWriterAgent",
     "get_speckit_writer_agent"
 ]

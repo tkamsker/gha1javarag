@@ -2,10 +2,11 @@
 Gherkin Test Writer Agent for generating BDD test scenarios.
 
 This agent specializes in:
-- Gherkin feature file generation
-- BDD scenario creation (Given-When-Then)
-- Acceptance criteria documentation
-- Test case coverage analysis
+- Writing Gherkin syntax (Given-When-Then)
+- Creating scenario outlines with examples
+- Defining acceptance criteria
+- Generating comprehensive test coverage
+- BDD best practices
 """
 
 import logging
@@ -25,13 +26,14 @@ logger = logging.getLogger(__name__)
 
 class GherkinTestWriterAgent:
     """
-    Gherkin Test Writer Agent for BDD test generation.
+    Gherkin Test Writer Agent for BDD test scenarios.
 
     Specializes in:
-    - Creating Gherkin feature files
-    - Writing Given-When-Then scenarios
-    - Generating scenario outlines with examples
-    - Documenting acceptance criteria in BDD format
+    - Gherkin syntax (Feature, Scenario, Given-When-Then)
+    - Scenario outlines with data tables
+    - Background sections for common setup
+    - Tags for test organization
+    - Clear, testable acceptance criteria
     """
 
     def __init__(self, config: Optional[AgentConfig] = None):
@@ -42,7 +44,7 @@ class GherkinTestWriterAgent:
         self.config = config
         self.role = AgentRole.GHERKIN_TEST_WRITER
 
-        logger.info(f"Initialized Gherkin Test Writer agent: {config.name}")
+        logger.info("Initialized Gherkin Test Writer agent")
 
     def execute_query(
         self,
@@ -53,36 +55,28 @@ class GherkinTestWriterAgent:
         Execute query with Gherkin Test Writer agent.
 
         Args:
-            query: User request for test generation
-            context: Optional context (e.g., feature description, user stories)
+            query: Test scenario request
+            context: Optional context from previous interactions
 
         Returns:
-            AgentResponse with generated Gherkin tests
+            AgentResponse with generated Gherkin scenarios
         """
         start_time = datetime.now()
 
         try:
             logger.info(f"Gherkin Test Writer processing: {query[:50]}...")
 
-            # Step 1: Analyze feature request
-            feature_info = self._analyze_feature(query, context)
+            # Step 1: Search for relevant artifacts (comprehensive)
+            artifacts = self._search_relevant_artifacts(query)
 
-            # Step 2: Identify test scenarios
-            scenarios = self._identify_scenarios(feature_info)
+            # Step 2: Generate Gherkin scenarios using LLM
+            gherkin_scenarios = self._generate_document(query, artifacts, context)
 
-            # Step 3: Extract acceptance criteria
-            acceptance_criteria = self._extract_acceptance_criteria(feature_info)
+            # Step 3: Extract citations
+            citations = self._extract_citations(artifacts)
 
-            # Step 4: Generate Gherkin tests
-            gherkin_content = self._generate_gherkin(
-                query, feature_info, scenarios, acceptance_criteria, context
-            )
-
-            # Step 5: Extract citations (if code artifacts provided)
-            citations = self._extract_citations(feature_info)
-
-            # Step 6: Generate follow-up questions
-            suggested_questions = self._generate_follow_ups(query)
+            # Step 4: Generate follow-up questions
+            suggested_questions = self._generate_follow_ups(query, artifacts)
 
             duration = (datetime.now() - start_time).total_seconds()
 
@@ -91,11 +85,11 @@ class GherkinTestWriterAgent:
                 query=query,
                 timestamp=start_time.isoformat(),
                 duration_seconds=duration,
-                response_text=gherkin_content,
+                response_text=gherkin_scenarios,
                 citations=citations,
-                confidence=0.79,
+                confidence=0.90,
                 suggested_questions=suggested_questions,
-                tools_used=["LLMQueryTool", "GherkinFormatter"]
+                tools_used=["WeaviateSearchTool", "LLMGenerationTool", "GherkinFormatter"]
             )
 
         except Exception as e:
@@ -111,132 +105,257 @@ class GherkinTestWriterAgent:
                 error=str(e)
             )
 
-    def _analyze_feature(
+    def _search_relevant_artifacts(self, query: str) -> List[Dict[str, Any]]:
+        """
+        Search for relevant artifacts (comprehensive).
+
+        Args:
+            query: Search query
+
+        Returns:
+            List of relevant artifacts
+        """
+        try:
+            logger.debug(f"Searching artifacts for Gherkin tests: {query}")
+
+            from codeindex.web.services.search_service import get_search_service
+            search_service = get_search_service()
+
+            # Comprehensive search with NO type filters
+            search_response = search_service.search(
+                query=query,
+                limit=15
+            )
+
+            artifacts = search_response.get("results", [])
+            logger.info(f"Found {len(artifacts)} artifacts for test generation")
+
+            return artifacts
+
+        except Exception as e:
+            logger.error(f"Artifact search failed: {e}")
+            return []
+
+    def _generate_document(
         self,
         query: str,
-        context: Optional[Dict[str, Any]]
-    ) -> Dict[str, Any]:
-        """
-        Analyze feature for test generation.
-
-        Args:
-            query: Feature description
-            context: Optional context
-
-        Returns:
-            Feature analysis
-        """
-        # TODO: Implement feature analysis
-        # - Extract feature name
-        # - Identify user roles
-        # - Parse user stories
-        # - Extract business rules
-
-        logger.debug("Analyzing feature for Gherkin generation")
-
-        return {
-            "feature_name": "Feature",
-            "description": query,
-            "user_roles": [],
-            "business_rules": []
-        }
-
-    def _identify_scenarios(self, feature_info: Dict[str, Any]) -> List[Dict[str, str]]:
-        """
-        Identify test scenarios.
-
-        Args:
-            feature_info: Feature analysis
-
-        Returns:
-            List of scenarios
-        """
-        # TODO: Implement scenario identification
-        # - Identify happy path
-        # - Extract edge cases
-        # - Find error scenarios
-        # - Generate data variations
-
-        logger.debug("Identifying test scenarios")
-
-        return []
-
-    def _extract_acceptance_criteria(self, feature_info: Dict[str, Any]) -> List[str]:
-        """
-        Extract acceptance criteria.
-
-        Args:
-            feature_info: Feature analysis
-
-        Returns:
-            List of acceptance criteria
-        """
-        # TODO: Implement acceptance criteria extraction
-        # - Parse user story format
-        # - Extract expected behaviors
-        # - Identify verification points
-
-        logger.debug("Extracting acceptance criteria")
-
-        return []
-
-    def _generate_gherkin(
-        self,
-        query: str,
-        feature_info: Dict[str, Any],
-        scenarios: List[Dict[str, str]],
-        acceptance_criteria: List[str],
+        artifacts: List[Dict[str, Any]],
         context: Optional[Dict[str, Any]]
     ) -> str:
         """
-        Generate Gherkin feature file using LLM.
-
-        TODO: Integrate with Ollama LLM for intelligent test generation
+        Generate Gherkin test scenarios using LLM.
 
         Args:
-            query: User query
-            feature_info: Feature analysis
-            scenarios: Test scenarios
-            acceptance_criteria: Acceptance criteria
+            query: Test scenario request
+            artifacts: Relevant artifacts
             context: Optional context
 
         Returns:
-            Gherkin feature file content
+            Generated Gherkin scenarios
         """
-        # TODO: Replace with actual Gherkin generation using Ollama
-        logger.debug("Generating Gherkin feature file")
+        try:
+            logger.debug("Generating Gherkin scenarios with Ollama LLM")
 
-        return f"""Feature: {feature_info['feature_name']}
-  As a user
-  I want to {query}
-  So that I can achieve my goal
+            from codeindex.services.ollama_client import OllamaClient
 
-  Scenario: Happy path
-    Given the system is ready
-    When I perform an action
-    Then I should see the expected result
+            # Build context from artifacts
+            context_parts = []
 
-  Scenario: Error handling
-    Given the system is ready
-    When an error occurs
-    Then I should see an error message
+            # Add artifacts for test context
+            if artifacts:
+                context_parts.append("## Components to Test:\n")
+                for i, artifact in enumerate(artifacts[:10], 1):
+                    artifact_type = artifact.get("artifactType", "Unknown")
+                    file_path = artifact.get("relativePath") or artifact.get("fileName", "Unknown")
+                    summary = artifact.get("summary", "")
+                    entities = artifact.get("entities", [])
 
-# Note: This is a placeholder response.
-# Full implementation will use Ollama LLM for comprehensive BDD test generation.
-"""
+                    context_parts.append(f"{i}. **{artifact_type}** - `{file_path}`")
+                    if summary:
+                        context_parts.append(f"   {summary}")
+                    if entities:
+                        context_parts.append(f"   Entities: {', '.join(entities[:3])}")
 
-    def _extract_citations(self, feature_info: Dict[str, Any]) -> List[Citation]:
-        """Extract citations from feature artifacts."""
-        # Gherkin tests typically don't have code citations
-        return []
+            context_text = "\n".join(context_parts) if context_parts else "No specific components found."
 
-    def _generate_follow_ups(self, query: str) -> List[str]:
-        """Generate follow-up questions."""
-        return [
-            "Would you like me to add more edge case scenarios?",
-            "Should I create Playwright E2E tests for this feature?",
-            "Would you like step definitions for these scenarios?"
+            # Create system prompt
+            system_prompt = """You are a QA Engineer expert in Behavior-Driven Development (BDD) and Gherkin syntax.
+Generate comprehensive test scenarios following these guidelines:
+
+**Gherkin Format:**
+```gherkin
+Feature: <Feature name>
+  As a <user type>
+  I want to <action>
+  So that <benefit>
+
+  Background:
+    Given <common precondition>
+
+  @tag
+  Scenario: <Scenario name>
+    Given <precondition>
+    And <additional precondition>
+    When <action>
+    And <additional action>
+    Then <expected result>
+    And <additional result>
+
+  @tag
+  Scenario Outline: <Parameterized scenario>
+    Given <precondition with <parameter>>
+    When <action with <parameter>>
+    Then <result with <parameter>>
+
+    Examples:
+      | parameter | expected |
+      | value1    | result1  |
+      | value2    | result2  |
+```
+
+**Best Practices:**
+1. Use clear, business-readable language
+2. Each step should be atomic and testable
+3. Use scenario outlines for data-driven tests
+4. Add tags for test organization (@smoke, @regression, @integration)
+5. Include both positive and negative test cases
+6. Cover edge cases and error conditions
+
+Base scenarios on the actual codebase components provided."""
+
+            # Create user prompt
+            user_prompt = f"""Test Request: {query}
+
+{context_text}
+
+Please generate comprehensive Gherkin test scenarios covering this functionality."""
+
+            # Call Ollama
+            ollama_client = OllamaClient()
+            response = ollama_client.call_ollama(
+                prompt=user_prompt,
+                system_prompt=system_prompt,
+                temperature=0.2,  # Very structured, specific syntax
+                format_json=False
+            )
+
+            gherkin = response.get("response", "")
+
+            if not gherkin:
+                gherkin = self._generate_fallback_gherkin(query, artifacts)
+
+            logger.info(f"Generated Gherkin scenarios ({len(gherkin)} chars)")
+            return gherkin.strip()
+
+        except Exception as e:
+            logger.error(f"Failed to generate Gherkin scenarios: {e}")
+            return self._generate_fallback_gherkin(query, artifacts)
+
+    def _generate_fallback_gherkin(self, query: str, artifacts: List[Dict[str, Any]]) -> str:
+        """
+        Generate basic Gherkin template when LLM fails.
+
+        Args:
+            query: Test request
+            artifacts: Found artifacts
+
+        Returns:
+            Basic Gherkin template
+        """
+        lines = [
+            f"Feature: {query}",
+            "  As a user",
+            "  I want to test this functionality",
+            "  So that I can ensure it works correctly\n",
+            "  Background:",
+            "    Given the system is initialized",
+            "    And the database is seeded with test data\n"
         ]
+
+        # Add scenarios based on artifacts
+        if artifacts:
+            lines.append("  @smoke")
+            lines.append("  Scenario: Basic functionality test")
+
+            for artifact in artifacts[:3]:
+                artifact_type = artifact.get("artifactType", "Unknown")
+                file_path = artifact.get("relativePath") or artifact.get("fileName", "Unknown")
+
+                lines.append(f"    Given the {artifact_type} is available")
+                lines.append(f"    # Component: {file_path}")
+
+            lines.extend([
+                "    When I perform the action",
+                "    Then the system should respond correctly",
+                "    And the result should be validated\n"
+            ])
+
+        lines.extend([
+            "  @regression",
+            "  Scenario Outline: Parameterized test",
+            "    Given the system state is <state>",
+            "    When I execute with <input>",
+            "    Then I should see <output>",
+            "    ",
+            "    Examples:",
+            "      | state    | input   | output  |",
+            "      | ready    | valid   | success |",
+            "      | busy     | valid   | retry   |",
+            "      | ready    | invalid | error   |\n",
+            "  # Note: LLM generation failed. Please ensure Ollama is running."
+        ])
+
+        return "\n".join(lines)
+
+    def _extract_citations(self, artifacts: List[Dict[str, Any]]) -> List[Citation]:
+        """
+        Extract citations from artifacts.
+
+        Args:
+            artifacts: Found artifacts
+
+        Returns:
+            List of citations
+        """
+        citations = []
+
+        for artifact in artifacts[:10]:
+            artifact_id = artifact.get("_additional", {}).get("id", artifact.get("id", ""))
+            distance = artifact.get("_additional", {}).get("distance", 0.0)
+            confidence = 1.0 - distance if distance < 1.0 else 0.5
+
+            citations.append(Citation(
+                artifact_id=artifact_id,
+                file_path=artifact.get("relativePath") or artifact.get("fileName", "Unknown"),
+                artifact_type=artifact.get("artifactType", "Unknown"),
+                confidence=confidence
+            ))
+
+        return citations
+
+    def _generate_follow_ups(
+        self,
+        query: str,
+        artifacts: List[Dict[str, Any]]
+    ) -> List[str]:
+        """
+        Generate follow-up suggestions for test refinement.
+
+        Args:
+            query: Original query
+            artifacts: Found artifacts
+
+        Returns:
+            List of suggested questions
+        """
+        suggestions = [
+            "Can you add negative test cases?",
+            "What edge cases should we test?",
+            "Can you add more scenario outlines with examples?",
+            "What integration tests should we include?"
+        ]
+
+        return suggestions[:4]
 
 
 # Global instance
@@ -244,7 +363,15 @@ _gherkin_test_writer_agent: Optional[GherkinTestWriterAgent] = None
 
 
 def get_gherkin_test_writer_agent(config: Optional[AgentConfig] = None) -> GherkinTestWriterAgent:
-    """Get global Gherkin Test Writer agent instance."""
+    """
+    Get global Gherkin Test Writer agent instance.
+
+    Args:
+        config: Optional agent configuration
+
+    Returns:
+        GherkinTestWriterAgent singleton
+    """
     global _gherkin_test_writer_agent
 
     if _gherkin_test_writer_agent is None:

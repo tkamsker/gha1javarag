@@ -2,10 +2,11 @@
 PRD Writer Agent for generating Product Requirements Documents.
 
 This agent specializes in:
-- PRD generation from codebase analysis
-- User story extraction
-- Functional requirement documentation
-- Stakeholder identification
+- Writing comprehensive PRDs from codebase analysis
+- Defining objectives, stakeholders, success metrics
+- Creating user stories and acceptance criteria
+- Documenting functional and non-functional requirements
+- Identifying out-of-scope items
 """
 
 import logging
@@ -28,10 +29,11 @@ class PrdWriterAgent:
     PRD Writer Agent for generating Product Requirements Documents.
 
     Specializes in:
-    - Analyzing codebase artifacts to generate PRDs
-    - Extracting user stories and functional requirements
-    - Documenting system objectives and stakeholders
-    - Creating structured PRD documents
+    - Analyzing codebase to understand features
+    - Writing clear product requirements
+    - Defining user stories with acceptance criteria
+    - Documenting technical constraints
+    - Setting success metrics and KPIs
     """
 
     def __init__(self, config: Optional[AgentConfig] = None):
@@ -42,7 +44,7 @@ class PrdWriterAgent:
         self.config = config
         self.role = AgentRole.PRD_WRITER
 
-        logger.info(f"Initialized PRD Writer agent: {config.name}")
+        logger.info("Initialized PRD Writer agent")
 
     def execute_query(
         self,
@@ -53,8 +55,8 @@ class PrdWriterAgent:
         Execute query with PRD Writer agent.
 
         Args:
-            query: User request for PRD generation
-            context: Optional context (e.g., artifacts to document)
+            query: Feature description or PRD request
+            context: Optional context from previous interactions
 
         Returns:
             AgentResponse with generated PRD
@@ -64,25 +66,17 @@ class PrdWriterAgent:
         try:
             logger.info(f"PRD Writer processing: {query[:50]}...")
 
-            # Step 1: Gather relevant artifacts
-            artifacts = self._gather_artifacts(query, context)
+            # Step 1: Search for relevant artifacts (comprehensive, no filters)
+            artifacts = self._search_relevant_artifacts(query)
 
-            # Step 2: Extract user stories from code
-            user_stories = self._extract_user_stories(artifacts)
+            # Step 2: Generate PRD using LLM
+            prd_document = self._generate_document(query, artifacts, context)
 
-            # Step 3: Identify functional requirements
-            requirements = self._identify_requirements(artifacts)
-
-            # Step 4: Generate PRD document
-            prd_content = self._generate_prd(
-                query, artifacts, user_stories, requirements, context
-            )
-
-            # Step 5: Extract citations
+            # Step 3: Extract citations
             citations = self._extract_citations(artifacts)
 
-            # Step 6: Generate follow-up questions
-            suggested_questions = self._generate_follow_ups(query)
+            # Step 4: Generate follow-up questions
+            suggested_questions = self._generate_follow_ups(query, artifacts)
 
             duration = (datetime.now() - start_time).total_seconds()
 
@@ -91,11 +85,11 @@ class PrdWriterAgent:
                 query=query,
                 timestamp=start_time.isoformat(),
                 duration_seconds=duration,
-                response_text=prd_content,
+                response_text=prd_document,
                 citations=citations,
-                confidence=0.80,
+                confidence=0.85,
                 suggested_questions=suggested_questions,
-                tools_used=["WeaviateSearchTool", "ExportService", "LLMQueryTool"]
+                tools_used=["WeaviateSearchTool", "LLMGenerationTool", "PrdFormatter"]
             )
 
         except Exception as e:
@@ -111,143 +105,229 @@ class PrdWriterAgent:
                 error=str(e)
             )
 
-    def _gather_artifacts(
-        self,
-        query: str,
-        context: Optional[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    def _search_relevant_artifacts(self, query: str) -> List[Dict[str, Any]]:
         """
-        Gather artifacts for PRD generation.
-
-        TODO: Integrate with Weaviate to search for relevant artifacts
+        Search for relevant artifacts (comprehensive, no type filters).
 
         Args:
             query: Search query
-            context: Optional context with specific artifacts
 
         Returns:
-            List of artifacts
+            List of relevant artifacts
         """
-        # TODO: Replace with actual Weaviate search
-        logger.debug("Gathering artifacts for PRD")
+        try:
+            logger.debug(f"Searching artifacts for PRD: {query}")
 
-        if context and "artifacts" in context:
-            return context["artifacts"]
+            from codeindex.web.services.search_service import get_search_service
+            search_service = get_search_service()
 
-        return []
+            # Search with NO artifact type filters to get comprehensive context
+            search_response = search_service.search(
+                query=query,
+                limit=20  # Get more artifacts for comprehensive PRD
+            )
 
-    def _extract_user_stories(self, artifacts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """
-        Extract user stories from artifacts.
+            artifacts = search_response.get("results", [])
+            logger.info(f"Found {len(artifacts)} artifacts for PRD generation")
 
-        Args:
-            artifacts: Code artifacts
+            return artifacts
 
-        Returns:
-            List of user stories
-        """
-        # TODO: Implement user story extraction
-        # - Analyze UI components to infer user actions
-        # - Extract business logic to identify features
-        # - Map presenters/views to user workflows
+        except Exception as e:
+            logger.error(f"Artifact search failed: {e}")
+            return []
 
-        logger.debug("Extracting user stories")
-
-        return []
-
-    def _identify_requirements(self, artifacts: List[Dict[str, Any]]) -> List[str]:
-        """
-        Identify functional requirements from code.
-
-        Args:
-            artifacts: Code artifacts
-
-        Returns:
-            List of functional requirements
-        """
-        # TODO: Implement requirement identification
-        # - Extract system capabilities from services
-        # - Identify data validation requirements
-        # - Map endpoints to functional features
-
-        logger.debug("Identifying functional requirements")
-
-        return []
-
-    def _generate_prd(
+    def _generate_document(
         self,
         query: str,
         artifacts: List[Dict[str, Any]],
-        user_stories: List[Dict[str, Any]],
-        requirements: List[str],
         context: Optional[Dict[str, Any]]
     ) -> str:
         """
-        Generate PRD document using LLM.
-
-        TODO: Integrate with Ollama LLM and ExportService
+        Generate PRD using LLM.
 
         Args:
-            query: User query
-            artifacts: Code artifacts
-            user_stories: Extracted user stories
-            requirements: Functional requirements
+            query: Feature description
+            artifacts: Relevant artifacts
             context: Optional context
 
         Returns:
-            PRD document text
+            Generated PRD document
         """
-        # TODO: Replace with actual PRD generation using Ollama + ExportService
-        logger.debug("Generating PRD document")
+        try:
+            logger.debug("Generating PRD with Ollama LLM")
 
-        return f"""# Product Requirements Document
+            from codeindex.services.ollama_client import OllamaClient
 
-## 1. Overview
+            # Build context from artifacts
+            context_parts = []
 
-This PRD documents the system based on codebase analysis.
+            # Group artifacts by type
+            artifact_types = {}
+            for artifact in artifacts:
+                artifact_type = artifact.get("artifactType", "Unknown")
+                if artifact_type not in artifact_types:
+                    artifact_types[artifact_type] = []
+                artifact_types[artifact_type].append(artifact)
 
-**Generated from**: {len(artifacts)} artifacts
+            # Add artifact summary by type
+            if artifact_types:
+                context_parts.append("## Codebase Components:\n")
+                for artifact_type, items in artifact_types.items():
+                    context_parts.append(f"\n**{artifact_type} ({len(items)}):**")
+                    for item in items[:5]:  # Max 5 per type
+                        file_path = item.get("relativePath") or item.get("fileName", "Unknown")
+                        summary = item.get("summary", "")
+                        context_parts.append(f"- `{file_path}`")
+                        if summary:
+                            context_parts.append(f"  {summary}")
 
-## 2. User Stories
+            context_text = "\n".join(context_parts) if context_parts else "No specific artifacts found."
 
-{len(user_stories)} user stories identified from code analysis.
+            # Create system prompt
+            system_prompt = """You are a Technical Product Manager who writes clear, comprehensive Product Requirements Documents (PRDs).
+Your PRDs follow industry best practices and include:
 
-## 3. Functional Requirements
+1. **Overview**: Feature purpose and business value
+2. **Objectives**: Clear, measurable goals
+3. **Stakeholders**: Who's involved and impacted
+4. **User Stories**: As a [user], I want to [action], so that [benefit]
+5. **Requirements**:
+   - Functional requirements (what it must do)
+   - Non-functional requirements (performance, security, usability)
+6. **Success Metrics**: How to measure success (KPIs, metrics)
+7. **Out of Scope**: What's explicitly NOT included
+8. **Technical Considerations**: Architecture, dependencies, constraints
 
-{len(requirements)} functional requirements extracted.
+Write in clear, concise language. Use bullet points and structured sections.
+Base your PRD on the actual codebase artifacts provided."""
 
-## 4. Next Steps
+            # Create user prompt
+            user_prompt = f"""Feature Request: {query}
 
-- Review and validate requirements
-- Prioritize user stories
-- Define acceptance criteria
+{context_text}
 
-*Note: This is a placeholder response. Full implementation will use Ollama LLM with ExportService for comprehensive PRD generation.*
-"""
+Please generate a comprehensive Product Requirements Document (PRD) for this feature based on the codebase context."""
+
+            # Call Ollama
+            ollama_client = OllamaClient()
+            response = ollama_client.call_ollama(
+                prompt=user_prompt,
+                system_prompt=system_prompt,
+                temperature=0.4,  # Slightly creative for business language
+                format_json=False
+            )
+
+            prd = response.get("response", "")
+
+            if not prd:
+                prd = self._generate_fallback_prd(query, artifacts)
+
+            logger.info(f"Generated PRD ({len(prd)} chars)")
+            return prd.strip()
+
+        except Exception as e:
+            logger.error(f"Failed to generate PRD: {e}")
+            return self._generate_fallback_prd(query, artifacts)
+
+    def _generate_fallback_prd(self, query: str, artifacts: List[Dict[str, Any]]) -> str:
+        """
+        Generate basic PRD structure when LLM fails.
+
+        Args:
+            query: Feature request
+            artifacts: Found artifacts
+
+        Returns:
+            Basic PRD template
+        """
+        sections = [
+            f"# Product Requirements Document\n",
+            f"## Feature: {query}\n",
+            f"**Status**: Draft",
+            f"**Author**: PRD Writer Agent",
+            f"**Date**: {datetime.now().strftime('%Y-%m-%d')}\n",
+            "## Overview",
+            f"This PRD defines requirements for: {query}\n",
+            "## Codebase Context",
+            f"Found {len(artifacts)} relevant components in the codebase:\n"
+        ]
+
+        # Add artifacts
+        for i, artifact in enumerate(artifacts[:10], 1):
+            artifact_type = artifact.get("artifactType", "Unknown")
+            file_path = artifact.get("relativePath") or artifact.get("fileName", "Unknown")
+            sections.append(f"{i}. **{artifact_type}**: `{file_path}`")
+
+        sections.extend([
+            "\n## Objectives",
+            "- [Define clear, measurable objectives]",
+            "\n## User Stories",
+            "- As a [user type], I want to [action], so that [benefit]",
+            "\n## Requirements",
+            "### Functional Requirements",
+            "- [List specific functional requirements]",
+            "### Non-Functional Requirements",
+            "- Performance: [Define performance criteria]",
+            "- Security: [Define security requirements]",
+            "- Usability: [Define usability standards]",
+            "\n## Success Metrics",
+            "- [Define KPIs and success criteria]",
+            "\n## Out of Scope",
+            "- [List what is NOT included]",
+            "\n**Note**: LLM generation failed. Please ensure Ollama is running."
+        ])
+
+        return "\n".join(sections)
 
     def _extract_citations(self, artifacts: List[Dict[str, Any]]) -> List[Citation]:
-        """Extract citations from artifacts."""
+        """
+        Extract citations from artifacts.
+
+        Args:
+            artifacts: Found artifacts
+
+        Returns:
+            List of citations
+        """
         citations = []
 
-        for artifact in artifacts[:10]:
-            if "file_path" in artifact:
-                citations.append(Citation(
-                    file_path=artifact["file_path"],
-                    line_start=1,
-                    line_end=10,
-                    snippet=f"Artifact: {artifact.get('type', 'Unknown')}",
-                    relevance_score=0.8
-                ))
+        for artifact in artifacts[:10]:  # Limit to 10
+            artifact_id = artifact.get("_additional", {}).get("id", artifact.get("id", ""))
+            distance = artifact.get("_additional", {}).get("distance", 0.0)
+            confidence = 1.0 - distance if distance < 1.0 else 0.5
+
+            citations.append(Citation(
+                artifact_id=artifact_id,
+                file_path=artifact.get("relativePath") or artifact.get("fileName", "Unknown"),
+                artifact_type=artifact.get("artifactType", "Unknown"),
+                confidence=confidence
+            ))
 
         return citations
 
-    def _generate_follow_ups(self, query: str) -> List[str]:
-        """Generate follow-up questions."""
-        return [
-            "Would you like me to generate a technical specification?",
-            "Should I create test scenarios for these requirements?",
-            "Would you like to export this PRD in a different format?"
+    def _generate_follow_ups(
+        self,
+        query: str,
+        artifacts: List[Dict[str, Any]]
+    ) -> List[str]:
+        """
+        Generate follow-up suggestions for PRD refinement.
+
+        Args:
+            query: Original query
+            artifacts: Found artifacts
+
+        Returns:
+            List of suggested questions
+        """
+        suggestions = [
+            "Can you add more detailed acceptance criteria?",
+            "What are the edge cases we should consider?",
+            "Can you expand the technical constraints section?",
+            "What are the dependencies for this feature?"
         ]
+
+        return suggestions[:4]
 
 
 # Global instance
@@ -255,7 +335,15 @@ _prd_writer_agent: Optional[PrdWriterAgent] = None
 
 
 def get_prd_writer_agent(config: Optional[AgentConfig] = None) -> PrdWriterAgent:
-    """Get global PRD Writer agent instance."""
+    """
+    Get global PRD Writer agent instance.
+
+    Args:
+        config: Optional agent configuration
+
+    Returns:
+        PrdWriterAgent singleton
+    """
     global _prd_writer_agent
 
     if _prd_writer_agent is None:
