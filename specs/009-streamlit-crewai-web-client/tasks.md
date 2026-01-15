@@ -145,6 +145,7 @@
 
 - [ ] T053 [P] [US2.1] Create unit tests for Senior Developer agent: `tests/unit/web/agents/test_senior_developer.py` (test agent configuration, role definition, tool setup)
 - [ ] T054 [P] [US2.1] Create unit tests for agent tools: `tests/unit/web/agents/test_agent_tools.py` (test WeaviateSearchTool, FileReadTool, LLMQueryTool)
+- [ ] T054.1 [P] [US2.1] Create unit tests for agent tools with mocked responses: `tests/unit/web/agents/test_agent_tools_mocked.py` (test WeaviateSearchTool with mocked Weaviate responses, FileReadTool with mocked file I/O, LLMQueryTool with mocked Ollama responses - verify error handling and retry logic)
 - [ ] T055 [P] [US2.1] Create unit tests for agent routing: `tests/unit/web/services/test_agent_routing.py` (test keyword detection, agent selection, fallback logic)
 - [ ] T056 [P] [US2.1] Create unit tests for response formatting: `tests/unit/web/components/test_agent_chat.py` (test citation extraction, hyperlink generation, streaming display)
 - [ ] T057 [US2.1] Create integration test for agent chat: `tests/integration/web/test_agent_chat.py` (test end-to-end agent query, CrewAI + Ollama integration, response streaming, citation formatting)
@@ -159,7 +160,7 @@
 - [ ] T063 [US2.1] Implement agent routing logic in agent_service.py (route "explain" questions to Senior Developer, keyword heuristics)
 - [ ] T064 [US2.1] Create agent chat component: `src/codeindex/web/components/agent_chat.py` (display user message, agent response, streaming support)
 - [ ] T065 [US2.1] Implement response streaming (word-by-word rendering as agent generates text)
-- [ ] T066 [US2.1] Add citation formatting (extract artifact IDs and file paths from response, convert to hyperlinks to artifact detail pages)
+- [ ] T066 [US2.1] Add citation formatting with validation (extract artifact IDs and file paths from response, verify via Weaviate per FR4.11, convert verified citations to hyperlinks to artifact detail pages, display warning icons for unverified citations)
 - [ ] T067 [US2.1] Implement conversation history (store in Streamlit session state, max 20 messages, clear history button)
 - [ ] T068 [US2.1] Add "Copy Response" button (copy agent response to clipboard)
 - [ ] T069 [US2.1] Add error handling for agent failures (Ollama timeout, Weaviate error, invalid response format)
@@ -279,9 +280,9 @@
 - [ ] T119 [US2.5] Create Tests page: `src/codeindex/web/pages/5_🧪_Tests.py` (page layout, test type selection)
 - [ ] T120 [US2.5] Add user story input section (text area for user stories, or artifact selection)
 - [ ] T121 [US2.5] Add "Generate Gherkin Tests" button (trigger Gherkin generation workflow)
-- [ ] T122 [US2.5] Implement Gherkin syntax validation (parse generated .feature files, check Gherkin syntax errors)
+- [ ] T122 [US2.5] Implement Gherkin syntax validation per FR8.8 (parse generated .feature files with Cucumber parser, detect syntax errors including invalid keywords and malformed scenario outlines, display errors with line numbers)
 - [ ] T123 [US2.5] Display generated Gherkin tests in UI (syntax-highlighted code viewer)
-- [ ] T124 [US2.5] Add download button for .feature files (export as .feature files, zip multiple files)
+- [ ] T124 [US2.5] Add download button for .feature files per FR8.8 (validate syntax before allowing download, block download on critical errors, export as .feature files, zip multiple files)
 - [ ] T125 [US2.5] Add test coverage summary (number of scenarios, steps, examples)
 
 **Checkpoint**: Gherkin test generation functional - QA engineers can generate BDD tests from requirements
@@ -308,9 +309,9 @@
 - [ ] T132 [US2.6] Add UI component selection to Tests page (select GwtPresenter, GwtView, JspForm artifacts)
 - [ ] T133 [US2.6] Add "Generate Playwright Tests" button (trigger Playwright generation workflow)
 - [ ] T134 [US2.6] Implement Playwright test generation logic (analyze UI components, generate page object models, test cases with locators and assertions)
-- [ ] T135 [US2.6] Add TypeScript/JavaScript syntax validation (parse generated .spec.ts/.spec.js files, check syntax errors)
+- [ ] T135 [US2.6] Add TypeScript/JavaScript syntax validation per FR8.8 (parse generated .spec.ts/.spec.js files with TypeScript/JavaScript parser, detect syntax errors including missing imports and invalid locators, display errors with line numbers)
 - [ ] T136 [US2.6] Display generated Playwright tests in UI (syntax-highlighted code viewer with TypeScript support)
-- [ ] T137 [US2.6] Add download button for .spec.ts/.spec.js files (export as test files, zip multiple files)
+- [ ] T137 [US2.6] Add download button for .spec.ts/.spec.js files per FR8.8 (validate syntax before allowing download, block download on critical errors, export as test files, zip multiple files)
 - [ ] T138 [US2.6] Add complete test suite workflow: `src/codeindex/web/workflows/complete_test_suite.py` (generate both Gherkin and Playwright tests in single workflow)
 
 **Checkpoint**: Playwright test generation functional - QA engineers can generate E2E test scripts
@@ -627,14 +628,14 @@ With 3 developers after Foundational phase completes:
 
 ## Test Coverage Summary
 
-**Total Tasks**: 236 (Setup: 7, Foundational: 12, User Stories: 197, Polish: 20)
-**Test Tasks**: 74 (31% of total tasks)
+**Total Tasks**: 237 (Setup: 7, Foundational: 12, User Stories: 198, Polish: 20)
+**Test Tasks**: 75 (32% of total tasks)
 
 **Tests by User Story**:
 - US1.1 (Search): 3 tests (T020-T022)
 - US1.2 (Filters): 3 tests (T031-T033)
 - US1.3 (Graphs): 4 tests (T040-T043)
-- US2.1 (Senior Dev Agent): 5 tests (T053-T057)
+- US2.1 (Senior Dev Agent): 6 tests (T053-T057, T054.1)
 - US2.2 (Data Analyst): 4 tests (T070-T073)
 - US2.3 (Multi-Agent PRD): 6 tests (T081-T086)
 - US2.4 (Agent Config): 4 tests (T098-T101)
@@ -649,7 +650,7 @@ With 3 developers after Foundational phase completes:
 - Foundational: 4 tests (T016-T019)
 
 **Test Types**:
-- Unit tests: ~50 tasks (services, components, agents, workflows)
+- Unit tests: ~51 tasks (services, components, agents, workflows)
 - Integration tests: ~24 tasks (end-to-end flows, multi-system integration)
 
 ---

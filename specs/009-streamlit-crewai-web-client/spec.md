@@ -319,6 +319,15 @@ An interactive web application that:
 - Preview of generated tests in UI before download
 - Validation of test syntax (Gherkin parser, TypeScript/JavaScript syntax check)
 
+**FR4.11**: System MUST validate all agent-cited artifact IDs before displaying hyperlinks (hallucination mitigation)
+- Citation Extraction: Parse agent responses for artifact ID patterns (e.g., `artifact:abc123`, `DaoCall:xyz789`, file paths)
+- Weaviate Verification: Query Weaviate to verify each cited artifact ID exists in the corpus
+- Hyperlink Generation: Only generate clickable hyperlinks for verified artifact IDs
+- Visual Indicators: Display warning icons for unverified citations with tooltip: "Citation could not be verified in database"
+- Logging: Log all failed verifications with context (agent role, user query, cited ID) for quality monitoring
+- Performance: Cache verification results for 5 minutes to reduce Weaviate queries
+- Implementation: Implement in `src/codeindex/web/services/agent_service.py` as post-processing step after agent response formatting
+
 ### FR5: Chat Interface
 
 **FR5.1**: Chat interface MUST support text input (multiline, max 2000 chars)
@@ -386,6 +395,13 @@ An interactive web application that:
   - PDF with diagrams: <10 seconds (depends on diagram count and complexity)
 - Implementation: Show progress indicator during PDF generation, allow background generation for large reports
 
+**FR8.8**: Gherkin and Playwright test exports MUST include syntax validation before download
+- Gherkin Validation: Parse .feature files with Cucumber parser, detect syntax errors (invalid keywords, malformed scenario outlines)
+- Playwright Validation: Parse .spec.ts/.spec.js files with TypeScript/JavaScript parser, detect syntax errors (missing imports, invalid locators, incorrect async/await usage)
+- User Feedback: Display validation errors in UI with line numbers and suggestions for fixes
+- Download Blocking: Prevent download if syntax validation fails (critical errors only, warnings allowed)
+- Implementation: Run validation asynchronously during test generation, cache results for preview
+
 ### FR9: Annotations and Collaboration
 
 **FR9.1**: Users MUST be able to add notes to artifacts (free-form text, Markdown support)
@@ -437,7 +453,7 @@ An interactive web application that:
 **NFR1.4**: Multi-agent workflows MUST complete in <5 minutes for medium-sized modules (20-30 artifacts)
 - Implementation: CrewAI `sequential` process with context passing between agents
 - LLM Backend: Ollama (gemma3:12b) with existing timeout/retry logic from `ollama_client.py`
-- Performance Target: 3-agent workflow in ~4.5 minutes (validated in prototype)
+- Performance Target: 4-agent PRD workflow (Backend Specialist → Frontend Specialist → Data Analyst → PRD Writer) in <5 minutes for 20-30 artifacts (validated in prototype with 3-agent workflow at ~4.5 minutes)
 - Orchestration: Use hierarchical process for parallel agent execution where dependencies allow
 
 **NFR1.5**: Application MUST handle 50 concurrent users without degradation (response time increase <20%)
