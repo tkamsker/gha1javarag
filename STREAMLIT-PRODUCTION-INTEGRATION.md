@@ -298,51 +298,84 @@ python3 -c "from codeindex.services.weaviate_store import WeaviateStore; print(W
    - ⚙️ Settings page (agent configuration, diagnostics)
    - 📊 Workspace page (session persistence)
 
-### 🚧 **Implemented but Using Placeholders**
+### ✅ **Connected to Production Data** (NEW)
 
-4. **Search Service** (infrastructure complete, needs real queries)
+4. **Search Service** (✅ COMPLETED - commit a9bf5dd)
    - File: `src/codeindex/web/services/search_service.py`
-   - Status: Uses placeholder responses (TODO: connect to real Weaviate)
-   - Fix: Replace placeholder with actual `WeaviateStore.semantic_search()` calls
+   - Status: ✅ Connected to real Weaviate via WeaviateStore.search_artifacts()
+   - Features: Semantic search, project filtering, artifact type filtering, pagination
+   - Returns: Real artifacts indexed by production pipeline
 
-5. **Agent Service** (routing complete, needs real LLM integration)
+5. **Senior Developer Agent** (✅ COMPLETED - commit 5b99f65)
+   - File: `src/codeindex/web/agents/senior_developer.py`
+   - Status: ✅ Connected to Ollama LLM (gemma3:12b)
+   - Features:
+     - Searches Weaviate for relevant artifacts
+     - Reads source files from JAVA_SOURCE_DIR
+     - Generates AI-powered explanations using Ollama
+     - Provides citations with confidence scores
+     - Smart follow-up questions based on artifact types
+
+### 🚧 **Agent Service** (7 of 8 agents still need implementation)
+
+6. **Remaining Agents** (routing complete, need LLM integration)
    - File: `src/codeindex/web/services/agent_service.py`
-   - Status: All 8 agents implemented with placeholder responses
-   - Fix: Connect agents to Ollama for real answers
+   - Status: 1/8 agents connected (Senior Developer ✅)
+   - Pending: Data Analyst, Frontend Specialist, Backend Specialist, PRD Writer, Spec-Kit Writer, Gherkin Test Writer, Playwright Test Writer
 
 ### 📝 **To Complete Full Integration**
 
-**Priority 1: Connect Search to Real Data**
+**Priority 1: Connect Search to Real Data** ✅ COMPLETED (commit a9bf5dd)
 
 ```python
-# src/codeindex/web/services/search_service.py
-# Replace placeholder with:
+# src/codeindex/web/services/search_service.py - DONE
 client = self._get_weaviate_client()
-results = client.semantic_search(
+artifacts = client.search_artifacts(
     query=query,
-    limit=limit,
-    offset=offset,
-    filters=filters
+    project_id=project_id,
+    artifact_types=artifact_types,
+    limit=limit + offset
 )
 ```
 
-**Priority 2: Connect Agents to Real LLM**
+**Priority 2: Connect Agents to Real LLM** 🔄 IN PROGRESS (1/8 agents complete)
 
 ```python
-# src/codeindex/web/agents/senior_developer.py
-# Replace placeholder with:
+# src/codeindex/web/agents/senior_developer.py - DONE (commit 5b99f65)
 from codeindex.services.ollama_client import OllamaClient
-ollama = OllamaClient()
-response = ollama.generate_response(query, context=artifacts)
+from codeindex.web.services.search_service import get_search_service
+
+# Search Weaviate
+search_service = get_search_service()
+artifacts = search_service.search(query, limit=10)
+
+# Generate LLM response
+ollama_client = OllamaClient()
+response = ollama_client.call_ollama(
+    prompt=user_prompt,
+    system_prompt=system_prompt,
+    temperature=0.3,
+    format_json=False
+)
 ```
 
-**Priority 3: Test End-to-End Flow**
+**Remaining agents to connect:**
+- [ ] Data Analyst
+- [ ] Frontend Specialist
+- [ ] Backend Specialist
+- [ ] PRD Writer
+- [ ] Spec-Kit Writer
+- [ ] Gherkin Test Writer
+- [ ] Playwright Test Writer
 
-1. Run pipeline: `./production-requirements-generation.sh`
-2. Verify Weaviate has data
-3. Launch Streamlit
-4. Search for artifacts (should return real results)
-5. Ask AI agents questions (should use real LLM)
+**Priority 3: Test End-to-End Flow** ⏳ READY FOR TESTING
+
+1. ✅ Run pipeline: `./production-requirements-generation.sh`
+2. ✅ Verify Weaviate has data: `./weaviate_stats.py`
+3. ✅ Launch Streamlit: `streamlit run src/codeindex/web/app.py`
+4. ✅ Search for artifacts (returns real results from Weaviate)
+5. ✅ Ask Senior Developer questions (uses real Ollama LLM with context)
+6. ⏸️ Test remaining 7 agents (still return placeholders)
 
 ---
 
@@ -412,27 +445,31 @@ grep WEAVIATE_URL .env
 
 1. ✅ **Same Data Source**: Streamlit and pipeline use the same Weaviate instance
 2. ✅ **Same Configuration**: Both read from `.env` file
-3. ✅ **Same Artifacts**: Search returns what pipeline indexed
-4. 🚧 **Needs Connection**: Search service has placeholder (connect to real Weaviate)
-5. 🚧 **Needs Integration**: Agents have placeholders (connect to real Ollama)
+3. ✅ **Same Artifacts**: Search returns what pipeline indexed *(WORKING - commit a9bf5dd)*
+4. ✅ **Search Connected**: Search service uses real Weaviate queries *(DONE - commit a9bf5dd)*
+5. 🔄 **Agents Partially Connected**: Senior Developer uses real Ollama LLM *(1/8 agents - commit 5b99f65)*
+6. 📝 **Remaining Work**: 7 agents need Ollama integration
 
 **What Works Now:**
-- Service health checks
-- Database initialization
-- UI navigation and pages
-- Configuration management
-- Agent routing infrastructure
+- ✅ Service health checks
+- ✅ Database initialization
+- ✅ UI navigation and pages
+- ✅ Configuration management
+- ✅ Agent routing infrastructure
+- ✅ **Search returns real Weaviate data** (commit a9bf5dd)
+- ✅ **Senior Developer agent uses real Ollama LLM** (commit 5b99f65)
 
 **What Needs Real Data:**
-- Search results (currently placeholder)
-- Agent responses (currently placeholder)
-- Relationship graphs (needs Weaviate queries)
+- 🚧 Remaining 7 agents (Data Analyst, Frontend Specialist, Backend Specialist, PRD Writer, Spec-Kit Writer, Gherkin Test Writer, Playwright Test Writer)
+- 📝 Relationship graphs (needs Weaviate relationship queries)
 
 **Next Steps:**
-1. ✅ Fix TypeError (DONE - parameter mapping)
-2. 📝 Connect search to real Weaviate queries
-3. 📝 Connect agents to real Ollama LLM
-4. 📝 Test with production pipeline data
+1. ✅ Fix TypeError (DONE - parameter mapping in commit 3b42293)
+2. ✅ Connect search to real Weaviate queries (DONE - commit a9bf5dd)
+3. 🔄 Connect agents to real Ollama LLM (IN PROGRESS - 1/8 agents complete)
+4. 📝 Test with production pipeline data (READY - search and Senior Developer work)
+5. 📝 Connect remaining 7 agents
+6. 📝 Phase 18: Production polish (logging, caching, deployment)
 
 ---
 
