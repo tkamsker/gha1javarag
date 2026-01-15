@@ -125,13 +125,27 @@ class SeniorDeveloperAgent:
         Returns:
             List of search results
         """
-        # TODO: Implement actual Weaviate search in Phase 6 implementation
-        # For now, return placeholder results
+        try:
+            logger.debug(f"Searching codebase for: {query}")
 
-        logger.debug(f"Searching codebase for: {query}")
+            # Use SearchService to query Weaviate
+            from codeindex.web.services.search_service import get_search_service
+            search_service = get_search_service()
 
-        # Placeholder - would query Weaviate
-        return []
+            # Execute search with limit of 10 most relevant artifacts
+            search_response = search_service.search(
+                query=query,
+                limit=10
+            )
+
+            artifacts = search_response.get("results", [])
+            logger.info(f"Found {len(artifacts)} artifacts for query")
+
+            return artifacts
+
+        except Exception as e:
+            logger.error(f"Search failed: {e}")
+            return []
 
     def _read_source_files(self, search_results: List[Dict[str, Any]]) -> Dict[str, str]:
         """
@@ -143,12 +157,37 @@ class SeniorDeveloperAgent:
         Returns:
             Dictionary mapping file paths to file contents
         """
-        # TODO: Implement file reading in Phase 6 implementation
+        from pathlib import Path
+        from codeindex.utils.config import get_config
+
+        file_contents = {}
+        config = get_config()
 
         logger.debug(f"Reading {len(search_results)} source files")
 
-        # Placeholder
-        return {}
+        for result in search_results[:5]:  # Limit to top 5 files to avoid context overflow
+            try:
+                # Get relative path from result
+                relative_path = result.get("relativePath") or result.get("fileName", "")
+                if not relative_path:
+                    continue
+
+                # Construct full path
+                full_path = Path(config.java_source_dir) / relative_path
+
+                if full_path.exists() and full_path.is_file():
+                    # Read file with size limit (max 5000 lines)
+                    with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        lines = f.readlines()[:5000]
+                        content = ''.join(lines)
+                        file_contents[str(relative_path)] = content
+                        logger.debug(f"Read {len(lines)} lines from {relative_path}")
+
+            except Exception as e:
+                logger.warning(f"Failed to read file {relative_path}: {e}")
+                continue
+
+        return file_contents
 
     def _generate_explanation(
         self,
@@ -169,33 +208,85 @@ class SeniorDeveloperAgent:
         Returns:
             Explanation text
         """
-        # TODO: Implement LLM query in Phase 6 implementation
+        try:
+            logger.debug("Generating explanation with Ollama LLM")
 
-        logger.debug("Generating explanation with LLM")
+            # Import Ollama client
+            from codeindex.services.ollama_client import OllamaClient
 
-        # Placeholder response
-        explanation = f"""
-**Senior Developer Analysis** (Placeholder - Full implementation pending)
+            # Build context from search results and file contents
+            context_parts = []
 
-You asked: "{query}"
+            # Add artifact summaries from search results
+            if search_results:
+                context_parts.append("## Relevant Artifacts Found:\n")
+                for i, result in enumerate(search_results[:5], 1):
+                    artifact_type = result.get("artifactType", "Unknown")
+                    file_path = result.get("relativePath") or result.get("fileName", "Unknown")
+                    summary = result.get("summary", "No summary available")
 
-This is a placeholder response from the Senior Developer agent. The full implementation will:
+                    context_parts.append(f"{i}. **{artifact_type}** - `{file_path}`")
+                    context_parts.append(f"   {summary}\n")
 
-1. **Search the codebase** using Weaviate to find relevant artifacts
-2. **Read source files** to understand implementation details
-3. **Analyze architecture** and identify design patterns
-4. **Explain best practices** and potential improvements
-5. **Provide citations** to specific code locations
+            # Add file content snippets
+            if file_contents:
+                context_parts.append("\n## Source Code Context:\n")
+                for file_path, content in list(file_contents.items())[:3]:  # Max 3 files
+                    # Truncate content to first 1000 characters
+                    content_preview = content[:1000] + ("..." if len(content) > 1000 else "")
+                    context_parts.append(f"### {file_path}\n```\n{content_preview}\n```\n")
 
-**Next Steps:**
-- Ensure Weaviate is indexed with your codebase
-- Ensure Ollama is running for LLM queries
-- Wait for full agent implementation in Phase 6
+            context_text = "\n".join(context_parts) if context_parts else "No specific code artifacts found."
 
-**Note**: This placeholder will be replaced with actual agent logic using CrewAI and Ollama.
-        """
+            # Create system prompt
+            system_prompt = """You are a Senior Software Developer with expertise in Java enterprise applications,
+GWT, and modern web architectures. Analyze the provided code artifacts and answer the user's question with:
 
-        return explanation.strip()
+1. Clear, concise explanations
+2. Specific references to code components
+3. Best practices and design patterns
+4. Potential improvements when relevant
+
+Keep responses focused and practical."""
+
+            # Create user prompt
+            user_prompt = f"""Question: {query}
+
+{context_text}
+
+Please analyze the above artifacts and provide a comprehensive answer to the question."""
+
+            # Call Ollama
+            ollama_client = OllamaClient()
+            response = ollama_client.call_ollama(
+                prompt=user_prompt,
+                system_prompt=system_prompt,
+                temperature=0.3,  # Lower temperature for more focused responses
+                format_json=False  # We want natural text, not JSON
+            )
+
+            explanation = response.get("response", "")
+
+            if not explanation:
+                explanation = "Unable to generate explanation. Please try rephrasing your question."
+
+            logger.info(f"Generated explanation ({len(explanation)} chars)")
+            return explanation.strip()
+
+        except Exception as e:
+            logger.error(f"Failed to generate explanation: {e}")
+
+            # Fallback response
+            return f"""I encountered an error while generating an explanation: {str(e)}
+
+However, I found {len(search_results)} relevant artifacts in the codebase:
+
+{self._format_search_results_fallback(search_results)}
+
+Please ensure:
+1. Ollama is running (http://localhost:11434)
+2. Weaviate has indexed artifacts
+3. The model 'gemma3:12b' is available"""
 
     def _extract_citations(self, search_results: List[Dict[str, Any]]) -> List[Citation]:
         """
@@ -210,17 +301,47 @@ This is a placeholder response from the Senior Developer agent. The full impleme
         citations = []
 
         for result in search_results[:5]:  # Limit to 5 citations
+            # Get ID from _additional if present (Weaviate format)
+            artifact_id = result.get("_additional", {}).get("id", result.get("id", ""))
+
+            # Get distance/confidence from _additional
+            distance = result.get("_additional", {}).get("distance", 0.0)
+            confidence = 1.0 - distance if distance < 1.0 else 0.5  # Convert distance to confidence
+
             citation = Citation(
-                artifact_id=result.get("id", ""),
-                file_path=result.get("file_path", ""),
-                line_start=result.get("line_start"),
-                line_end=result.get("line_end"),
-                artifact_type=result.get("artifact_type"),
-                confidence=result.get("confidence", 1.0)
+                artifact_id=artifact_id,
+                file_path=result.get("relativePath") or result.get("fileName", "Unknown"),
+                artifact_type=result.get("artifactType", "Unknown"),
+                confidence=confidence
             )
             citations.append(citation)
 
         return citations
+
+    def _format_search_results_fallback(self, search_results: List[Dict[str, Any]]) -> str:
+        """
+        Format search results as fallback text when LLM fails.
+
+        Args:
+            search_results: Search results from Weaviate
+
+        Returns:
+            Formatted text listing artifacts
+        """
+        if not search_results:
+            return "No artifacts found in the codebase."
+
+        lines = []
+        for i, result in enumerate(search_results[:5], 1):
+            artifact_type = result.get("artifactType", "Unknown")
+            file_path = result.get("relativePath") or result.get("fileName", "Unknown")
+            summary = result.get("summary", "")
+
+            lines.append(f"{i}. **{artifact_type}**: `{file_path}`")
+            if summary:
+                lines.append(f"   {summary}")
+
+        return "\n".join(lines)
 
     def _generate_follow_ups(
         self,
@@ -228,7 +349,7 @@ This is a placeholder response from the Senior Developer agent. The full impleme
         search_results: List[Dict[str, Any]]
     ) -> List[str]:
         """
-        Generate suggested follow-up questions.
+        Generate suggested follow-up questions based on search results.
 
         Args:
             query: Original query
@@ -237,15 +358,30 @@ This is a placeholder response from the Senior Developer agent. The full impleme
         Returns:
             List of suggested questions
         """
-        # TODO: Implement intelligent follow-up generation
+        suggestions = []
 
-        # Placeholder suggestions
-        return [
-            "Can you explain the implementation details?",
-            "What are the dependencies for this component?",
-            "Are there any potential improvements?",
-            "How does this integrate with other modules?"
-        ]
+        # Generic follow-ups
+        suggestions.append("Can you explain the implementation details?")
+
+        # Add artifact-specific suggestions based on what was found
+        if search_results:
+            artifact_types = set(r.get("artifactType", "") for r in search_results[:3])
+
+            if "GwtPresenter" in artifact_types:
+                suggestions.append("How does this presenter handle user interactions?")
+            if "BackendDoc" in artifact_types or "DaoCall" in artifact_types:
+                suggestions.append("What database operations does this use?")
+            if "DtoArtifact" in artifact_types:
+                suggestions.append("What validation rules are applied to this data?")
+
+        # Always include these
+        if len(suggestions) < 3:
+            suggestions.extend([
+                "What are the dependencies for this component?",
+                "How does this integrate with other modules?"
+            ])
+
+        return suggestions[:4]  # Limit to 4 suggestions
 
 
 # Global agent instance
