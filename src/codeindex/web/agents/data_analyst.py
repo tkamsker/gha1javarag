@@ -45,7 +45,7 @@ class DataAnalystAgent:
         self.config = config
         self.role = AgentRole.DATA_ANALYST
 
-        logger.info(f"Initialized Data Analyst agent: {config.name}")
+        logger.info(f"Initialized Data Analyst agent")
 
     def execute_query(
         self,
@@ -118,7 +118,7 @@ class DataAnalystAgent:
         """
         Search for database-related artifacts.
 
-        TODO: Integrate with Weaviate to search for:
+        Searches for:
         - DbTable artifacts
         - DaoCall artifacts
         - IbatisStatement artifacts
@@ -130,25 +130,30 @@ class DataAnalystAgent:
         Returns:
             List of database artifacts
         """
-        # TODO: Replace with actual Weaviate search
-        # This is a placeholder that simulates finding database artifacts
-        logger.debug(f"Searching database artifacts for: {query}")
+        try:
+            logger.debug(f"Searching database artifacts for: {query}")
 
-        return [
-            {
-                "id": "db_table_001",
-                "type": "DbTable",
-                "name": "users",
-                "columns": ["user_id", "username", "email", "created_at"],
-                "file_path": "src/main/resources/schema.sql"
-            },
-            {
-                "id": "dao_call_001",
-                "type": "DaoCall",
-                "method": "getUserById",
-                "file_path": "src/main/java/com/example/dao/UserDao.java"
-            }
-        ]
+            # Use SearchService to query Weaviate with database-specific filters
+            from codeindex.web.services.search_service import get_search_service
+            search_service = get_search_service()
+
+            # Search with database-related artifact types
+            search_response = search_service.search(
+                query=query,
+                filters={
+                    "artifact_types": ["DbTable", "DaoCall", "IbatisStatement", "DtoArtifact"]
+                },
+                limit=15  # Get more results for comprehensive database analysis
+            )
+
+            artifacts = search_response.get("results", [])
+            logger.info(f"Found {len(artifacts)} database artifacts")
+
+            return artifacts
+
+        except Exception as e:
+            logger.error(f"Database artifact search failed: {e}")
+            return []
 
     def _analyze_dao_patterns(self, artifacts: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
@@ -160,21 +165,23 @@ class DataAnalystAgent:
         Returns:
             DAO pattern analysis
         """
-        # TODO: Implement DAO pattern analysis
-        # - Extract DAO method signatures
-        # - Identify CRUD patterns (Create, Read, Update, Delete)
-        # - Analyze transaction boundaries
-        # - Find N+1 query issues
-
         logger.debug("Analyzing DAO patterns")
 
-        dao_calls = [a for a in artifacts if a.get("type") == "DaoCall"]
-        ibatis_stmts = [a for a in artifacts if a.get("type") == "IbatisStatement"]
+        # Filter by artifact type (Weaviate uses "artifactType" field)
+        dao_calls = [a for a in artifacts if a.get("artifactType") == "DaoCall"]
+        ibatis_stmts = [a for a in artifacts if a.get("artifactType") == "IbatisStatement"]
+
+        # Extract method names from entities field
+        dao_methods = []
+        for dao in dao_calls:
+            entities = dao.get("entities", [])
+            dao_methods.extend(entities)
 
         return {
             "dao_count": len(dao_calls),
             "ibatis_count": len(ibatis_stmts),
-            "patterns": ["CRUD", "Repository", "Active Record"]
+            "dao_methods": dao_methods[:10],  # Sample of methods
+            "patterns": ["CRUD", "Repository Pattern", "DAO Pattern"]
         }
 
     def _extract_schema_info(self, artifacts: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -187,20 +194,30 @@ class DataAnalystAgent:
         Returns:
             Schema information
         """
-        # TODO: Implement schema extraction
-        # - Parse table definitions
-        # - Extract column types and constraints
-        # - Identify foreign key relationships
-        # - Find indexes and constraints
-
         logger.debug("Extracting schema information")
 
-        tables = [a for a in artifacts if a.get("type") == "DbTable"]
+        # Filter by artifact type (Weaviate uses "artifactType" field)
+        tables = [a for a in artifacts if a.get("artifactType") == "DbTable"]
+        dtos = [a for a in artifacts if a.get("artifactType") == "DtoArtifact"]
+
+        # Extract table names from entities field
+        table_names = []
+        for table in tables:
+            entities = table.get("entities", [])
+            table_names.extend(entities)
+
+        # Extract DTO names
+        dto_names = []
+        for dto in dtos:
+            entities = dto.get("entities", [])
+            dto_names.extend(entities)
 
         return {
             "table_count": len(tables),
-            "tables": [t.get("name") for t in tables],
-            "relationships": []
+            "tables": table_names[:20],  # Sample of tables
+            "dto_count": len(dtos),
+            "dtos": dto_names[:10],  # Sample of DTOs
+            "relationships": []  # Would be extracted from foreign keys in real artifacts
         }
 
     def _generate_data_analysis(
@@ -214,12 +231,6 @@ class DataAnalystAgent:
         """
         Generate data flow analysis using LLM.
 
-        TODO: Integrate with Ollama LLM to generate:
-        - Database schema explanations
-        - Data flow descriptions
-        - DAO pattern analysis
-        - Query optimization suggestions
-
         Args:
             query: User query
             artifacts: Database artifacts
@@ -230,25 +241,108 @@ class DataAnalystAgent:
         Returns:
             Analysis text
         """
-        # TODO: Replace with actual Ollama LLM call
-        # This is a placeholder response
-        logger.debug("Generating data analysis with LLM")
+        try:
+            logger.debug("Generating data analysis with Ollama LLM")
 
-        return f"""Based on the database schema analysis:
+            # Import Ollama client
+            from codeindex.services.ollama_client import OllamaClient
 
-**Tables Found**: {schema_info['table_count']} tables
-- {', '.join(schema_info['tables'][:5])}
+            # Build context from database artifacts
+            context_parts = []
 
-**DAO Patterns**: {dao_analysis['dao_count']} DAO calls detected
-- Patterns: {', '.join(dao_analysis['patterns'])}
-- iBATIS statements: {dao_analysis['ibatis_count']}
+            # Add schema summary
+            if schema_info["table_count"] > 0:
+                context_parts.append("## Database Schema:\n")
+                context_parts.append(f"**Tables ({schema_info['table_count']}):**")
+                context_parts.append(", ".join(schema_info["tables"][:20]))
+                if schema_info["dto_count"] > 0:
+                    context_parts.append(f"\n**DTOs ({schema_info['dto_count']}):**")
+                    context_parts.append(", ".join(schema_info["dtos"][:10]))
+                context_parts.append("\n")
 
-**Data Flow Analysis**:
-The system uses a standard DAO pattern with iBATIS for database access.
-The {schema_info['tables'][0] if schema_info['tables'] else 'main'} table appears to be central to the data model.
+            # Add DAO analysis
+            if dao_analysis["dao_count"] > 0:
+                context_parts.append("\n## Data Access Layer:\n")
+                context_parts.append(f"**DAO Methods ({dao_analysis['dao_count']}):**")
+                if dao_analysis["dao_methods"]:
+                    context_parts.append(", ".join(dao_analysis["dao_methods"][:10]))
+                context_parts.append(f"\n**iBATIS Statements:** {dao_analysis['ibatis_count']}")
+                context_parts.append(f"\n**Patterns:** {', '.join(dao_analysis['patterns'])}")
+                context_parts.append("\n")
 
-*Note: This is a placeholder response. Full implementation will use Ollama LLM with actual database artifacts.*
-"""
+            # Add artifact details
+            if artifacts:
+                context_parts.append("\n## Relevant Artifacts:\n")
+                for i, artifact in enumerate(artifacts[:5], 1):
+                    artifact_type = artifact.get("artifactType", "Unknown")
+                    file_path = artifact.get("relativePath") or artifact.get("fileName", "Unknown")
+                    summary = artifact.get("summary", "")
+
+                    context_parts.append(f"{i}. **{artifact_type}** - `{file_path}`")
+                    if summary:
+                        context_parts.append(f"   {summary}")
+
+            context_text = "\n".join(context_parts) if context_parts else "No database artifacts found."
+
+            # Create system prompt
+            system_prompt = """You are a Data Analyst with expertise in database design, data modeling,
+and data access patterns. Analyze the provided database artifacts and answer the user's question with:
+
+1. Clear database schema explanations
+2. Data flow and entity relationships
+3. DAO/iBATIS usage patterns
+4. Potential data quality or performance insights
+5. Specific references to tables and methods
+
+Keep responses focused on data and database aspects."""
+
+            # Create user prompt
+            user_prompt = f"""Question: {query}
+
+{context_text}
+
+Please analyze the database structure and data access patterns, then provide a comprehensive answer."""
+
+            # Call Ollama
+            ollama_client = OllamaClient()
+            response = ollama_client.call_ollama(
+                prompt=user_prompt,
+                system_prompt=system_prompt,
+                temperature=0.3,
+                format_json=False
+            )
+
+            analysis = response.get("response", "")
+
+            if not analysis:
+                analysis = "Unable to generate database analysis. Please try rephrasing your question."
+
+            logger.info(f"Generated data analysis ({len(analysis)} chars)")
+            return analysis.strip()
+
+        except Exception as e:
+            logger.error(f"Failed to generate data analysis: {e}")
+
+            # Fallback response with structured info
+            fallback = [
+                f"I encountered an error while analyzing the database: {str(e)}\n",
+                f"However, I found {len(artifacts)} database artifacts:\n"
+            ]
+
+            if schema_info["table_count"] > 0:
+                fallback.append(f"\n**Database Tables ({schema_info['table_count']}):**")
+                fallback.append(", ".join(schema_info["tables"][:10]))
+
+            if dao_analysis["dao_count"] > 0:
+                fallback.append(f"\n\n**DAO Methods ({dao_analysis['dao_count']}):**")
+                if dao_analysis["dao_methods"]:
+                    fallback.append(", ".join(dao_analysis["dao_methods"][:5]))
+
+            fallback.append("\n\nPlease ensure:")
+            fallback.append("1. Ollama is running (http://localhost:11434)")
+            fallback.append("2. Weaviate has indexed database artifacts")
+
+            return "\n".join(fallback)
 
     def _extract_citations(self, artifacts: List[Dict[str, Any]]) -> List[Citation]:
         """
@@ -263,14 +357,19 @@ The {schema_info['tables'][0] if schema_info['tables'] else 'main'} table appear
         citations = []
 
         for artifact in artifacts[:10]:  # Limit to 10 citations
-            if "file_path" in artifact:
-                citations.append(Citation(
-                    file_path=artifact["file_path"],
-                    line_start=1,
-                    line_end=10,
-                    snippet=f"Database artifact: {artifact.get('type', 'Unknown')}",
-                    relevance_score=0.8
-                ))
+            # Get ID from _additional if present (Weaviate format)
+            artifact_id = artifact.get("_additional", {}).get("id", artifact.get("id", ""))
+
+            # Get distance/confidence from _additional
+            distance = artifact.get("_additional", {}).get("distance", 0.0)
+            confidence = 1.0 - distance if distance < 1.0 else 0.5
+
+            citations.append(Citation(
+                artifact_id=artifact_id,
+                file_path=artifact.get("relativePath") or artifact.get("fileName", "Unknown"),
+                artifact_type=artifact.get("artifactType", "Unknown"),
+                confidence=confidence
+            ))
 
         return citations
 
@@ -289,12 +388,33 @@ The {schema_info['tables'][0] if schema_info['tables'] else 'main'} table appear
         Returns:
             List of suggested questions
         """
-        return [
-            "What are the foreign key relationships in this schema?",
-            "Show me the DAO methods that access this table",
-            "Are there any N+1 query issues in this data access pattern?",
-            "What indexes are defined on these tables?"
-        ]
+        suggestions = []
+
+        # Analyze what artifacts were found
+        artifact_types = set(a.get("artifactType", "") for a in artifacts[:10])
+
+        # Add context-specific suggestions
+        if "DbTable" in artifact_types:
+            suggestions.append("What are the foreign key relationships in this schema?")
+
+        if "DaoCall" in artifact_types:
+            suggestions.append("Show me the DAO methods that access this table")
+
+        if "IbatisStatement" in artifact_types:
+            suggestions.append("Explain the iBATIS queries for this entity")
+
+        if "DtoArtifact" in artifact_types:
+            suggestions.append("What validation rules are defined on these DTOs?")
+
+        # Add generic database questions
+        if len(suggestions) < 3:
+            suggestions.extend([
+                "Are there any N+1 query issues in this data access pattern?",
+                "What indexes are defined on these tables?",
+                "How is this data transformed between layers?"
+            ])
+
+        return suggestions[:4]  # Limit to 4 suggestions
 
 
 # Global instance (singleton pattern)
