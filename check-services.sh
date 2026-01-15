@@ -206,8 +206,8 @@ if db_path.exists():
         warn(f"SQLite: Cannot read database - {e}")
 else:
     warn(f"SQLite: Database not found ({db_path})")
-    print("   This is normal if you haven't initialized the database yet")
-    print("   Run: python3 -c 'from codeindex.web.database.connection import get_workspace_manager; get_workspace_manager().initialize_database()'")
+    print("   This is normal if you haven't initialized the database yet (Step 3)")
+    print("   Run: ./init-database.sh")
 
 print("")
 print("=" * 50)

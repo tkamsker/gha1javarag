@@ -226,11 +226,16 @@ curl -s http://localhost:8080/v1/meta | jq .
 # For detailed output:
 ./check-services.sh --verbose
 
-# Expected output:
+# Expected output (before Step 3 - Database Init):
 # ✅ Ollama: Connected (http://localhost:11434)
 # ✅ Weaviate: Connected (http://localhost:8080)
-# ✅ SQLite: Database exists (data/workspaces.db)
+# ⚠️  SQLite: Database not found (data/workspaces.db)
+#    This is normal if you haven't initialized the database yet (Step 3)
+#    Run: ./init-database.sh
 # ✅ All services healthy - ready to proceed!
+
+# Note: SQLite warning is expected before Step 3. Services are still
+# considered healthy - you can proceed with the guide.
 ```
 
 **Option 2: Manual Check with Python**
@@ -277,6 +282,27 @@ EOF
 
 ### 3.1 Run Database Initialization
 
+**Option 1: Use Standalone Script (Recommended)**
+
+```bash
+# Initialize SQLite databases (works on macOS and Linux)
+./init-database.sh
+
+# Expected output:
+# ✅ Virtual environment activated
+# ✅ Data directories created
+# ✅ Database initialized successfully
+#    Location: data/workspaces.db
+# ✅ Tables created: 3
+#    - workspaces
+#    - workspace_artifacts
+#    - annotations
+# ✅ WAL mode enabled: wal
+# ✅ Database initialization complete!
+```
+
+**Option 2: Manual Initialization with Python**
+
 ```bash
 # Ensure virtual environment is activated
 source .venv/bin/activate  # Skip if already activated
@@ -318,6 +344,22 @@ EOF
 ```
 
 ### 3.2 Verify Database
+
+**Option 1: Quick Check with Service Health Script**
+
+```bash
+# Run service health check - should now show SQLite OK
+./check-services.sh
+
+# Expected output:
+# ✅ Ollama: Connected (http://localhost:11434)
+# ✅ Weaviate: Connected (http://localhost:8080)
+# ✅ SQLite: Database exists (data/workspaces.db)
+# ✅ SQLite: Valid database format
+# ✅ All services healthy - ready to proceed!
+```
+
+**Option 2: Manual Verification**
 
 ```bash
 # Check database file exists and is accessible
