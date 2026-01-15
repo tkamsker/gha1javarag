@@ -44,7 +44,7 @@ def load_file_tree():
     """Load file tree from source directory."""
     try:
         config = get_config()
-        source_dir = config.get("JAVA_SOURCE_DIR")
+        source_dir = config.java_source_dir
 
         if not source_dir:
             set_value("file_error", "JAVA_SOURCE_DIR not configured")
@@ -77,7 +77,7 @@ def load_file_content(file_path: str):
     """Load file content."""
     try:
         config = get_config()
-        source_dir = Path(config.get("JAVA_SOURCE_DIR"))
+        source_dir = Path(config.java_source_dir) if config.java_source_dir else Path(".")
         full_path = source_dir / file_path
 
         if not full_path.exists():
@@ -170,7 +170,7 @@ def render_file_viewer():
 
     with col1:
         config = get_config()
-        source_dir = config.get("JAVA_SOURCE_DIR")
+        source_dir = config.java_source_dir if config.java_source_dir else Path(".")
         full_path = Path(source_dir) / current_file
         st.caption(f"**Path**: `{full_path}`")
 

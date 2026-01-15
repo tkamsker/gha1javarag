@@ -197,7 +197,7 @@ def render_service_diagnostics():
 
     with col1:
         st.markdown("**Weaviate**")
-        weaviate_url = config.get("WEAVIATE_URL", "http://localhost:8080")
+        weaviate_url = config.weaviate_url
         st.code(weaviate_url)
 
         if st.button("Test Connection", key="test_weaviate"):
@@ -213,7 +213,7 @@ def render_service_diagnostics():
 
     with col2:
         st.markdown("**Ollama**")
-        ollama_url = config.get("OLLAMA_BASE_URL", "http://localhost:11434")
+        ollama_url = config.ollama_base_url
         st.code(ollama_url)
 
         if st.button("Test Connection", key="test_ollama"):
@@ -231,7 +231,7 @@ def render_service_diagnostics():
 
     # Database info
     st.markdown("**SQLite Database**")
-    workspace_db = config.get("WORKSPACE_DB_PATH", "data/workspaces.db")
+    workspace_db = str(config.workspace_db_path)
     st.code(workspace_db)
 
     if Path(workspace_db).exists():
@@ -248,11 +248,11 @@ def render_system_info():
     config = get_config()
 
     info = {
-        "Source Directory": config.get("JAVA_SOURCE_DIR", "Not configured"),
-        "Workspace DB": config.get("WORKSPACE_DB_PATH", "data/workspaces.db"),
-        "Export Directory": config.get("EXPORT_DIR", "data/exports"),
-        "Max Concurrent Agents": config.get("MAX_CONCURRENT_AGENTS", 3),
-        "LLM Model": config.get("OLLAMA_MODEL_NAME", "gemma3:12b")
+        "Source Directory": str(config.java_source_dir) if config.java_source_dir else "Not configured",
+        "Workspace DB": str(config.workspace_db_path),
+        "Export Directory": str(config.export_dir),
+        "Max Concurrent Agents": config.max_concurrent_agents,
+        "LLM Model": config.ollama_model_name
     }
 
     for key, value in info.items():

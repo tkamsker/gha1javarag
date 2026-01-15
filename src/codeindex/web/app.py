@@ -39,7 +39,7 @@ def check_service_health() -> dict:
 
     # Check Weaviate
     try:
-        weaviate_url = config.get("WEAVIATE_URL", "http://localhost:8080")
+        weaviate_url = config.weaviate_url
         health_status["weaviate"]["url"] = weaviate_url
 
         # Attempt to reach Weaviate health endpoint
@@ -55,7 +55,7 @@ def check_service_health() -> dict:
 
     # Check Ollama
     try:
-        ollama_url = config.get("OLLAMA_BASE_URL", "http://localhost:11434")
+        ollama_url = config.ollama_base_url
         health_status["ollama"]["url"] = ollama_url
 
         # Attempt to reach Ollama API endpoint
@@ -71,7 +71,7 @@ def check_service_health() -> dict:
 
     # Check SQLite
     try:
-        workspace_db = config.get("WORKSPACE_DB_PATH", "data/workspaces.db")
+        workspace_db = str(config.workspace_db_path)
         health_status["sqlite"]["path"] = workspace_db
 
         # Check if database file exists and is writable
