@@ -36,7 +36,7 @@ huggingface-hub
 # Streamlit dependencies (T002)
 streamlit>=1.30.0
 streamlit-code-editor>=0.1.0
-streamlit-cytoscape>=1.0.0
+streamlit-cytoscape>=0.1.0  # Latest: 0.1.4 (fixed from incorrect >=1.0.0)
 
 # CrewAI dependencies (T003)
 crewai>=0.20.0
