@@ -66,34 +66,53 @@ class SearchService:
         Returns:
             Dictionary with search results and metadata
         """
+        import time
+        start_time = time.time()
+
         try:
             client = self._get_weaviate_client()
 
-            # TODO: Implement actual search in Phase 3 (US1.1)
-            # This is a placeholder that will be replaced with actual Weaviate queries
+            # Extract filters
+            filters = filters or {}
+            project_id = filters.get("project")
+            artifact_types = filters.get("artifact_types", [])
 
-            logger.info(f"Executing search: query='{query[:50]}...', filters={filters}, limit={limit}")
+            logger.info(f"Executing search: query='{query[:50]}...', project={project_id}, types={artifact_types}, limit={limit}")
 
-            # Placeholder response
-            results = {
+            # Execute search using WeaviateStore.search_artifacts()
+            artifacts = client.search_artifacts(
+                query=query,
+                project_id=project_id,
+                artifact_types=artifact_types,
+                limit=limit + offset  # Get more to handle offset
+            )
+
+            # Apply pagination offset
+            paginated_artifacts = artifacts[offset:offset + limit] if offset > 0 else artifacts[:limit]
+
+            # Calculate execution time
+            execution_time_ms = int((time.time() - start_time) * 1000)
+
+            logger.info(f"Search completed: found {len(artifacts)} results in {execution_time_ms}ms")
+
+            return {
                 "query": query,
-                "total_results": 0,
-                "results": [],
-                "filters_applied": filters or {},
-                "execution_time_ms": 0,
+                "total_results": len(artifacts),
+                "results": paginated_artifacts,
+                "filters_applied": filters,
+                "execution_time_ms": execution_time_ms,
                 "error": None
             }
 
-            return results
-
         except Exception as e:
+            execution_time_ms = int((time.time() - start_time) * 1000)
             logger.error(f"Search failed: {e}", exc_info=True)
             return {
                 "query": query,
                 "total_results": 0,
                 "results": [],
                 "filters_applied": filters or {},
-                "execution_time_ms": 0,
+                "execution_time_ms": execution_time_ms,
                 "error": str(e)
             }
 
@@ -107,10 +126,15 @@ class SearchService:
         try:
             client = self._get_weaviate_client()
 
-            # TODO: Implement in Phase 4 (US1.2)
-            # Query Weaviate for distinct project values
+            # Get statistics which includes all projects
+            stats = client.get_statistics()
+            projects = stats.get("projects", [])
 
-            return []
+            # Extract project IDs
+            project_ids = [p.get("project_id") for p in projects if p.get("project_id")]
+
+            logger.info(f"Retrieved {len(project_ids)} projects from Weaviate")
+            return project_ids
 
         except Exception as e:
             logger.error(f"Failed to get projects: {e}")
