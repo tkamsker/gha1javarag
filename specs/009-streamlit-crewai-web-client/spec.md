@@ -273,7 +273,9 @@ An interactive web application that:
 
 ### FR4: CrewAI Multi-Agent System
 
-**FR4.1**: System MUST implement 8 specialized agents using CrewAI framework:
+**Architecture Note**: This system defines 8 specialized agent roles (individual AI assistants) and 6 collaborative workflows (multi-agent processes that orchestrate these roles together for complex tasks like PRD generation).
+
+**FR4.1**: System MUST implement 8 specialized agent roles using CrewAI framework:
 
 | Agent Role | Expertise | Primary Tasks |
 |------------|-----------|---------------|
@@ -428,7 +430,7 @@ An interactive web application that:
 | `STREAMLIT_HOST` | str | localhost | Web server host |
 | `JAVA_SOURCE_DIR` | str | (required) | Root directory for code viewer |
 | `WEAVIATE_URL` | str | http://localhost:8080 | Weaviate endpoint |
-| `OLLAMA_URL` | str | http://localhost:11434 | Ollama endpoint |
+| `OLLAMA_BASE_URL` | str | http://localhost:11434 | Ollama endpoint (matches existing codebase convention) |
 | `OLLAMA_MODEL_NAME` | str | gemma3:12b | Model for agents |
 | `MAX_CONCURRENT_AGENTS` | int | 3 | Max parallel agents in workflows |
 | `WORKSPACE_DB_PATH` | str | data/workspaces.db | SQLite database path |
@@ -1135,7 +1137,7 @@ The following items are explicitly **NOT** included in Feature 009:
 - **Workspace**: A saved UI state (search, filters, selections) for collaborative analysis
 - **Agent**: An AI assistant with specialized role, goal, and tools (CrewAI concept)
 - **Streamlit**: Python web framework for data apps (reactive UI, no HTML/CSS/JS required)
-- **Gherkin**: BDD (Behavior-Driven Development) syntax for writing test cases in plain language (Given-When-Then)
+- **Gherkin**: A language for writing BDD (Behavior-Driven Development) test scenarios in plain English using Given-When-Then syntax
 - **Playwright**: Modern web automation framework for end-to-end testing across browsers
 
 ### References
