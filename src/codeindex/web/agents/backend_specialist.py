@@ -45,7 +45,7 @@ class BackendSpecialistAgent:
         self.config = config
         self.role = AgentRole.BACKEND_SPECIALIST
 
-        logger.info(f"Initialized Backend Specialist agent: {config.name}")
+        logger.info(f"Initialized Backend Specialist agent")
 
     def execute_query(
         self,
@@ -70,24 +70,15 @@ class BackendSpecialistAgent:
             # Step 1: Search for backend artifacts
             backend_artifacts = self._search_backend_artifacts(query)
 
-            # Step 2: Analyze service layer patterns
-            service_analysis = self._analyze_service_patterns(backend_artifacts)
-
-            # Step 3: Extract endpoint definitions
-            endpoint_info = self._extract_endpoints(backend_artifacts)
-
-            # Step 4: Analyze business logic flow
-            logic_flow = self._analyze_business_logic(backend_artifacts)
-
-            # Step 5: Generate backend explanation
-            explanation = self._generate_backend_explanation(
-                query, backend_artifacts, service_analysis, endpoint_info, logic_flow, context
+            # Step 2: Generate backend analysis using LLM
+            analysis = self._generate_backend_analysis(
+                query, backend_artifacts, context
             )
 
-            # Step 6: Extract citations
+            # Step 3: Extract citations
             citations = self._extract_citations(backend_artifacts)
 
-            # Step 7: Generate follow-up questions
+            # Step 4: Generate follow-up questions
             suggested_questions = self._generate_follow_ups(query, backend_artifacts)
 
             duration = (datetime.now() - start_time).total_seconds()
@@ -97,11 +88,11 @@ class BackendSpecialistAgent:
                 query=query,
                 timestamp=start_time.isoformat(),
                 duration_seconds=duration,
-                response_text=explanation,
+                response_text=analysis,
                 citations=citations,
                 confidence=0.84,
                 suggested_questions=suggested_questions,
-                tools_used=["WeaviateSearchTool", "ServiceAnalyzer", "EndpointExtractor"]
+                tools_used=["WeaviateSearchTool", "LLMQueryTool", "ServiceAnalyzer"]
             )
 
         except Exception as e:
@@ -121,11 +112,10 @@ class BackendSpecialistAgent:
         """
         Search for backend-related artifacts.
 
-        TODO: Integrate with Weaviate to search for:
+        Searches for:
         - BackendDoc artifacts (services, controllers)
         - GwtEndpoint artifacts (RPC servlets)
         - DaoCall artifacts
-        - IbatisStatement artifacts
 
         Args:
             query: Search query
@@ -133,165 +123,171 @@ class BackendSpecialistAgent:
         Returns:
             List of backend artifacts
         """
-        # TODO: Replace with actual Weaviate search
-        logger.debug(f"Searching backend artifacts for: {query}")
+        try:
+            logger.debug(f"Searching backend artifacts for: {query}")
 
-        return [
-            {
-                "id": "backend_doc_001",
-                "type": "BackendDoc",
-                "name": "UserService",
-                "methods": ["createUser", "updateUser", "deleteUser", "getUserById"],
-                "file_path": "src/main/java/com/example/service/UserService.java"
-            },
-            {
-                "id": "gwt_endpoint_001",
-                "type": "GwtEndpoint",
-                "service": "UserServiceImpl",
-                "methods": ["getUserAsync"],
-                "file_path": "src/main/java/com/example/server/UserServiceImpl.java"
-            },
-            {
-                "id": "dao_call_001",
-                "type": "DaoCall",
-                "method": "getUserById",
-                "file_path": "src/main/java/com/example/dao/UserDao.java"
-            }
-        ]
+            # Use SearchService to query Weaviate with backend-specific filters
+            from codeindex.web.services.search_service import get_search_service
+            search_service = get_search_service()
 
-    def _analyze_service_patterns(self, artifacts: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """
-        Analyze service layer patterns.
+            # Search with backend-related artifact types
+            search_response = search_service.search(
+                query=query,
+                filters={
+                    "artifact_types": ["BackendDoc", "GwtEndpoint", "DaoCall"]
+                },
+                limit=15  # Get more results for comprehensive backend analysis
+            )
 
-        Args:
-            artifacts: Backend artifacts
+            artifacts = search_response.get("results", [])
+            logger.info(f"Found {len(artifacts)} backend artifacts")
 
-        Returns:
-            Service pattern analysis
-        """
-        # TODO: Implement service pattern analysis
-        # - Identify service layer organization
-        # - Analyze dependency injection patterns
-        # - Find transaction boundaries (@Transactional)
-        # - Detect design patterns (Strategy, Factory, etc.)
+            return artifacts
 
-        logger.debug("Analyzing service patterns")
+        except Exception as e:
+            logger.error(f"Backend artifact search failed: {e}")
+            return []
 
-        services = [a for a in artifacts if a.get("type") == "BackendDoc"]
-        endpoints = [a for a in artifacts if a.get("type") == "GwtEndpoint"]
-
-        return {
-            "service_count": len(services),
-            "endpoint_count": len(endpoints),
-            "patterns": ["Service Layer", "DAO", "DTO"]
-        }
-
-    def _extract_endpoints(self, artifacts: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """
-        Extract endpoint definitions.
-
-        Args:
-            artifacts: Backend artifacts
-
-        Returns:
-            Endpoint information
-        """
-        # TODO: Implement endpoint extraction
-        # - Parse GWT RPC servlet methods
-        # - Extract REST endpoint mappings
-        # - Identify request/response DTOs
-        # - Map endpoints to services
-
-        logger.debug("Extracting endpoints")
-
-        endpoints = [a for a in artifacts if a.get("type") == "GwtEndpoint"]
-
-        return {
-            "endpoint_count": len(endpoints),
-            "endpoints": [e.get("service") for e in endpoints],
-            "methods": [m for e in endpoints for m in e.get("methods", [])]
-        }
-
-    def _analyze_business_logic(self, artifacts: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """
-        Analyze business logic flow.
-
-        Args:
-            artifacts: Backend artifacts
-
-        Returns:
-            Business logic analysis
-        """
-        # TODO: Implement business logic analysis
-        # - Trace service method calls
-        # - Identify validation logic
-        # - Find error handling patterns
-        # - Map service-to-DAO flows
-
-        logger.debug("Analyzing business logic")
-
-        services = [a for a in artifacts if a.get("type") == "BackendDoc"]
-        dao_calls = [a for a in artifacts if a.get("type") == "DaoCall"]
-
-        return {
-            "service_methods": sum(len(s.get("methods", [])) for s in services),
-            "dao_calls": len(dao_calls),
-            "logic_layers": ["Controller", "Service", "DAO"]
-        }
-
-    def _generate_backend_explanation(
+    def _generate_backend_analysis(
         self,
         query: str,
         artifacts: List[Dict[str, Any]],
-        service_analysis: Dict[str, Any],
-        endpoint_info: Dict[str, Any],
-        logic_flow: Dict[str, Any],
         context: Optional[Dict[str, Any]]
     ) -> str:
         """
-        Generate backend explanation using LLM.
-
-        TODO: Integrate with Ollama LLM to generate:
-        - Service architecture descriptions
-        - Business logic flow explanations
-        - Endpoint documentation
-        - Integration pattern analysis
+        Generate backend analysis using LLM.
 
         Args:
             query: User query
             artifacts: Backend artifacts
-            service_analysis: Service pattern analysis
-            endpoint_info: Endpoint details
-            logic_flow: Business logic analysis
             context: Optional context
 
         Returns:
-            Explanation text
+            Analysis text
         """
-        # TODO: Replace with actual Ollama LLM call
-        logger.debug("Generating backend explanation with LLM")
+        try:
+            logger.debug("Generating backend analysis with Ollama LLM")
 
-        services = ", ".join(endpoint_info.get("endpoints", [])[:5])
+            # Import Ollama client
+            from codeindex.services.ollama_client import OllamaClient
 
-        return f"""Based on the backend architecture analysis:
+            # Build context from backend artifacts
+            context_parts = []
 
-**Service Layer**: {service_analysis['service_count']} services identified
-- Patterns: {', '.join(service_analysis['patterns'])}
-- Services: {services}
+            # Add artifact summaries grouped by type
+            if artifacts:
+                # Group artifacts by type
+                services = [a for a in artifacts if a.get("artifactType") == "BackendDoc"]
+                endpoints = [a for a in artifacts if a.get("artifactType") == "GwtEndpoint"]
+                dao_calls = [a for a in artifacts if a.get("artifactType") == "DaoCall"]
 
-**Endpoints**: {endpoint_info['endpoint_count']} GWT RPC endpoints
-- Methods: {len(endpoint_info['methods'])} total methods
-- Integration: GWT RemoteServiceServlet pattern
+                # Add Services section
+                if services:
+                    context_parts.append("## Backend Services:\n")
+                    for i, artifact in enumerate(services[:5], 1):
+                        file_path = artifact.get("relativePath") or artifact.get("fileName", "Unknown")
+                        summary = artifact.get("summary", "")
+                        entities = artifact.get("entities", [])
 
-**Business Logic Flow**:
-- Service methods: {logic_flow['service_methods']}
-- DAO calls: {logic_flow['dao_calls']}
-- Layers: {' → '.join(logic_flow['logic_layers'])}
+                        context_parts.append(f"{i}. `{file_path}`")
+                        if entities:
+                            context_parts.append(f"   Methods: {', '.join(entities[:10])}")
+                        if summary:
+                            context_parts.append(f"   {summary}")
+                        context_parts.append("")
 
-The backend follows a standard multi-tier architecture with clear separation between layers.
+                # Add GWT RPC Endpoints section
+                if endpoints:
+                    context_parts.append("\n## GWT RPC Endpoints:\n")
+                    for i, artifact in enumerate(endpoints[:5], 1):
+                        file_path = artifact.get("relativePath") or artifact.get("fileName", "Unknown")
+                        summary = artifact.get("summary", "")
+                        entities = artifact.get("entities", [])
 
-*Note: This is a placeholder response. Full implementation will use Ollama LLM with actual backend artifacts.*
-"""
+                        context_parts.append(f"{i}. `{file_path}`")
+                        if entities:
+                            context_parts.append(f"   RPC Methods: {', '.join(entities[:10])}")
+                        if summary:
+                            context_parts.append(f"   {summary}")
+                        context_parts.append("")
+
+                # Add DAO Calls section
+                if dao_calls:
+                    context_parts.append("\n## Data Access Layer:\n")
+                    for i, artifact in enumerate(dao_calls[:5], 1):
+                        file_path = artifact.get("relativePath") or artifact.get("fileName", "Unknown")
+                        summary = artifact.get("summary", "")
+                        entities = artifact.get("entities", [])
+
+                        context_parts.append(f"{i}. `{file_path}`")
+                        if entities:
+                            context_parts.append(f"   DAO Methods: {', '.join(entities[:10])}")
+                        if summary:
+                            context_parts.append(f"   {summary}")
+                        context_parts.append("")
+
+            context_text = "\n".join(context_parts) if context_parts else "No backend artifacts found."
+
+            # Create system prompt
+            system_prompt = """You are a Backend Specialist with expertise in service layers, APIs, and business logic.
+Analyze the provided backend artifacts and answer the user's question with:
+
+1. Clear explanations of service architecture and design patterns
+2. Business logic flow and transaction boundaries
+3. API contract analysis (GWT RPC, REST endpoints)
+4. Service-to-DAO integration patterns
+5. Error handling and validation strategies
+6. Specific references to services, endpoints, and methods
+
+Keep responses focused on backend/server-side aspects and business logic."""
+
+            # Create user prompt
+            user_prompt = f"""Question: {query}
+
+{context_text}
+
+Please analyze the backend artifacts and provide a comprehensive answer focused on service architecture, business logic, and API contracts."""
+
+            # Call Ollama
+            ollama_client = OllamaClient()
+            response = ollama_client.call_ollama(
+                prompt=user_prompt,
+                system_prompt=system_prompt,
+                temperature=0.3,
+                format_json=False
+            )
+
+            analysis = response.get("response", "")
+
+            if not analysis:
+                analysis = "Unable to generate backend analysis. Please try rephrasing your question."
+
+            logger.info(f"Generated backend analysis ({len(analysis)} chars)")
+            return analysis.strip()
+
+        except Exception as e:
+            logger.error(f"Failed to generate backend analysis: {e}")
+
+            # Fallback response with structured info
+            fallback = [
+                f"I encountered an error while analyzing the backend: {str(e)}\n",
+                f"However, I found {len(artifacts)} backend artifacts:\n"
+            ]
+
+            # Group artifacts by type for fallback
+            artifact_counts = {}
+            for artifact in artifacts:
+                artifact_type = artifact.get("artifactType", "Unknown")
+                artifact_counts[artifact_type] = artifact_counts.get(artifact_type, 0) + 1
+
+            for artifact_type, count in artifact_counts.items():
+                fallback.append(f"\n**{artifact_type}**: {count} found")
+
+            fallback.append("\n\nPlease ensure:")
+            fallback.append("1. Ollama is running (http://localhost:11434)")
+            fallback.append("2. Weaviate has indexed backend artifacts")
+
+            return "\n".join(fallback)
 
     def _extract_citations(self, artifacts: List[Dict[str, Any]]) -> List[Citation]:
         """
@@ -306,14 +302,19 @@ The backend follows a standard multi-tier architecture with clear separation bet
         citations = []
 
         for artifact in artifacts[:10]:  # Limit to 10 citations
-            if "file_path" in artifact:
-                citations.append(Citation(
-                    file_path=artifact["file_path"],
-                    line_start=1,
-                    line_end=10,
-                    snippet=f"Backend artifact: {artifact.get('type', 'Unknown')}",
-                    relevance_score=0.8
-                ))
+            # Get ID from _additional if present (Weaviate format)
+            artifact_id = artifact.get("_additional", {}).get("id", artifact.get("id", ""))
+
+            # Get distance/confidence from _additional
+            distance = artifact.get("_additional", {}).get("distance", 0.0)
+            confidence = 1.0 - distance if distance < 1.0 else 0.5
+
+            citations.append(Citation(
+                artifact_id=artifact_id,
+                file_path=artifact.get("relativePath") or artifact.get("fileName", "Unknown"),
+                artifact_type=artifact.get("artifactType", "Unknown"),
+                confidence=confidence
+            ))
 
         return citations
 
@@ -332,12 +333,33 @@ The backend follows a standard multi-tier architecture with clear separation bet
         Returns:
             List of suggested questions
         """
-        return [
-            "What are the transaction boundaries in this service?",
-            "Show me the DAO methods called by this service",
-            "How does this RPC servlet handle errors?",
-            "What validation logic exists in this service layer?"
-        ]
+        suggestions = []
+
+        # Analyze what artifacts were found
+        artifact_types = set(a.get("artifactType", "") for a in artifacts[:10])
+
+        # Add context-specific suggestions
+        if "BackendDoc" in artifact_types:
+            suggestions.append("What are the transaction boundaries in this service?")
+            suggestions.append("What validation logic exists in this service layer?")
+
+        if "GwtEndpoint" in artifact_types:
+            suggestions.append("How does this RPC servlet handle errors?")
+            suggestions.append("What DTOs are used in this endpoint?")
+
+        if "DaoCall" in artifact_types:
+            suggestions.append("Show me the DAO methods called by this service")
+            suggestions.append("What database operations does this perform?")
+
+        # Add generic backend questions
+        if len(suggestions) < 3:
+            suggestions.extend([
+                "How is dependency injection configured in this service?",
+                "What design patterns are used in this backend code?",
+                "Explain the service-to-database flow"
+            ])
+
+        return suggestions[:4]  # Limit to 4 suggestions
 
 
 # Global instance (singleton pattern)
