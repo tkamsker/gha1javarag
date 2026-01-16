@@ -33,7 +33,10 @@ from codeindex.web.utils.session_state import (
     clear_list
 )
 from codeindex.web.workflows.prd_generation import PrdGenerationWorkflow
-from codeindex.web.components.progress_indicator import render_workflow_progress
+from codeindex.web.components.progress_indicator import (
+    render_workflow_progress,
+    render_workflow_cancellation_button
+)
 
 
 def initialize_chat_state():
@@ -63,7 +66,9 @@ def initialize_chat_state():
             "current_step": 0,
             "total_steps": 4,
             "current_agent": None
-        }
+        },
+        # T095 - Workflow cancellation
+        "prd_workflow_instance": None
     }
 
     initialize_session_state(defaults)
@@ -596,6 +601,10 @@ def generate_prd_workflow():
 
         # Step 4: Execute workflow
         workflow = PrdGenerationWorkflow()
+
+        # T095 - Store workflow instance for cancellation
+        set_value("prd_workflow_instance", workflow)
+
         result = workflow.execute(
             artifacts=selected_artifacts,
             project_name="Generated PRD",
@@ -700,6 +709,7 @@ Please check the logs for more details or try again with different artifacts.
 
     finally:
         set_value("prd_workflow_running", False)
+        set_value("prd_workflow_instance", None)  # T095 - Clear workflow instance
         st.rerun()
 
 
@@ -960,6 +970,19 @@ def main():
             current_step=current_step,
             total_steps=total_steps,
             current_agent=current_agent
+        )
+
+        # T095 - Workflow cancellation button
+        def cancel_workflow():
+            """Cancel the running PRD workflow."""
+            workflow = get("prd_workflow_instance")
+            if workflow:
+                workflow.cancel()
+                st.warning("⚠️ Workflow cancellation requested...")
+
+        render_workflow_cancellation_button(
+            on_cancel=cancel_workflow,
+            key="cancel_prd_workflow"
         )
 
         st.markdown("---")
