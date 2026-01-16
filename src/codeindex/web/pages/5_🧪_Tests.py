@@ -37,7 +37,9 @@ def initialize_tests_state():
         "test_input": "",
         "generated_tests": [],
         "test_loading": False,
-        "test_error": None
+        "test_error": None,
+        "validation_results": None,  # T122: Validation status
+        "test_coverage_summary": None  # T125: Coverage summary
     }
 
     initialize_session_state(defaults)
@@ -126,49 +128,78 @@ Describe the UI elements and expected behavior..."""
 
 
 def generate_tests(description: str):
-    """Generate tests using appropriate agent."""
+    """Generate tests using appropriate agent or workflow."""
     set_value("test_loading", True)
     set_value("test_error", None)
 
     try:
         test_type = get("test_type", "gherkin")
-        agent_service = get_agent_service()
 
-        # Select appropriate agent
         if test_type == "gherkin":
-            agent_role = AgentRole.GHERKIN_TEST_WRITER
-        else:
-            agent_role = AgentRole.PLAYWRIGHT_TEST_WRITER
+            # Use workflow for comprehensive Gherkin generation (T118)
+            from codeindex.web.workflows.gherkin_generation import get_gherkin_generation_workflow
+            workflow = get_gherkin_generation_workflow()
 
-        # Generate tests
-        start_time = time.time()
+            result = workflow.execute(description)
 
-        response = agent_service.execute_query(
-            query=f"Generate {test_type} tests for: {description}",
-            agent_role=agent_role
-        )
+            # Check for errors
+            if "error" in result:
+                set_value("test_error", result["error"])
+                return
 
-        end_time = time.time()
+            # Store validation results (T122)
+            set_value("validation_results", result["validation"])
 
-        # Log performance
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(
-            f"Test generation: type={test_type}, "
-            f"time={response.duration_seconds:.2f}s"
-        )
+            # Calculate coverage summary (T125)
+            from codeindex.web.services.gherkin_validation import count_gherkin_elements
+            element_counts = count_gherkin_elements(result["gherkin_content"])
 
-        if response.has_error():
-            set_value("test_error", response.error)
-        else:
+            summary = {
+                "scenario_count": element_counts.get("scenarios", 0),
+                "step_count": element_counts.get("steps", 0),
+                "example_count": element_counts.get("examples", 0),
+                "background_steps": element_counts.get("background_steps", 0),
+                "duration_seconds": result["total_duration_seconds"]
+            }
+            set_value("test_coverage_summary", summary)
+
             # Add to generated tests
             append_to_list("generated_tests", {
                 "type": test_type,
                 "description": description,
-                "content": response.response_text,
-                "timestamp": response.timestamp,
-                "citations": [c.to_dict() for c in response.citations]
+                "content": result["gherkin_content"],
+                "timestamp": result["timestamp"],
+                "citations": [c.to_dict() for c in result["citations"]],
+                "validation": result["validation"],
+                "summary": summary
             })
+
+        else:
+            # Use agent for Playwright generation
+            agent_service = get_agent_service()
+            agent_role = AgentRole.PLAYWRIGHT_TEST_WRITER
+
+            response = agent_service.execute_query(
+                query=f"Generate {test_type} tests for: {description}",
+                agent_role=agent_role
+            )
+
+            if response.has_error():
+                set_value("test_error", response.error)
+            else:
+                # Add to generated tests
+                append_to_list("generated_tests", {
+                    "type": test_type,
+                    "description": description,
+                    "content": response.response_text,
+                    "timestamp": response.timestamp,
+                    "citations": [c.to_dict() for c in response.citations]
+                })
+
+        # Log performance
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Test generation: type={test_type}")
 
     except Exception as e:
         set_value("test_error", str(e))
@@ -182,7 +213,7 @@ def generate_tests(description: str):
 
 
 def render_generated_tests():
-    """Render generated test results."""
+    """Render generated test results with validation and coverage (T122, T123, T124, T125)."""
     tests = get("generated_tests", [])
 
     if not tests:
@@ -196,24 +227,66 @@ def render_generated_tests():
             # Description
             st.caption(f"**Description**: {test['description'][:100]}...")
 
-            # Test content
-            if test['type'] == "gherkin":
-                st.code(test['content'], language="gherkin")
-            else:
-                st.code(test['content'], language="javascript")
+            # T122: Validation status (for Gherkin tests)
+            if test['type'] == "gherkin" and 'validation' in test:
+                validation = test['validation']
+                is_valid = validation.get("is_valid", False)
+                errors = validation.get("errors", [])
 
-            # Actions
+                if is_valid:
+                    st.success("✅ Gherkin syntax valid - ready for download")
+                else:
+                    st.error("❌ Gherkin syntax validation failed")
+                    with st.expander("Validation Errors", expanded=True):
+                        for error in errors:
+                            st.markdown(f"- {error}")
+
+            # T125: Test coverage summary (for Gherkin tests)
+            if test['type'] == "gherkin" and 'summary' in test:
+                summary = test['summary']
+
+                st.markdown("**📊 Test Coverage:**")
+                col1, col2, col3, col4 = st.columns(4)
+
+                with col1:
+                    st.metric("Scenarios", summary.get("scenario_count", 0))
+                with col2:
+                    st.metric("Steps", summary.get("step_count", 0))
+                with col3:
+                    st.metric("Examples", summary.get("example_count", 0))
+                with col4:
+                    duration = summary.get("duration_seconds", 0)
+                    st.metric("Time", f"{duration:.1f}s")
+
+            st.markdown("---")
+
+            # T123: Test content with syntax highlighting
+            if test['type'] == "gherkin":
+                st.code(test['content'], language="gherkin", line_numbers=True)
+            else:
+                st.code(test['content'], language="javascript", line_numbers=True)
+
+            # T124: Download button (with validation check for Gherkin)
             col1, col2, col3 = st.columns([1, 1, 4])
 
             with col1:
+                # Check if download should be enabled (T124: FR8.8)
+                is_downloadable = True
+                if test['type'] == "gherkin" and 'validation' in test:
+                    is_downloadable = test['validation'].get("is_valid", False)
+
                 # Download button
-                filename = f"{test['type']}_test_{int(time.time())}.txt"
+                extension = ".feature" if test['type'] == "gherkin" else ".spec.ts"
+                filename = f"{test['type']}_test_{int(time.time())}{extension}"
+
                 st.download_button(
-                    label="💾 Download",
+                    label="⬇️ Download",
                     data=test['content'],
                     file_name=filename,
                     mime="text/plain",
-                    key=f"download_{i}"
+                    key=f"download_{i}",
+                    disabled=not is_downloadable,
+                    help="Download test file" + ("" if is_downloadable else " (blocked due to validation errors)")
                 )
 
             with col2:
