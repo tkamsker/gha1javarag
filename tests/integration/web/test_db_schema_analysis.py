@@ -206,7 +206,7 @@ class TestDatabaseSchemaAnalysisIntegration:
         quality_report = quality_analyzer.analyze_schema(empty_schema)
         assert quality_report["total_tables"] == 0
 
-    @patch('codeindex.web.agents.data_analyst.get_search_service')
+    @patch('codeindex.web.services.search_service.get_search_service')
     @patch('codeindex.services.ollama_client.OllamaClient')
     def test_data_analyst_schema_analysis(
         self,
