@@ -1,8 +1,8 @@
 """
-Test Generation Service (T117 - US2.5).
+Test Generation Service (T117 - US2.5, T129 - US2.6).
 
-Provides high-level interface for generating Gherkin test scenarios with
-syntax validation and .feature file generation.
+Provides high-level interface for generating Gherkin test scenarios and
+Playwright E2E tests with syntax validation and file generation.
 """
 
 import logging
@@ -15,14 +15,15 @@ logger = logging.getLogger(__name__)
 
 class TestGenerationService:
     """
-    Service for generating BDD test cases in Gherkin format.
+    Service for generating BDD test cases in Gherkin format and Playwright E2E tests.
 
     This service:
     - Generates Gherkin feature files from user stories
-    - Validates Gherkin syntax before output
-    - Creates .feature files for download
+    - Generates Playwright E2E tests from UI artifacts
+    - Validates Gherkin and TypeScript/JavaScript syntax before output
+    - Creates .feature and .spec.ts files for download
     - Provides test coverage summaries
-    - Integrates with Gherkin Test Writer agent
+    - Integrates with Gherkin Test Writer agent and Playwright Generation Workflow
     """
 
     def __init__(self):
@@ -204,6 +205,128 @@ class TestGenerationService:
 
         except Exception as e:
             logger.error(f"Failed to generate multiple .feature files: {e}", exc_info=True)
+            raise
+
+    def generate_playwright_file(
+        self,
+        test_request: str,
+        output_dir: Path,
+        artifacts: List[Dict[str, Any]],
+        validate_before_save: bool = True,
+        language: str = 'typescript'
+    ) -> Path:
+        """
+        Generate .spec.ts/.spec.js file for download.
+
+        Args:
+            test_request: Test automation request (e.g., "Generate tests for login")
+            output_dir: Directory to save .spec.ts file
+            artifacts: List of UI artifacts to test
+            validate_before_save: If True, validates syntax before saving (per FR8.8)
+            language: 'typescript' or 'javascript' (default: typescript)
+
+        Returns:
+            Path to generated .spec.ts or .spec.js file
+
+        Raises:
+            ValueError: If validation fails and validate_before_save=True
+            Exception: If generation fails
+        """
+        try:
+            logger.info(f"Generating Playwright test file for: {test_request[:50]}...")
+
+            # Step 1: Generate Playwright tests using workflow
+            from codeindex.web.workflows.playwright_generation import get_playwright_generation_workflow
+            workflow = get_playwright_generation_workflow()
+
+            result = workflow.execute(
+                test_request=test_request,
+                artifacts=artifacts
+            )
+
+            test_code = result["test_code"]
+
+            # Step 2: Validate TypeScript/JavaScript syntax
+            from codeindex.web.services.playwright_validation import validate_playwright_syntax
+            is_valid, errors = validate_playwright_syntax(test_code, language=language)
+
+            # Step 3: Validate before saving (per FR8.8: block download on critical errors)
+            if validate_before_save and not is_valid:
+                error_msg = f"Playwright syntax validation failed. Cannot generate .spec file. Errors: {', '.join(errors)}"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
+
+            # Step 4: Create output directory if needed
+            output_dir = Path(output_dir)
+            output_dir.mkdir(parents=True, exist_ok=True)
+
+            # Step 5: Generate test file name from request
+            test_name = self._sanitize_feature_name(test_request)
+            extension = ".ts" if language == 'typescript' else ".js"
+            test_file_path = output_dir / f"{test_name}.spec{extension}"
+
+            # Step 6: Write .spec.ts/.spec.js file
+            test_file_path.write_text(test_code, encoding='utf-8')
+
+            logger.info(f"Generated Playwright test file: {test_file_path}")
+
+            return test_file_path
+
+        except ValueError:
+            # Re-raise validation errors
+            raise
+        except Exception as e:
+            logger.error(f"Failed to generate Playwright test file: {e}", exc_info=True)
+            raise
+
+    def generate_multiple_playwright_files(
+        self,
+        test_requests: List[str],
+        output_dir: Path,
+        artifacts: List[Dict[str, Any]],
+        language: str = 'typescript'
+    ) -> List[Path]:
+        """
+        Generate multiple .spec.ts/.spec.js files from list of test requests.
+
+        Args:
+            test_requests: List of test automation requests
+            output_dir: Directory to save .spec files
+            artifacts: List of UI artifacts to test
+            language: 'typescript' or 'javascript' (default: typescript)
+
+        Returns:
+            List of paths to generated .spec files
+
+        Raises:
+            Exception: If any generation fails
+        """
+        try:
+            logger.info(f"Generating {len(test_requests)} Playwright test files...")
+
+            test_files = []
+
+            for test_request in test_requests:
+                try:
+                    test_file = self.generate_playwright_file(
+                        test_request=test_request,
+                        output_dir=output_dir,
+                        artifacts=artifacts,
+                        language=language
+                    )
+                    test_files.append(test_file)
+
+                except ValueError as e:
+                    # Log validation error but continue with other files
+                    logger.warning(f"Skipping test file due to validation error: {e}")
+                    continue
+
+            logger.info(f"Generated {len(test_files)} Playwright test files")
+
+            return test_files
+
+        except Exception as e:
+            logger.error(f"Failed to generate multiple Playwright test files: {e}", exc_info=True)
             raise
 
     def _sanitize_feature_name(self, user_story: str) -> str:

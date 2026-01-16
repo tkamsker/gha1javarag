@@ -7,7 +7,7 @@ structure, keywords, and formatting per FR8.8.
 
 import logging
 import re
-from typing import Tuple, List, Dict, Any
+from typing import Tuple, List, Dict, Any, Optional
 from pathlib import Path
 
 logger = logging.getLogger(__name__)

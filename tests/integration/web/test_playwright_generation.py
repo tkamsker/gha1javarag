@@ -249,10 +249,22 @@ test('broken test', async ({ page }) => {
         mock_search.search.return_value = {"results": mock_weaviate_ui_artifacts, "total": 3}
         mock_search_service.return_value = mock_search
 
+        # Mock responses for 3 requests × 3 agents each = 9 responses
         mock_ollama_instance = Mock()
-        mock_ollama_instance.call_ollama.return_value = {
-            "response": "test('example', async ({ page }) => {});"
-        }
+        mock_ollama_instance.call_ollama.side_effect = [
+            # Request 1: Login tests
+            {"response": "Frontend analysis"},
+            {"response": "Backend analysis"},
+            {"response": "import { test, expect } from '@playwright/test';\ntest('login', async ({ page }) => {});"},
+            # Request 2: User management tests
+            {"response": "Frontend analysis"},
+            {"response": "Backend analysis"},
+            {"response": "import { test, expect } from '@playwright/test';\ntest('user management', async ({ page }) => {});"},
+            # Request 3: Dashboard tests
+            {"response": "Frontend analysis"},
+            {"response": "Backend analysis"},
+            {"response": "import { test, expect } from '@playwright/test';\ntest('dashboard', async ({ page }) => {});"}
+        ]
         mock_ollama.return_value = mock_ollama_instance
 
         # Generate multiple test files
@@ -454,10 +466,22 @@ export class LoginPage {
         mock_search.search.return_value = {"results": mock_weaviate_ui_artifacts, "total": 3}
         mock_search_service.return_value = mock_search
 
+        # Mock responses for 4 agent calls: Gherkin + (Frontend + Backend + Playwright)
         mock_ollama_instance = Mock()
-        mock_ollama_instance.call_ollama.return_value = {
-            "response": "test code"
-        }
+        mock_ollama_instance.call_ollama.side_effect = [
+            # Gherkin Test Writer response
+            {"response": """Feature: Login
+  Scenario: User login
+    Given the user is on login page
+    When they enter credentials
+    Then they should be logged in"""},
+            # Frontend Specialist response
+            {"response": "Frontend analysis"},
+            # Backend Specialist response
+            {"response": "Backend analysis"},
+            # Playwright Test Writer response
+            {"response": "import { test, expect } from '@playwright/test';\ntest('login', async ({ page }) => {});"}
+        ]
         mock_ollama.return_value = mock_ollama_instance
 
         # Execute complete test suite workflow
