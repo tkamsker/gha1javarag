@@ -29,50 +29,86 @@ def extract_citations_from_text(response_text: str) -> List[Dict[str, str]]:
     """
     Extract artifact references from response text.
 
-    Looks for patterns like:
-    - `file/path/Component.java`
+    Supports multiple formats:
     - artifact:artifact_id_123
-    - [Component](src/Component.java)
+    - ArtifactType:artifact_id (e.g., DaoCall:xyz789)
+    - [1] ArtifactType:artifact_id (numbered references)
+    - `file/path/Component.java` (backtick file paths)
+    - file/path/Component.java (plain file paths)
+    - File: file/path/Component.java
+    - [Component](src/Component.java) (markdown links)
 
     Args:
         response_text: Agent response text
 
     Returns:
-        List of extracted citations with artifact_id and file_path
+        List of extracted citations with artifact_id and file_path (deduplicated)
     """
     citations = []
+    seen = set()  # For deduplication
 
-    # Pattern 1: Backtick file paths (e.g., `src/services/UserService.java`)
+    # Pattern 1: artifact:id or ArtifactType:id (e.g., artifact:service_123, DaoCall:xyz789)
+    artifact_id_pattern = r'(?:\[\d+\]\s*)?(?:artifact|[A-Z][a-zA-Z]+):([a-zA-Z0-9_-]+)'
+    for match in re.finditer(artifact_id_pattern, response_text):
+        artifact_id = match.group(1)
+        if artifact_id not in seen:
+            citations.append({
+                "artifact_id": artifact_id,
+                "file_path": "",
+                "match_text": match.group(0)
+            })
+            seen.add(artifact_id)
+
+    # Pattern 2: Backtick file paths (e.g., `src/services/UserService.java`)
     file_path_pattern = r'`([a-zA-Z0-9_/.-]+\.(java|jsp|xml|js|sql))`'
     for match in re.finditer(file_path_pattern, response_text):
         file_path = match.group(1)
-        citations.append({
-            "artifact_id": "",  # Will be resolved from Weaviate
-            "file_path": file_path,
-            "match_text": match.group(0)
-        })
+        if file_path not in seen:
+            citations.append({
+                "artifact_id": "",
+                "file_path": file_path,
+                "match_text": match.group(0)
+            })
+            seen.add(file_path)
 
-    # Pattern 2: artifact:id references (e.g., artifact:service_user_123)
-    artifact_id_pattern = r'artifact:([a-zA-Z0-9_-]+)'
-    for match in re.finditer(artifact_id_pattern, response_text):
-        artifact_id = match.group(1)
-        citations.append({
-            "artifact_id": artifact_id,
-            "file_path": "",  # Will be resolved from Weaviate
-            "match_text": match.group(0)
-        })
+    # Pattern 3: Plain file paths (e.g., src/services/UserService.java)
+    # Look for file paths that are NOT in backticks
+    plain_file_pattern = r'(?<!`)\b([a-zA-Z0-9_/.-]+/[a-zA-Z0-9_/.-]+\.(java|jsp|xml|js|sql))\b(?!`)'
+    for match in re.finditer(plain_file_pattern, response_text):
+        file_path = match.group(1)
+        if file_path not in seen:
+            citations.append({
+                "artifact_id": "",
+                "file_path": file_path,
+                "match_text": match.group(0)
+            })
+            seen.add(file_path)
 
-    # Pattern 3: Markdown links (e.g., [Component](src/Component.java))
+    # Pattern 4: File: prefix (e.g., File: src/main/java/User.java)
+    file_prefix_pattern = r'File:\s*([a-zA-Z0-9_/.-]+\.(java|jsp|xml|js|sql))'
+    for match in re.finditer(file_prefix_pattern, response_text):
+        file_path = match.group(1)
+        if file_path not in seen:
+            citations.append({
+                "artifact_id": "",
+                "file_path": file_path,
+                "match_text": match.group(0)
+            })
+            seen.add(file_path)
+
+    # Pattern 5: Markdown links (e.g., [Component](src/Component.java))
     markdown_link_pattern = r'\[([^\]]+)\]\(([^)]+\.(java|jsp|xml|js|sql))\)'
     for match in re.finditer(markdown_link_pattern, response_text):
         file_path = match.group(2)
-        citations.append({
-            "artifact_id": "",
-            "file_path": file_path,
-            "match_text": match.group(0)
-        })
+        if file_path not in seen:
+            citations.append({
+                "artifact_id": "",
+                "file_path": file_path,
+                "match_text": match.group(0)
+            })
+            seen.add(file_path)
 
-    logger.debug(f"Extracted {len(citations)} citation candidates from response")
+    logger.debug(f"Extracted {len(citations)} unique citations from response")
     return citations
 
 
@@ -85,6 +121,8 @@ def validate_citations(
 
     Checks if artifact IDs exist in Weaviate database. Verified citations
     can be converted to hyperlinks; unverified citations get warning icons.
+
+    Caches validation results for 5 minutes to avoid redundant Weaviate calls.
 
     Args:
         citations: List of Citation objects
@@ -107,13 +145,21 @@ def validate_citations(
         try:
             # Query Weaviate to verify artifact exists
             if citation.artifact_id:
-                exists = weaviate_store.artifact_exists(citation.artifact_id)
+                # Check cache first
+                if citation.artifact_id in _validation_cache:
+                    exists = _validation_cache[citation.artifact_id]
+                    logger.debug(f"Using cached validation for: {citation.artifact_id}")
+                else:
+                    exists = weaviate_store.artifact_exists(citation.artifact_id)
+                    # Cache the result
+                    _validation_cache[citation.artifact_id] = exists
+
                 validated_citation["verified"] = exists
 
                 if exists:
                     logger.debug(f"Verified citation: {citation.artifact_id}")
                 else:
-                    logger.warning(f"Unverified citation: {citation.artifact_id} (not found in Weaviate)")
+                    logger.warning(f"Citation verification failed: {citation.artifact_id} (not found in Weaviate)")
 
         except Exception as e:
             logger.error(f"Error validating citation {citation.artifact_id}: {e}")
@@ -149,29 +195,36 @@ def format_response_with_hyperlinks(
     # Replace verified citations with hyperlinks
     for citation in validated_citations:
         if citation["verified"] and citation["artifact_id"]:
-            # Generate hyperlink
-            hyperlink = f'<a href="/artifact/{citation["artifact_id"]}" class="citation-link">{citation["file_path"]}</a>'
+            # Generate hyperlink for artifact ID
+            artifact_link = f'[artifact:{citation["artifact_id"]}](/artifact/{citation["artifact_id"]})'
 
-            # Replace citation in text
-            # Try to find file path reference
+            # Replace artifact:id references with hyperlink
+            formatted_text = formatted_text.replace(
+                f'artifact:{citation["artifact_id"]}',
+                artifact_link
+            )
+
+            # Also replace file path references if present
             if citation["file_path"]:
                 # Replace backtick file paths
+                file_link = f'<a href="/artifact/{citation["artifact_id"]}" class="citation-link">`{citation["file_path"]}`</a>'
                 formatted_text = formatted_text.replace(
                     f'`{citation["file_path"]}`',
-                    hyperlink
+                    file_link
                 )
 
         elif not citation["verified"]:
             # Add warning icon for unverified citations
+            if citation["artifact_id"]:
+                formatted_text = formatted_text.replace(
+                    f'artifact:{citation["artifact_id"]}',
+                    f'artifact:{citation["artifact_id"]} ⚠️'
+                )
+
             if citation["file_path"]:
                 formatted_text = formatted_text.replace(
                     f'`{citation["file_path"]}`',
                     f'`{citation["file_path"]}` ⚠️'
-                )
-            elif citation["artifact_id"]:
-                formatted_text = formatted_text.replace(
-                    f'artifact:{citation["artifact_id"]}',
-                    f'artifact:{citation["artifact_id"]} ⚠️'
                 )
 
     return formatted_text
@@ -186,14 +239,23 @@ def format_response_for_streaming(response_text: str, chunk_size: int = 5) -> Li
         chunk_size: Characters per chunk (default: 5 for ~1 word)
 
     Returns:
-        List of text chunks
+        List of text chunks that can be joined to reconstruct original text
     """
-    # Split by words (preserve whitespace)
-    words = response_text.split()
+    # Split by whitespace while preserving the separators
+    import re
 
+    # Split on word boundaries but keep the separators (spaces, newlines)
+    parts = re.split(r'(\s+)', response_text)
+
+    # Group into chunks: word + following whitespace
     chunks = []
-    for word in words:
-        chunks.append(word + " ")
+    for i in range(0, len(parts), 2):
+        if i < len(parts):
+            chunk = parts[i]
+            # Add following whitespace if present
+            if i + 1 < len(parts):
+                chunk += parts[i + 1]
+            chunks.append(chunk)
 
     logger.debug(f"Split response into {len(chunks)} chunks for streaming")
     return chunks
@@ -311,7 +373,7 @@ def sanitize_html(html_text: str) -> str:
 
     # Escape non-allowed tags
     def escape_non_allowed_tags(match):
-        tag_name = match.group(1).lower()
+        tag_name = match.group(2).lower()  # Group 2 is the tag name (group 1 is optional /)
         if tag_name not in allowed_tags:
             return html.escape(match.group(0))
         return match.group(0)
@@ -321,21 +383,42 @@ def sanitize_html(html_text: str) -> str:
     return html_text
 
 
-def extract_plain_text(html_text: str) -> str:
+def extract_plain_text(text: str) -> str:
     """
-    Extract plain text from HTML (for copy functionality).
+    Extract plain text from HTML/markdown (for copy functionality).
 
     Args:
-        html_text: HTML text
+        text: HTML or markdown text
 
     Returns:
-        Plain text without HTML tags
+        Plain text without HTML tags or markdown formatting
     """
+    plain_text = text
+
     # Remove HTML tags
-    plain_text = re.sub(r'<[^>]+>', '', html_text)
+    plain_text = re.sub(r'<[^>]+>', '', plain_text)
 
     # Decode HTML entities
     plain_text = html.unescape(plain_text)
+
+    # Remove markdown formatting
+    # Headers (## Header -> Header)
+    plain_text = re.sub(r'^#{1,6}\s+', '', plain_text, flags=re.MULTILINE)
+
+    # Bold (**text** -> text)
+    plain_text = re.sub(r'\*\*(.+?)\*\*', r'\1', plain_text)
+
+    # Italic (*text* -> text)
+    plain_text = re.sub(r'\*(.+?)\*', r'\1', plain_text)
+
+    # Code blocks (```code``` -> code)
+    plain_text = re.sub(r'```[a-z]*\n(.*?)\n```', r'\1', plain_text, flags=re.DOTALL)
+
+    # Inline code (`code` -> code)
+    plain_text = re.sub(r'`([^`]+)`', r'\1', plain_text)
+
+    # Links ([text](url) -> text)
+    plain_text = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', plain_text)
 
     # Clean up whitespace
     plain_text = re.sub(r'\n\s*\n', '\n\n', plain_text)  # Remove excessive newlines
