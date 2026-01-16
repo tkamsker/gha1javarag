@@ -50,7 +50,8 @@ class AgentConfig:
     # Tools (assigned at runtime, tool names as strings)
     tools: List[str] = field(default_factory=list)
 
-    # Output Formatting
+    # Output Formatting (US2.4)
+    verbosity: str = "standard"      # 'concise', 'standard', 'verbose'
     output_format: str = "markdown"  # 'markdown', 'json', 'text'
     citation_style: str = "inline"   # 'inline', 'footnotes', 'none'
     technical_level: str = "senior"  # 'junior', 'mid', 'senior'
@@ -68,6 +69,7 @@ class AgentConfig:
             "temperature": self.temperature,
             "max_tokens": self.max_tokens,
             "tools": self.tools,
+            "verbosity": self.verbosity,
             "output_format": self.output_format,
             "citation_style": self.citation_style,
             "technical_level": self.technical_level
@@ -290,3 +292,141 @@ def get_agent_config(role: AgentRole, **overrides) -> AgentConfig:
         config_dict["role"] = AgentRole(config_dict["role"])
 
     return AgentConfig(**config_dict)
+
+
+# US2.4 - Agent Configuration Helper Functions
+
+
+def apply_settings_to_config(config: AgentConfig, settings: Dict[str, Any], strict: bool = False) -> AgentConfig:
+    """
+    Apply settings to agent configuration.
+
+    Args:
+        config: Base agent configuration
+        settings: Settings dictionary
+        strict: If True, raise ValueError for invalid settings
+
+    Returns:
+        Updated AgentConfig instance
+    """
+    # Validate settings if strict mode
+    if strict:
+        from codeindex.web.services.settings_service import validate_settings
+        is_valid, errors = validate_settings(settings)
+        if not is_valid:
+            raise ValueError(f"Invalid settings: {errors}")
+
+    # Create new config with updated settings
+    config_dict = config.to_dict()
+
+    # Apply settings
+    for key in ["verbosity", "technical_level", "citation_style", "output_format"]:
+        if key in settings:
+            config_dict[key] = settings[key]
+
+    # Convert role back to enum if needed
+    if isinstance(config_dict["role"], str):
+        config_dict["role"] = AgentRole(config_dict["role"])
+
+    return AgentConfig(**config_dict)
+
+
+def apply_settings_to_agent(agent, settings: Dict[str, Any]):
+    """
+    Apply settings to an agent instance.
+
+    Args:
+        agent: Agent instance
+        settings: Settings dictionary
+    """
+    agent.config = apply_settings_to_config(agent.config, settings)
+
+
+def build_agent_prompt(query: str, verbosity: str = "standard", technical_level: str = "senior") -> str:
+    """
+    Build agent prompt with settings applied.
+
+    Args:
+        query: User query
+        verbosity: Response verbosity (concise, standard, verbose)
+        technical_level: Technical level (junior, mid, senior)
+
+    Returns:
+        Formatted prompt string
+    """
+    prompt_parts = [query]
+
+    # Add verbosity instructions
+    if verbosity == "concise":
+        prompt_parts.append("\n\nProvide a brief, concise response focusing on key points only.")
+    elif verbosity == "verbose":
+        prompt_parts.append("\n\nProvide a detailed, thorough response with comprehensive explanations and examples.")
+
+    # Add technical level instructions
+    if technical_level == "junior":
+        prompt_parts.append("\n\nExplain concepts in simple, beginner-friendly terms. Avoid jargon where possible and define technical terms when used.")
+    elif technical_level == "mid":
+        prompt_parts.append("\n\nBalance technical accuracy with clear explanations. Assume moderate technical knowledge.")
+    elif technical_level == "senior":
+        prompt_parts.append("\n\nUse technical terminology freely. Assume advanced understanding of software architecture and design patterns.")
+
+    return "".join(prompt_parts)
+
+
+def format_citations(citations: List[Dict[str, Any]], style: str = "inline") -> str:
+    """
+    Format citations according to style.
+
+    Args:
+        citations: List of citation dictionaries
+        style: Citation style (inline, footnotes, none)
+
+    Returns:
+        Formatted citations string
+    """
+    if style == "none" or not citations:
+        return ""
+
+    if style == "inline":
+        # Format: [1] [2] [3]
+        formatted = []
+        for i, citation in enumerate(citations, 1):
+            file_path = citation.get("file_path", "")
+            formatted.append(f"[{i}] {file_path}")
+        return "\n".join(formatted)
+
+    elif style == "footnotes":
+        # Format: numbered list at end
+        formatted = ["**References:**\n"]
+        for i, citation in enumerate(citations, 1):
+            file_path = citation.get("file_path", "")
+            artifact_type = citation.get("artifact_type", "")
+            formatted.append(f"{i}. {file_path} ({artifact_type})")
+        return "\n".join(formatted)
+
+    return ""
+
+
+def format_response_output(response_text: str, output_format: str = "markdown") -> str:
+    """
+    Format response output according to format.
+
+    Args:
+        response_text: Response text
+        output_format: Output format (markdown, text)
+
+    Returns:
+        Formatted response
+    """
+    if output_format == "text":
+        # Strip markdown formatting
+        import re
+        # Remove markdown bold/italic
+        text = re.sub(r'\*\*([^\*]+)\*\*', r'\1', response_text)  # **bold**
+        text = re.sub(r'\*([^\*]+)\*', r'\1', text)  # *italic*
+        text = re.sub(r'`([^`]+)`', r'\1', text)  # `code`
+        text = re.sub(r'^#+\s+', '', text, flags=re.MULTILINE)  # # headers
+        return text
+
+    # Markdown - return as-is
+    return response_text
