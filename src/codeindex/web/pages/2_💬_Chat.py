@@ -46,6 +46,14 @@ def initialize_chat_state():
             "verbosity": "standard",
             "technical_level": "senior",
             "citation_style": "inline"
+        },
+        # T093 - Artifact selection for PRD generation
+        "selected_artifacts": [],
+        "artifacts_loaded": False,
+        "available_artifacts": {
+            "backend": [],
+            "frontend": [],
+            "data": []
         }
     }
 
@@ -129,6 +137,216 @@ def render_agent_settings():
         "technical_level": technical_level,
         "citation_style": citation_style
     })
+
+
+def load_available_artifacts():
+    """Load available artifacts from Weaviate for PRD generation (T093)."""
+    try:
+        search_service = get_search_service()
+
+        # Load backend artifacts
+        backend_response = search_service.search(
+            query="",
+            filters={"artifact_types": ["BackendDoc", "GwtEndpoint", "DaoCall"]},
+            limit=100
+        )
+        backend_artifacts = backend_response.get("results", [])
+
+        # Load frontend artifacts
+        frontend_response = search_service.search(
+            query="",
+            filters={"artifact_types": ["GwtPresenter", "GwtView", "GwtUiBinder", "JspForm"]},
+            limit=100
+        )
+        frontend_artifacts = frontend_response.get("results", [])
+
+        # Load data artifacts
+        data_response = search_service.search(
+            query="",
+            filters={"artifact_types": ["DbTable", "DtoArtifact", "IbatisStatement"]},
+            limit=100
+        )
+        data_artifacts = data_response.get("results", [])
+
+        # Update session state
+        set_value("available_artifacts", {
+            "backend": backend_artifacts,
+            "frontend": frontend_artifacts,
+            "data": data_artifacts
+        })
+        set_value("artifacts_loaded", True)
+
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(
+            f"Loaded artifacts for PRD: backend={len(backend_artifacts)}, "
+            f"frontend={len(frontend_artifacts)}, data={len(data_artifacts)}"
+        )
+
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to load artifacts: {e}", exc_info=True)
+
+        set_value("artifacts_loaded", False)
+
+
+def render_artifact_selection():
+    """Render artifact selection UI for PRD generation (T093)."""
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("📋 PRD Artifact Selection")
+
+    st.sidebar.caption("Select artifacts to include in PRD generation")
+
+    # Load artifacts if not loaded
+    if not get("artifacts_loaded", False):
+        if st.sidebar.button("🔄 Load Artifacts", use_container_width=True):
+            with st.spinner("Loading artifacts..."):
+                load_available_artifacts()
+            st.rerun()
+        return
+
+    available_artifacts = get("available_artifacts", {})
+    selected_artifacts = get("selected_artifacts", [])
+
+    # Backend artifacts
+    backend_artifacts = available_artifacts.get("backend", [])
+    if backend_artifacts:
+        st.sidebar.markdown("**⚙️ Backend** ({} artifacts)".format(len(backend_artifacts)))
+
+        # Select all/none buttons
+        col1, col2 = st.sidebar.columns(2)
+        with col1:
+            if st.button("All", key="backend_all", use_container_width=True):
+                backend_ids = [a["id"] for a in backend_artifacts]
+                selected_artifacts = list(set(selected_artifacts + backend_ids))
+                set_value("selected_artifacts", selected_artifacts)
+                st.rerun()
+        with col2:
+            if st.button("None", key="backend_none", use_container_width=True):
+                backend_ids = [a["id"] for a in backend_artifacts]
+                selected_artifacts = [aid for aid in selected_artifacts if aid not in backend_ids]
+                set_value("selected_artifacts", selected_artifacts)
+                st.rerun()
+
+        # Show top 10 backend artifacts with checkboxes
+        for artifact in backend_artifacts[:10]:
+            artifact_id = artifact["id"]
+            artifact_name = artifact.get("fileName", artifact_id)
+            artifact_type = artifact.get("artifactType", "")
+
+            is_selected = artifact_id in selected_artifacts
+
+            if st.sidebar.checkbox(
+                f"{artifact_name} ({artifact_type})",
+                value=is_selected,
+                key=f"artifact_{artifact_id}"
+            ):
+                if artifact_id not in selected_artifacts:
+                    selected_artifacts.append(artifact_id)
+            else:
+                if artifact_id in selected_artifacts:
+                    selected_artifacts.remove(artifact_id)
+
+        if len(backend_artifacts) > 10:
+            st.sidebar.caption(f"+ {len(backend_artifacts) - 10} more backend artifacts")
+
+    # Frontend artifacts
+    frontend_artifacts = available_artifacts.get("frontend", [])
+    if frontend_artifacts:
+        st.sidebar.markdown("**🎨 Frontend** ({} artifacts)".format(len(frontend_artifacts)))
+
+        # Select all/none buttons
+        col1, col2 = st.sidebar.columns(2)
+        with col1:
+            if st.button("All", key="frontend_all", use_container_width=True):
+                frontend_ids = [a["id"] for a in frontend_artifacts]
+                selected_artifacts = list(set(selected_artifacts + frontend_ids))
+                set_value("selected_artifacts", selected_artifacts)
+                st.rerun()
+        with col2:
+            if st.button("None", key="frontend_none", use_container_width=True):
+                frontend_ids = [a["id"] for a in frontend_artifacts]
+                selected_artifacts = [aid for aid in selected_artifacts if aid not in frontend_ids]
+                set_value("selected_artifacts", selected_artifacts)
+                st.rerun()
+
+        # Show top 10 frontend artifacts
+        for artifact in frontend_artifacts[:10]:
+            artifact_id = artifact["id"]
+            artifact_name = artifact.get("fileName", artifact_id)
+            artifact_type = artifact.get("artifactType", "")
+
+            is_selected = artifact_id in selected_artifacts
+
+            if st.sidebar.checkbox(
+                f"{artifact_name} ({artifact_type})",
+                value=is_selected,
+                key=f"artifact_{artifact_id}"
+            ):
+                if artifact_id not in selected_artifacts:
+                    selected_artifacts.append(artifact_id)
+            else:
+                if artifact_id in selected_artifacts:
+                    selected_artifacts.remove(artifact_id)
+
+        if len(frontend_artifacts) > 10:
+            st.sidebar.caption(f"+ {len(frontend_artifacts) - 10} more frontend artifacts")
+
+    # Data artifacts
+    data_artifacts = available_artifacts.get("data", [])
+    if data_artifacts:
+        st.sidebar.markdown("**📊 Data** ({} artifacts)".format(len(data_artifacts)))
+
+        # Select all/none buttons
+        col1, col2 = st.sidebar.columns(2)
+        with col1:
+            if st.button("All", key="data_all", use_container_width=True):
+                data_ids = [a["id"] for a in data_artifacts]
+                selected_artifacts = list(set(selected_artifacts + data_ids))
+                set_value("selected_artifacts", selected_artifacts)
+                st.rerun()
+        with col2:
+            if st.button("None", key="data_none", use_container_width=True):
+                data_ids = [a["id"] for a in data_artifacts]
+                selected_artifacts = [aid for aid in selected_artifacts if aid not in data_ids]
+                set_value("selected_artifacts", selected_artifacts)
+                st.rerun()
+
+        # Show top 10 data artifacts
+        for artifact in data_artifacts[:10]:
+            artifact_id = artifact["id"]
+            artifact_name = artifact.get("fileName", artifact_id)
+            artifact_type = artifact.get("artifactType", "")
+
+            is_selected = artifact_id in selected_artifacts
+
+            if st.sidebar.checkbox(
+                f"{artifact_name} ({artifact_type})",
+                value=is_selected,
+                key=f"artifact_{artifact_id}"
+            ):
+                if artifact_id not in selected_artifacts:
+                    selected_artifacts.append(artifact_id)
+            else:
+                if artifact_id in selected_artifacts:
+                    selected_artifacts.remove(artifact_id)
+
+        if len(data_artifacts) > 10:
+            st.sidebar.caption(f"+ {len(data_artifacts) - 10} more data artifacts")
+
+    # Update session state
+    set_value("selected_artifacts", selected_artifacts)
+
+    # Show selection summary
+    st.sidebar.markdown("---")
+    st.sidebar.caption(f"**Selected:** {len(selected_artifacts)} artifact(s)")
+
+    # Clear selection button
+    if selected_artifacts:
+        if st.sidebar.button("🗑️ Clear Selection", use_container_width=True):
+            set_value("selected_artifacts", [])
+            st.rerun()
 
 
 def render_chat_history():
@@ -502,6 +720,7 @@ def main():
     # Render sidebar controls
     render_agent_selector()
     render_agent_settings()
+    render_artifact_selection()  # T093 - Artifact selection UI
 
     # Show loading indicator
     if get("chat_loading", False):
