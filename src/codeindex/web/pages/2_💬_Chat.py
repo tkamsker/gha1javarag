@@ -32,6 +32,8 @@ from codeindex.web.utils.session_state import (
     append_to_list,
     clear_list
 )
+from codeindex.web.workflows.prd_generation import PrdGenerationWorkflow
+from codeindex.web.components.progress_indicator import render_workflow_progress
 
 
 def initialize_chat_state():
@@ -54,6 +56,13 @@ def initialize_chat_state():
             "backend": [],
             "frontend": [],
             "data": []
+        },
+        # T094 - PRD workflow tracking
+        "prd_workflow_running": False,
+        "prd_workflow_progress": {
+            "current_step": 0,
+            "total_steps": 4,
+            "current_agent": None
         }
     }
 
@@ -514,6 +523,212 @@ def execute_agent_query(query: str):
         set_value("chat_loading", False)
 
 
+def generate_prd_workflow():
+    """
+    Execute multi-agent PRD generation workflow (T094).
+
+    This function:
+    1. Retrieves selected artifacts from session state
+    2. Executes 4-agent workflow (Backend → Frontend → Data → PRD Writer)
+    3. Displays real-time progress with progress indicator
+    4. Adds generated PRD to chat history with agent responses
+    """
+    set_value("prd_workflow_running", True)
+    set_value("chat_error", None)
+
+    try:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info("Starting PRD generation workflow")
+
+        # Step 1: Get selected artifacts
+        selected_artifact_ids = get("selected_artifacts", [])
+
+        if not selected_artifact_ids:
+            # No artifacts selected
+            append_to_list("chat_history", {
+                "role": "assistant",
+                "agent_role": "PRD Writer",
+                "content": "⚠️ No artifacts selected. Please select at least one artifact from the sidebar before generating a PRD.",
+                "confidence": 1.0,
+                "citations": [],
+                "suggested_questions": [
+                    "How do I select artifacts for PRD generation?",
+                    "What artifact types are available?"
+                ]
+            })
+            return
+
+        # Step 2: Load full artifact data from Weaviate
+        available_artifacts = get("available_artifacts", {})
+        all_artifacts = (
+            available_artifacts.get("backend", []) +
+            available_artifacts.get("frontend", []) +
+            available_artifacts.get("data", [])
+        )
+
+        selected_artifacts = [
+            artifact for artifact in all_artifacts
+            if artifact["id"] in selected_artifact_ids
+        ]
+
+        logger.info(f"Selected {len(selected_artifacts)} artifacts for PRD generation")
+
+        if not selected_artifacts:
+            append_to_list("chat_history", {
+                "role": "assistant",
+                "agent_role": "PRD Writer",
+                "content": "⚠️ Selected artifacts could not be loaded. Please try reloading artifacts.",
+                "confidence": 0.0,
+                "citations": [],
+                "suggested_questions": []
+            })
+            return
+
+        # Step 3: Define progress callback
+        def progress_callback(current_step, total_steps, current_agent):
+            """Update progress in session state."""
+            set_value("prd_workflow_progress", {
+                "current_step": current_step,
+                "total_steps": total_steps,
+                "current_agent": current_agent
+            })
+
+        # Step 4: Execute workflow
+        workflow = PrdGenerationWorkflow()
+        result = workflow.execute(
+            artifacts=selected_artifacts,
+            project_name="Generated PRD",
+            progress_callback=progress_callback
+        )
+
+        logger.info(f"PRD workflow completed: success={result['success']}")
+
+        # Step 5: Add result to chat history
+        if result["success"]:
+            # Successful PRD generation
+            prd_content = result["prd_content"]
+            steps = result["steps"]
+
+            # Create response with PRD content
+            response_content = f"""## 📝 Product Requirements Document Generated
+
+**Summary:** Analyzed {len(selected_artifacts)} artifact(s) using 4 specialized agents
+
+### Generated PRD
+
+{prd_content}
+
+---
+
+*Generated at {time.strftime('%Y-%m-%d %H:%M:%S')}*
+"""
+
+            # Collect citations from all steps
+            all_citations = []
+            for step in steps:
+                if step["status"] == "completed":
+                    step_citations = step.get("citations", [])
+                    all_citations.extend(step_citations)
+
+            # Deduplicate citations by artifact_id
+            seen_ids = set()
+            unique_citations = []
+            for citation in all_citations:
+                artifact_id = citation.get("artifact_id", "")
+                if artifact_id and artifact_id not in seen_ids:
+                    seen_ids.add(artifact_id)
+                    unique_citations.append(citation)
+
+            append_to_list("chat_history", {
+                "role": "assistant",
+                "agent_role": "PRD Writer",
+                "content": response_content,
+                "confidence": 1.0,
+                "citations": unique_citations[:10],  # Limit to top 10 citations
+                "suggested_questions": [
+                    "Can you explain the user stories in detail?",
+                    "What are the main functional requirements?",
+                    "Are there any technical risks identified?",
+                    "What should be done next with this PRD?"
+                ]
+            })
+
+        else:
+            # Workflow failed
+            error_message = result.get("error", "Unknown error")
+            steps = result.get("steps", [])
+
+            append_to_list("chat_history", {
+                "role": "assistant",
+                "agent_role": "PRD Writer",
+                "content": f"""❌ PRD generation failed: {error_message}
+
+**Workflow Steps:**
+{_format_workflow_steps(steps)}
+
+Please check the logs for more details or try again with different artifacts.
+""",
+                "confidence": 0.0,
+                "citations": [],
+                "suggested_questions": [
+                    "What went wrong with PRD generation?",
+                    "How can I troubleshoot this error?"
+                ]
+            })
+
+            set_value("chat_error", error_message)
+
+        logger.info("PRD workflow results added to chat history")
+
+    except Exception as e:
+        # Error handling
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"PRD generation workflow failed: {e}", exc_info=True)
+
+        set_value("chat_error", str(e))
+
+        append_to_list("chat_history", {
+            "role": "assistant",
+            "agent_role": "PRD Writer",
+            "content": f"❌ Failed to generate PRD: {str(e)}",
+            "confidence": 0.0,
+            "citations": [],
+            "suggested_questions": []
+        })
+
+    finally:
+        set_value("prd_workflow_running", False)
+        st.rerun()
+
+
+def _format_workflow_steps(steps: List[Dict[str, Any]]) -> str:
+    """Format workflow steps for display."""
+    if not steps:
+        return "No steps recorded"
+
+    lines = []
+    for step in steps:
+        agent_role = step.get("agent_role", "Unknown")
+        status = step.get("status", "pending")
+
+        status_icon = {
+            "completed": "✅",
+            "failed": "❌",
+            "in_progress": "⏳",
+            "pending": "⏸️"
+        }.get(status, "❓")
+
+        lines.append(f"- {status_icon} **{agent_role}**: {status}")
+
+        if status == "failed":
+            error = step.get("error", "No error details")
+            lines.append(f"  - Error: {error}")
+
+    return "\n".join(lines)
+
+
 def analyze_database_schema():
     """
     Analyze database schema workflow (T075, T076).
@@ -656,6 +871,15 @@ def render_chat_actions():
         if st.button("🗄️ Analyze Database Schema", use_container_width=True):
             analyze_database_schema()
 
+    with col4:
+        # T094 - Generate PRD workflow button
+        selected_count = len(get("selected_artifacts", []))
+        button_label = f"📝 Generate PRD ({selected_count} artifacts)"
+        button_enabled = selected_count > 0 and not get("prd_workflow_running", False)
+
+        if st.button(button_label, use_container_width=True, disabled=not button_enabled):
+            generate_prd_workflow()
+
 
 def export_chat_history():
     """Export chat history to markdown."""
@@ -721,6 +945,24 @@ def main():
     render_agent_selector()
     render_agent_settings()
     render_artifact_selection()  # T093 - Artifact selection UI
+
+    # Show PRD workflow progress (T094)
+    if get("prd_workflow_running", False):
+        st.markdown("---")
+        st.markdown("### 📝 Generating PRD...")
+
+        progress = get("prd_workflow_progress", {})
+        current_step = progress.get("current_step", 0)
+        total_steps = progress.get("total_steps", 4)
+        current_agent = progress.get("current_agent")
+
+        render_workflow_progress(
+            current_step=current_step,
+            total_steps=total_steps,
+            current_agent=current_agent
+        )
+
+        st.markdown("---")
 
     # Show loading indicator
     if get("chat_loading", False):
