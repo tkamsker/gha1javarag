@@ -267,23 +267,23 @@
 
 ### Tests for User Story 2.5
 
-- [ ] T112 [P] [US2.5] Create unit tests for Gherkin Test Writer agent: `tests/unit/web/agents/test_gherkin_test_writer.py` (test agent configuration, Gherkin syntax generation, scenario creation)
-- [ ] T113 [P] [US2.5] Create unit tests for Gherkin syntax validation: `tests/unit/web/services/test_gherkin_validation.py` (test .feature file parsing, Gherkin syntax checking, error detection)
-- [ ] T114 [P] [US2.5] Create unit tests for test generation workflow: `tests/unit/web/workflows/test_gherkin_generation.py` (test workflow orchestration, agent context passing)
-- [ ] T115 [US2.5] Create integration test for Gherkin test generation: `tests/integration/web/test_gherkin_generation.py` (test end-to-end Gherkin generation, .feature file download, syntax validation)
+- [X] T112 [P] [US2.5] Create unit tests for Gherkin Test Writer agent: `tests/unit/web/agents/test_gherkin_test_writer.py` (test agent configuration, Gherkin syntax generation, scenario creation)
+- [X] T113 [P] [US2.5] Create unit tests for Gherkin syntax validation: `tests/unit/web/services/test_gherkin_validation.py` (test .feature file parsing, Gherkin syntax checking, error detection)
+- [X] T114 [P] [US2.5] Create unit tests for test generation workflow: `tests/unit/web/workflows/test_gherkin_generation.py` (test workflow orchestration, agent context passing)
+- [X] T115 [US2.5] Create integration test for Gherkin test generation: `tests/integration/web/test_gherkin_generation.py` (test end-to-end Gherkin generation, .feature file download, syntax validation)
 
 ### Implementation for User Story 2.5
 
-- [ ] T116 [US2.5] Implement Gherkin Test Writer agent: `src/codeindex/web/agents/gherkin_test_writer.py` (role, goal, backstory per spec.md, tools: WeaviateSearchTool, FileReadTool, DocumentGeneratorTool)
-- [ ] T117 [US2.5] Create test generation service: `src/codeindex/web/services/test_generation_service.py` (Gherkin test generation, syntax validation)
-- [ ] T118 [US2.5] Implement Gherkin generation workflow: `src/codeindex/web/workflows/gherkin_generation.py` (PRD Writer → Frontend Specialist → Gherkin Test Writer)
-- [ ] T119 [US2.5] Create Tests page: `src/codeindex/web/pages/5_🧪_Tests.py` (page layout, test type selection)
-- [ ] T120 [US2.5] Add user story input section (text area for user stories, or artifact selection)
-- [ ] T121 [US2.5] Add "Generate Gherkin Tests" button (trigger Gherkin generation workflow)
-- [ ] T122 [US2.5] Implement Gherkin syntax validation per FR8.8 (parse generated .feature files with Cucumber parser, detect syntax errors including invalid keywords and malformed scenario outlines, display errors with line numbers)
-- [ ] T123 [US2.5] Display generated Gherkin tests in UI (syntax-highlighted code viewer)
-- [ ] T124 [US2.5] Add download button for .feature files per FR8.8 (validate syntax before allowing download, block download on critical errors, export as .feature files, zip multiple files)
-- [ ] T125 [US2.5] Add test coverage summary (number of scenarios, steps, examples)
+- [X] T116 [US2.5] Implement Gherkin Test Writer agent: `src/codeindex/web/agents/gherkin_test_writer.py` (role, goal, backstory per spec.md, tools: WeaviateSearchTool, FileReadTool, DocumentGeneratorTool)
+- [X] T117 [US2.5] Create test generation service: `src/codeindex/web/services/test_generation_service.py` (Gherkin test generation, syntax validation)
+- [X] T118 [US2.5] Implement Gherkin generation workflow: `src/codeindex/web/workflows/gherkin_generation.py` (PRD Writer → Frontend Specialist → Gherkin Test Writer)
+- [X] T119 [US2.5] Create Tests page: `src/codeindex/web/pages/5_🧪_Tests.py` (page layout, test type selection)
+- [X] T120 [US2.5] Add user story input section (text area for user stories, or artifact selection)
+- [X] T121 [US2.5] Add "Generate Gherkin Tests" button (trigger Gherkin generation workflow)
+- [X] T122 [US2.5] Implement Gherkin syntax validation per FR8.8 (parse generated .feature files with Cucumber parser, detect syntax errors including invalid keywords and malformed scenario outlines, display errors with line numbers)
+- [X] T123 [US2.5] Display generated Gherkin tests in UI (syntax-highlighted code viewer)
+- [X] T124 [US2.5] Add download button for .feature files per FR8.8 (validate syntax before allowing download, block download on critical errors, export as .feature files, zip multiple files)
+- [X] T125 [US2.5] Add test coverage summary (number of scenarios, steps, examples)
 
 **Checkpoint**: Gherkin test generation functional - QA engineers can generate BDD tests from requirements
 
