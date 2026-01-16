@@ -46,7 +46,10 @@ class AgentService:
         return {
             AgentRole.DATA_ANALYST: [
                 "database", "schema", "table", "column", "foreign key",
-                "index", "sql", "query", "entity", "relationship", "erd"
+                "index", "sql", "query", "entity", "relationship", "erd",
+                "data model", "data flow", "dao", "ibatis", "mybatis",
+                "orm", "jpa", "hibernate", "primary key", "join",
+                "quality", "analyze schema", "analyze database"
             ],
             AgentRole.FRONTEND_SPECIALIST: [
                 "ui", "view", "presenter", "form", "widget", "jsp", "gwt",
