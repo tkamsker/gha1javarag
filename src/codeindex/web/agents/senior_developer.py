@@ -15,8 +15,7 @@ from codeindex.web.agents.base import (
     AgentConfig,
     AgentResponse,
     Citation,
-    get_agent_config,
-    build_agent_prompt
+    get_agent_config
 )
 from codeindex.web.agents.tools import (
     WeaviateSearchTool,
@@ -245,10 +244,8 @@ class SeniorDeveloperAgent:
 
             context_text = "\n".join(context_parts) if context_parts else "No specific code artifacts found."
 
-            # Create system prompt with verbosity level from config
-            system_prompt = build_agent_prompt(
-                self.config,
-                base_prompt="""You are a Senior Software Developer with expertise in Java enterprise applications,
+            # Create system prompt
+            system_prompt = """You are a Senior Software Developer with expertise in Java enterprise applications,
 GWT, and modern web architectures. Analyze the provided code artifacts and answer the user's question with:
 
 1. Clear, concise explanations
@@ -257,7 +254,6 @@ GWT, and modern web architectures. Analyze the provided code artifacts and answe
 4. Potential improvements when relevant
 
 Keep responses focused and practical."""
-            )
 
             # Create formatted query
             formatted_query = f"""Question: {query}
