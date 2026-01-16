@@ -80,7 +80,7 @@ class CodeViewer:
             show_line_numbers: Show line numbers (default: True)
             highlighted_lines: List of line numbers to highlight
         """
-        if not content and not file_path:
+        if content is None and not file_path:
             raise ValueError("Either content or file_path must be provided")
 
         if file_path:
@@ -88,7 +88,7 @@ class CodeViewer:
             self.content = read_source_file(Path(file_path))
             self.file_path = file_path
         else:
-            self.content = content
+            self.content = content if content is not None else ""
             self.file_path = file_path
 
         # Auto-detect language if not provided
@@ -210,8 +210,10 @@ class CodeViewer:
         """
         # Determine filename
         if self.file_path:
+            # Use original filename from file_path
             filename = Path(self.file_path).name
         else:
+            # Generate filename based on language
             ext = _get_extension_for_language(self.language)
             filename = f"code{ext}"
 
