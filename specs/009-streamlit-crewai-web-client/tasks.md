@@ -237,23 +237,23 @@
 
 ### Tests for User Story 2.4
 
-- [ ] T098 [P] [US2.4] Create unit tests for settings persistence: `tests/unit/web/services/test_settings_service.py` (test session state storage, settings validation, default values)
-- [ ] T099 [P] [US2.4] Create unit tests for agent configuration application: `tests/unit/web/agents/test_agent_config_application.py` (test settings propagation to agents, AgentConfig updates)
-- [ ] T100 [US2.4] Create unit tests for settings preview: `tests/unit/web/components/test_settings_preview.py` (test example response generation with different settings)
-- [ ] T101 [US2.4] Create integration test for agent settings: `tests/integration/web/test_agent_settings.py` (test end-to-end settings application, verify agent responses change with settings)
+- [x] T098 [P] [US2.4] Create unit tests for settings persistence: `tests/unit/web/services/test_settings_service.py` (test session state storage, settings validation, default values)
+- [x] T099 [P] [US2.4] Create unit tests for agent configuration application: `tests/unit/web/agents/test_agent_config_application.py` (test settings propagation to agents, AgentConfig updates)
+- [x] T100 [US2.4] Create unit tests for settings preview: `tests/unit/web/components/test_settings_preview.py` (test example response generation with different settings)
+- [x] T101 [US2.4] Create integration test for agent settings: `tests/integration/web/test_agent_settings.py` (test end-to-end settings application, verify agent responses change with settings)
 
 ### Implementation for User Story 2.4
 
-- [ ] T102 [US2.4] Create Settings page: `src/codeindex/web/pages/6_⚙️_Settings.py` (page layout, settings form)
-- [ ] T103 [US2.4] Add agent verbosity settings (radio buttons: concise, standard, verbose)
-- [ ] T104 [US2.4] Add technical level settings (radio buttons: junior, mid, senior)
-- [ ] T105 [US2.4] Add citation style settings (radio buttons: inline, footnotes, none)
-- [ ] T106 [US2.4] Add UI theme settings (radio buttons: light, dark)
-- [ ] T107 [US2.4] Add output format settings (radio buttons: markdown, text)
-- [ ] T108 [US2.4] Persist settings in Streamlit session state (apply to all agent queries in current session)
-- [ ] T109 [US2.4] Update agent configurations in agents/base.py (read settings from session state, apply to AgentConfig)
-- [ ] T110 [US2.4] Add settings preview (show example agent response with current settings)
-- [ ] T111 [US2.4] Add "Reset to Defaults" button (restore default settings)
+- [x] T102 [US2.4] Create Settings page: `src/codeindex/web/pages/6_⚙️_Settings.py` (page layout, settings form)
+- [x] T103 [US2.4] Add agent verbosity settings (radio buttons: concise, standard, verbose)
+- [x] T104 [US2.4] Add technical level settings (radio buttons: junior, mid, senior)
+- [x] T105 [US2.4] Add citation style settings (radio buttons: inline, footnotes, none)
+- [x] T106 [US2.4] Add UI theme settings (radio buttons: light, dark)
+- [x] T107 [US2.4] Add output format settings (radio buttons: markdown, text)
+- [x] T108 [US2.4] Persist settings in Streamlit session state (apply to all agent queries in current session)
+- [x] T109 [US2.4] Update agent configurations in agents/base.py (read settings from session state, apply to AgentConfig)
+- [x] T110 [US2.4] Add settings preview (show example agent response with current settings)
+- [x] T111 [US2.4] Add "Reset to Defaults" button (restore default settings)
 
 **Checkpoint**: Agent configuration functional - users can customize agent behavior
 
