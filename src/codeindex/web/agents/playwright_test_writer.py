@@ -115,27 +115,25 @@ class PlaywrightTestWriterAgent:
 
         Returns:
             List of relevant artifacts
+
+        Raises:
+            Exception: If search fails (propagates to execute_query)
         """
-        try:
-            logger.debug(f"Searching artifacts for Playwright tests: {query}")
+        logger.debug(f"Searching artifacts for Playwright tests: {query}")
 
-            from codeindex.web.services.search_service import get_search_service
-            search_service = get_search_service()
+        from codeindex.web.services.search_service import get_search_service
+        search_service = get_search_service()
 
-            # Comprehensive search with NO type filters
-            search_response = search_service.search(
-                query=query,
-                limit=15
-            )
+        # Comprehensive search with NO type filters
+        search_response = search_service.search(
+            query=query,
+            limit=15
+        )
 
-            artifacts = search_response.get("results", [])
-            logger.info(f"Found {len(artifacts)} artifacts for test automation")
+        artifacts = search_response.get("results", [])
+        logger.info(f"Found {len(artifacts)} artifacts for test automation")
 
-            return artifacts
-
-        except Exception as e:
-            logger.error(f"Artifact search failed: {e}")
-            return []
+        return artifacts
 
     def _generate_document(
         self,
