@@ -21,6 +21,9 @@ src_dir = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(src_dir))
 
 from codeindex.web.services.agent_service import get_agent_service
+from codeindex.web.services.search_service import get_search_service
+from codeindex.web.services.erd_generator import get_erd_generator
+from codeindex.web.services.db_quality import get_db_quality_analyzer
 from codeindex.web.agents.base import AgentRole, AgentResponse
 from codeindex.web.utils.session_state import (
     initialize_session_state,
@@ -293,9 +296,133 @@ def execute_agent_query(query: str):
         set_value("chat_loading", False)
 
 
+def analyze_database_schema():
+    """
+    Analyze database schema workflow (T075, T076).
+
+    This function:
+    1. Queries Weaviate for all DbTable artifacts
+    2. Generates ERD diagram using ErdGenerator
+    3. Generates quality report using DbQualityAnalyzer
+    4. Adds results to chat history with formatted Mermaid diagram and report
+    """
+    set_value("chat_loading", True)
+    set_value("chat_error", None)
+
+    try:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info("Starting database schema analysis workflow")
+
+        # Step 1: Query Weaviate for DbTable artifacts
+        search_service = get_search_service()
+        search_response = search_service.search(
+            query="",  # Empty query to get all tables
+            filters={"artifact_types": ["DbTable"]},
+            limit=100
+        )
+
+        tables = search_response.get("results", [])
+        total_tables = search_response.get("total", 0)
+
+        logger.info(f"Found {total_tables} database tables")
+
+        if not tables:
+            # No tables found
+            append_to_list("chat_history", {
+                "role": "assistant",
+                "agent_role": "Data Analyst",
+                "content": "⚠️ No database tables found in the indexed codebase. Please ensure database schema files have been discovered and indexed.",
+                "confidence": 1.0,
+                "citations": [],
+                "suggested_questions": [
+                    "What artifact types are indexed?",
+                    "How do I index database schema files?"
+                ]
+            })
+            return
+
+        # Step 2: Generate ERD diagram
+        erd_generator = get_erd_generator()
+        erd_diagram = erd_generator.generate_mermaid_erd(tables)
+
+        logger.info(f"Generated ERD diagram with {len(tables)} tables")
+
+        # Step 3: Generate quality report
+        quality_analyzer = get_db_quality_analyzer()
+        quality_report = quality_analyzer.analyze_schema(tables)
+        quality_markdown = quality_analyzer.format_report_markdown(quality_report)
+
+        logger.info(f"Generated quality report with score: {quality_report['quality_score']:.1f}/100")
+
+        # Step 4: Build response content
+        response_content = f"""## 🗄️ Database Schema Analysis
+
+**Summary:** Analyzed {total_tables} database table(s)
+
+### Entity-Relationship Diagram
+
+```mermaid
+{erd_diagram}
+```
+
+### Quality Analysis
+
+{quality_markdown}
+
+---
+
+*Analysis completed at {time.strftime('%Y-%m-%d %H:%M:%S')}*
+"""
+
+        # Step 5: Add to chat history
+        append_to_list("chat_history", {
+            "role": "assistant",
+            "agent_role": "Data Analyst",
+            "content": response_content,
+            "confidence": 1.0,
+            "citations": [
+                {
+                    "file_path": table.get("relativePath", table.get("fileName", "unknown")),
+                    "artifact_type": "DbTable"
+                }
+                for table in tables[:10]  # Limit citations to first 10 tables
+            ],
+            "suggested_questions": [
+                "What are the main entities in this schema?",
+                "Explain the relationships between tables",
+                "What quality issues should be fixed first?",
+                "Show me the data flow through this schema"
+            ]
+        })
+
+        logger.info("Database schema analysis workflow completed successfully")
+
+    except Exception as e:
+        # Error handling
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Database schema analysis failed: {e}", exc_info=True)
+
+        set_value("chat_error", str(e))
+
+        append_to_list("chat_history", {
+            "role": "assistant",
+            "agent_role": "Data Analyst",
+            "content": f"❌ Failed to analyze database schema: {str(e)}",
+            "confidence": 0.0,
+            "citations": [],
+            "suggested_questions": []
+        })
+
+    finally:
+        set_value("chat_loading", False)
+        st.rerun()
+
+
 def render_chat_actions():
     """Render chat action buttons."""
-    col1, col2, col3 = st.columns([1, 1, 4])
+    col1, col2, col3, col4 = st.columns([1, 1, 2, 2])
 
     with col1:
         if st.button("🗑️ Clear Chat", use_container_width=True):
@@ -306,6 +433,10 @@ def render_chat_actions():
     with col2:
         if st.button("💾 Export Chat", use_container_width=True):
             export_chat_history()
+
+    with col3:
+        if st.button("🗄️ Analyze Database Schema", use_container_width=True):
+            analyze_database_schema()
 
 
 def export_chat_history():
