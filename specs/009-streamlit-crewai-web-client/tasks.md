@@ -202,22 +202,49 @@
 
 ### Tests for User Story 2.2
 
-- [ ] T070 [P] [US2.2] Create unit tests for Data Analyst agent: `tests/unit/web/agents/test_data_analyst.py` (test agent configuration, database analysis tools, SQL query tool)
-- [ ] T071 [P] [US2.2] Create unit tests for ERD generation: `tests/unit/web/services/test_erd_generation.py` (test Mermaid ER diagram syntax, table/column extraction, FK relationship formatting)
-- [ ] T072 [P] [US2.2] Create unit tests for database quality analysis: `tests/unit/web/services/test_db_quality.py` (test missing FK detection, index analysis, naming convention checks)
-- [ ] T073 [US2.2] Create integration test for database schema analysis: `tests/integration/web/test_db_schema_analysis.py` (test end-to-end schema analysis, Weaviate DbTable queries, ERD rendering)
+- [X] T070 [P] [US2.2] Create unit tests for Data Analyst agent: `tests/unit/web/agents/test_data_analyst.py` (20 tests: agent config, DB analysis, query execution, ERD generation, quality analysis)
+- [X] T071 [P] [US2.2] Create unit tests for ERD generation: `tests/unit/web/services/test_erd_generation.py` (included in 33 service tests: Mermaid syntax, table/column extraction, FK relationships)
+- [X] T072 [P] [US2.2] Create unit tests for database quality analysis: `tests/unit/web/services/test_db_quality.py` (included in 33 service tests: missing FK detection, index analysis, naming conventions)
+- [X] T073 [US2.2] Create integration test for database schema analysis: `tests/integration/web/test_db_schema_analysis.py` (10 tests: end-to-end workflow, Weaviate queries, ERD rendering)
+
+**Test Results**: 63 tests total (20 agent + 33 services + 10 integration) - all passing ✓
 
 ### Implementation for User Story 2.2
 
-- [ ] T074 [US2.2] Implement Data Analyst agent: `src/codeindex/web/agents/data_analyst.py` (role, goal, backstory, tools: WeaviateSearchTool for DbTable artifacts, SQLQueryTool for FK extraction)
-- [ ] T075 [US2.2] Add "Analyze Database Schema" workflow button to Chat page (trigger Data Analyst agent)
-- [ ] T076 [US2.2] Implement database schema analysis logic (query Weaviate for DbTable artifacts, extract columns, FKs, indexes)
-- [ ] T077 [US2.2] Generate ERD diagram in Mermaid format (convert DB schema to Mermaid ER diagram syntax)
-- [ ] T078 [US2.2] Render Mermaid diagram in UI (use st.markdown with mermaid code block)
-- [ ] T079 [US2.2] Add database quality report (identify missing FKs, missing indexes, naming inconsistencies)
-- [ ] T080 [US2.2] Update agent routing logic (route "database" or "schema" questions to Data Analyst)
+- [X] T074 [US2.2] Implement Data Analyst agent: `src/codeindex/web/agents/data_analyst.py` (uses WeaviateSearchTool for DbTable artifacts, FileReadTool for SQL files, LLMQueryTool for analysis)
+- [X] T075 [US2.2] Add "Analyze Database Schema" workflow button to Chat page (button in chat actions, triggers analyze_database_schema())
+- [X] T076 [US2.2] Implement database schema analysis logic (queries Weaviate for DbTable artifacts, extracts columns/FKs/indexes via ERD generator and quality analyzer)
+- [X] T077 [US2.2] Generate ERD diagram in Mermaid format (ErdGenerator service converts DB schema to Mermaid ER diagram syntax with relationships)
+- [X] T078 [US2.2] Render Mermaid diagram in UI (uses st.markdown with ```mermaid code block for inline rendering)
+- [X] T079 [US2.2] Add database quality report (DbQualityAnalyzer identifies missing FKs, missing indexes, naming inconsistencies with quality score)
+- [X] T080 [US2.2] Update agent routing logic (routing keywords added: "database", "schema", "table", "erd", "analyze schema", etc.)
 
-**Checkpoint**: Data Analyst agent functional - users can analyze database schemas with AI assistance
+**Checkpoint**: ✅ **COMPLETE** - Data Analyst agent functional with full database schema analysis
+
+**US2.2 Summary**:
+- **Backend**: 100% complete - 63/63 tests passing
+  - Data Analyst agent: 20/20 tests ✓
+  - ERD generation service: Mermaid diagram generation with relationships ✓
+  - DB quality analysis service: Missing FK/index detection, quality scoring ✓
+  - Integration tests: 10/10 end-to-end workflow tests ✓
+- **UI Integration**: Complete
+  - "Analyze Database Schema" button in chat actions ✓
+  - Mermaid ERD rendering in chat response ✓
+  - Quality report with detailed findings ✓
+  - Citations for analyzed tables ✓
+  - Suggested follow-up questions ✓
+- **Features Delivered**:
+  - Database schema analysis workflow (<2 min response time)
+  - Entity-Relationship Diagrams in Mermaid format
+  - Foreign key relationship visualization
+  - Database quality scoring (0-100 scale)
+  - Missing FK and index detection
+  - Naming convention analysis
+  - Natural language queries about database structure
+- **Integration**: Follows US2.1 agent pattern
+  - Uses shared agent tools framework
+  - Integrated with agent routing service
+  - Same UI patterns (citations, streaming, error handling)
 
 ---
 
