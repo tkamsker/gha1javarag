@@ -175,26 +175,69 @@ def generate_tests(description: str):
             })
 
         else:
-            # Use agent for Playwright generation
-            agent_service = get_agent_service()
-            agent_role = AgentRole.PLAYWRIGHT_TEST_WRITER
+            # T132: Use workflow for comprehensive Playwright generation
+            from codeindex.web.workflows.playwright_generation import get_playwright_generation_workflow
+            from codeindex.web.services.search_service import get_search_service
 
-            response = agent_service.execute_query(
-                query=f"Generate {test_type} tests for: {description}",
-                agent_role=agent_role
-            )
+            # Get UI artifacts for context
+            search_service = get_search_service()
+            search_results = search_service.search(description, limit=10)
+            artifacts = search_results.get("results", [])
 
-            if response.has_error():
-                set_value("test_error", response.error)
-            else:
+            # Use workflow with progress tracking (T136)
+            workflow = get_playwright_generation_workflow()
+
+            progress_container = st.empty()
+
+            def progress_callback(stage: str, progress: float):
+                """Update progress indicator."""
+                progress_container.progress(progress / 100.0, text=f"🔄 {stage} ({progress:.0f}%)")
+
+            try:
+                result = workflow.execute(
+                    test_request=description,
+                    artifacts=artifacts,
+                    progress_callback=progress_callback
+                )
+
+                progress_container.empty()
+
+                # T133: Validate Playwright syntax
+                from codeindex.web.services.playwright_validation import validate_playwright_syntax, count_playwright_elements
+                test_code = result["test_code"]
+                is_valid, errors = validate_playwright_syntax(test_code, language='typescript')
+
+                validation_results = {
+                    "is_valid": is_valid,
+                    "errors": errors
+                }
+
+                # T134: Calculate coverage summary
+                element_counts = count_playwright_elements(test_code)
+                summary = {
+                    "test_count": element_counts.get("test_cases", 0),
+                    "describe_count": element_counts.get("describe_blocks", 0),
+                    "expectation_count": element_counts.get("expectations", 0),
+                    "hook_count": element_counts.get("beforeEach_hooks", 0) + element_counts.get("afterEach_hooks", 0),
+                    "duration_seconds": result["duration_seconds"]
+                }
+
                 # Add to generated tests
                 append_to_list("generated_tests", {
                     "type": test_type,
                     "description": description,
-                    "content": response.response_text,
-                    "timestamp": response.timestamp,
-                    "citations": [c.to_dict() for c in response.citations]
+                    "content": test_code,
+                    "timestamp": result["timestamp"],
+                    "citations": [],  # Playwright workflow doesn't return citations
+                    "validation": validation_results,  # T133
+                    "summary": summary,  # T134
+                    "frontend_analysis": result.get("frontend_analysis", ""),
+                    "backend_analysis": result.get("backend_analysis", "")
                 })
+
+            except Exception as workflow_error:
+                progress_container.empty()
+                raise workflow_error
 
         # Log performance
         import logging
@@ -227,36 +270,59 @@ def render_generated_tests():
             # Description
             st.caption(f"**Description**: {test['description'][:100]}...")
 
-            # T122: Validation status (for Gherkin tests)
-            if test['type'] == "gherkin" and 'validation' in test:
+            # T122 & T133: Validation status (for Gherkin and Playwright tests)
+            if 'validation' in test:
                 validation = test['validation']
                 is_valid = validation.get("is_valid", False)
                 errors = validation.get("errors", [])
 
                 if is_valid:
-                    st.success("✅ Gherkin syntax valid - ready for download")
+                    st.success(f"✅ {test['type'].capitalize()} syntax valid - ready for download")
                 else:
-                    st.error("❌ Gherkin syntax validation failed")
+                    st.error(f"❌ {test['type'].capitalize()} syntax validation failed")
                     with st.expander("Validation Errors", expanded=True):
                         for error in errors:
                             st.markdown(f"- {error}")
 
-            # T125: Test coverage summary (for Gherkin tests)
-            if test['type'] == "gherkin" and 'summary' in test:
+            # T125 & T134: Test coverage summary (for Gherkin and Playwright tests)
+            if 'summary' in test:
                 summary = test['summary']
 
                 st.markdown("**📊 Test Coverage:**")
-                col1, col2, col3, col4 = st.columns(4)
 
-                with col1:
-                    st.metric("Scenarios", summary.get("scenario_count", 0))
-                with col2:
-                    st.metric("Steps", summary.get("step_count", 0))
-                with col3:
-                    st.metric("Examples", summary.get("example_count", 0))
-                with col4:
-                    duration = summary.get("duration_seconds", 0)
-                    st.metric("Time", f"{duration:.1f}s")
+                if test['type'] == "gherkin":
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("Scenarios", summary.get("scenario_count", 0))
+                    with col2:
+                        st.metric("Steps", summary.get("step_count", 0))
+                    with col3:
+                        st.metric("Examples", summary.get("example_count", 0))
+                    with col4:
+                        duration = summary.get("duration_seconds", 0)
+                        st.metric("Time", f"{duration:.1f}s")
+                else:  # playwright
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("Tests", summary.get("test_count", 0))
+                    with col2:
+                        st.metric("Describes", summary.get("describe_count", 0))
+                    with col3:
+                        st.metric("Expectations", summary.get("expectation_count", 0))
+                    with col4:
+                        duration = summary.get("duration_seconds", 0)
+                        st.metric("Time", f"{duration:.1f}s")
+
+            # Show workflow analysis (for Playwright tests)
+            if test['type'] == "playwright" and ('frontend_analysis' in test or 'backend_analysis' in test):
+                with st.expander("🔍 Workflow Analysis", expanded=False):
+                    if test.get('frontend_analysis'):
+                        st.markdown("**Frontend Specialist Analysis:**")
+                        st.text(test['frontend_analysis'][:500] + "..." if len(test['frontend_analysis']) > 500 else test['frontend_analysis'])
+
+                    if test.get('backend_analysis'):
+                        st.markdown("**Backend Specialist Analysis:**")
+                        st.text(test['backend_analysis'][:500] + "..." if len(test['backend_analysis']) > 500 else test['backend_analysis'])
 
             st.markdown("---")
 
@@ -266,13 +332,13 @@ def render_generated_tests():
             else:
                 st.code(test['content'], language="javascript", line_numbers=True)
 
-            # T124: Download button (with validation check for Gherkin)
+            # T124 & T135: Download button (with validation check for both Gherkin and Playwright)
             col1, col2, col3 = st.columns([1, 1, 4])
 
             with col1:
-                # Check if download should be enabled (T124: FR8.8)
+                # Check if download should be enabled (T124 & T135: FR8.8)
                 is_downloadable = True
-                if test['type'] == "gherkin" and 'validation' in test:
+                if 'validation' in test:
                     is_downloadable = test['validation'].get("is_valid", False)
 
                 # Download button
