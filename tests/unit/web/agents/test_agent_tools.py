@@ -373,7 +373,7 @@ class TestLLMQueryToolQuery:
         from codeindex.web.agents.tools import LLMQueryTool
 
         mock_client = MagicMock()
-        mock_client.generate.side_effect = TimeoutError("Ollama request timed out")
+        mock_client.generate.side_effect = TimeoutError("Ollama request timeout")
         mock_client_class.return_value = mock_client
 
         tool = LLMQueryTool(ollama_client=mock_client)

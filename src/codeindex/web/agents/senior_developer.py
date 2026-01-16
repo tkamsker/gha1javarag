@@ -2,8 +2,8 @@
 Senior Developer Agent implementation (T060 - US2.1).
 
 This agent specializes in explaining code architecture, design patterns,
-and best practices. It uses Weaviate search, file reading, and LLM queries
-to provide comprehensive code explanations.
+and best practices. It uses the agent tools framework (WeaviateSearchTool,
+FileReadTool, LLMQueryTool) to provide comprehensive code explanations.
 """
 
 import logging
@@ -15,7 +15,13 @@ from codeindex.web.agents.base import (
     AgentConfig,
     AgentResponse,
     Citation,
-    get_agent_config
+    get_agent_config,
+    build_agent_prompt
+)
+from codeindex.web.agents.tools import (
+    WeaviateSearchTool,
+    FileReadTool,
+    LLMQueryTool
 )
 
 logger = logging.getLogger(__name__)
@@ -45,6 +51,13 @@ class SeniorDeveloperAgent:
 
         self.config = config
         self.role = AgentRole.SENIOR_DEVELOPER
+
+        # Initialize tools
+        self.search_tool = WeaviateSearchTool()
+        self.file_tool = FileReadTool()
+        self.llm_tool = LLMQueryTool()
+
+        logger.info("Initialized Senior Developer agent with tools")
 
     def execute_query(
         self,
@@ -117,7 +130,7 @@ class SeniorDeveloperAgent:
 
     def _search_codebase(self, query: str) -> List[Dict[str, Any]]:
         """
-        Search Weaviate for relevant artifacts.
+        Search Weaviate for relevant artifacts using WeaviateSearchTool.
 
         Args:
             query: Search query
@@ -128,19 +141,13 @@ class SeniorDeveloperAgent:
         try:
             logger.debug(f"Searching codebase for: {query}")
 
-            # Use SearchService to query Weaviate
-            from codeindex.web.services.search_service import get_search_service
-            search_service = get_search_service()
-
-            # Execute search with limit of 10 most relevant artifacts
-            search_response = search_service.search(
+            # Use WeaviateSearchTool to query Weaviate
+            artifacts = self.search_tool.search(
                 query=query,
-                limit=10
+                limit=15  # Get comprehensive results
             )
 
-            artifacts = search_response.get("results", [])
             logger.info(f"Found {len(artifacts)} artifacts for query")
-
             return artifacts
 
         except Exception as e:
@@ -149,7 +156,7 @@ class SeniorDeveloperAgent:
 
     def _read_source_files(self, search_results: List[Dict[str, Any]]) -> Dict[str, str]:
         """
-        Read source files for relevant artifacts.
+        Read source files for relevant artifacts using FileReadTool.
 
         Args:
             search_results: Search results from Weaviate
@@ -157,11 +164,7 @@ class SeniorDeveloperAgent:
         Returns:
             Dictionary mapping file paths to file contents
         """
-        from pathlib import Path
-        from codeindex.utils.config import get_config
-
         file_contents = {}
-        config = get_config()
 
         logger.debug(f"Reading {len(search_results)} source files")
 
@@ -172,17 +175,24 @@ class SeniorDeveloperAgent:
                 if not relative_path:
                     continue
 
-                # Construct full path
-                full_path = Path(config.java_source_dir) / relative_path
+                # Use FileReadTool to read file with security validation
+                content = self.file_tool.read_file(relative_path)
 
-                if full_path.exists() and full_path.is_file():
-                    # Read file with size limit (max 5000 lines)
-                    with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        lines = f.readlines()[:5000]
-                        content = ''.join(lines)
-                        file_contents[str(relative_path)] = content
-                        logger.debug(f"Read {len(lines)} lines from {relative_path}")
+                # Truncate to first 5000 lines if needed
+                lines = content.split('\n')
+                if len(lines) > 5000:
+                    content = '\n'.join(lines[:5000])
+                    logger.debug(f"Truncated {relative_path} to 5000 lines")
 
+                file_contents[str(relative_path)] = content
+                logger.debug(f"Read {len(lines)} lines from {relative_path}")
+
+            except FileNotFoundError:
+                logger.warning(f"File not found: {relative_path}")
+                continue
+            except ValueError as e:
+                logger.warning(f"Invalid file path {relative_path}: {e}")
+                continue
             except Exception as e:
                 logger.warning(f"Failed to read file {relative_path}: {e}")
                 continue
@@ -197,7 +207,7 @@ class SeniorDeveloperAgent:
         context: Optional[Dict[str, Any]]
     ) -> str:
         """
-        Generate explanation using LLM.
+        Generate explanation using LLMQueryTool.
 
         Args:
             query: User query
@@ -209,10 +219,7 @@ class SeniorDeveloperAgent:
             Explanation text
         """
         try:
-            logger.debug("Generating explanation with Ollama LLM")
-
-            # Import Ollama client
-            from codeindex.services.ollama_client import OllamaClient
+            logger.debug("Generating explanation with LLM")
 
             # Build context from search results and file contents
             context_parts = []
@@ -238,8 +245,10 @@ class SeniorDeveloperAgent:
 
             context_text = "\n".join(context_parts) if context_parts else "No specific code artifacts found."
 
-            # Create system prompt
-            system_prompt = """You are a Senior Software Developer with expertise in Java enterprise applications,
+            # Create system prompt with verbosity level from config
+            system_prompt = build_agent_prompt(
+                self.config,
+                base_prompt="""You are a Senior Software Developer with expertise in Java enterprise applications,
 GWT, and modern web architectures. Analyze the provided code artifacts and answer the user's question with:
 
 1. Clear, concise explanations
@@ -248,24 +257,22 @@ GWT, and modern web architectures. Analyze the provided code artifacts and answe
 4. Potential improvements when relevant
 
 Keep responses focused and practical."""
-
-            # Create user prompt
-            user_prompt = f"""Question: {query}
-
-{context_text}
-
-Please analyze the above artifacts and provide a comprehensive answer to the question."""
-
-            # Call Ollama
-            ollama_client = OllamaClient()
-            response = ollama_client.call_ollama(
-                prompt=user_prompt,
-                system_prompt=system_prompt,
-                temperature=0.3,  # Lower temperature for more focused responses
-                format_json=False  # We want natural text, not JSON
             )
 
-            explanation = response.get("response", "")
+            # Create formatted query
+            formatted_query = f"""Question: {query}
+
+Please analyze the artifacts and provide a comprehensive answer to the question."""
+
+            # Use LLMQueryTool to generate response
+            explanation = self.llm_tool.query(
+                prompt=formatted_query,
+                context=context_text,
+                system_prompt=system_prompt,
+                model=self.config.llm_model,
+                max_retries=3,
+                enable_cache=True
+            )
 
             if not explanation:
                 explanation = "Unable to generate explanation. Please try rephrasing your question."
