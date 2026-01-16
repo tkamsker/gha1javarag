@@ -68,7 +68,10 @@ def initialize_chat_state():
             "current_agent": None
         },
         # T095 - Workflow cancellation
-        "prd_workflow_instance": None
+        "prd_workflow_instance": None,
+        # T097 - PRD download
+        "latest_prd_content": None,
+        "latest_prd_timestamp": None
     }
 
     initialize_session_state(defaults)
@@ -362,6 +365,31 @@ def render_artifact_selection():
             set_value("selected_artifacts", [])
             st.rerun()
 
+    # T097 - PRD download button
+    latest_prd = get("latest_prd_content")
+    prd_timestamp = get("latest_prd_timestamp")
+
+    if latest_prd:
+        st.sidebar.markdown("---")
+        st.sidebar.subheader("📥 Download PRD")
+
+        # Format timestamp
+        if prd_timestamp:
+            timestamp_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(prd_timestamp))
+            st.sidebar.caption(f"Last generated: {timestamp_str}")
+
+        # Download button
+        prd_filename = f"prd_{int(prd_timestamp or time.time())}.md"
+
+        st.sidebar.download_button(
+            label="📥 Download PRD (Markdown)",
+            data=latest_prd,
+            file_name=prd_filename,
+            mime="text/markdown",
+            use_container_width=True,
+            key="download_prd_button"
+        )
+
 
 def render_chat_history():
     """Render chat message history."""
@@ -618,6 +646,10 @@ def generate_prd_workflow():
             # Successful PRD generation
             prd_content = result["prd_content"]
             steps = result["steps"]
+
+            # T097 - Store PRD for download
+            set_value("latest_prd_content", prd_content)
+            set_value("latest_prd_timestamp", time.time())
 
             # Create response with PRD content
             response_content = f"""## 📝 Product Requirements Document Generated
