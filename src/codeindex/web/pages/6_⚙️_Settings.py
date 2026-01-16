@@ -1,12 +1,14 @@
 """
-Settings page for GEMINI Code Analysis Pipeline Web UI (Phase 14).
+Settings page for agent configuration (T102 - US2.4).
 
-This page provides configuration management with:
-- Agent settings (verbosity, technical level, citation style)
-- Service connection settings
-- UI preferences
-- Export settings
-- System diagnostics
+This page allows users to configure agent behavior including:
+- Agent verbosity (concise, standard, verbose)
+- Technical level (junior, mid, senior)
+- Citation style (inline, footnotes, none)
+- UI theme (light, dark)
+- Output format (markdown, text)
+
+Settings persist per user session and apply to all agent queries.
 """
 
 import streamlit as st
@@ -17,308 +19,253 @@ from pathlib import Path
 src_dir = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(src_dir))
 
-from codeindex.utils.config import get_config
-from codeindex.web.utils.session_state import (
-    initialize_session_state,
-    get,
-    set_value,
-    update_nested
+from codeindex.web.services.settings_service import (
+    load_settings,
+    save_settings,
+    reset_settings,
+    validate_settings,
+    get_default_settings
 )
+from codeindex.web.components.settings_preview import render_settings_preview
+from codeindex.web.utils.session_state import initialize_session_state, get, set_value
 
 
-def initialize_settings_state():
+def initialize_settings_page():
     """Initialize session state for settings page."""
     defaults = {
-        "settings": {
-            "agent": {
-                "verbosity": "standard",
-                "technical_level": "senior",
-                "citation_style": "inline",
-                "max_iterations": 10,
-                "temperature": 0.7
-            },
-            "ui": {
-                "theme": "light",
-                "page_size": 50,
-                "enable_animations": True
-            },
-            "export": {
-                "default_format": "pdf",
-                "include_citations": True,
-                "include_timestamps": True
-            }
-        },
-        "settings_saved": False
+        "settings_changed": False,
+        "settings_error": None
     }
 
     initialize_session_state(defaults)
 
 
-def render_agent_settings():
-    """Render agent configuration settings."""
-    st.subheader("🤖 Agent Settings")
+def render_agent_verbosity_settings(current_settings: dict):
+    """Render agent verbosity settings (T103)."""
+    st.subheader("📝 Agent Verbosity")
 
-    agent_settings = get("settings", {}).get("agent", {})
+    st.caption("Control how detailed agent responses should be")
 
-    # Verbosity
-    verbosity = st.select_slider(
+    verbosity = st.radio(
         "Response Detail Level",
-        options=["concise", "standard", "detailed"],
-        value=agent_settings.get("verbosity", "standard"),
-        help="Control how detailed agent responses should be"
+        options=["concise", "standard", "verbose"],
+        index=["concise", "standard", "verbose"].index(current_settings.get("verbosity", "standard")),
+        horizontal=True,
+        help=(
+            "**Concise**: Brief responses focusing on key points only\n\n"
+            "**Standard**: Balanced detail with clear explanations\n\n"
+            "**Verbose**: Comprehensive responses with examples and thorough explanations"
+        )
     )
 
-    # Technical level
-    technical_level = st.select_slider(
-        "Technical Explanation Level",
+    current_settings["verbosity"] = verbosity
+
+
+def render_technical_level_settings(current_settings: dict):
+    """Render technical level settings (T104)."""
+    st.subheader("🎓 Technical Level")
+
+    st.caption("Adjust explanations for your technical expertise")
+
+    technical_level = st.radio(
+        "Target Audience",
         options=["junior", "mid", "senior"],
-        value=agent_settings.get("technical_level", "senior"),
-        help="Adjust explanations for your technical expertise"
+        index=["junior", "mid", "senior"].index(current_settings.get("technical_level", "senior")),
+        horizontal=True,
+        help=(
+            "**Junior**: Simple explanations, avoid jargon, define technical terms\n\n"
+            "**Mid**: Balanced technical content with clear explanations\n\n"
+            "**Senior**: Use technical terminology freely, assume advanced knowledge"
+        )
     )
 
-    # Citation style
-    citation_style = st.selectbox(
-        "Citation Style",
+    current_settings["technical_level"] = technical_level
+
+
+def render_citation_style_settings(current_settings: dict):
+    """Render citation style settings (T105)."""
+    st.subheader("📚 Citation Style")
+
+    st.caption("How to display code references in responses")
+
+    citation_style = st.radio(
+        "Citation Format",
         options=["inline", "footnotes", "none"],
-        index=["inline", "footnotes", "none"].index(
-            agent_settings.get("citation_style", "inline")
-        ),
-        help="How to display code references"
+        index=["inline", "footnotes", "none"].index(current_settings.get("citation_style", "inline")),
+        horizontal=True,
+        help=(
+            "**Inline**: References within text like [1] [2]\n\n"
+            "**Footnotes**: Numbered references at end of response\n\n"
+            "**None**: No citation references (content only)"
+        )
     )
 
-    # Max iterations
-    max_iterations = st.slider(
-        "Max Agent Iterations",
-        min_value=5,
-        max_value=20,
-        value=agent_settings.get("max_iterations", 10),
-        help="Maximum reasoning steps for agent"
+    current_settings["citation_style"] = citation_style
+
+
+def render_ui_theme_settings(current_settings: dict):
+    """Render UI theme settings (T106)."""
+    st.subheader("🎨 UI Theme")
+
+    st.caption("Visual theme for the application interface")
+
+    ui_theme = st.radio(
+        "Theme",
+        options=["light", "dark"],
+        index=["light", "dark"].index(current_settings.get("ui_theme", "light")),
+        horizontal=True,
+        help=(
+            "**Light**: Light background with dark text (default)\n\n"
+            "**Dark**: Dark background with light text\n\n"
+            "*Note: Theme changes apply on page refresh*"
+        )
     )
 
-    # Temperature
-    temperature = st.slider(
-        "LLM Temperature",
-        min_value=0.0,
-        max_value=1.0,
-        value=agent_settings.get("temperature", 0.7),
-        step=0.1,
-        help="Higher = more creative, Lower = more focused"
+    current_settings["ui_theme"] = ui_theme
+
+
+def render_output_format_settings(current_settings: dict):
+    """Render output format settings (T107)."""
+    st.subheader("📄 Output Format")
+
+    st.caption("Format for agent responses")
+
+    output_format = st.radio(
+        "Format",
+        options=["markdown", "text"],
+        index=["markdown", "text"].index(current_settings.get("output_format", "markdown")),
+        horizontal=True,
+        help=(
+            "**Markdown**: Formatted text with headings, bold, code blocks\n\n"
+            "**Text**: Plain text without formatting"
+        )
     )
 
-    # Update settings
-    update_nested("settings", "agent", {
-        "verbosity": verbosity,
-        "technical_level": technical_level,
-        "citation_style": citation_style,
-        "max_iterations": max_iterations,
-        "temperature": temperature
-    })
-
-
-def render_ui_settings():
-    """Render UI preferences."""
-    st.subheader("🎨 UI Preferences")
-
-    ui_settings = get("settings", {}).get("ui", {})
-
-    # Theme (placeholder - Streamlit handles this)
-    st.info("💡 Use the Streamlit theme selector (☰ menu → Settings → Theme) to change appearance")
-
-    # Page size
-    page_size = st.slider(
-        "Search Results Per Page",
-        min_value=10,
-        max_value=100,
-        value=ui_settings.get("page_size", 50),
-        step=10,
-        help="Number of results to show per page"
-    )
-
-    # Animations
-    enable_animations = st.checkbox(
-        "Enable Animations",
-        value=ui_settings.get("enable_animations", True),
-        help="Show loading animations and transitions"
-    )
-
-    # Update settings
-    update_nested("settings", "ui", {
-        "page_size": page_size,
-        "enable_animations": enable_animations
-    })
-
-
-def render_export_settings():
-    """Render export configuration."""
-    st.subheader("📤 Export Settings")
-
-    export_settings = get("settings", {}).get("export", {})
-
-    # Default format
-    default_format = st.selectbox(
-        "Default Export Format",
-        options=["pdf", "markdown", "json", "csv"],
-        index=["pdf", "markdown", "json", "csv"].index(
-            export_settings.get("default_format", "pdf")
-        ),
-        help="Preferred format for exporting reports"
-    )
-
-    # Include citations
-    include_citations = st.checkbox(
-        "Include Citations in Exports",
-        value=export_settings.get("include_citations", True),
-        help="Add source file references to exported documents"
-    )
-
-    # Include timestamps
-    include_timestamps = st.checkbox(
-        "Include Timestamps in Exports",
-        value=export_settings.get("include_timestamps", True),
-        help="Add generation timestamps to exported documents"
-    )
-
-    # Update settings
-    update_nested("settings", "export", {
-        "default_format": default_format,
-        "include_citations": include_citations,
-        "include_timestamps": include_timestamps
-    })
-
-
-def render_service_diagnostics():
-    """Render service connection diagnostics."""
-    st.subheader("🔧 Service Diagnostics")
-
-    config = get_config()
-
-    # Check services
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.markdown("**Weaviate**")
-        weaviate_url = config.weaviate_url
-        st.code(weaviate_url)
-
-        if st.button("Test Connection", key="test_weaviate"):
-            import httpx
-            try:
-                response = httpx.get(f"{weaviate_url}/v1/.well-known/ready", timeout=5.0)
-                if response.status_code == 200:
-                    st.success("✅ Connected")
-                else:
-                    st.error(f"❌ HTTP {response.status_code}")
-            except Exception as e:
-                st.error(f"❌ {str(e)[:50]}")
-
-    with col2:
-        st.markdown("**Ollama**")
-        ollama_url = config.ollama_base_url
-        st.code(ollama_url)
-
-        if st.button("Test Connection", key="test_ollama"):
-            import httpx
-            try:
-                response = httpx.get(f"{ollama_url}/api/tags", timeout=5.0)
-                if response.status_code == 200:
-                    st.success("✅ Connected")
-                else:
-                    st.error(f"❌ HTTP {response.status_code}")
-            except Exception as e:
-                st.error(f"❌ {str(e)[:50]}")
-
-    st.markdown("---")
-
-    # Database info
-    st.markdown("**SQLite Database**")
-    workspace_db = str(config.workspace_db_path)
-    st.code(workspace_db)
-
-    if Path(workspace_db).exists():
-        size = Path(workspace_db).stat().st_size
-        st.caption(f"Size: {size:,} bytes")
-    else:
-        st.warning("Database file not created yet")
-
-
-def render_system_info():
-    """Render system information."""
-    st.subheader("ℹ️ System Information")
-
-    config = get_config()
-
-    info = {
-        "Source Directory": str(config.java_source_dir) if config.java_source_dir else "Not configured",
-        "Workspace DB": str(config.workspace_db_path),
-        "Export Directory": str(config.export_dir),
-        "Max Concurrent Agents": config.max_concurrent_agents,
-        "LLM Model": config.ollama_model_name
-    }
-
-    for key, value in info.items():
-        st.text(f"{key}: {value}")
-
-
-def save_settings():
-    """Save settings (placeholder - would persist to config)."""
-    set_value("settings_saved", True)
-    st.success("✅ Settings saved successfully!")
-
-
-def reset_settings():
-    """Reset settings to defaults."""
-    initialize_settings_state()
-    st.success("✅ Settings reset to defaults")
+    current_settings["output_format"] = output_format
 
 
 def main():
     """Main settings page function."""
     # Page configuration
-    st.title("⚙️ Settings")
+    st.title("⚙️ Agent Settings")
 
     st.markdown("""
-    Configure agent behavior, UI preferences, and system settings.
+    Configure how AI agents respond to your queries. Settings apply to all agent interactions
+    in your current session and persist until you reset them.
     """)
 
     # Initialize session state
-    initialize_settings_state()
+    initialize_settings_page()
 
-    # Render settings sections
-    render_agent_settings()
+    # Load current settings (T108)
+    current_settings = load_settings()
 
+    # Create a form for settings
     st.markdown("---")
 
-    render_ui_settings()
+    # T103-T107: Render all setting sections
+    with st.container():
+        col1, col2 = st.columns([2, 1])
 
-    st.markdown("---")
+        with col1:
+            render_agent_verbosity_settings(current_settings)
+            st.markdown("---")
 
-    render_export_settings()
+            render_technical_level_settings(current_settings)
+            st.markdown("---")
 
-    st.markdown("---")
+            render_citation_style_settings(current_settings)
+            st.markdown("---")
 
-    render_service_diagnostics()
+            render_ui_theme_settings(current_settings)
+            st.markdown("---")
 
-    st.markdown("---")
+            render_output_format_settings(current_settings)
 
-    render_system_info()
-
-    st.markdown("---")
+        with col2:
+            # T109: Settings preview (T110)
+            st.markdown("### Preview")
+            render_settings_preview(current_settings)
 
     # Action buttons
-    col1, col2, col3 = st.columns([1, 1, 4])
+    st.markdown("---")
+
+    col1, col2, col3 = st.columns([1, 1, 2])
 
     with col1:
-        if st.button("💾 Save Settings", use_container_width=True):
-            save_settings()
+        # T108: Apply settings button
+        if st.button("✅ Apply Settings", use_container_width=True, type="primary"):
+            # Validate settings
+            is_valid, errors = validate_settings(current_settings)
+
+            if is_valid:
+                # Save settings (T108)
+                save_settings(current_settings)
+                st.success("✅ Settings applied successfully!")
+                set_value("settings_changed", True)
+
+                # Show what changed
+                defaults = get_default_settings()
+                changes = []
+                for key, value in current_settings.items():
+                    if defaults.get(key) != value:
+                        changes.append(f"- **{key.replace('_', ' ').title()}**: {value}")
+
+                if changes:
+                    with st.expander("Changed Settings"):
+                        st.markdown("\n".join(changes))
+            else:
+                st.error(f"❌ Invalid settings: {', '.join(errors.values())}")
+                set_value("settings_error", errors)
 
     with col2:
+        # T111: Reset to defaults button
         if st.button("🔄 Reset to Defaults", use_container_width=True):
             reset_settings()
+            st.success("✅ Settings reset to defaults")
+            set_value("settings_changed", True)
             st.rerun()
 
-    # Show save confirmation
-    if get("settings_saved", False):
-        st.info("💡 Settings are saved for this session")
+    # Settings info
+    st.markdown("---")
+
+    with st.expander("ℹ️ About Settings"):
+        st.markdown("""
+        ### How Settings Work
+
+        **Session Persistence**: Settings are stored in your browser session and persist
+        across page navigation. They reset when you close the browser tab or clear session data.
+
+        **Agent Application**: Settings apply to all agent queries including:
+        - Chat conversations
+        - PRD generation
+        - Test generation
+        - Code analysis
+
+        **Default Values**:
+        - **Verbosity**: Standard (balanced detail)
+        - **Technical Level**: Senior (assume advanced knowledge)
+        - **Citation Style**: Inline (references within text)
+        - **UI Theme**: Light (light background)
+        - **Output Format**: Markdown (formatted text)
+
+        ### Tips for Best Results
+
+        - **New to codebase?** Use `verbose` verbosity and `junior` level for detailed explanations
+        - **Quick answers?** Use `concise` verbosity and `senior` level
+        - **Formal docs?** Use `footnotes` citations and `markdown` format
+        - **Copy-paste friendly?** Use `text` format to avoid markdown syntax
+
+        ### Performance Impact
+
+        - **Verbose** responses may take slightly longer to generate
+        - **Concise** responses are typically faster
+        - Citation style and format have minimal performance impact
+        """)
+
+    # Current settings display
+    with st.expander("🔍 Current Settings (Raw JSON)"):
+        st.json(current_settings)
 
 
 if __name__ == "__main__":
