@@ -114,27 +114,25 @@ class PrdWriterAgent:
 
         Returns:
             List of relevant artifacts
+
+        Raises:
+            Exception: If search fails (propagates to execute_query)
         """
-        try:
-            logger.debug(f"Searching artifacts for PRD: {query}")
+        logger.debug(f"Searching artifacts for PRD: {query}")
 
-            from codeindex.web.services.search_service import get_search_service
-            search_service = get_search_service()
+        from codeindex.web.services.search_service import get_search_service
+        search_service = get_search_service()
 
-            # Search with NO artifact type filters to get comprehensive context
-            search_response = search_service.search(
-                query=query,
-                limit=20  # Get more artifacts for comprehensive PRD
-            )
+        # Search with NO artifact type filters to get comprehensive context
+        search_response = search_service.search(
+            query=query,
+            limit=20  # Get more artifacts for comprehensive PRD
+        )
 
-            artifacts = search_response.get("results", [])
-            logger.info(f"Found {len(artifacts)} artifacts for PRD generation")
+        artifacts = search_response.get("results", [])
+        logger.info(f"Found {len(artifacts)} artifacts for PRD generation")
 
-            return artifacts
-
-        except Exception as e:
-            logger.error(f"Artifact search failed: {e}")
-            return []
+        return artifacts
 
     def _generate_document(
         self,
@@ -322,9 +320,9 @@ Please generate a comprehensive Product Requirements Document (PRD) for this fea
         """
         suggestions = [
             "Can you add more detailed acceptance criteria?",
-            "What are the edge cases we should consider?",
+            "What are the functional requirements for this feature?",
             "Can you expand the technical constraints section?",
-            "What are the dependencies for this feature?"
+            "What stakeholders should be involved in this feature?"
         ]
 
         return suggestions[:4]

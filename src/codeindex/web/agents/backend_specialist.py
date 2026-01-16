@@ -122,31 +122,29 @@ class BackendSpecialistAgent:
 
         Returns:
             List of backend artifacts
+
+        Raises:
+            Exception: If search fails (propagates to execute_query)
         """
-        try:
-            logger.debug(f"Searching backend artifacts for: {query}")
+        logger.debug(f"Searching backend artifacts for: {query}")
 
-            # Use SearchService to query Weaviate with backend-specific filters
-            from codeindex.web.services.search_service import get_search_service
-            search_service = get_search_service()
+        # Use SearchService to query Weaviate with backend-specific filters
+        from codeindex.web.services.search_service import get_search_service
+        search_service = get_search_service()
 
-            # Search with backend-related artifact types
-            search_response = search_service.search(
-                query=query,
-                filters={
-                    "artifact_types": ["BackendDoc", "GwtEndpoint", "DaoCall"]
-                },
-                limit=15  # Get more results for comprehensive backend analysis
-            )
+        # Search with backend-related artifact types
+        search_response = search_service.search(
+            query=query,
+            filters={
+                "artifact_types": ["BackendDoc", "GwtEndpoint", "DaoCall"]
+            },
+            limit=15  # Get more results for comprehensive backend analysis
+        )
 
-            artifacts = search_response.get("results", [])
-            logger.info(f"Found {len(artifacts)} backend artifacts")
+        artifacts = search_response.get("results", [])
+        logger.info(f"Found {len(artifacts)} backend artifacts")
 
-            return artifacts
-
-        except Exception as e:
-            logger.error(f"Backend artifact search failed: {e}")
-            return []
+        return artifacts
 
     def _generate_backend_analysis(
         self,

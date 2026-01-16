@@ -124,31 +124,29 @@ class FrontendSpecialistAgent:
 
         Returns:
             List of frontend artifacts
+
+        Raises:
+            Exception: If search fails (propagates to execute_query)
         """
-        try:
-            logger.debug(f"Searching frontend artifacts for: {query}")
+        logger.debug(f"Searching frontend artifacts for: {query}")
 
-            # Use SearchService to query Weaviate with frontend-specific filters
-            from codeindex.web.services.search_service import get_search_service
-            search_service = get_search_service()
+        # Use SearchService to query Weaviate with frontend-specific filters
+        from codeindex.web.services.search_service import get_search_service
+        search_service = get_search_service()
 
-            # Search with frontend-related artifact types
-            search_response = search_service.search(
-                query=query,
-                filters={
-                    "artifact_types": ["GwtPresenter", "GwtView", "GwtUiBinder", "JspForm", "JsArtifact"]
-                },
-                limit=15  # Get more results for comprehensive frontend analysis
-            )
+        # Search with frontend-related artifact types
+        search_response = search_service.search(
+            query=query,
+            filters={
+                "artifact_types": ["GwtPresenter", "GwtView", "GwtUiBinder", "JspForm", "JsArtifact"]
+            },
+            limit=15  # Get more results for comprehensive frontend analysis
+        )
 
-            artifacts = search_response.get("results", [])
-            logger.info(f"Found {len(artifacts)} frontend artifacts")
+        artifacts = search_response.get("results", [])
+        logger.info(f"Found {len(artifacts)} frontend artifacts")
 
-            return artifacts
-
-        except Exception as e:
-            logger.error(f"Frontend artifact search failed: {e}")
-            return []
+        return artifacts
 
     def _generate_frontend_analysis(
         self,
