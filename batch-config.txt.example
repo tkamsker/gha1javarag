@@ -1,0 +1,24 @@
+# Batch Processing Configuration File
+# Format: project-name|/path/to/project
+#
+# Lines starting with # are comments
+# Empty lines are ignored
+#
+# Example entries:
+
+# Microservices
+backend-api|/workspace/backend-api
+frontend-web|/workspace/frontend-web
+auth-service|/workspace/auth-service
+
+# Legacy systems
+legacy-app|/legacy/old-system
+gwt-frontend|/legacy/gwt-app
+
+# Shared libraries
+shared-models|/workspace/shared/models
+common-utils|/workspace/shared/utils
+
+# Production systems (uncomment to process)
+# cuco-ui-admin|/mnt/cucocalcai/cuco-master/cuco-ui-admin
+# cuco-backend|/mnt/cucocalcai/cuco-master/cuco-backend
