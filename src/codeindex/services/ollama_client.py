@@ -344,6 +344,57 @@ class OllamaClient:
                 self.logger.error(f"Ollama HTTP error {e.response.status_code}: {e}")
                 raise
 
+    def generate(
+        self,
+        prompt: str,
+        model: Optional[str] = None,
+        system_prompt: Optional[str] = None,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None
+    ) -> str:
+        """
+        Generate text response from Ollama (simplified interface for web agents).
+
+        Args:
+            prompt: User prompt
+            model: Model name (uses instance model if not specified)
+            system_prompt: Optional system prompt
+            temperature: Sampling temperature (0.0-1.0)
+            max_tokens: Maximum tokens (not used with Ollama, kept for API compatibility)
+
+        Returns:
+            Generated text response as string
+
+        Raises:
+            httpx.HTTPError: On HTTP errors
+            ValueError: On invalid response
+            TimeoutError: On timeout
+        """
+        # Use specified model or fall back to instance model
+        if model and model != self.model:
+            # Temporarily override model for this call
+            original_model = self.model
+            self.model = model
+            try:
+                result = self.call_ollama(
+                    prompt=prompt,
+                    system_prompt=system_prompt,
+                    temperature=temperature,
+                    format_json=False  # Web agents expect plain text, not JSON
+                )
+            finally:
+                self.model = original_model
+        else:
+            result = self.call_ollama(
+                prompt=prompt,
+                system_prompt=system_prompt,
+                temperature=temperature,
+                format_json=False  # Web agents expect plain text, not JSON
+            )
+
+        # Extract response text from result dict
+        return result.get("response", "")
+
     def extract_semantics(
         self,
         file_path: str,
