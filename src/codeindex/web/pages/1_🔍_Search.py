@@ -36,6 +36,8 @@ from codeindex.web.utils.url_params import (
 )
 from codeindex.web.components.artifact_card import render_artifact_cards
 from codeindex.web.components.relationship_graph import render_relationship_graph
+from codeindex.web.components.code_viewer import CodeViewer
+from codeindex.web.services.code_service import get_code_service
 
 
 def restore_state_from_url():
@@ -491,6 +493,83 @@ def main():
 
     # Render search input
     render_search_input()
+
+    # Show code viewer if triggered (T191 - US4.1)
+    if "view_source_file" in st.session_state and st.session_state.get("view_source_file"):
+        st.markdown("---")
+
+        file_path = st.session_state["view_source_file"]
+        artifact_type = st.session_state.get("view_source_artifact_type", "Unknown")
+        highlight_lines = st.session_state.get("view_source_highlight_lines", [])
+
+        # Header with close button
+        col_h1, col_h2 = st.columns([5, 1])
+        with col_h1:
+            st.subheader(f"📄 Source Code: {Path(file_path).name}")
+            st.caption(f"Type: {artifact_type} | Path: {file_path}")
+        with col_h2:
+            if st.button("✖️ Close", key="close_code_viewer"):
+                st.session_state["view_source_file"] = None
+                st.session_state["view_source_artifact_id"] = None
+                st.session_state["view_source_highlight_lines"] = []
+                st.rerun()
+
+        # Render code viewer
+        try:
+            code_service = get_code_service()
+
+            # Try to read file content
+            try:
+                content = code_service.read_file(file_path)
+            except Exception as e:
+                st.error(f"❌ Could not read file: {e}")
+                content = None
+
+            if content:
+                # Create code viewer
+                viewer = CodeViewer(
+                    content=content,
+                    file_path=file_path,
+                    show_line_numbers=True,
+                    highlighted_lines=highlight_lines
+                )
+
+                # Render with Streamlit
+                viewer.render_streamlit()
+
+                # Download button
+                col_d1, col_d2, col_d3 = st.columns([1, 1, 4])
+                with col_d1:
+                    st.download_button(
+                        label="⬇️ Download",
+                        data=viewer.get_copy_content(),
+                        file_name=Path(file_path).name,
+                        mime="text/plain",
+                        help="Download source file"
+                    )
+                with col_d2:
+                    # Search in file
+                    if st.button("🔍 Search in File", key="search_in_file"):
+                        st.session_state["show_file_search"] = True
+                        st.rerun()
+
+                # Search functionality
+                if st.session_state.get("show_file_search"):
+                    search_query = st.text_input("Search in file:", key="file_search_query")
+                    if search_query:
+                        matches = viewer.search(search_query)
+                        if matches:
+                            st.success(f"✅ Found {len(matches)} matches")
+                            for match in matches[:10]:  # Show first 10
+                                st.caption(f"Line {match.line_number}: {match.line_content}")
+                        else:
+                            st.info("No matches found")
+
+        except Exception as e:
+            st.error(f"❌ Error displaying source code: {e}")
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Code viewer error: {e}", exc_info=True)
 
     # Show relationship graph if triggered (T052)
     if "show_graph_for" in st.session_state and st.session_state["show_graph_for"]:

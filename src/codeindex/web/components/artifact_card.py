@@ -189,15 +189,39 @@ def render_artifact_card(
             else:
                 st.error("Low", icon="❌")
 
-        # Show Relationships button (T049)
-        if st.button(
-            "🔗 Relationships",
-            key=f"{key}_relationships",
-            use_container_width=True
-        ):
-            st.session_state["show_graph_for"] = artifact_id
-            st.session_state["show_graph_name"] = artifact_type
-            st.rerun()
+        # Action buttons (T191 - View Source, T049 - Relationships)
+        col_btn1, col_btn2 = st.columns(2)
+
+        with col_btn1:
+            # View Source button (T191 - US4.1)
+            if st.button(
+                "👁️ View Source",
+                key=f"{key}_view_source",
+                use_container_width=True,
+                help="View source code with syntax highlighting"
+            ):
+                st.session_state["view_source_file"] = file_path
+                st.session_state["view_source_artifact_id"] = artifact_id
+                st.session_state["view_source_artifact_type"] = artifact_type
+                # Store line numbers for highlighting if available
+                if metadata.get("line_start"):
+                    st.session_state["view_source_highlight_lines"] = list(range(
+                        metadata.get("line_start", 1),
+                        metadata.get("line_end", 1) + 1
+                    ))
+                st.rerun()
+
+        with col_btn2:
+            # Show Relationships button (T049)
+            if st.button(
+                "🔗 Relationships",
+                key=f"{key}_relationships",
+                use_container_width=True,
+                help="Show artifact relationships"
+            ):
+                st.session_state["show_graph_for"] = artifact_id
+                st.session_state["show_graph_name"] = artifact_type
+                st.rerun()
 
         # Divider
         st.markdown("---")
