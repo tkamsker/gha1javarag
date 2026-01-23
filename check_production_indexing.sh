@@ -220,9 +220,9 @@ if command -v codeindex &> /dev/null; then
     search_output=$(codeindex search "service" --project "$PROJECT_NAME" --limit 5 2>&1)
 
     if [ $? -eq 0 ]; then
-        result_count=$(echo "$search_output" | grep -c "artifact_type" || echo "0")
+        result_count=$(echo "$search_output" | grep -c "artifact_type" | head -1 | tr -d '\n\r ' || echo "0")
 
-        if [ "$result_count" -gt 0 ]; then
+        if [ "$result_count" -gt 0 ] 2>/dev/null; then
             echo "  Search returned $result_count results"
             print_status "PASS" "Search is working"
         else
@@ -270,19 +270,14 @@ try:
 except:
     pass
 
-# Simple heuristic for Weaviate
+# Simple heuristic for Weaviate using CLI
 import subprocess
 try:
     result = subprocess.run(
-        ['python3', '-c',
-         'import sys; sys.path.insert(0, "src"); '
-         'from codeindex.services.weaviate_client import WeaviateManager; '
-         'm = WeaviateManager(); '
-         's = m.get_project_status(); '
-         'print(sum(1 for p in s if "$PROJECT_NAME" in p["project_id"] and p["artifact_count"] > 0))'],
+        ['codeindex', 'status'],
         capture_output=True, text=True, timeout=10
     )
-    if result.returncode == 0 and int(result.stdout.strip()) > 0:
+    if result.returncode == 0 and "$PROJECT_NAME" in result.stdout and "Artifacts: 0" not in result.stdout:
         weaviate_ok = True
 except:
     pass
@@ -309,8 +304,7 @@ elif discovery_ok and extraction_ok and not weaviate_ok:
     print("     tail -100 data/indexing-$PROJECT_NAME.log")
     print()
     print("  2. Re-run indexing stage:")
-    print("     codeindex index --inventory data/discovery-$PROJECT_NAME.jsonl \\")
-    print("                     --extraction data/extraction-$PROJECT_NAME.jsonl")
+    print("     codeindex index --inventory data/discovery-$PROJECT_NAME.jsonl --extraction data/extraction-$PROJECT_NAME.jsonl")
     print()
     print("  3. Verify with:")
     print("     codeindex status")
@@ -324,8 +318,7 @@ elif discovery_ok and not extraction_ok:
     print("     curl http://localhost:11434/api/tags")
     print()
     print("  2. Re-run extraction:")
-    print("     codeindex extract --inventory data/discovery-$PROJECT_NAME.jsonl \\")
-    print("                       --output data/extraction-$PROJECT_NAME.jsonl")
+    print("     codeindex extract --inventory data/discovery-$PROJECT_NAME.jsonl --output data/extraction-$PROJECT_NAME.jsonl")
 else:
     print("✗ PIPELINE FAILED")
     print()
