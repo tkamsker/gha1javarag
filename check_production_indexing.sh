@@ -176,117 +176,65 @@ echo ""
 
 # Check 6: Weaviate indexed data
 print_status "INFO" "Check 6: Weaviate Indexed Data"
-$PYTHON << EOF
-import sys
-import os
 
-# Try multiple path strategies
-script_dir = os.path.dirname(os.path.abspath('$0'))
-sys.path.insert(0, os.path.join(script_dir, 'src'))
-sys.path.insert(0, 'src')
-sys.path.insert(0, '.')
+# Use CLI command instead of Python import
+if command -v codeindex &> /dev/null; then
+    # Use the CLI status command
+    status_output=$(codeindex status 2>&1)
 
-try:
-    from codeindex.services.weaviate_client import WeaviateManager
-except ImportError:
-    print("  Error: codeindex module not found")
-    print("  Please ensure you're in the project directory and run:")
-    print("    pip install -e .")
-    sys.exit(1)
+    if echo "$status_output" | grep -q "$PROJECT_NAME"; then
+        # Extract artifact count (handle comma-formatted numbers)
+        artifact_line=$(echo "$status_output" | grep -A2 "$PROJECT_NAME" | grep "Artifacts:" | head -1)
 
-from codeindex.services.weaviate_client import WeaviateManager
+        if [ -n "$artifact_line" ]; then
+            artifact_count=$(echo "$artifact_line" | grep -oE '[0-9,]+' | tr -d ',' || echo "0")
 
-try:
-    manager = WeaviateManager()
-    status = manager.get_project_status()
+            echo "  ✓ Target project found: $PROJECT_NAME"
+            echo "    Artifacts: $artifact_count"
 
-    if not status:
-        print("  Warning: No projects found in Weaviate")
-        sys.exit(1)
-
-    print(f"  Total projects in Weaviate: {len(status)}")
-
-    target_found = False
-    for project in status:
-        project_id = project['project_id']
-        artifact_count = project['artifact_count']
-        last_indexed = project.get('last_indexed', 'Unknown')
-
-        if "$PROJECT_NAME" in project_id:
-            print(f"\n  ✓ Target project found: {project_id}")
-            print(f"    Artifacts: {artifact_count:,}")
-            print(f"    Last indexed: {last_indexed}")
-            target_found = True
-
-            if artifact_count == 0:
-                print(f"    ⚠ WARNING: Zero artifacts indexed!")
-                sys.exit(1)
-        else:
-            print(f"    Other: {project_id} ({artifact_count:,} artifacts)")
-
-    if not target_found:
-        print(f"\n  ⚠ WARNING: Project '$PROJECT_NAME' not found in Weaviate")
-        sys.exit(1)
-
-    sys.exit(0)
-except Exception as e:
-    print(f"  Error querying Weaviate: {e}")
-    import traceback
-    traceback.print_exc()
-    sys.exit(1)
-EOF
-
-if [ $? -eq 0 ]; then
-    print_status "PASS" "Project is indexed in Weaviate with artifacts"
+            if [ "$artifact_count" -gt 0 ] 2>/dev/null; then
+                print_status "PASS" "Project is indexed in Weaviate with $artifact_count artifacts"
+            else
+                print_status "FAIL" "Project has zero artifacts indexed"
+            fi
+        else
+            print_status "PASS" "Project found in Weaviate"
+        fi
+    else
+        print_status "FAIL" "Project '$PROJECT_NAME' not found in Weaviate"
+        echo "  Available projects:"
+        echo "$status_output" | grep -E "^[a-zA-Z0-9_-]+:" | sed 's/^/    /' | head -5
+    fi
 else
-    print_status "FAIL" "Project missing or has zero artifacts in Weaviate"
+    print_status "FAIL" "codeindex CLI not found - package may not be installed"
+    echo "  Run: pip install -e ."
 fi
 echo ""
 
 # Check 7: Search functionality
 print_status "INFO" "Check 7: Search Functionality"
-$PYTHON << EOF
-import sys
-import os
 
-# Try multiple path strategies
-script_dir = os.path.dirname(os.path.abspath('$0'))
-sys.path.insert(0, os.path.join(script_dir, 'src'))
-sys.path.insert(0, 'src')
-sys.path.insert(0, '.')
+# Use CLI command instead of Python import
+if command -v codeindex &> /dev/null; then
+    # Use the CLI search command
+    search_output=$(codeindex search "service" --project "$PROJECT_NAME" --limit 5 2>&1)
 
-try:
-    from codeindex.services.weaviate_client import WeaviateManager
-except ImportError:
-    print("  Error: codeindex module not found")
-    print("  Run: pip install -e .")
-    sys.exit(1)
+    if [ $? -eq 0 ]; then
+        result_count=$(echo "$search_output" | grep -c "artifact_type" || echo "0")
 
-from codeindex.services.weaviate_client import WeaviateManager
-
-try:
-    manager = WeaviateManager()
-    results = manager.search("service", project_filter="$PROJECT_NAME", limit=5)
-
-    if results:
-        print(f"  Search returned {len(results)} results")
-        for i, result in enumerate(results[:3], 1):
-            artifact_type = result.get('artifact_type', 'unknown')
-            score = result.get('_additional', {}).get('certainty', 0)
-            print(f"    {i}. {artifact_type} (score: {score:.2f})")
-        sys.exit(0)
-    else:
-        print("  Warning: Search returned no results")
-        sys.exit(1)
-except Exception as e:
-    print(f"  Error searching: {e}")
-    sys.exit(1)
-EOF
-
-if [ $? -eq 0 ]; then
-    print_status "PASS" "Search is working"
+        if [ "$result_count" -gt 0 ]; then
+            echo "  Search returned $result_count results"
+            print_status "PASS" "Search is working"
+        else
+            echo "  Warning: Search returned no results"
+            print_status "WARN" "Search returned no results (may be expected for some queries)"
+        fi
+    else
+        print_status "FAIL" "Search command failed"
+        echo "  Error: $search_output"
+    fi
 else
-    print_status "WARN" "Search returned no results"
+    print_status "FAIL" "codeindex CLI not found"
 fi
 echo ""
 
