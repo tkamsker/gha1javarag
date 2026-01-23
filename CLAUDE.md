@@ -203,6 +203,53 @@ codeindex status --project backend-api
 # This runs: discover → extract → index → status
 ```
 
+### PRD Generation
+
+Generate Product Requirements Documents from indexed artifacts:
+
+```bash
+# Generate complete PRD (all sections: database, services, frontend)
+codeindex prd full \
+  --project cuco-ui-admin \
+  --output-dir ./output/cuco-ui-admin
+
+# Generate specific sections
+codeindex prd database --project cuco-ui-admin --output-dir ./output  # Database schemas only
+codeindex prd services --project cuco-ui-admin --output-dir ./output  # Backend services/DAOs
+codeindex prd frontend --project cuco-ui-admin --output-dir ./output  # GWT UI components
+
+# Run in background
+nohup codeindex prd full --project cuco-ui-admin --output-dir ./output \
+  > "log_prd_$(date +'%Y-%m-%d_%H-%M-%S').log" 2>&1 &
+```
+
+**PRD Command Options:**
+
+| Command | Description | Output File |
+|---------|-------------|-------------|
+| `full` | Complete PRD (all sections) ⭐ | `full_prd.md` |
+| `database` | Database schemas and tables | `database_prd.md` |
+| `services` | Backend services and DAOs | `services_prd.md` |
+| `frontend` | GWT UI components and forms | `frontend_prd.md` |
+
+**Output Structure:**
+```
+output/{project}/
+├── prd/
+│   ├── full_prd.md          # Complete requirements document
+│   ├── database_prd.md      # Database section only
+│   ├── services_prd.md      # Backend section only
+│   └── frontend_prd.md      # Frontend section only
+├── backend/
+│   ├── services/            # Extracted service details (JSON)
+│   ├── daos/                # DAO call patterns (JSON)
+│   └── database/            # DB schema info (JSON)
+├── frontend/
+│   ├── components/          # GWT Presenters/Views (JSON)
+│   └── forms/               # Form definitions (JSON)
+└── diagrams/                # Architecture diagrams (Mermaid)
+```
+
 #### CLI Parameters Reference (Features 004-005)
 
 **Discovery Parameters:**
