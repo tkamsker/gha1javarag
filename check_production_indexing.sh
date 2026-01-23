@@ -7,6 +7,15 @@
 
 set -euo pipefail
 
+# Detect Python interpreter (prefer venv python if available)
+if [ -n "${VIRTUAL_ENV:-}" ]; then
+    PYTHON="$VIRTUAL_ENV/bin/python"
+elif command -v python &> /dev/null; then
+    PYTHON="python"
+else
+    PYTHON="python3"
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -63,7 +72,7 @@ if [ -f "$DISCOVERY_FILE" ]; then
     print_status "PASS" "Discovery file exists: $line_count lines"
 
     # Check actual file count in JSON
-    python3 << EOF
+    $PYTHON << EOF
 import json
 import sys
 
@@ -110,7 +119,7 @@ if [ -f "$EXTRACTION_FILE" ]; then
     print_status "PASS" "Extraction file exists: $line_count lines"
 
     # Count artifacts by type
-    python3 << EOF
+    $PYTHON << EOF
 import json
 from collections import Counter
 
@@ -167,7 +176,7 @@ echo ""
 
 # Check 6: Weaviate indexed data
 print_status "INFO" "Check 6: Weaviate Indexed Data"
-python3 << EOF
+$PYTHON << EOF
 import sys
 import os
 
@@ -236,7 +245,7 @@ echo ""
 
 # Check 7: Search functionality
 print_status "INFO" "Check 7: Search Functionality"
-python3 << EOF
+$PYTHON << EOF
 import sys
 import os
 
@@ -286,7 +295,7 @@ echo "=============================================="
 echo "Summary & Recommendations"
 echo "=============================================="
 
-python3 << EOF
+$PYTHON << EOF
 import json
 
 discovery_ok = False
