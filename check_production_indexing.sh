@@ -63,7 +63,7 @@ if [ -f "$DISCOVERY_FILE" ]; then
     print_status "PASS" "Discovery file exists: $line_count lines"
 
     # Check actual file count in JSON
-    python3 << 'EOF'
+    python3 << EOF
 import json
 import sys
 
@@ -110,7 +110,7 @@ if [ -f "$EXTRACTION_FILE" ]; then
     print_status "PASS" "Extraction file exists: $line_count lines"
 
     # Count artifacts by type
-    python3 << 'EOF'
+    python3 << EOF
 import json
 from collections import Counter
 
@@ -167,7 +167,7 @@ echo ""
 
 # Check 6: Weaviate indexed data
 print_status "INFO" "Check 6: Weaviate Indexed Data"
-python3 << 'EOF'
+python3 << EOF
 import sys
 sys.path.insert(0, 'src')
 
@@ -222,7 +222,7 @@ echo ""
 
 # Check 7: Search functionality
 print_status "INFO" "Check 7: Search Functionality"
-python3 << 'EOF'
+python3 << EOF
 import sys
 sys.path.insert(0, 'src')
 
@@ -259,7 +259,7 @@ echo "=============================================="
 echo "Summary & Recommendations"
 echo "=============================================="
 
-python3 << 'EOF'
+python3 << EOF
 import json
 
 discovery_ok = False
