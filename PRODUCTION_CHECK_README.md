@@ -33,6 +33,9 @@ cd /path/to/gha1javarag
 # Activate virtual environment
 source .venv/bin/activate
 
+# Install the package if not already installed
+pip install -e .
+
 # Run checker for cuco-ui-admin
 ./check_production_indexing.sh cuco-ui-admin /mnt/cucocalcai/cuco-master/cuco-master@d34bb6b6d1c/cuco-ui-admin
 
