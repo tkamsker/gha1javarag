@@ -169,7 +169,21 @@ echo ""
 print_status "INFO" "Check 6: Weaviate Indexed Data"
 python3 << EOF
 import sys
+import os
+
+# Try multiple path strategies
+script_dir = os.path.dirname(os.path.abspath('$0'))
+sys.path.insert(0, os.path.join(script_dir, 'src'))
 sys.path.insert(0, 'src')
+sys.path.insert(0, '.')
+
+try:
+    from codeindex.services.weaviate_client import WeaviateManager
+except ImportError:
+    print("  Error: codeindex module not found")
+    print("  Please ensure you're in the project directory and run:")
+    print("    pip install -e .")
+    sys.exit(1)
 
 from codeindex.services.weaviate_client import WeaviateManager
 
@@ -224,7 +238,20 @@ echo ""
 print_status "INFO" "Check 7: Search Functionality"
 python3 << EOF
 import sys
+import os
+
+# Try multiple path strategies
+script_dir = os.path.dirname(os.path.abspath('$0'))
+sys.path.insert(0, os.path.join(script_dir, 'src'))
 sys.path.insert(0, 'src')
+sys.path.insert(0, '.')
+
+try:
+    from codeindex.services.weaviate_client import WeaviateManager
+except ImportError:
+    print("  Error: codeindex module not found")
+    print("  Run: pip install -e .")
+    sys.exit(1)
 
 from codeindex.services.weaviate_client import WeaviateManager
 
