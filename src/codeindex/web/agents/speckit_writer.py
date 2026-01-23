@@ -215,8 +215,9 @@ Base your specification on the actual codebase structure."""
 
 Please generate a comprehensive technical specification based on the codebase architecture."""
 
-            # Call Ollama
-            ollama_client = OllamaClient()
+            # Call Ollama with configured client
+            from codeindex.web.agents import get_configured_ollama_client
+            ollama_client = get_configured_ollama_client()
             response = ollama_client.call_ollama(
                 prompt=user_prompt,
                 system_prompt=system_prompt,

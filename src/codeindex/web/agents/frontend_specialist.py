@@ -257,8 +257,9 @@ Keep responses focused on frontend/UI aspects and user experience."""
 
 Please analyze the frontend artifacts and provide a comprehensive answer focused on UI components, user flows, and MVP patterns."""
 
-            # Call Ollama
-            ollama_client = OllamaClient()
+            # Call Ollama with configured client
+            from codeindex.web.agents import get_configured_ollama_client
+            ollama_client = get_configured_ollama_client()
             response = ollama_client.call_ollama(
                 prompt=user_prompt,
                 system_prompt=system_prompt,

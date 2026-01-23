@@ -206,8 +206,9 @@ Base your PRD on the actual codebase artifacts provided."""
 
 Please generate a comprehensive Product Requirements Document (PRD) for this feature based on the codebase context."""
 
-            # Call Ollama
-            ollama_client = OllamaClient()
+            # Call Ollama with configured client
+            from codeindex.web.agents import get_configured_ollama_client
+            ollama_client = get_configured_ollama_client()
             response = ollama_client.call_ollama(
                 prompt=user_prompt,
                 system_prompt=system_prompt,

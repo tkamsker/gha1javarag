@@ -246,8 +246,9 @@ Keep responses focused on backend/server-side aspects and business logic."""
 
 Please analyze the backend artifacts and provide a comprehensive answer focused on service architecture, business logic, and API contracts."""
 
-            # Call Ollama
-            ollama_client = OllamaClient()
+            # Call Ollama with configured client
+            from codeindex.web.agents import get_configured_ollama_client
+            ollama_client = get_configured_ollama_client()
             response = ollama_client.call_ollama(
                 prompt=user_prompt,
                 system_prompt=system_prompt,

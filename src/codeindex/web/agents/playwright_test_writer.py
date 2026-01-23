@@ -264,8 +264,9 @@ Please generate Playwright test code including:
 4. Test assertions
 5. Setup and teardown"""
 
-            # Call Ollama with higher token limit for code generation
-            ollama_client = OllamaClient()
+            # Call Ollama with configured client and higher token limit for code generation
+            from codeindex.web.agents import get_configured_ollama_client
+            ollama_client = get_configured_ollama_client()
             response = ollama_client.call_ollama(
                 prompt=user_prompt,
                 system_prompt=system_prompt,

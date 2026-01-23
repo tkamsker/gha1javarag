@@ -317,7 +317,16 @@ class LLMQueryTool:
 
         if ollama_client is None:
             from codeindex.services.ollama_client import OllamaClient
-            self.ollama_client = OllamaClient()
+            from codeindex.utils.config import Config
+
+            # Load config to get correct Ollama settings from .env
+            config = Config()
+            self.ollama_client = OllamaClient(
+                base_url=config.ollama_base_url,
+                model=config.ollama_model_name,
+                connect_timeout=config.ollama_connect_timeout,
+                read_timeout=config.ollama_read_timeout
+            )
         else:
             self.ollama_client = ollama_client
 
